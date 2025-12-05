@@ -12,6 +12,7 @@ import MusicianDetail from "@/pages/MusicianDetail";
 import Marketplace from "@/pages/Marketplace";
 import ListingDetail from "@/pages/ListingDetail";
 import Dashboard from "@/pages/Dashboard";
+import Messages from "@/pages/Messages";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +30,8 @@ function Router() {
       <Route path="/marketplace" component={Marketplace} />
       <Route path="/marketplace/:id" component={ListingDetail} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/messages" component={Messages} />
+      <Route path="/messages/:userId" component={Messages} />
       <Route component={NotFound} />
     </Switch>
   );

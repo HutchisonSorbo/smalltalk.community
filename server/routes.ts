@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertMusicianProfileSchema, insertMarketplaceListingSchema } from "@shared/schema";
+import { insertMusicianProfileSchema, insertMarketplaceListingSchema, insertMessageSchema } from "@shared/schema";
 
 // Allowed MIME types for image uploads
 const ALLOWED_IMAGE_TYPES = [
@@ -97,7 +97,10 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       if (!profile) {
         return res.status(404).json({ message: "Musician not found" });
       }
-      res.json(profile);
+      
+      // Get user info for messaging
+      const user = await storage.getUser(profile.userId);
+      res.json({ ...profile, user });
     } catch (error) {
       console.error("Error fetching musician:", error);
       res.status(500).json({ message: "Failed to fetch musician" });
@@ -120,13 +123,19 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
   app.post("/api/musicians", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("Creating musician profile for user:", userId);
+      console.log("Request body:", JSON.stringify(req.body));
+      
       const parsed = insertMusicianProfileSchema.safeParse({ ...req.body, userId });
       
       if (!parsed.success) {
+        console.log("Validation failed:", parsed.error.errors);
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
 
+      console.log("Parsed data:", JSON.stringify(parsed.data));
       const profile = await storage.createMusicianProfile(parsed.data);
+      console.log("Profile created:", profile?.id);
       res.status(201).json(profile);
     } catch (error) {
       console.error("Error creating musician profile:", error);
@@ -293,6 +302,89 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     } catch (error) {
       console.error("Error deleting marketplace listing:", error);
       res.status(500).json({ message: "Failed to delete listing" });
+    }
+  });
+
+  // ========== MESSAGING ==========
+
+  // Get all conversations for current user (protected)
+  app.get("/api/messages/conversations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversations = await storage.getConversations(userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  // Get unread message count for current user (protected)
+  app.get("/api/messages/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      res.status(500).json({ message: "Failed to fetch unread count" });
+    }
+  });
+
+  // Get conversation with specific user (protected)
+  app.get("/api/messages/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user.claims.sub;
+      const otherUserId = req.params.userId;
+      
+      // Get the other user to validate they exist
+      const otherUser = await storage.getUser(otherUserId);
+      if (!otherUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Mark messages as read
+      await storage.markMessagesAsRead(currentUserId, otherUserId);
+      
+      // Get all messages in conversation
+      const messages = await storage.getConversation(currentUserId, otherUserId);
+      
+      res.json({ messages, otherUser });
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+      res.status(500).json({ message: "Failed to fetch conversation" });
+    }
+  });
+
+  // Send a message (protected)
+  app.post("/api/messages", isAuthenticated, async (req: any, res) => {
+    try {
+      const senderId = req.user.claims.sub;
+      const validatedData = insertMessageSchema.parse({
+        ...req.body,
+        senderId,
+      });
+      
+      // Verify receiver exists
+      const receiver = await storage.getUser(validatedData.receiverId);
+      if (!receiver) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+      
+      // Can't message yourself
+      if (senderId === validatedData.receiverId) {
+        return res.status(400).json({ message: "Cannot send message to yourself" });
+      }
+      
+      const message = await storage.sendMessage(validatedData);
+      res.status(201).json(message);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        const firstError = error.errors?.[0]?.message || "Invalid message data";
+        return res.status(400).json({ message: firstError });
+      }
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
     }
   });
 

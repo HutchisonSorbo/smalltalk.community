@@ -1,6 +1,6 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Mail, Phone, Package, Calendar, User } from "lucide-react";
+import { ArrowLeft, MapPin, Mail, Phone, Package, Calendar, User, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { useAuth } from "@/hooks/useAuth";
 import type { MarketplaceListing, User as UserType } from "@shared/schema";
 
 interface ListingWithSeller extends MarketplaceListing {
@@ -16,12 +17,16 @@ interface ListingWithSeller extends MarketplaceListing {
 
 export default function ListingDetail() {
   const [, params] = useRoute("/marketplace/:id");
+  const [, navigate] = useLocation();
   const listingId = params?.id;
+  const { user, isAuthenticated } = useAuth();
 
   const { data: listing, isLoading } = useQuery<ListingWithSeller>({
     queryKey: ["/api/marketplace", listingId],
     enabled: !!listingId,
   });
+
+  const canMessage = isAuthenticated && listing?.userId && user?.id !== listing.userId;
 
   const formatPrice = (price: number | null, priceType: string | null) => {
     if (!price) return "Contact for price";
@@ -200,8 +205,19 @@ export default function ListingDetail() {
                       </div>
                     )}
 
+                    {canMessage && (
+                      <Button
+                        className="w-full"
+                        onClick={() => navigate(`/messages/${listing.userId}`)}
+                        data-testid="button-send-message"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    )}
+
                     {listing.contactEmail && (
-                      <Button asChild className="w-full" data-testid="button-email-seller">
+                      <Button asChild variant={canMessage ? "outline" : "default"} className="w-full" data-testid="button-email-seller">
                         <a href={`mailto:${listing.contactEmail}?subject=Inquiry: ${listing.title}`}>
                           <Mail className="h-4 w-4 mr-2" />
                           Email Seller
@@ -218,7 +234,7 @@ export default function ListingDetail() {
                       </Button>
                     )}
 
-                    {!listing.contactEmail && !listing.contactPhone && (
+                    {!listing.contactEmail && !listing.contactPhone && !canMessage && (
                       <p className="text-muted-foreground text-sm text-center py-4">
                         No contact information provided.
                       </p>

@@ -1,6 +1,6 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Mail, Phone, Music, Calendar, Award } from "lucide-react";
+import { ArrowLeft, MapPin, Mail, Phone, Music, Calendar, Award, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,16 +9,25 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import type { MusicianProfile } from "@shared/schema";
+import { useAuth } from "@/hooks/useAuth";
+import type { MusicianProfile, User } from "@shared/schema";
+
+interface MusicianProfileWithUser extends MusicianProfile {
+  user?: User;
+}
 
 export default function MusicianDetail() {
   const [, params] = useRoute("/musicians/:id");
+  const [, navigate] = useLocation();
   const musicianId = params?.id;
+  const { user, isAuthenticated } = useAuth();
 
-  const { data: musician, isLoading } = useQuery<MusicianProfile>({
+  const { data: musician, isLoading } = useQuery<MusicianProfileWithUser>({
     queryKey: ["/api/musicians", musicianId],
     enabled: !!musicianId,
   });
+
+  const canMessage = isAuthenticated && musician?.userId && user?.id !== musician.userId;
 
   if (isLoading) {
     return (
@@ -162,6 +171,16 @@ export default function MusicianDetail() {
                     <CardTitle className="text-lg">Contact</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {canMessage && (
+                      <Button
+                        className="w-full"
+                        onClick={() => navigate(`/messages/${musician.userId}`)}
+                        data-testid="button-send-message"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Send Message
+                      </Button>
+                    )}
                     {musician.contactEmail && (
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -196,7 +215,7 @@ export default function MusicianDetail() {
                         </div>
                       </div>
                     )}
-                    {!musician.contactEmail && !musician.contactPhone && (
+                    {!musician.contactEmail && !musician.contactPhone && !canMessage && (
                       <p className="text-muted-foreground text-sm">
                         No contact information provided.
                       </p>

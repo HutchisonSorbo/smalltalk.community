@@ -1,8 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { Menu, X, Music, Search, User } from "lucide-react";
+import { Menu, X, Music, Search, User, MessageCircle } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +27,14 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
   const [searchQuery, setSearchQuery] = useState("");
   const [location] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
+
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/messages/unread-count"],
+    enabled: isAuthenticated,
+    refetchInterval: 30000,
+  });
+
+  const unreadCount = unreadData?.count || 0;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +118,17 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
                     <Link href="/dashboard" className="cursor-pointer" data-testid="link-dashboard">
                       <User className="mr-2 h-4 w-4" />
                       Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/messages" className="cursor-pointer" data-testid="link-messages">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Messages
+                      {unreadCount > 0 && (
+                        <Badge variant="default" className="ml-auto text-xs">
+                          {unreadCount}
+                        </Badge>
+                      )}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

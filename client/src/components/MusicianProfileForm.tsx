@@ -28,7 +28,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { instruments, genres, experienceLevels, victoriaRegions, insertMusicianProfileSchema } from "@shared/schema";
 import type { MusicianProfile } from "@shared/schema";
 
-const formSchema = insertMusicianProfileSchema.extend({
+const formSchema = insertMusicianProfileSchema.omit({ userId: true }).extend({
   name: z.string().min(2, "Name must be at least 2 characters"),
   bio: z.string().optional(),
   instruments: z.array(z.string()).min(1, "Select at least one instrument"),
@@ -106,12 +106,17 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
   });
 
   const onSubmit = (data: FormData) => {
+    console.log("Form submitted with data:", data);
     mutation.mutate(data);
+  };
+
+  const handleFormError = () => {
+    console.log("Form errors:", form.formState.errors);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit, handleFormError)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
