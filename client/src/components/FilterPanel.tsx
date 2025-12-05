@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -27,7 +27,7 @@ interface FilterOption {
 interface FilterSection {
   id: string;
   title: string;
-  type: "checkbox" | "select";
+  type: "checkbox" | "select" | "range";
   options: FilterOption[];
 }
 
@@ -36,6 +36,7 @@ interface FilterPanelProps {
   selectedFilters: Record<string, string[]>;
   onFilterChange: (sectionId: string, value: string, checked: boolean) => void;
   onSelectChange: (sectionId: string, value: string) => void;
+  onRangeChange?: (sectionId: string, min: string, max: string) => void;
   onClearAll: () => void;
   mobileOpen?: boolean;
   onMobileOpenChange?: (open: boolean) => void;
@@ -46,6 +47,7 @@ function FilterContent({
   selectedFilters,
   onFilterChange,
   onSelectChange,
+  onRangeChange,
   onClearAll,
 }: Omit<FilterPanelProps, "mobileOpen" | "onMobileOpenChange">) {
   const hasActiveFilters = Object.values(selectedFilters).some(
@@ -94,6 +96,42 @@ function FilterContent({
                   ))}
                 </SelectContent>
               </Select>
+            ) : section.type === "range" ? (
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={selectedFilters[section.id]?.[0] || ""}
+                    onChange={(e) =>
+                      onRangeChange?.(
+                        section.id,
+                        e.target.value,
+                        selectedFilters[section.id]?.[1] || ""
+                      )
+                    }
+                    data-testid={`input-${section.id}-min`}
+                    className="w-full"
+                  />
+                </div>
+                <span className="text-muted-foreground">-</span>
+                <div className="flex-1">
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={selectedFilters[section.id]?.[1] || ""}
+                    onChange={(e) =>
+                      onRangeChange?.(
+                        section.id,
+                        selectedFilters[section.id]?.[0] || "",
+                        e.target.value
+                      )
+                    }
+                    data-testid={`input-${section.id}-max`}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             ) : (
               <ScrollArea className="h-48">
                 <div className="space-y-2 pr-4">

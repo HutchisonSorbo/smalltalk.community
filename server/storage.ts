@@ -14,7 +14,23 @@ import {
   type Conversation,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, sql, ne } from "drizzle-orm";
+import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps } from "drizzle-orm";
+
+export interface MusicianFilters {
+  location?: string;
+  instruments?: string[];
+  genres?: string[];
+  experienceLevel?: string;
+  availability?: string;
+}
+
+export interface MarketplaceFilters {
+  location?: string;
+  category?: string[];
+  condition?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+}
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -22,7 +38,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
 
   // Musician profile operations
-  getMusicianProfiles(): Promise<MusicianProfile[]>;
+  getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]>;
   getMusicianProfile(id: string): Promise<MusicianProfile | undefined>;
   getMusicianProfilesByUser(userId: string): Promise<MusicianProfile[]>;
   createMusicianProfile(profile: InsertMusicianProfile): Promise<MusicianProfile>;
@@ -30,7 +46,7 @@ export interface IStorage {
   deleteMusicianProfile(id: string): Promise<boolean>;
 
   // Marketplace listing operations
-  getMarketplaceListings(): Promise<MarketplaceListing[]>;
+  getMarketplaceListings(filters?: MarketplaceFilters): Promise<MarketplaceListing[]>;
   getMarketplaceListing(id: string): Promise<MarketplaceListing | undefined>;
   getMarketplaceListingsByUser(userId: string): Promise<MarketplaceListing[]>;
   createMarketplaceListing(listing: InsertMarketplaceListing): Promise<MarketplaceListing>;
@@ -68,11 +84,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Musician profile operations
-  async getMusicianProfiles(): Promise<MusicianProfile[]> {
+  async getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]> {
+    const conditions = [eq(musicianProfiles.isActive, true)];
+
+    if (filters) {
+      if (filters.location) {
+        conditions.push(eq(musicianProfiles.location, filters.location));
+      }
+      if (filters.experienceLevel) {
+        conditions.push(eq(musicianProfiles.experienceLevel, filters.experienceLevel));
+      }
+      if (filters.availability) {
+        conditions.push(eq(musicianProfiles.availability, filters.availability));
+      }
+      if (filters.instruments && filters.instruments.length > 0) {
+        conditions.push(arrayOverlaps(musicianProfiles.instruments, filters.instruments));
+      }
+      if (filters.genres && filters.genres.length > 0) {
+        conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
+      }
+    }
+
     return db
       .select()
       .from(musicianProfiles)
-      .where(eq(musicianProfiles.isActive, true))
+      .where(and(...conditions))
       .orderBy(desc(musicianProfiles.createdAt));
   }
 
@@ -118,11 +154,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Marketplace listing operations
-  async getMarketplaceListings(): Promise<MarketplaceListing[]> {
+  async getMarketplaceListings(filters?: MarketplaceFilters): Promise<MarketplaceListing[]> {
+    const conditions = [eq(marketplaceListings.isActive, true)];
+
+    if (filters) {
+      if (filters.location) {
+        conditions.push(eq(marketplaceListings.location, filters.location));
+      }
+      if (filters.category && filters.category.length > 0) {
+        if (filters.category.length === 1) {
+          conditions.push(eq(marketplaceListings.category, filters.category[0]));
+        } else {
+          const categoryConditions = filters.category.map(cat => 
+            eq(marketplaceListings.category, cat)
+          );
+          conditions.push(or(...categoryConditions)!);
+        }
+      }
+      if (filters.condition && filters.condition.length > 0) {
+        if (filters.condition.length === 1) {
+          conditions.push(eq(marketplaceListings.condition, filters.condition[0]));
+        } else {
+          const conditionConditions = filters.condition.map(cond => 
+            eq(marketplaceListings.condition, cond)
+          );
+          conditions.push(or(...conditionConditions)!);
+        }
+      }
+      if (filters.minPrice !== undefined) {
+        conditions.push(gte(marketplaceListings.price, filters.minPrice));
+      }
+      if (filters.maxPrice !== undefined) {
+        conditions.push(lte(marketplaceListings.price, filters.maxPrice));
+      }
+    }
+
     return db
       .select()
       .from(marketplaceListings)
-      .where(eq(marketplaceListings.isActive, true))
+      .where(and(...conditions))
       .orderBy(desc(marketplaceListings.createdAt));
   }
 

@@ -7,7 +7,7 @@ import { Footer } from "@/components/Footer";
 import { MusicianCard } from "@/components/MusicianCard";
 import { FilterPanel } from "@/components/FilterPanel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { instruments, genres, experienceLevels, victoriaRegions } from "@shared/schema";
+import { instruments, genres, experienceLevels, availabilityOptions, victoriaRegions } from "@shared/schema";
 import type { MusicianProfile } from "@shared/schema";
 
 export default function Musicians() {
@@ -17,6 +17,7 @@ export default function Musicians() {
     instruments: [],
     genres: [],
     experienceLevel: [],
+    availability: [],
     location: [],
   });
 
@@ -49,6 +50,12 @@ export default function Musicians() {
       type: "select" as const,
       options: experienceLevels.map((e) => ({ value: e, label: e })),
     },
+    {
+      id: "availability",
+      title: "Availability",
+      type: "select" as const,
+      options: availabilityOptions.map((a) => ({ value: a, label: a })),
+    },
   ];
 
   const handleFilterChange = (sectionId: string, value: string, checked: boolean) => {
@@ -72,6 +79,7 @@ export default function Musicians() {
       instruments: [],
       genres: [],
       experienceLevel: [],
+      availability: [],
       location: [],
     });
   };
@@ -110,6 +118,12 @@ export default function Musicians() {
 
       if (selectedFilters.experienceLevel?.length) {
         if (!musician.experienceLevel || !selectedFilters.experienceLevel.includes(musician.experienceLevel)) {
+          return false;
+        }
+      }
+
+      if (selectedFilters.availability?.length) {
+        if (!musician.availability || !selectedFilters.availability.includes(musician.availability)) {
           return false;
         }
       }

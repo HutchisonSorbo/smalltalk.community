@@ -17,6 +17,7 @@ export default function Marketplace() {
     category: [],
     condition: [],
     location: [],
+    priceRange: [],
   });
 
   const { data: listings, isLoading } = useQuery<MarketplaceListing[]>({
@@ -42,6 +43,12 @@ export default function Marketplace() {
       type: "checkbox" as const,
       options: itemConditions.map((c) => ({ value: c, label: c })),
     },
+    {
+      id: "priceRange",
+      title: "Price Range ($)",
+      type: "range" as const,
+      options: [],
+    },
   ];
 
   const handleFilterChange = (sectionId: string, value: string, checked: boolean) => {
@@ -65,7 +72,15 @@ export default function Marketplace() {
       category: [],
       condition: [],
       location: [],
+      priceRange: [],
     });
+  };
+
+  const handleRangeChange = (sectionId: string, min: string, max: string) => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      [sectionId]: [min, max],
+    }));
   };
 
   const filteredListings = useMemo(() => {
@@ -95,6 +110,25 @@ export default function Marketplace() {
 
       if (selectedFilters.condition?.length) {
         if (!listing.condition || !selectedFilters.condition.includes(listing.condition)) {
+          return false;
+        }
+      }
+
+      const priceRange = selectedFilters.priceRange || [];
+      const minStr = priceRange[0] || '';
+      const maxStr = priceRange[1] || '';
+      const min = minStr.trim() ? parseInt(minStr, 10) : undefined;
+      const max = maxStr.trim() ? parseInt(maxStr, 10) : undefined;
+      
+      if ((min !== undefined && !isNaN(min)) || (max !== undefined && !isNaN(max))) {
+        if (listing.price !== null && listing.price !== undefined) {
+          if (min !== undefined && !isNaN(min) && listing.price < min) {
+            return false;
+          }
+          if (max !== undefined && !isNaN(max) && listing.price > max) {
+            return false;
+          }
+        } else {
           return false;
         }
       }
@@ -132,6 +166,7 @@ export default function Marketplace() {
                 selectedFilters={selectedFilters}
                 onFilterChange={handleFilterChange}
                 onSelectChange={handleSelectChange}
+                onRangeChange={handleRangeChange}
                 onClearAll={handleClearAll}
                 mobileOpen={mobileFiltersOpen}
                 onMobileOpenChange={setMobileFiltersOpen}

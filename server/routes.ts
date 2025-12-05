@@ -1,11 +1,32 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import multer from "multer";
-import { storage } from "./storage";
+import { storage, type MusicianFilters, type MarketplaceFilters } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { insertMusicianProfileSchema, insertMarketplaceListingSchema, insertMessageSchema } from "@shared/schema";
+import { z } from "zod";
+
+const musicianFiltersSchema = z.object({
+  location: z.string().optional(),
+  experienceLevel: z.string().optional(),
+  availability: z.string().optional(),
+  instruments: z.string().optional(),
+  genres: z.string().optional(),
+});
+
+const marketplaceFiltersSchema = z.object({
+  location: z.string().optional(),
+  category: z.string().optional(),
+  condition: z.string().optional(),
+  minPrice: z.string().refine((val) => !val || !isNaN(parseInt(val, 10)), {
+    message: "minPrice must be a valid number",
+  }).optional(),
+  maxPrice: z.string().refine((val) => !val || !isNaN(parseInt(val, 10)), {
+    message: "maxPrice must be a valid number",
+  }).optional(),
+});
 
 // Allowed MIME types for image uploads
 const ALLOWED_IMAGE_TYPES = [
@@ -79,10 +100,40 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
 
   // ========== MUSICIAN PROFILES ==========
 
-  // Get all musician profiles (public)
+  // Get all musician profiles (public) with optional filtering
   app.get("/api/musicians", async (req, res) => {
     try {
-      const profiles = await storage.getMusicianProfiles();
+      const parsed = musicianFiltersSchema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid filter parameters", errors: parsed.error.errors });
+      }
+      
+      const filters: MusicianFilters = {};
+      const query = parsed.data;
+      
+      if (query.location) {
+        filters.location = query.location;
+      }
+      if (query.experienceLevel) {
+        filters.experienceLevel = query.experienceLevel;
+      }
+      if (query.availability) {
+        filters.availability = query.availability;
+      }
+      if (query.instruments) {
+        const instruments = query.instruments.split(',').filter(Boolean);
+        if (instruments.length > 0) {
+          filters.instruments = instruments;
+        }
+      }
+      if (query.genres) {
+        const genres = query.genres.split(',').filter(Boolean);
+        if (genres.length > 0) {
+          filters.genres = genres;
+        }
+      }
+
+      const profiles = await storage.getMusicianProfiles(Object.keys(filters).length > 0 ? filters : undefined);
       res.json(profiles);
     } catch (error) {
       console.error("Error fetching musicians:", error);
@@ -196,10 +247,46 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
 
   // ========== MARKETPLACE LISTINGS ==========
 
-  // Get all marketplace listings (public)
+  // Get all marketplace listings (public) with optional filtering
   app.get("/api/marketplace", async (req, res) => {
     try {
-      const listings = await storage.getMarketplaceListings();
+      const parsed = marketplaceFiltersSchema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid filter parameters", errors: parsed.error.errors });
+      }
+      
+      const filters: MarketplaceFilters = {};
+      const query = parsed.data;
+      
+      if (query.location) {
+        filters.location = query.location;
+      }
+      if (query.category) {
+        const category = query.category.split(',').filter(Boolean);
+        if (category.length > 0) {
+          filters.category = category;
+        }
+      }
+      if (query.condition) {
+        const condition = query.condition.split(',').filter(Boolean);
+        if (condition.length > 0) {
+          filters.condition = condition;
+        }
+      }
+      if (query.minPrice) {
+        const minPrice = parseInt(query.minPrice, 10);
+        if (!isNaN(minPrice)) {
+          filters.minPrice = minPrice;
+        }
+      }
+      if (query.maxPrice) {
+        const maxPrice = parseInt(query.maxPrice, 10);
+        if (!isNaN(maxPrice)) {
+          filters.maxPrice = maxPrice;
+        }
+      }
+
+      const listings = await storage.getMarketplaceListings(Object.keys(filters).length > 0 ? filters : undefined);
       res.json(listings);
     } catch (error) {
       console.error("Error fetching marketplace listings:", error);

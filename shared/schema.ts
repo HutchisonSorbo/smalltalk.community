@@ -176,6 +176,18 @@ export const experienceLevels = [
   "Professional",
 ] as const;
 
+// Availability options
+export const availabilityOptions = [
+  "Available Now",
+  "Weekends Only",
+  "Evenings Only",
+  "Flexible Schedule",
+  "Looking for Gigs",
+  "Studio Sessions Only",
+  "Touring Available",
+  "Limited Availability",
+] as const;
+
 // Marketplace categories
 export const marketplaceCategories = [
   "Guitars",

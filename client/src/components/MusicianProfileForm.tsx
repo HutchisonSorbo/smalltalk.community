@@ -25,7 +25,7 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { instruments, genres, experienceLevels, victoriaRegions, insertMusicianProfileSchema } from "@shared/schema";
+import { instruments, genres, experienceLevels, availabilityOptions, victoriaRegions, insertMusicianProfileSchema } from "@shared/schema";
 import type { MusicianProfile } from "@shared/schema";
 
 const formSchema = insertMusicianProfileSchema.omit({ userId: true }).extend({
@@ -308,13 +308,23 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
           render={({ field }) => (
             <FormItem>
               <FormLabel>Availability</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g., Weekends, Evenings, Full-time"
-                  {...field}
-                  data-testid="input-availability"
-                />
-              </FormControl>
+              <Select
+                value={field.value || ""}
+                onValueChange={field.onChange}
+              >
+                <FormControl>
+                  <SelectTrigger data-testid="select-availability">
+                    <SelectValue placeholder="Select your availability" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {availabilityOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
