@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiImageUpload } from "@/components/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -37,6 +38,7 @@ const formSchema = insertMarketplaceListingSchema.extend({
   location: z.string().optional(),
   contactEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   contactPhone: z.string().optional(),
+  imageUrls: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -63,6 +65,7 @@ export function ListingForm({ listing, onSuccess, onCancel }: ListingFormProps) 
       location: listing?.location || "",
       contactEmail: listing?.contactEmail || "",
       contactPhone: listing?.contactPhone || "",
+      imageUrls: listing?.imageUrls || [],
     },
   });
 
@@ -121,6 +124,25 @@ export function ListingForm({ listing, onSuccess, onCancel }: ListingFormProps) 
               <FormLabel>Title *</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Fender Stratocaster 2020" {...field} data-testid="input-listing-title" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="imageUrls"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Photos</FormLabel>
+              <FormControl>
+                <MultiImageUpload
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  maxImages={5}
+                  label="Add Photos"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

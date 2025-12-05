@@ -1,8 +1,65 @@
 import type { Express } from "express";
 import type { Server } from "http";
+import multer from "multer";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
 import { insertMusicianProfileSchema, insertMarketplaceListingSchema } from "@shared/schema";
+
+// Allowed MIME types for image uploads
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
+
+// Magic bytes for image validation
+const IMAGE_SIGNATURES: Record<string, number[][]> = {
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+  'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+  'image/gif': [[0x47, 0x49, 0x46, 0x38, 0x37, 0x61], [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]], // RIFF header, WebP has WEBP after
+};
+
+function validateImageMagicBytes(buffer: Buffer, mimetype: string): boolean {
+  const signatures = IMAGE_SIGNATURES[mimetype];
+  if (!signatures) return false;
+  
+  for (const signature of signatures) {
+    let matches = true;
+    for (let i = 0; i < signature.length; i++) {
+      if (buffer[i] !== signature[i]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      if (mimetype === 'image/webp') {
+        return buffer.length > 11 && 
+               buffer[8] === 0x57 && // W
+               buffer[9] === 0x45 && // E
+               buffer[10] === 0x42 && // B
+               buffer[11] === 0x50; // P
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPEG, PNG, WebP, GIF) are allowed'));
+    }
+  },
+});
 
 export async function registerRoutes(server: Server, app: Express): Promise<void> {
   // Auth middleware
@@ -236,6 +293,132 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
     } catch (error) {
       console.error("Error deleting marketplace listing:", error);
       res.status(500).json({ message: "Failed to delete listing" });
+    }
+  });
+
+  // ========== FILE UPLOAD ==========
+
+  // Get presigned URL for upload (protected)
+  app.post("/api/objects/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ message: "Failed to get upload URL" });
+    }
+  });
+
+  // Direct file upload (protected) - for simpler client integration
+  // Use custom wrapper to handle Multer errors properly
+  app.post("/api/upload", isAuthenticated, (req: any, res, next) => {
+    upload.single("file")(req, res, (err: any) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ message: "File too large. Maximum size is 5MB." });
+          }
+          return res.status(400).json({ message: `Upload error: ${err.message}` });
+        }
+        // Custom error from fileFilter
+        return res.status(400).json({ message: err.message || "Invalid file type" });
+      }
+      next();
+    });
+  }, async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file provided" });
+      }
+
+      // Validate MIME type again (defense in depth)
+      if (!ALLOWED_IMAGE_TYPES.includes(req.file.mimetype)) {
+        return res.status(400).json({ message: "Only image files (JPEG, PNG, WebP, GIF) are allowed" });
+      }
+
+      // Validate magic bytes to prevent spoofed MIME types
+      if (!validateImageMagicBytes(req.file.buffer, req.file.mimetype)) {
+        return res.status(400).json({ message: "Invalid image file: content does not match file type" });
+      }
+
+      const userId = req.user.claims.sub;
+      const objectStorageService = new ObjectStorageService();
+      
+      // Get presigned URL
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      
+      // Upload file to storage
+      const uploadResponse = await fetch(uploadURL, {
+        method: "PUT",
+        body: req.file.buffer,
+        headers: {
+          "Content-Type": req.file.mimetype,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to storage");
+      }
+
+      // Set ACL policy and get normalized path
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        uploadURL,
+        {
+          owner: userId,
+          visibility: "public", // Profile images and listing images are public
+        }
+      );
+
+      console.log(`User ${userId} uploaded image: ${objectPath}`);
+      res.json({ url: objectPath });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
+  // Serve uploaded objects (public for visibility: public)
+  app.get("/objects/:objectPath(*)", async (req: any, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      
+      // Check if user can access (for public files, this will pass)
+      const userId = req.user?.claims?.sub;
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        objectFile,
+        userId,
+        requestedPermission: ObjectPermission.READ,
+      });
+      
+      if (!canAccess) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ message: "Object not found" });
+      }
+      console.error("Error serving object:", error);
+      res.status(500).json({ message: "Failed to serve object" });
+    }
+  });
+
+  // Serve public assets
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    try {
+      const filePath = req.params.filePath;
+      const objectStorageService = new ObjectStorageService();
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 }

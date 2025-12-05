@@ -293,12 +293,12 @@ export default function Dashboard() {
                                     </div>
                                     <div className="flex flex-wrap gap-1 mt-2">
                                       {profile.instruments?.slice(0, 3).map((instrument) => (
-                                        <Badge key={instrument} variant="outline" size="sm">
+                                        <Badge key={instrument} variant="outline" className="text-xs">
                                           {instrument}
                                         </Badge>
                                       ))}
                                       {profile.instruments && profile.instruments.length > 3 && (
-                                        <Badge variant="outline" size="sm">
+                                        <Badge variant="outline" className="text-xs">
                                           +{profile.instruments.length - 3}
                                         </Badge>
                                       )}
@@ -420,9 +420,9 @@ export default function Dashboard() {
                                       </div>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mt-2">
-                                      <Badge variant="secondary" size="sm">{listing.category}</Badge>
+                                      <Badge variant="secondary" className="text-xs">{listing.category}</Badge>
                                       {listing.condition && (
-                                        <Badge variant="outline" size="sm">{listing.condition}</Badge>
+                                        <Badge variant="outline" className="text-xs">{listing.condition}</Badge>
                                       )}
                                       {listing.location && (
                                         <span className="text-sm text-muted-foreground">{listing.location}</span>

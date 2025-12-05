@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUpload } from "@/components/ImageUpload";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -119,6 +120,24 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
               <FormLabel>Name *</FormLabel>
               <FormControl>
                 <Input placeholder="Your name or stage name" {...field} data-testid="input-profile-name" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="profileImageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Profile Photo</FormLabel>
+              <FormControl>
+                <ImageUpload
+                  value={field.value}
+                  onChange={field.onChange}
+                  label="Add Photo"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
