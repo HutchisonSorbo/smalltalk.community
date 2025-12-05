@@ -7,8 +7,9 @@ import { Footer } from "@/components/Footer";
 import { ListingCard } from "@/components/ListingCard";
 import { FilterPanel } from "@/components/FilterPanel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { marketplaceCategories, itemConditions, victoriaRegions } from "@shared/schema";
+import { marketplaceCategories, itemConditions } from "@shared/schema";
 import type { MarketplaceListing } from "@shared/schema";
+import { victoriaLocations, victoriaRegions } from "@/lib/victoriaLocations";
 
 export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,8 +29,8 @@ export default function Marketplace() {
     {
       id: "location",
       title: "Location",
-      type: "select" as const,
-      options: victoriaRegions.map((r) => ({ value: r, label: r })),
+      type: "location" as const,
+      options: [],
     },
     {
       id: "category",
@@ -96,10 +97,33 @@ export default function Marketplace() {
         if (!matchesSearch) return false;
       }
 
-      if (selectedFilters.location?.length) {
-        if (!listing.location || !selectedFilters.location.includes(listing.location)) {
+      if (selectedFilters.location?.length && selectedFilters.location[0]) {
+        const filterValue = selectedFilters.location[0].trim();
+        if (!filterValue) return true;
+        if (!listing.location) return false;
+        const listingLoc = listing.location.trim();
+        const filterLower = filterValue.toLowerCase();
+        const listingLower = listingLoc.toLowerCase();
+        if (listingLower === filterLower) return true;
+        const isFilterRegion = victoriaRegions.some(r => r.toLowerCase() === filterLower);
+        if (isFilterRegion) {
+          if (listingLower === filterLower) return true;
+          const suburbInRegion = victoriaLocations.find(
+            loc => loc.suburb.toLowerCase() === listingLower && loc.region.toLowerCase() === filterLower
+          );
+          if (suburbInRegion) return true;
           return false;
         }
+        const filterSuburbData = victoriaLocations.find(loc => loc.suburb.toLowerCase() === filterLower);
+        if (filterSuburbData) {
+          if (listingLower === filterLower) return true;
+          if (listingLower === filterSuburbData.region.toLowerCase()) return true;
+          return false;
+        }
+        if (listingLower.includes(filterLower) || filterLower.includes(listingLower)) {
+          return true;
+        }
+        return false;
       }
 
       if (selectedFilters.category?.length) {

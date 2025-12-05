@@ -22,10 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MultiImageUpload } from "@/components/ImageUpload";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { marketplaceCategories, itemConditions, victoriaRegions, insertMarketplaceListingSchema } from "@shared/schema";
+import { marketplaceCategories, itemConditions, insertMarketplaceListingSchema } from "@shared/schema";
 import type { MarketplaceListing } from "@shared/schema";
 
 const formSchema = insertMarketplaceListingSchema.omit({ userId: true }).extend({
@@ -272,20 +273,14 @@ export function ListingForm({ listing, onSuccess, onCancel }: ListingFormProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Location</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger data-testid="select-listing-location">
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {victoriaRegions.map((region) => (
-                    <SelectItem key={region} value={region}>
-                      {region}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <LocationAutocomplete
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Search suburbs or regions..."
+                  data-testid="input-listing-location"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

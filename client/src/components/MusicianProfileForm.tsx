@@ -22,10 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ImageUpload } from "@/components/ImageUpload";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { instruments, genres, experienceLevels, availabilityOptions, victoriaRegions, insertMusicianProfileSchema } from "@shared/schema";
+import { instruments, genres, experienceLevels, availabilityOptions, insertMusicianProfileSchema } from "@shared/schema";
 import type { MusicianProfile } from "@shared/schema";
 
 const formSchema = insertMusicianProfileSchema.omit({ userId: true }).extend({
@@ -200,20 +201,14 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Location</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-location">
-                      <SelectValue placeholder="Select region" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {victoriaRegions.map((region) => (
-                      <SelectItem key={region} value={region}>
-                        {region}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <LocationAutocomplete
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    placeholder="Search suburbs or regions..."
+                    data-testid="input-location"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

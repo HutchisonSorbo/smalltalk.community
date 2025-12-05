@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 
 interface FilterOption {
   value: string;
@@ -27,7 +28,7 @@ interface FilterOption {
 interface FilterSection {
   id: string;
   title: string;
-  type: "checkbox" | "select" | "range";
+  type: "checkbox" | "select" | "range" | "location";
   options: FilterOption[];
 }
 
@@ -79,7 +80,14 @@ function FilterContent({
               {section.title}
             </h4>
 
-            {section.type === "select" ? (
+            {section.type === "location" ? (
+              <LocationAutocomplete
+                value={selectedFilters[section.id]?.[0] || ""}
+                onChange={(value) => onSelectChange(section.id, value || "all")}
+                placeholder="Search locations..."
+                data-testid={`input-filter-${section.id}`}
+              />
+            ) : section.type === "select" ? (
               <Select
                 value={selectedFilters[section.id]?.[0] || "all"}
                 onValueChange={(value) => onSelectChange(section.id, value)}

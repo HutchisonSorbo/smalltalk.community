@@ -7,8 +7,9 @@ import { Footer } from "@/components/Footer";
 import { MusicianCard } from "@/components/MusicianCard";
 import { FilterPanel } from "@/components/FilterPanel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { instruments, genres, experienceLevels, availabilityOptions, victoriaRegions } from "@shared/schema";
+import { instruments, genres, experienceLevels, availabilityOptions } from "@shared/schema";
 import type { MusicianProfile } from "@shared/schema";
+import { victoriaLocations, victoriaRegions } from "@/lib/victoriaLocations";
 
 export default function Musicians() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,8 +30,8 @@ export default function Musicians() {
     {
       id: "location",
       title: "Location",
-      type: "select" as const,
-      options: victoriaRegions.map((r) => ({ value: r, label: r })),
+      type: "location" as const,
+      options: [],
     },
     {
       id: "instruments",
@@ -98,10 +99,33 @@ export default function Musicians() {
         if (!matchesSearch) return false;
       }
 
-      if (selectedFilters.location?.length) {
-        if (!musician.location || !selectedFilters.location.includes(musician.location)) {
+      if (selectedFilters.location?.length && selectedFilters.location[0]) {
+        const filterValue = selectedFilters.location[0].trim();
+        if (!filterValue) return true;
+        if (!musician.location) return false;
+        const musicianLoc = musician.location.trim();
+        const filterLower = filterValue.toLowerCase();
+        const musicianLower = musicianLoc.toLowerCase();
+        if (musicianLower === filterLower) return true;
+        const isFilterRegion = victoriaRegions.some(r => r.toLowerCase() === filterLower);
+        if (isFilterRegion) {
+          if (musicianLower === filterLower) return true;
+          const suburbInRegion = victoriaLocations.find(
+            loc => loc.suburb.toLowerCase() === musicianLower && loc.region.toLowerCase() === filterLower
+          );
+          if (suburbInRegion) return true;
           return false;
         }
+        const filterSuburbData = victoriaLocations.find(loc => loc.suburb.toLowerCase() === filterLower);
+        if (filterSuburbData) {
+          if (musicianLower === filterLower) return true;
+          if (musicianLower === filterSuburbData.region.toLowerCase()) return true;
+          return false;
+        }
+        if (musicianLower.includes(filterLower) || filterLower.includes(musicianLower)) {
+          return true;
+        }
+        return false;
       }
 
       if (selectedFilters.instruments?.length) {
