@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ReviewSection } from "@/components/ReviewSection";
+import { StarRating } from "@/components/StarRating";
 import { useAuth } from "@/hooks/useAuth";
 import type { MarketplaceListing, User as UserType } from "@shared/schema";
 
@@ -23,6 +25,11 @@ export default function ListingDetail() {
 
   const { data: listing, isLoading } = useQuery<ListingWithSeller>({
     queryKey: ["/api/marketplace", listingId],
+    enabled: !!listingId,
+  });
+
+  const { data: ratingData } = useQuery<{ average: number; count: number }>({
+    queryKey: ["/api/reviews", "listing", listingId, "rating"],
     enabled: !!listingId,
   });
 
@@ -148,6 +155,15 @@ export default function ListingDetail() {
                     {listing.title}
                   </h1>
 
+                  {ratingData && ratingData.count > 0 && (
+                    <div className="flex items-center gap-2" data-testid="listing-rating">
+                      <StarRating rating={ratingData.average} size="sm" />
+                      <span className="text-sm text-muted-foreground">
+                        ({ratingData.count} {ratingData.count === 1 ? "review" : "reviews"})
+                      </span>
+                    </div>
+                  )}
+
                   <p className="text-3xl font-bold text-primary" data-testid="text-listing-price">
                     {formatPrice(listing.price, listing.priceType)}
                   </p>
@@ -242,6 +258,15 @@ export default function ListingDetail() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            <div className="mt-8">
+              <ReviewSection
+                targetType="listing"
+                targetId={listing.id}
+                currentUser={user}
+                ownerId={listing.userId}
+              />
             </div>
           </div>
         </div>

@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ReviewSection } from "@/components/ReviewSection";
+import { StarRating } from "@/components/StarRating";
 import { useAuth } from "@/hooks/useAuth";
 import type { MusicianProfile, User } from "@shared/schema";
 
@@ -24,6 +26,11 @@ export default function MusicianDetail() {
 
   const { data: musician, isLoading } = useQuery<MusicianProfileWithUser>({
     queryKey: ["/api/musicians", musicianId],
+    enabled: !!musicianId,
+  });
+
+  const { data: ratingData } = useQuery<{ average: number; count: number }>({
+    queryKey: ["/api/reviews", "musician", musicianId, "rating"],
     enabled: !!musicianId,
   });
 
@@ -116,6 +123,14 @@ export default function MusicianDetail() {
               <div className="space-y-6">
                 <div>
                   <h1 className="text-3xl font-bold mb-2" data-testid="text-musician-name">{musician.name}</h1>
+                  {ratingData && ratingData.count > 0 && (
+                    <div className="flex items-center gap-2 mb-2" data-testid="musician-rating">
+                      <StarRating rating={ratingData.average} size="sm" />
+                      <span className="text-sm text-muted-foreground">
+                        ({ratingData.count} {ratingData.count === 1 ? "review" : "reviews"})
+                      </span>
+                    </div>
+                  )}
                   {musician.location && (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <MapPin className="h-4 w-4" />
@@ -223,6 +238,15 @@ export default function MusicianDetail() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            <div className="mt-8">
+              <ReviewSection
+                targetType="musician"
+                targetId={musician.id}
+                currentUser={user}
+                ownerId={musician.userId}
+              />
             </div>
           </div>
         </div>

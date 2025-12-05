@@ -3,6 +3,7 @@ import {
   musicianProfiles,
   marketplaceListings,
   messages,
+  reviews,
   type User,
   type UpsertUser,
   type MusicianProfile,
@@ -12,6 +13,9 @@ import {
   type Message,
   type InsertMessage,
   type Conversation,
+  type Review,
+  type InsertReview,
+  type ReviewWithReviewer,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps } from "drizzle-orm";
@@ -59,6 +63,16 @@ export interface IStorage {
   sendMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(userId: string, otherUserId: string): Promise<void>;
   getUnreadMessageCount(userId: string): Promise<number>;
+
+  // Review operations
+  getReview(id: string): Promise<Review | undefined>;
+  getReviewsForTarget(targetType: string, targetId: string): Promise<ReviewWithReviewer[]>;
+  getReviewsByUser(userId: string): Promise<Review[]>;
+  createReview(review: InsertReview): Promise<Review>;
+  updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined>;
+  deleteReview(id: string): Promise<boolean>;
+  getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }>;
+  hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -322,6 +336,85 @@ export class DatabaseStorage implements IStorage {
       .from(messages)
       .where(and(eq(messages.receiverId, userId), eq(messages.isRead, false)));
     return result[0]?.count || 0;
+  }
+
+  // Review operations
+  async getReview(id: string): Promise<Review | undefined> {
+    const [review] = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.id, id));
+    return review;
+  }
+
+  async getReviewsForTarget(targetType: string, targetId: string): Promise<ReviewWithReviewer[]> {
+    const reviewList = await db
+      .select()
+      .from(reviews)
+      .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)))
+      .orderBy(desc(reviews.createdAt));
+
+    const reviewsWithReviewers: ReviewWithReviewer[] = [];
+    for (const review of reviewList) {
+      const reviewer = await this.getUser(review.reviewerId);
+      reviewsWithReviewers.push({ ...review, reviewer });
+    }
+    return reviewsWithReviewers;
+  }
+
+  async getReviewsByUser(userId: string): Promise<Review[]> {
+    return db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.reviewerId, userId))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async createReview(review: InsertReview): Promise<Review> {
+    const [created] = await db.insert(reviews).values(review).returning();
+    return created;
+  }
+
+  async updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined> {
+    const [updated] = await db
+      .update(reviews)
+      .set({ ...review, updatedAt: new Date() })
+      .where(eq(reviews.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteReview(id: string): Promise<boolean> {
+    const result = await db.delete(reviews).where(eq(reviews.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
+    const result = await db
+      .select({
+        average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
+        count: sql<number>`COUNT(*)::int`,
+      })
+      .from(reviews)
+      .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
+    return {
+      average: result[0]?.average || 0,
+      count: result[0]?.count || 0,
+    };
+  }
+
+  async hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.reviewerId, userId),
+          eq(reviews.targetType, targetType),
+          eq(reviews.targetId, targetId)
+        )
+      );
+    return result.length > 0;
   }
 }
 

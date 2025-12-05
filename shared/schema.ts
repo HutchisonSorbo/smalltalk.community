@@ -261,3 +261,35 @@ export interface Conversation {
   lastMessage: Message;
   unreadCount: number;
 }
+
+// Reviews table for musician profiles and marketplace listings
+export const reviews = pgTable("reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reviewerId: varchar("reviewer_id").notNull().references(() => users.id),
+  targetType: varchar("target_type", { length: 50 }).notNull(),
+  targetId: varchar("target_id").notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  reviewer: one(users, {
+    fields: [reviews.reviewerId],
+    references: [users.id],
+  }),
+}));
+
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
+
+export interface ReviewWithReviewer extends Review {
+  reviewer?: User;
+}

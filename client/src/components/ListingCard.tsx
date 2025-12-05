@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { MapPin, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RatingBadge } from "@/components/RatingBadge";
 import type { MarketplaceListing } from "@shared/schema";
 
 interface ListingCardProps {
@@ -45,6 +46,7 @@ export function ListingCard({ listing }: ListingCardProps) {
         <CardContent className="p-4 space-y-3">
           <div className="space-y-1">
             <h3 className="font-semibold line-clamp-2">{listing.title}</h3>
+            <RatingBadge targetType="listing" targetId={listing.id} />
             <p className="text-xl font-bold text-primary">
               {formatPrice(listing.price, listing.priceType)}
             </p>

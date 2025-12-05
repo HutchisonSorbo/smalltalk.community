@@ -5,7 +5,7 @@ import { storage, type MusicianFilters, type MarketplaceFilters } from "./storag
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertMusicianProfileSchema, insertMarketplaceListingSchema, insertMessageSchema } from "@shared/schema";
+import { insertMusicianProfileSchema, insertMarketplaceListingSchema, insertMessageSchema, insertReviewSchema } from "@shared/schema";
 import { z } from "zod";
 
 const musicianFiltersSchema = z.object({
@@ -472,6 +472,183 @@ export async function registerRoutes(server: Server, app: Express): Promise<void
       }
       console.error("Error sending message:", error);
       res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // ========== REVIEWS ==========
+
+  // Get reviews for a target (musician profile or marketplace listing)
+  app.get("/api/reviews/:targetType/:targetId", async (req, res) => {
+    try {
+      const { targetType, targetId } = req.params;
+      
+      if (!["musician", "listing"].includes(targetType)) {
+        return res.status(400).json({ message: "Invalid target type. Must be 'musician' or 'listing'" });
+      }
+      
+      const reviews = await storage.getReviewsForTarget(targetType, targetId);
+      const { average, count } = await storage.getAverageRating(targetType, targetId);
+      
+      res.json({ reviews, average, count });
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  // Get average rating for a target
+  app.get("/api/reviews/:targetType/:targetId/rating", async (req, res) => {
+    try {
+      const { targetType, targetId } = req.params;
+      
+      if (!["musician", "listing"].includes(targetType)) {
+        return res.status(400).json({ message: "Invalid target type" });
+      }
+      
+      const { average, count } = await storage.getAverageRating(targetType, targetId);
+      res.json({ average, count });
+    } catch (error) {
+      console.error("Error fetching rating:", error);
+      res.status(500).json({ message: "Failed to fetch rating" });
+    }
+  });
+
+  // Check if current user has reviewed a target
+  app.get("/api/reviews/:targetType/:targetId/check", isAuthenticated, async (req: any, res) => {
+    try {
+      const { targetType, targetId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      if (!["musician", "listing"].includes(targetType)) {
+        return res.status(400).json({ message: "Invalid target type" });
+      }
+      
+      const hasReviewed = await storage.hasUserReviewed(userId, targetType, targetId);
+      res.json({ hasReviewed });
+    } catch (error) {
+      console.error("Error checking review:", error);
+      res.status(500).json({ message: "Failed to check review status" });
+    }
+  });
+
+  // Create a new review (protected)
+  app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
+    try {
+      const reviewerId = req.user.claims.sub;
+      const { targetType, targetId, rating, comment } = req.body;
+      
+      if (!["musician", "listing"].includes(targetType)) {
+        return res.status(400).json({ message: "Invalid target type. Must be 'musician' or 'listing'" });
+      }
+      
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+      
+      // Check if target exists
+      if (targetType === "musician") {
+        const profile = await storage.getMusicianProfile(targetId);
+        if (!profile) {
+          return res.status(404).json({ message: "Musician profile not found" });
+        }
+        // Can't review your own profile
+        if (profile.userId === reviewerId) {
+          return res.status(400).json({ message: "Cannot review your own profile" });
+        }
+      } else {
+        const listing = await storage.getMarketplaceListing(targetId);
+        if (!listing) {
+          return res.status(404).json({ message: "Marketplace listing not found" });
+        }
+        // Can't review your own listing
+        if (listing.userId === reviewerId) {
+          return res.status(400).json({ message: "Cannot review your own listing" });
+        }
+      }
+      
+      // Check if user already reviewed this target
+      const hasReviewed = await storage.hasUserReviewed(reviewerId, targetType, targetId);
+      if (hasReviewed) {
+        return res.status(400).json({ message: "You have already reviewed this" });
+      }
+      
+      const validatedData = insertReviewSchema.parse({
+        reviewerId,
+        targetType,
+        targetId,
+        rating: parseInt(rating, 10),
+        comment: comment || null,
+      });
+      
+      const review = await storage.createReview(validatedData);
+      res.status(201).json(review);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        const firstError = error.errors?.[0]?.message || "Invalid review data";
+        return res.status(400).json({ message: firstError });
+      }
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  // Update a review (protected - only owner can update)
+  app.patch("/api/reviews/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const reviewId = req.params.id;
+      const userId = req.user.claims.sub;
+      
+      // Get existing review and verify ownership
+      const existingReview = await storage.getReview(reviewId);
+      
+      if (!existingReview) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      
+      if (existingReview.reviewerId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to edit this review" });
+      }
+      
+      const { rating, comment } = req.body;
+      
+      if (rating && (rating < 1 || rating > 5)) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+      
+      const updatedReview = await storage.updateReview(reviewId, {
+        rating: rating ? parseInt(rating, 10) : undefined,
+        comment: comment !== undefined ? comment : undefined,
+      });
+      
+      res.json(updatedReview);
+    } catch (error) {
+      console.error("Error updating review:", error);
+      res.status(500).json({ message: "Failed to update review" });
+    }
+  });
+
+  // Delete a review (protected - only owner can delete)
+  app.delete("/api/reviews/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const reviewId = req.params.id;
+      const userId = req.user.claims.sub;
+      
+      // Get existing review and verify ownership
+      const existingReview = await storage.getReview(reviewId);
+      
+      if (!existingReview) {
+        return res.status(404).json({ message: "Review not found" });
+      }
+      
+      if (existingReview.reviewerId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to delete this review" });
+      }
+      
+      await storage.deleteReview(reviewId);
+      res.json({ message: "Review deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      res.status(500).json({ message: "Failed to delete review" });
     }
   });
 

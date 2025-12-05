@@ -3,6 +3,7 @@ import { MapPin, Music } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RatingBadge } from "@/components/RatingBadge";
 import type { MusicianProfile } from "@shared/schema";
 
 interface MusicianCardProps {
@@ -28,6 +29,10 @@ export function MusicianCard({ musician }: MusicianCardProps) {
             
             <div className="space-y-2 w-full">
               <h3 className="font-semibold text-lg truncate">{musician.name}</h3>
+              
+              <div className="flex justify-center">
+                <RatingBadge targetType="musician" targetId={musician.id} />
+              </div>
               
               {musician.location && (
                 <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
