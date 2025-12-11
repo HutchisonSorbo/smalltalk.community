@@ -1,0 +1,19 @@
+<svg width="400" height="100" viewBox="0 0 400 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="logoNoteMask">
+      <rect width="100%" height="100%" fill="white"/>
+      <path d="M330 140V330C330 357.6 307.6 380 280 380C252.4 380 230 357.6 230 330C230 302.4 252.4 280 280 280C285 280 290 281 294 283V200H186V370C186 397.6 163.6 420 136 420C108.4 420 86 397.6 86 370C86 342.4 108.4 320 136 320C141 320 146 321 150 323V140H330Z" fill="black" transform="translate(90, 40)"/>
+    </mask>
+  </defs>
+
+  <!-- Text -->
+  <text x="10" y="70" font-family="sans-serif" font-weight="bold" font-size="60" fill="currentColor">Vic</text>
+  
+  <!-- Icon -->
+  <g transform="translate(110, 10) scale(0.15)">
+      <circle cx="256" cy="256" r="256" fill="currentColor" mask="url(#logoNoteMask)"/>
+  </g>
+
+  <!-- Text -->
+  <text x="200" y="70" font-family="sans-serif" font-weight="bold" font-size="60" fill="currentColor">band</text>
+</svg>

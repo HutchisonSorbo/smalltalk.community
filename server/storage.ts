@@ -4,8 +4,13 @@ import {
   marketplaceListings,
   messages,
   reviews,
+  bands,
+  bandMembers,
+  gigs,
+  rateLimits,
   type User,
   type UpsertUser,
+  // InsertUser removed
   type MusicianProfile,
   type InsertMusicianProfile,
   type MarketplaceListing,
@@ -13,12 +18,29 @@ import {
   type Message,
   type InsertMessage,
   type Conversation,
+  // Room removed
   type Review,
   type InsertReview,
   type ReviewWithReviewer,
+  type Band,
+  type InsertBand,
+  type BandMember,
+  type InsertBandMember,
+  type BandMemberWithUser,
+  type Gig,
+  type InsertGig,
+  reports,
+  type Report,
+  type InsertReport,
+  notifications,
+  type Notification,
+  type InsertNotification,
+  contactRequests,
+  type ContactRequest,
+  type InsertContactRequest,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps } from "drizzle-orm";
+import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt } from "drizzle-orm";
 
 export interface MusicianFilters {
   location?: string;
@@ -26,6 +48,9 @@ export interface MusicianFilters {
   genres?: string[];
   experienceLevel?: string;
   availability?: string;
+  searchQuery?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface MarketplaceFilters {
@@ -34,11 +59,29 @@ export interface MarketplaceFilters {
   condition?: string[];
   minPrice?: number;
   maxPrice?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export interface GigFilters {
+  location?: string;
+  date?: string; // 'upcoming', 'past', 'today'
+  genre?: string;
+  searchQuery?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface BandFilters extends Partial<Band> {
+  searchQuery?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
 
   // Musician profile operations
@@ -54,6 +97,19 @@ export interface IStorage {
   getMarketplaceListing(id: string): Promise<MarketplaceListing | undefined>;
   getMarketplaceListingsByUser(userId: string): Promise<MarketplaceListing[]>;
   createMarketplaceListing(listing: InsertMarketplaceListing): Promise<MarketplaceListing>;
+
+  // Notifications
+  getNotifications(userId: string): Promise<Notification[]>;
+  getUnreadNotificationCount(userId: string): Promise<number>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: string): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+
+  // Contact Requests
+  createContactRequest(request: InsertContactRequest): Promise<ContactRequest>;
+  getContactRequest(requesterId: string, recipientId: string): Promise<ContactRequest | undefined>;
+  getContactRequestById(id: string): Promise<ContactRequest | undefined>;
+  updateContactRequestStatus(id: string, status: string): Promise<void>;
   updateMarketplaceListing(id: string, listing: Partial<InsertMarketplaceListing>): Promise<MarketplaceListing | undefined>;
   deleteMarketplaceListing(id: string): Promise<boolean>;
 
@@ -73,12 +129,42 @@ export interface IStorage {
   deleteReview(id: string): Promise<boolean>;
   getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }>;
   hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean>;
+
+  // Band operations
+  createBand(band: InsertBand): Promise<Band>;
+  getBand(id: string): Promise<Band | undefined>;
+  getBands(filters?: BandFilters): Promise<Band[]>;
+  getBandsByUser(userId: string): Promise<Band[]>;
+  updateBand(id: string, band: Partial<InsertBand>): Promise<Band | undefined>;
+
+  // Band Members
+  addBandMember(member: InsertBandMember): Promise<BandMember>;
+  removeBandMember(bandId: string, userId: string): Promise<boolean>;
+  getBandMembers(bandId: string): Promise<BandMemberWithUser[]>;
+  isBandAdmin(bandId: string, userId: string): Promise<boolean>;
+
+  // Gigs
+  createGig(gig: InsertGig): Promise<Gig>;
+  getGigs(filters?: GigFilters): Promise<Gig[]>;
+  getGigsByBand(bandId: string): Promise<Gig[]>;
+  getGigsByMusician(musicianId: string): Promise<Gig[]>;
+
+  // Security
+  checkRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise<boolean>;
+
+  // Reports
+  createReport(report: InsertReport): Promise<Report>;
 }
 
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
@@ -117,13 +203,28 @@ export class DatabaseStorage implements IStorage {
       if (filters.genres && filters.genres.length > 0) {
         conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
       }
+      if (filters.searchQuery) {
+        const query = `%${filters.searchQuery}%`;
+        const searchCondition = or(
+          ilike(musicianProfiles.name, query),
+          ilike(musicianProfiles.bio, query),
+          // Use array_to_string for array columns
+          sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${query}`,
+          sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${query}`
+        );
+        if (searchCondition) {
+          conditions.push(searchCondition);
+        }
+      }
     }
 
     return db
       .select()
       .from(musicianProfiles)
       .where(and(...conditions))
-      .orderBy(desc(musicianProfiles.createdAt));
+      .orderBy(desc(musicianProfiles.createdAt))
+      .limit(filters?.limit || 50)
+      .offset(filters?.offset || 0);
   }
 
   async getMusicianProfile(id: string): Promise<MusicianProfile | undefined> {
@@ -179,7 +280,7 @@ export class DatabaseStorage implements IStorage {
         if (filters.category.length === 1) {
           conditions.push(eq(marketplaceListings.category, filters.category[0]));
         } else {
-          const categoryConditions = filters.category.map(cat => 
+          const categoryConditions = filters.category.map(cat =>
             eq(marketplaceListings.category, cat)
           );
           conditions.push(or(...categoryConditions)!);
@@ -189,7 +290,7 @@ export class DatabaseStorage implements IStorage {
         if (filters.condition.length === 1) {
           conditions.push(eq(marketplaceListings.condition, filters.condition[0]));
         } else {
-          const conditionConditions = filters.condition.map(cond => 
+          const conditionConditions = filters.condition.map(cond =>
             eq(marketplaceListings.condition, cond)
           );
           conditions.push(or(...conditionConditions)!);
@@ -264,14 +365,14 @@ export class DatabaseStorage implements IStorage {
     for (const message of allMessages) {
       const otherUserId =
         message.senderId === userId ? message.receiverId : message.senderId;
-      
+
       if (!conversationMap.has(otherUserId)) {
         conversationMap.set(otherUserId, { messages: [], unreadCount: 0 });
       }
-      
+
       const conv = conversationMap.get(otherUserId)!;
       conv.messages.push(message);
-      
+
       if (message.receiverId === userId && !message.isRead) {
         conv.unreadCount++;
       }
@@ -332,7 +433,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUnreadMessageCount(userId: string): Promise<number> {
     const result = await db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ count: sql<number>`count(*):: int` })
       .from(messages)
       .where(and(eq(messages.receiverId, userId), eq(messages.isRead, false)));
     return result[0]?.count || 0;
@@ -371,8 +472,158 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createReview(review: InsertReview): Promise<Review> {
-    const [created] = await db.insert(reviews).values(review).returning();
-    return created;
+    const [newReview] = await db.insert(reviews).values(review).returning();
+    return newReview;
+  }
+
+  // Bands
+  async createBand(band: InsertBand): Promise<Band> {
+    const [newBand] = await db.insert(bands).values(band).returning();
+    return newBand;
+  }
+
+  async getBand(id: string): Promise<Band | undefined> {
+    const [band] = await db.select().from(bands).where(eq(bands.id, id));
+    return band;
+  }
+
+  async getBands(filters?: Partial<Band> & { searchQuery?: string }): Promise<Band[]> {
+    const conditions = [eq(bands.isActive, true)];
+
+    if (filters) {
+      if (filters.location) {
+        conditions.push(ilike(bands.location, `%${filters.location}%`));
+      }
+      if (filters.searchQuery) {
+        const query = `%${filters.searchQuery}%`;
+        const searchCondition = or(
+          ilike(bands.name, query),
+          ilike(bands.bio, query),
+          ilike(bands.location, query),
+          sql`array_to_string(${bands.genres}, ',') ILIKE ${query}`
+        );
+        if (searchCondition) {
+          conditions.push(searchCondition);
+        }
+      }
+    }
+
+    return await db.select().from(bands).where(and(...conditions));
+  }
+
+  async getBandsByUser(userId: string): Promise<Band[]> {
+    return await db.select().from(bands).where(eq(bands.userId, userId));
+  }
+
+  async updateBand(id: string, band: Partial<InsertBand>): Promise<Band | undefined> {
+    const [updated] = await db
+      .update(bands)
+      .set({ ...band, updatedAt: new Date() })
+      .where(eq(bands.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Band Members
+  async addBandMember(member: InsertBandMember): Promise<BandMember> {
+    const [newMember] = await db.insert(bandMembers).values(member).returning();
+    return newMember;
+  }
+
+  async removeBandMember(bandId: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(bandMembers)
+      .where(and(eq(bandMembers.bandId, bandId), eq(bandMembers.userId, userId)))
+      .returning();
+    return result.length > 0;
+  }
+
+  async getBandMembers(bandId: string): Promise<BandMemberWithUser[]> {
+    const members = await db
+      .select()
+      .from(bandMembers)
+      .where(eq(bandMembers.bandId, bandId));
+
+    const membersWithUsers: BandMemberWithUser[] = [];
+    for (const member of members) {
+      const user = await this.getUser(member.userId);
+      if (user) {
+        membersWithUsers.push({ ...member, user });
+      }
+    }
+    return membersWithUsers;
+  }
+
+  async isBandAdmin(bandId: string, userId: string): Promise<boolean> {
+    // Check if owner
+    const band = await this.getBand(bandId);
+    if (band && band.userId === userId) return true;
+
+    // Check if admin member
+    const [member] = await db
+      .select()
+      .from(bandMembers)
+      .where(
+        and(
+          eq(bandMembers.bandId, bandId),
+          eq(bandMembers.userId, userId),
+          eq(bandMembers.role, 'admin')
+        )
+      );
+    return !!member;
+  }
+
+  // Gigs
+  async createGig(gig: InsertGig): Promise<Gig> {
+    const [newGig] = await db.insert(gigs).values(gig).returning();
+    return newGig;
+  }
+
+  async getGigs(filters?: GigFilters): Promise<Gig[]> {
+    const conditions: any[] = [];
+
+    if (filters) {
+      if (filters.location) {
+        conditions.push(ilike(gigs.location, `%${filters.location}%`));
+      }
+      if (filters.genre) {
+        conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
+      }
+      if (filters.date === 'upcoming') {
+        conditions.push(gte(gigs.date, new Date()));
+      } else if (filters.date === 'past') {
+        conditions.push(lt(gigs.date, new Date()));
+      }
+      if (filters.searchQuery) {
+        const query = `%${filters.searchQuery}%`;
+        conditions.push(
+          or(
+            ilike(gigs.title, query),
+            ilike(gigs.description, query),
+            ilike(gigs.genre, query),
+            ilike(gigs.location, query)
+          )
+        );
+      }
+    }
+
+    return await db.select().from(gigs)
+      .where(and(...conditions))
+      .orderBy(gigs.date)
+      .limit(filters?.limit || 50)
+      .offset(filters?.offset || 0);
+  }
+
+  async getGigsByBand(bandId: string): Promise<Gig[]> {
+    return await db.select().from(gigs)
+      .where(and(eq(gigs.bandId, bandId), gte(gigs.date, new Date())))
+      .orderBy(gigs.date);
+  }
+
+  async getGigsByMusician(musicianId: string): Promise<Gig[]> {
+    return await db.select().from(gigs)
+      .where(and(eq(gigs.musicianId, musicianId), gte(gigs.date, new Date())))
+      .orderBy(gigs.date);
   }
 
   async updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined> {
@@ -416,6 +667,126 @@ export class DatabaseStorage implements IStorage {
       );
     return result.length > 0;
   }
+
+  async checkRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise<boolean> {
+    const now = new Date();
+    const windowStartThreshold = new Date(now.getTime() - windowSeconds * 1000);
+
+    const [record] = await db
+      .select()
+      .from(rateLimits)
+      .where(and(eq(rateLimits.userId, userId), eq(rateLimits.type, type)));
+
+    if (!record) {
+      // First time action
+      await db.insert(rateLimits).values({
+        userId,
+        type,
+        hits: 1,
+        windowStart: now,
+      });
+      return true;
+    }
+
+    if (record.windowStart < windowStartThreshold) {
+      // Window expired, reset
+      await db
+        .update(rateLimits)
+        .set({ hits: 1, windowStart: now })
+        .where(eq(rateLimits.id, record.id));
+      return true;
+    }
+
+    if (record.hits >= limit) {
+      // Limit exceeded
+      return false;
+    }
+
+    // Increment
+    await db
+      .update(rateLimits)
+      .set({ hits: record.hits + 1 })
+      .where(eq(rateLimits.id, record.id));
+
+    return true;
+  }
+
+  // Notifications
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+    return result[0]?.count || 0;
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [created] = await db.insert(notifications).values(notification).returning();
+    return created;
+  }
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
+  }
+
+  // Contact Requests
+  async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
+    const [created] = await db.insert(contactRequests).values(request).returning();
+    return created;
+  }
+
+  async getContactRequest(requesterId: string, recipientId: string): Promise<ContactRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(contactRequests)
+      .where(
+        and(
+          eq(contactRequests.requesterId, requesterId),
+          eq(contactRequests.recipientId, recipientId)
+        )
+      );
+    return request;
+  }
+
+  async getContactRequestById(id: string): Promise<ContactRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(contactRequests)
+      .where(eq(contactRequests.id, id));
+    return request;
+  }
+
+  async updateContactRequestStatus(id: string, status: string): Promise<void> {
+    await db
+      .update(contactRequests)
+      .set({ status })
+      .where(eq(contactRequests.id, id));
+  }
+
+  // Reports
+  async createReport(report: InsertReport): Promise<Report> {
+    const [created] = await db.insert(reports).values(report).returning();
+    return created;
+  }
 }
+
 
 export const storage = new DatabaseStorage();

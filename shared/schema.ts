@@ -9,6 +9,7 @@ import {
   varchar,
   integer,
   boolean,
+  pgPolicy,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -21,7 +22,11 @@ export const sessions = pgTable(
     sess: jsonb("sess").notNull(),
     expire: timestamp("expire").notNull(),
   },
-  (table) => [index("IDX_session_expire").on(table.expire)],
+  (table) => [
+    index("IDX_session_expire").on(table.expire),
+    pgPolicy("service_read", { for: "select", to: "service_role", using: sql`true` }),
+    pgPolicy("service_write", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  ],
 );
 
 // User storage table for Replit Auth
@@ -31,9 +36,14 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  dateOfBirth: timestamp("date_of_birth"),
+  lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  pgPolicy("users_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.id}`, withCheck: sql`auth.uid() = ${table.id}` }),
+]);
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -53,9 +63,25 @@ export const musicianProfiles = pgTable("musician_profiles", {
   contactPhone: varchar("contact_phone", { length: 50 }),
   profileImageUrl: varchar("profile_image_url"),
   isActive: boolean("is_active").default(true),
+  isLookingForGroup: boolean("is_looking_for_group").default(false),
+  isLocationShared: boolean("is_location_shared").default(false),
+  isContactInfoPublic: boolean("is_contact_info_public").default(false),
+  socialLinks: jsonb("social_links").$type<{
+    youtube?: string;
+    spotify?: string;
+    soundcloud?: string;
+    appleMusic?: string;
+    website?: string;
+  }>().default({}),
+  influences: text("influences").array().notNull().default(sql`'{}'::text[]`),
+  latitude: varchar("latitude"),
+  longitude: varchar("longitude"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  pgPolicy("musicians_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("musicians_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+]);
 
 export const musicianProfilesRelations = relations(musicianProfiles, ({ one }) => ({
   user: one(users, {
@@ -90,7 +116,10 @@ export const marketplaceListings = pgTable("marketplace_listings", {
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  pgPolicy("marketplace_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("marketplace_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+]);
 
 export const marketplaceListingsRelations = relations(marketplaceListings, ({ one }) => ({
   user: one(users, {
@@ -107,6 +136,71 @@ export const insertMarketplaceListingSchema = createInsertSchema(marketplaceList
 
 export type InsertMarketplaceListing = z.infer<typeof insertMarketplaceListingSchema>;
 export type MarketplaceListing = typeof marketplaceListings.$inferSelect;
+
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull(), // 'message', 'invite', 'system'
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  link: varchar("link", { length: 255 }),
+  metadata: jsonb("metadata"), // For storing extra data like requestId
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("notifications_self_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("notifications_self_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+]);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
+// Contact Requests table
+export const contactRequests = pgTable("contact_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requesterId: varchar("requester_id").notNull().references(() => users.id),
+  recipientId: varchar("recipient_id").notNull().references(() => users.id), // Linking to User ID for easier notification routing
+  status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, declined
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("contact_requests_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.requesterId} OR auth.uid() = ${table.recipientId}` }),
+  pgPolicy("contact_requests_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.requesterId}` }),
+  pgPolicy("contact_requests_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.recipientId} OR auth.uid() = ${table.requesterId}` }),
+]);
+
+export const contactRequestsRelations = relations(contactRequests, ({ one }) => ({
+  requester: one(users, {
+    fields: [contactRequests.requesterId],
+    references: [users.id],
+    relationName: "requester",
+  }),
+  recipient: one(users, {
+    fields: [contactRequests.recipientId],
+    references: [users.id],
+    relationName: "recipient",
+  }),
+}));
+
+export const insertContactRequestSchema = createInsertSchema(contactRequests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
+export type ContactRequest = typeof contactRequests.$inferSelect;
 
 // Victoria regions for location filtering
 export const victoriaRegions = [
@@ -226,7 +320,10 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  pgPolicy("messages_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.senderId} OR auth.uid() = ${table.receiverId}` }),
+  pgPolicy("messages_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.senderId}` }),
+]);
 
 export const messagesRelations = relations(messages, ({ one }) => ({
   sender: one(users, {
@@ -272,7 +369,10 @@ export const reviews = pgTable("reviews", {
   comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  pgPolicy("reviews_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("reviews_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.reviewerId}`, withCheck: sql`auth.uid() = ${table.reviewerId}` }),
+]);
 
 export const reviewsRelations = relations(reviews, ({ one }) => ({
   reviewer: one(users, {
@@ -293,3 +393,198 @@ export type Review = typeof reviews.$inferSelect;
 export interface ReviewWithReviewer extends Review {
   reviewer?: User;
 }
+
+// Bands table
+export const bands = pgTable("bands", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  bio: text("bio"),
+  genres: text("genres").array().notNull().default(sql`'{}'::text[]`),
+  influences: text("influences").array().notNull().default(sql`'{}'::text[]`),
+  location: varchar("location", { length: 255 }),
+  profileImageUrl: varchar("profile_image_url"),
+  websiteUrl: varchar("website_url", { length: 255 }),
+  socialLinks: jsonb("social_links").$type<{
+    facebook?: string;
+    instagram?: string;
+    snapchat?: string;
+    tiktok?: string;
+    youtube?: string;
+    spotify?: string;
+    soundcloud?: string;
+    appleMusic?: string;
+  }>().default({}),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("bands_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("bands_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+]);
+
+export const bandsRelations = relations(bands, ({ one }) => ({
+  user: one(users, {
+    fields: [bands.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertBandSchema = createInsertSchema(bands).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertBand = z.infer<typeof insertBandSchema>;
+export type Band = typeof bands.$inferSelect;
+// Rate Limiting table
+export const rateLimits = pgTable("rate_limits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull(), // e.g., 'upload', 'login_attempt'
+  hits: integer("hits").notNull().default(1),
+  windowStart: timestamp("window_start").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("rate_limits_service_all", { for: "all", to: "service_role", using: sql`true` }),
+]);
+
+export type RateLimit = typeof rateLimits.$inferSelect;
+
+// Band Members table (for Admin/Member roles)
+export const bandMembers = pgTable("band_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bandId: varchar("band_id").notNull().references(() => bands.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  role: varchar("role", { length: 50 }).notNull().default("member"), // 'admin', 'member'
+  instrument: varchar("instrument", { length: 100 }),
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => [
+  pgPolicy("band_members_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("band_members_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+]);
+
+export const bandMembersRelations = relations(bandMembers, ({ one }) => ({
+  band: one(bands, {
+    fields: [bandMembers.bandId],
+    references: [bands.id],
+  }),
+  user: one(users, {
+    fields: [bandMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertBandMemberSchema = createInsertSchema(bandMembers).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export type InsertBandMember = z.infer<typeof insertBandMemberSchema>;
+export type BandMember = typeof bandMembers.$inferSelect;
+
+export interface BandMemberWithUser extends BandMember {
+  user: User;
+}
+
+// Gigs table
+export const gigs = pgTable("gigs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  creatorId: varchar("creator_id").notNull().references(() => users.id),
+  bandId: varchar("band_id").references(() => bands.id), // Nullable if solo musician
+  musicianId: varchar("musician_id").references(() => musicianProfiles.id), // Nullable if band
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  location: varchar("location", { length: 255 }).notNull(),
+  date: timestamp("date").notNull(),
+  price: integer("price"), // In cents? Or just text description? Let's assume text for MVP flexibility or integer for cents
+  ticketUrl: varchar("ticket_url", { length: 500 }),
+  imageUrl: varchar("image_url"),
+  coverImageUrl: varchar("cover_image_url"),
+  genre: varchar("genre", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("gigs_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("gigs_creator_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.creatorId}`, withCheck: sql`auth.uid() = ${table.creatorId}` }),
+]);
+
+// Gig Managers table for collaborative editing
+export const gigManagers = pgTable("gig_managers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gigId: varchar("gig_id").notNull().references(() => gigs.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("gig_managers_read", { for: "select", to: "authenticated", using: sql`true` }),
+  pgPolicy("gig_managers_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+]);
+
+export const gigsRelations = relations(gigs, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [gigs.creatorId],
+    references: [users.id],
+  }),
+  band: one(bands, {
+    fields: [gigs.bandId],
+    references: [bands.id],
+  }),
+  musician: one(musicianProfiles, {
+    fields: [gigs.musicianId],
+    references: [musicianProfiles.id],
+  }),
+  managers: many(gigManagers),
+}));
+
+export const gigManagersRelations = relations(gigManagers, ({ one }) => ({
+  gig: one(gigs, {
+    fields: [gigManagers.gigId],
+    references: [gigs.id],
+  }),
+  user: one(users, {
+    fields: [gigManagers.userId],
+    references: [users.id],
+  }),
+}));
+
+
+export const insertGigSchema = createInsertSchema(gigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGig = z.infer<typeof insertGigSchema>;
+export type Gig = typeof gigs.$inferSelect;
+// Reports table
+export const reports = pgTable("reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reporterId: varchar("reporter_id").notNull().references(() => users.id),
+  targetType: varchar("target_type", { length: 50 }).notNull(), // 'user', 'band', 'gig', 'listing', 'message'
+  targetId: varchar("target_id").notNull(),
+  reason: varchar("reason", { length: 100 }).notNull(), // 'harassment', 'spam', 'inappropriate_content', 'other'
+  description: text("description"),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // 'pending', 'reviewed', 'resolved', 'dismissed'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("reports_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.reporterId}` }),
+  pgPolicy("reports_admin_read", { for: "select", to: "service_role", using: sql`true` }),
+]);
+
+export const reportsRelations = relations(reports, ({ one }) => ({
+  reporter: one(users, {
+    fields: [reports.reporterId],
+    references: [users.id],
+  }),
+}));
+
+export const insertReportSchema = createInsertSchema(reports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+});
+
+export type InsertReport = z.infer<typeof insertReportSchema>;
+export type Report = typeof reports.$inferSelect;
