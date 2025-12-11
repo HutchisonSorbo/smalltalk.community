@@ -1,9 +1,0 @@
-{
-  "/api/auth/user/route": "app/api/auth/user/route.js",
-  "/api/musicians/route": "app/api/musicians/route.js",
-  "/api/reviews/[targetType]/[targetId]/rating/route": "app/api/reviews/[targetType]/[targetId]/rating/route.js",
-  "/api/messages/unread-count/route": "app/api/messages/unread-count/route.js",
-  "/api/notifications/unread-count/route": "app/api/notifications/unread-count/route.js",
-  "/page": "app/page.js",
-  "/musicians/page": "app/musicians/page.js"
-}
