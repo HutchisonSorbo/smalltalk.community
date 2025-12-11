@@ -58,7 +58,7 @@ async function main() {
                 requesterId: testUser.id,
                 requesterName: testProfile.name
             },
-            actionUrl: `/musicians/${testProfile.id}`,
+            link: `/musicians/${testProfile.id}`,
         });
 
         console.log("Notification sent!");
