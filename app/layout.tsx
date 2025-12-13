@@ -14,9 +14,7 @@ export const metadata: Metadata = {
     title: "vic.band",
     // ... existing metadata ...
     description: "Connect with Victorian musicians and buy/sell gear",
-    icons: {
-        icon: "/favicon.ico",
-    },
+
 
 };
 
