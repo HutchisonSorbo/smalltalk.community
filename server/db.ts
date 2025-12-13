@@ -8,5 +8,6 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const queryClient = postgres(process.env.DATABASE_URL);
+// Disable prepared statements for Supabase Transaction Pooler compatibility
+export const queryClient = postgres(process.env.DATABASE_URL, { prepare: false });
 export const db = drizzle(queryClient, { schema });
