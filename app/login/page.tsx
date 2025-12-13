@@ -8,7 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 import { AccessibilityPanel } from "@/components/AccessibilityPanel";
@@ -18,6 +19,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+            <LoginForm />
+        </Suspense>
+    );
+}
+
+function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [dob, setDob] = useState("");
@@ -26,8 +35,21 @@ export default function LoginPage() {
     const [isSignUp, setIsSignUp] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { toast } = useToast();
     const supabase = createClient();
+
+    useEffect(() => {
+        const error = searchParams.get("error");
+        const errorDescription = searchParams.get("error_description");
+        if (error) {
+            toast({
+                title: error === "auth_code_error" ? "Verification Failed" : "Authentication Error",
+                description: errorDescription || "An error occurred during authentication.",
+                variant: "destructive",
+            });
+        }
+    }, [searchParams, toast]);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,7 +75,8 @@ export default function LoginPage() {
 
         try {
             if (isSignUp) {
-                const { error } = await authClient.auth.signUp({
+                console.log("Sign up attempt for:", email);
+                const { data, error } = await authClient.auth.signUp({
                     email,
                     password,
                     options: {
@@ -64,6 +87,7 @@ export default function LoginPage() {
                         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
                     },
                 });
+                console.log("Sign up result:", { data, error });
                 if (error) throw error;
                 toast({
                     title: "Check your email",

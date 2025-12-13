@@ -9,21 +9,28 @@ export async function GET(request: Request) {
 
     if (code) {
         const supabase = await createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
-            const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
-            const isLocalEnv = process.env.NODE_ENV === 'development'
-            if (isLocalEnv) {
-                // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-                return NextResponse.redirect(`${origin}${next}`)
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${next}`)
+        try {
+            const { error } = await supabase.auth.exchangeCodeForSession(code)
+            if (!error) {
+                const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
+                const isLocalEnv = process.env.NODE_ENV === 'development'
+                if (isLocalEnv) {
+                    return NextResponse.redirect(`${origin}${next}`)
+                } else if (forwardedHost) {
+                    return NextResponse.redirect(`https://${forwardedHost}${next}`)
+                } else {
+                    return NextResponse.redirect(`${origin}${next}`)
+                }
             } else {
-                return NextResponse.redirect(`${origin}${next}`)
+                console.error('Auth code exchange error:', error)
+                return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.name)}&error_description=${encodeURIComponent(error.message)}`)
             }
+        } catch (err: any) {
+            console.error('Auth callback exception:', err)
+            return NextResponse.redirect(`${origin}/login?error=server_error&error_description=${encodeURIComponent(err.message || "Unknown error")}`)
         }
     }
 
     // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/login?error=auth_code_error`)
+    return NextResponse.redirect(`${origin}/login?error=auth_code_missing&error_description=No+code+provided`)
 }
