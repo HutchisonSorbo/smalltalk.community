@@ -32,5 +32,6 @@ export async function GET(request: Request) {
     }
 
     // return the user to an error page with instructions
+    console.error('Auth callback missing code. Full URL:', request.url);
     return NextResponse.redirect(`${origin}/login?error=auth_code_missing&error_description=No+code+provided`)
 }

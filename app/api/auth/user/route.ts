@@ -19,8 +19,30 @@ export async function GET(request: Request) {
 
         console.log("Auth User API: User found:", user.id, user.email);
 
-        const dbUser = await storage.getUser(user.id);
+        let dbUser = await storage.getUser(user.id);
         if (!dbUser) {
+            // Check if user exists by email (handle ID mismatch scenario)
+            const existingUser = await storage.getUserByEmail(user.email!);
+
+            if (existingUser) {
+                console.log(`Auth User API: ID mismatch for ${user.email}. DB: ${existingUser.id}, Auth: ${user.id}. Migrating...`);
+                try {
+                    await storage.migrateUserId(existingUser.id, user.id);
+                    // Fetch the migrated user
+                    dbUser = await storage.getUser(user.id);
+                    if (dbUser) {
+                        console.log("Auth User API: Migration successful");
+                        return NextResponse.json(dbUser);
+                    }
+                } catch (error) {
+                    console.error("Auth User API: Migration failed:", error);
+                    return NextResponse.json(
+                        { message: "Failed to sync user identity", error: error instanceof Error ? error.message : "Unknown error" },
+                        { status: 500 }
+                    );
+                }
+            }
+
             console.log("Auth User API: User not in DB, creating...");
             // Sync user from Supabase Auth to our database
             const newUser = await storage.upsertUser({

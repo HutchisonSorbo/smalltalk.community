@@ -7,6 +7,7 @@ import {
   bands,
   bandMembers,
   gigs,
+  gigManagers,
   rateLimits,
   type User,
   type UpsertUser,
@@ -154,6 +155,9 @@ export interface IStorage {
 
   // Reports
   createReport(report: InsertReport): Promise<Report>;
+
+  // Admin/System
+  migrateUserId(oldId: string, newId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -785,6 +789,114 @@ export class DatabaseStorage implements IStorage {
   async createReport(report: InsertReport): Promise<Report> {
     const [created] = await db.insert(reports).values(report).returning();
     return created;
+  }
+
+  async migrateUserId(oldId: string, newId: string): Promise<void> {
+    const oldUser = await this.getUser(oldId);
+    if (!oldUser) {
+      throw new Error(`User ${oldId} not found`);
+    }
+
+    await db.transaction(async (tx) => {
+      // 1. Create new user with temp email
+      const tempEmail = `migrated_${Date.now()}_${oldUser.email}`;
+      await tx.insert(users).values({
+        ...oldUser,
+        id: newId,
+        email: tempEmail,
+        updatedAt: new Date(),
+      });
+
+      // 2. Update all references
+      // Musician Profiles
+      await tx
+        .update(musicianProfiles)
+        .set({ userId: newId })
+        .where(eq(musicianProfiles.userId, oldId));
+
+      // Marketplace Listings
+      await tx
+        .update(marketplaceListings)
+        .set({ userId: newId })
+        .where(eq(marketplaceListings.userId, oldId));
+
+      // Notifications
+      await tx
+        .update(notifications)
+        .set({ userId: newId })
+        .where(eq(notifications.userId, oldId));
+
+      // Contact Requests
+      await tx
+        .update(contactRequests)
+        .set({ requesterId: newId })
+        .where(eq(contactRequests.requesterId, oldId));
+      await tx
+        .update(contactRequests)
+        .set({ recipientId: newId })
+        .where(eq(contactRequests.recipientId, oldId));
+
+      // Messages
+      await tx
+        .update(messages)
+        .set({ senderId: newId })
+        .where(eq(messages.senderId, oldId));
+      await tx
+        .update(messages)
+        .set({ receiverId: newId })
+        .where(eq(messages.receiverId, oldId));
+
+      // Reviews
+      await tx
+        .update(reviews)
+        .set({ reviewerId: newId })
+        .where(eq(reviews.reviewerId, oldId));
+
+      // Bands
+      await tx
+        .update(bands)
+        .set({ userId: newId })
+        .where(eq(bands.userId, oldId));
+
+      // Band Members
+      await tx
+        .update(bandMembers)
+        .set({ userId: newId })
+        .where(eq(bandMembers.userId, oldId));
+
+      // Rate Limits
+      await tx
+        .update(rateLimits)
+        .set({ userId: newId })
+        .where(eq(rateLimits.userId, oldId));
+
+      // Gigs
+      await tx
+        .update(gigs)
+        .set({ creatorId: newId })
+        .where(eq(gigs.creatorId, oldId));
+
+      // Gig Managers
+      await tx
+        .update(gigManagers)
+        .set({ userId: newId })
+        .where(eq(gigManagers.userId, oldId));
+
+      // Reports
+      await tx
+        .update(reports)
+        .set({ reporterId: newId })
+        .where(eq(reports.reporterId, oldId));
+
+      // 3. Delete old user
+      await tx.delete(users).where(eq(users.id, oldId));
+
+      // 4. Update email on new user
+      await tx
+        .update(users)
+        .set({ email: oldUser.email })
+        .where(eq(users.id, newId));
+    });
   }
 }
 
