@@ -104,28 +104,21 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
               <div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
             ) : isAuthenticated && user ? (
               <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-full relative" data-testid="button-user-menu">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} className="object-cover" />
-                          <AvatarFallback>
-                            {user.firstName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        {totalUnread > 0 && (
-                          <span className="absolute -top-1 -right-4 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-medium text-white ring-2 ring-background">
-                            {totalUnread > 99 ? '99+' : totalUnread}
-                          </span>
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Profile</p>
-                  </TooltipContent>
-                </Tooltip>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full relative" data-testid="button-user-menu">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} className="object-cover" />
+                      <AvatarFallback>
+                        {user.firstName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    {totalUnread > 0 && (
+                      <span className="absolute -top-1 -right-4 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-medium text-white ring-2 ring-background">
+                        {totalUnread > 99 ? '99+' : totalUnread}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
