@@ -61,6 +61,7 @@ export default function LoginPage() {
                             date_of_birth: dob,
                         },
                         captchaToken: captchaToken,
+                        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
                     },
                 });
                 if (error) throw error;

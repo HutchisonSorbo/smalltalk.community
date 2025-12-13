@@ -80,7 +80,10 @@ export const musicianProfiles = pgTable("musician_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("musicians_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("musicians_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("musicians_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("musicians_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("musicians_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("musicians_user_id_idx").on(table.userId),
 ]);
 
 export const musicianProfilesRelations = relations(musicianProfiles, ({ one }) => ({
@@ -118,7 +121,10 @@ export const marketplaceListings = pgTable("marketplace_listings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("marketplace_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("marketplace_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("marketplace_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("marketplace_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("marketplace_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("marketplace_user_id_idx").on(table.userId),
 ]);
 
 export const marketplaceListingsRelations = relations(marketplaceListings, ({ one }) => ({
@@ -150,7 +156,10 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   pgPolicy("notifications_self_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("notifications_self_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("notifications_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("notifications_self_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("notifications_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("notifications_user_id_idx").on(table.userId),
 ]);
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
@@ -179,6 +188,8 @@ export const contactRequests = pgTable("contact_requests", {
   pgPolicy("contact_requests_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.requesterId} OR auth.uid() = ${table.recipientId}` }),
   pgPolicy("contact_requests_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.requesterId}` }),
   pgPolicy("contact_requests_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.recipientId} OR auth.uid() = ${table.requesterId}` }),
+  index("contact_requests_requester_id_idx").on(table.requesterId),
+  index("contact_requests_recipient_id_idx").on(table.recipientId),
 ]);
 
 export const contactRequestsRelations = relations(contactRequests, ({ one }) => ({
@@ -323,6 +334,8 @@ export const messages = pgTable("messages", {
 }, (table) => [
   pgPolicy("messages_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.senderId} OR auth.uid() = ${table.receiverId}` }),
   pgPolicy("messages_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.senderId}` }),
+  index("messages_sender_id_idx").on(table.senderId),
+  index("messages_receiver_id_idx").on(table.receiverId),
 ]);
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -371,7 +384,10 @@ export const reviews = pgTable("reviews", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("reviews_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("reviews_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.reviewerId}`, withCheck: sql`auth.uid() = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.reviewerId}`, withCheck: sql`auth.uid() = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.reviewerId}` }),
+  index("reviews_reviewer_id_idx").on(table.reviewerId),
 ]);
 
 export const reviewsRelations = relations(reviews, ({ one }) => ({
@@ -420,7 +436,10 @@ export const bands = pgTable("bands", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("bands_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("bands_owner_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("bands_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("bands_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("bands_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("bands_user_id_idx").on(table.userId),
 ]);
 
 export const bandsRelations = relations(bands, ({ one }) => ({
@@ -447,6 +466,7 @@ export const rateLimits = pgTable("rate_limits", {
   windowStart: timestamp("window_start").defaultNow().notNull(),
 }, (table) => [
   pgPolicy("rate_limits_service_all", { for: "all", to: "service_role", using: sql`true` }),
+  index("rate_limits_user_id_idx").on(table.userId),
 ]);
 
 export type RateLimit = typeof rateLimits.$inferSelect;
@@ -461,7 +481,11 @@ export const bandMembers = pgTable("band_members", {
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   pgPolicy("band_members_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("band_members_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("band_members_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("band_members_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("band_members_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("band_members_band_id_idx").on(table.bandId),
+  index("band_members_user_id_idx").on(table.userId),
 ]);
 
 export const bandMembersRelations = relations(bandMembers, ({ one }) => ({
@@ -506,7 +530,12 @@ export const gigs = pgTable("gigs", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("gigs_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("gigs_creator_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.creatorId}`, withCheck: sql`auth.uid() = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.creatorId}`, withCheck: sql`auth.uid() = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.creatorId}` }),
+  index("gigs_creator_id_idx").on(table.creatorId),
+  index("gigs_band_id_idx").on(table.bandId),
+  index("gigs_musician_id_idx").on(table.musicianId),
 ]);
 
 // Gig Managers table for collaborative editing
@@ -517,7 +546,11 @@ export const gigManagers = pgTable("gig_managers", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   pgPolicy("gig_managers_read", { for: "select", to: "authenticated", using: sql`true` }),
-  pgPolicy("gig_managers_write", { for: "all", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("gig_managers_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("gig_managers_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("gig_managers_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("gig_managers_gig_id_idx").on(table.gigId),
+  index("gig_managers_user_id_idx").on(table.userId),
 ]);
 
 export const gigsRelations = relations(gigs, ({ one, many }) => ({
@@ -570,6 +603,7 @@ export const reports = pgTable("reports", {
 }, (table) => [
   pgPolicy("reports_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.reporterId}` }),
   pgPolicy("reports_admin_read", { for: "select", to: "service_role", using: sql`true` }),
+  index("reports_reporter_id_idx").on(table.reporterId),
 ]);
 
 export const reportsRelations = relations(reports, ({ one }) => ({
