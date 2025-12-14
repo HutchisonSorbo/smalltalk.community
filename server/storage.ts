@@ -149,77 +149,34 @@ export interface IStorage {
   createClassified(classified: InsertClassified): Promise<Classified>;
   deleteClassified(id: string): Promise<boolean>;
 
-  // Classifieds operations
-  async getClassifieds(filters?: ClassifiedFilters): Promise<Classified[]> {
-  const conditions = [eq(classifieds.isActive, true)];
 
-  if (filters) {
-    if (filters.location) conditions.push(ilike(classifieds.location, `%${filters.location}%`));
-    if (filters.instrument) conditions.push(eq(classifieds.instrument, filters.instrument));
-    if (filters.type) conditions.push(eq(classifieds.type, filters.type));
-    if (filters.genre) conditions.push(eq(classifieds.genre, filters.genre));
-  }
+  // Band operations
+  createBand(band: InsertBand): Promise<Band>;
+  getBand(id: string): Promise<Band | undefined>;
+  getBands(filters?: BandFilters): Promise<Band[]>;
+  getBandsByUser(userId: string): Promise<Band[]>;
+  updateBand(id: string, band: Partial<InsertBand>): Promise<Band | undefined>;
 
-  return db
-    .select()
-    .from(classifieds)
-    .where(and(...conditions))
-    .orderBy(desc(classifieds.createdAt))
-    .limit(filters?.limit || 50)
-    .offset(filters?.offset || 0);
-}
+  // Band Members
+  addBandMember(member: InsertBandMember): Promise<BandMember>;
+  removeBandMember(bandId: string, userId: string): Promise<boolean>;
+  getBandMembers(bandId: string): Promise<BandMemberWithUser[]>;
+  isBandAdmin(bandId: string, userId: string): Promise<boolean>;
 
-  async getClassified(id: string): Promise < Classified | undefined > {
-  const [item] = await db
-    .select()
-    .from(classifieds)
-    .where(eq(classifieds.id, id));
-  return item;
-}
+  // Gigs
+  createGig(gig: InsertGig): Promise<Gig>;
+  getGigs(filters?: GigFilters): Promise<Gig[]>;
+  getGigsByBand(bandId: string): Promise<Gig[]>;
+  getGigsByMusician(musicianId: string): Promise<Gig[]>;
 
-  async createClassified(data: InsertClassified): Promise < Classified > {
-  const [item] = await db
-    .insert(classifieds)
-    .values(data)
-    .returning();
-  return item;
-}
+  // Security
+  checkRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise<boolean>;
 
-  async deleteClassified(id: string): Promise < boolean > {
-  const [deleted] = await db
-    .delete(classifieds)
-    .where(eq(classifieds.id, id))
-    .returning();
-  return !!deleted;
-}
+  // Reports
+  createReport(report: InsertReport): Promise<Report>;
 
-// Band operations
-createBand(band: InsertBand): Promise<Band>;
-getBand(id: string): Promise<Band | undefined>;
-getBands(filters ?: BandFilters): Promise<Band[]>;
-getBandsByUser(userId: string): Promise<Band[]>;
-updateBand(id: string, band: Partial<InsertBand>): Promise<Band | undefined>;
-
-// Band Members
-addBandMember(member: InsertBandMember): Promise<BandMember>;
-removeBandMember(bandId: string, userId: string): Promise<boolean>;
-getBandMembers(bandId: string): Promise<BandMemberWithUser[]>;
-isBandAdmin(bandId: string, userId: string): Promise<boolean>;
-
-// Gigs
-createGig(gig: InsertGig): Promise<Gig>;
-getGigs(filters ?: GigFilters): Promise<Gig[]>;
-getGigsByBand(bandId: string): Promise<Gig[]>;
-getGigsByMusician(musicianId: string): Promise<Gig[]>;
-
-// Security
-checkRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise<boolean>;
-
-// Reports
-createReport(report: InsertReport): Promise<Report>;
-
-// Admin/System
-migrateUserId(oldId: string, newId: string): Promise<void>;
+  // Admin/System
+  migrateUserId(oldId: string, newId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -345,6 +302,50 @@ export class DatabaseStorage implements IStorage {
       .where(eq(musicianProfiles.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  // Classifieds operations
+  async getClassifieds(filters?: ClassifiedFilters): Promise<Classified[]> {
+    const conditions = [eq(classifieds.isActive, true)];
+
+    if (filters) {
+      if (filters.location) conditions.push(ilike(classifieds.location, `%${filters.location}%`));
+      if (filters.instrument) conditions.push(eq(classifieds.instrument, filters.instrument));
+      if (filters.type) conditions.push(eq(classifieds.type, filters.type));
+      if (filters.genre) conditions.push(eq(classifieds.genre, filters.genre));
+    }
+
+    return db
+      .select()
+      .from(classifieds)
+      .where(and(...conditions))
+      .orderBy(desc(classifieds.createdAt))
+      .limit(filters?.limit || 50)
+      .offset(filters?.offset || 0);
+  }
+
+  async getClassified(id: string): Promise<Classified | undefined> {
+    const [item] = await db
+      .select()
+      .from(classifieds)
+      .where(eq(classifieds.id, id));
+    return item;
+  }
+
+  async createClassified(data: InsertClassified): Promise<Classified> {
+    const [item] = await db
+      .insert(classifieds)
+      .values(data)
+      .returning();
+    return item;
+  }
+
+  async deleteClassified(id: string): Promise<boolean> {
+    const [deleted] = await db
+      .delete(classifieds)
+      .where(eq(classifieds.id, id))
+      .returning();
+    return !!deleted;
   }
 
   // Marketplace listing operations
