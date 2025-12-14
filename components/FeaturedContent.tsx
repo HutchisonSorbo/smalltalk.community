@@ -90,7 +90,7 @@ export function FeaturedContent() {
             {/* Featured Band */}
             {data.featuredBand ? (
                 <Link href={`/bands/${data.featuredBand.id}`} className="block h-full">
-                    <Card className="hover-elevate h-full border-t-4 border-t-secondary">
+                    <Card className="hover-elevate h-full border-t-4 border-t-primary">
                         <CardHeader className="flex flex-row items-center gap-4 pb-2">
                             <Avatar className="h-12 w-12">
                                 <AvatarImage src={data.featuredBand.profileImageUrl || ""} alt={data.featuredBand.name} />
@@ -131,7 +131,7 @@ export function FeaturedContent() {
             {/* Featured Gig */}
             {data.featuredGig ? (
                 <Link href={`/gigs/${data.featuredGig.id}`} className="block h-full">
-                    <Card className="hover-elevate h-full border-t-4 border-t-accent">
+                    <Card className="hover-elevate h-full border-t-4 border-t-primary">
                         <CardHeader className="flex flex-row items-center gap-4 pb-2">
                             <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs flex-col leading-none shrink-0">
                                 <span className="text-[10px] uppercase font-semibold">{format(new Date(data.featuredGig.date), "MMM")}</span>
