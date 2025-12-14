@@ -146,13 +146,33 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
       console.log("Coordinates missing, attempting geocode for:", data.location);
 
       // Try local lookup first
-      const { searchLocations } = await import("@/lib/victoriaLocations");
-      const localResults = searchLocations(data.location, 1);
+      // Try local lookup first with sanitized query
+      const { searchLocations, parseLocationForStorage } = await import("@/lib/victoriaLocations");
+
+      // 1. Try exact/raw lookup
+      let localResults = searchLocations(data.location, 1);
+
+      // 2. If no result, try parsing (removes state/postcode suffix)
+      if (localResults.length === 0) {
+        const parsed = parseLocationForStorage(data.location);
+        if (parsed !== data.location) {
+          localResults = searchLocations(parsed, 1);
+        }
+      }
+
+      // 3. If still no result, try removing punctuation (e.g. "St. Kilda" -> "St Kilda")
+      if (localResults.length === 0) {
+        const punctuationRemoved = data.location.replace(/[.,]/g, "");
+        localResults = searchLocations(punctuationRemoved, 1);
+      }
 
       if (localResults.length > 0 && localResults[0].latitude && localResults[0].longitude) {
         data.latitude = localResults[0].latitude;
         data.longitude = localResults[0].longitude;
-        console.log("Found coordinates locally:", data.latitude, data.longitude);
+        console.log("Found coordinates locally:", data.location, data.latitude, data.longitude);
+
+        // Let the user know we found it
+        toast({ title: "Location verified", description: `Map pin placed for ${localResults[0].suburb}` });
       } else {
         // Fallback to external API
         try {
