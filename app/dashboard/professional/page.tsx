@@ -157,7 +157,7 @@ export default function ProfessionalEditorPage() {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Role *</FormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                <Select onValueChange={field.onChange} value={field.value || "Producer"}>
                                                     <FormControl>
                                                         <SelectTrigger>
                                                             <SelectValue placeholder="Select role" />
@@ -181,7 +181,7 @@ export default function ProfessionalEditorPage() {
                                             <FormItem>
                                                 <FormLabel>Business Name *</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g. Acme Studios" {...field} />
+                                                    <Input placeholder="e.g. Acme Studios" {...field} value={field.value || ""} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -195,7 +195,7 @@ export default function ProfessionalEditorPage() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Location *</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select region" />
@@ -223,6 +223,7 @@ export default function ProfessionalEditorPage() {
                                                     placeholder="Tell us about your experience, style, and equipment..."
                                                     className="h-32"
                                                     {...field}
+                                                    value={field.value || ""}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -241,6 +242,7 @@ export default function ProfessionalEditorPage() {
                                                     placeholder="List specific services (e.g. Mixing, Mastering, Headshots, Video Production)"
                                                     className="h-24"
                                                     {...field}
+                                                    value={field.value || ""}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -256,7 +258,7 @@ export default function ProfessionalEditorPage() {
                                             <FormItem>
                                                 <FormLabel>Contact Email</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="email@example.com" {...field} />
+                                                    <Input placeholder="email@example.com" {...field} value={field.value || ""} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -270,7 +272,7 @@ export default function ProfessionalEditorPage() {
                                             <FormItem>
                                                 <FormLabel>Rates (Optional)</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g. $50/hr or Contact for Quote" {...field} />
+                                                    <Input placeholder="e.g. $50/hr or Contact for Quote" {...field} value={field.value || ""} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -288,7 +290,7 @@ export default function ProfessionalEditorPage() {
                                                 <FormItem>
                                                     <FormLabel>Website</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="https://..." {...field} />
+                                                        <Input placeholder="https://..." {...field} value={field.value || ""} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -301,7 +303,7 @@ export default function ProfessionalEditorPage() {
                                                 <FormItem>
                                                     <FormLabel>Portfolio URL</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="Cloudinary / SoundCloud / etc" {...field} />
+                                                        <Input placeholder="Cloudinary / SoundCloud / etc" {...field} value={field.value || ""} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -314,7 +316,7 @@ export default function ProfessionalEditorPage() {
                                                 <FormItem>
                                                     <FormLabel>Instagram</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="@username" {...field} />
+                                                        <Input placeholder="@username" {...field} value={field.value || ""} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
