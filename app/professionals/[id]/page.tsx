@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { MapPin, Globe, Mail, Instagram, ArrowLeft, ExternalLink, Briefcase } from "lucide-react";
 import { ProfessionalProfile } from "@shared/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
