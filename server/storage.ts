@@ -42,6 +42,9 @@ import {
   classifieds,
   type Classified,
   type InsertClassified,
+  professionalProfiles,
+  type ProfessionalProfile,
+  type InsertProfessionalProfile,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull } from "drizzle-orm";
@@ -88,6 +91,14 @@ export interface ClassifiedFilters {
   instrument?: string;
   type?: string;
   genre?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ProfessionalFilters {
+  location?: string;
+  role?: string;
+  searchQuery?: string;
   limit?: number;
   offset?: number;
 }
@@ -149,6 +160,14 @@ export interface IStorage {
   getClassified(id: string): Promise<Classified | undefined>;
   createClassified(classified: InsertClassified): Promise<Classified>;
   deleteClassified(id: string): Promise<boolean>;
+
+  // Professionals operations
+  getProfessionalProfiles(filters?: ProfessionalFilters): Promise<ProfessionalProfile[]>;
+  getProfessionalProfile(id: string): Promise<ProfessionalProfile | undefined>;
+  getProfessionalProfileByUserId(userId: string): Promise<ProfessionalProfile | undefined>;
+  createProfessionalProfile(profile: InsertProfessionalProfile): Promise<ProfessionalProfile>;
+  updateProfessionalProfile(id: string, profile: Partial<InsertProfessionalProfile>): Promise<ProfessionalProfile | undefined>;
+  deleteProfessionalProfile(id: string): Promise<boolean>;
 
 
   // Band operations
@@ -345,6 +364,73 @@ export class DatabaseStorage implements IStorage {
     const [deleted] = await db
       .delete(classifieds)
       .where(eq(classifieds.id, id))
+      .returning();
+    return !!deleted;
+  }
+
+  // Professionals operations
+  async getProfessionalProfiles(filters?: ProfessionalFilters): Promise<ProfessionalProfile[]> {
+    const conditions = [eq(professionalProfiles.isActive, true)];
+
+    if (filters) {
+      if (filters.location) conditions.push(ilike(professionalProfiles.location, `%${filters.location}%`));
+      if (filters.role) conditions.push(eq(professionalProfiles.role, filters.role));
+      if (filters.searchQuery) {
+        const query = `%${filters.searchQuery}%`;
+        conditions.push(or(
+          ilike(professionalProfiles.businessName, query),
+          ilike(professionalProfiles.bio, query),
+          ilike(professionalProfiles.services, query)
+        )!);
+      }
+    }
+
+    return db
+      .select()
+      .from(professionalProfiles)
+      .where(and(...conditions))
+      .orderBy(desc(professionalProfiles.createdAt))
+      .limit(filters?.limit || 50)
+      .offset(filters?.offset || 0);
+  }
+
+  async getProfessionalProfile(id: string): Promise<ProfessionalProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(professionalProfiles)
+      .where(eq(professionalProfiles.id, id));
+    return profile;
+  }
+
+  async getProfessionalProfileByUserId(userId: string): Promise<ProfessionalProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(professionalProfiles)
+      .where(eq(professionalProfiles.userId, userId));
+    return profile;
+  }
+
+  async createProfessionalProfile(profile: InsertProfessionalProfile): Promise<ProfessionalProfile> {
+    const [created] = await db
+      .insert(professionalProfiles)
+      .values(profile)
+      .returning();
+    return created;
+  }
+
+  async updateProfessionalProfile(id: string, profile: Partial<InsertProfessionalProfile>): Promise<ProfessionalProfile | undefined> {
+    const [updated] = await db
+      .update(professionalProfiles)
+      .set({ ...profile, updatedAt: new Date() })
+      .where(eq(professionalProfiles.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteProfessionalProfile(id: string): Promise<boolean> {
+    const [deleted] = await db
+      .delete(professionalProfiles)
+      .where(eq(professionalProfiles.id, id))
       .returning();
     return !!deleted;
   }

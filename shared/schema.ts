@@ -662,3 +662,59 @@ export const insertClassifiedSchema = createInsertSchema(classifieds).omit({
 export type InsertClassified = z.infer<typeof insertClassifiedSchema>;
 export type Classified = typeof classifieds.$inferSelect;
 
+export const professionalRoles = [
+  "Producer",
+  "Audio Engineer",
+  "Photographer",
+  "Videographer",
+  "Graphic Designer",
+  "Manager",
+  "Teacher",
+  "Luthier/Tech",
+  "Venue Booker",
+  "Other"
+] as const;
+
+export const professionalProfiles = pgTable("professional_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  role: varchar("role", { length: 50 }).notNull(),
+  businessName: varchar("business_name", { length: 100 }),
+  bio: text("bio").notNull(),
+  location: varchar("location", { length: 255 }).notNull(),
+  services: text("services"), // Detailed description of services
+  rates: varchar("rates", { length: 255 }), // e.g. "$50/hr" or "Contact for quote"
+  portfolioUrl: varchar("portfolio_url", { length: 255 }),
+  website: varchar("website", { length: 255 }),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  isActive: boolean("is_active").default(true),
+  instagramUrl: varchar("instagram_url", { length: 255 }), // Common for creatives
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("pro_profiles_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("pro_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("pro_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  index("pro_role_idx").on(table.role),
+  index("pro_location_idx").on(table.location),
+]);
+
+export const professionalProfilesRelations = relations(professionalProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [professionalProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertProfessionalProfileSchema = createInsertSchema(professionalProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  verified: true
+});
+
+export type InsertProfessionalProfile = z.infer<typeof insertProfessionalProfileSchema>;
+export type ProfessionalProfile = typeof professionalProfiles.$inferSelect;
+
+

@@ -62,6 +62,7 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
     { href: "/musicians", label: "Musicians" },
     { href: "/bands", label: "Bands" },
     { href: "/gigs", label: "Gigs" },
+    { href: "/professionals", label: "Professionals" },
     { href: "/classifieds", label: "Auditions" },
   ];
 
