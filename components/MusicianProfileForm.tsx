@@ -140,10 +140,10 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
   const onSubmit = async (data: FormData) => {
     console.log("Form submitted with data:", data);
 
-    // Geocode if location sharing is enabled, location is present, AND coords are missing
-    // If we have coords from local DB (via Autocomplete), we skip this.
-    if (data.isLocationShared && data.location && (!data.latitude || !data.longitude)) {
-      console.log("Coordinates missing, attempting geocode for:", data.location);
+    // Geocode if location sharing is enabled and location is present
+    // ALWAYS re-resolve to ensure coordinates match the text (fixes bug where editing text kept old coords)
+    if (data.isLocationShared && data.location) {
+      console.log("Resolving coordinates for:", data.location);
 
       // Try local lookup first
       // Try local lookup first with sanitized query
