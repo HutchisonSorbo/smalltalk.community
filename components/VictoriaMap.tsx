@@ -34,6 +34,30 @@ export default function VictoriaMap() {
         queryKey: ["/api/musicians?hasLocation=true"],
     });
 
+    // Debug: Log all profiles received from API
+    useEffect(() => {
+        if (profiles) {
+            console.log("VictoriaMap: Received profiles:", profiles.length);
+            const validLocs = profiles.filter(p => p.isLocationShared && p.latitude && p.longitude);
+            console.log("VictoriaMap: Valid locations found:", validLocs.length);
+
+            // Check specifically for Kilmore or user's likely profile
+            const kilmore = profiles.find(p => p.location?.includes("Kilmore"));
+            if (kilmore) {
+                console.log("VictoriaMap: Found Kilmore profile:", {
+                    id: kilmore.id,
+                    name: kilmore.name,
+                    location: kilmore.location,
+                    lat: kilmore.latitude,
+                    lng: kilmore.longitude,
+                    shared: kilmore.isLocationShared
+                });
+            } else {
+                console.log("VictoriaMap: NO profile found with location 'Kilmore'");
+            }
+        }
+    }, [profiles]);
+
     const locations = profiles?.filter(p => p.isLocationShared && p.latitude && p.longitude) || [];
 
     // Initialize Map
@@ -63,14 +87,28 @@ export default function VictoriaMap() {
 
         markersLayerRef.current.clearLayers();
 
+        console.log("VictoriaMap: Rendering markers for", locations.length, "locations");
+
         // Aggregate profiles by suburb to show a single marker per suburb with count tooltip
         const suburbMap = new Map<string, { lat: number; lng: number; count: number }>();
         locations.forEach(profile => {
             if (!profile.latitude || !profile.longitude) return;
             const suburb = profile.location?.trim();
             if (!suburb) return;
+
+            // Debug specific coordinates
+            if (suburb.includes("Kilmore")) {
+                console.log("VictoriaMap: Processing Kilmore marker:", profile.latitude, profile.longitude);
+            }
+
             const lat = parseFloat(profile.latitude);
             const lng = parseFloat(profile.longitude);
+
+            if (isNaN(lat) || isNaN(lng)) {
+                console.error("VictoriaMap: Invalid coordinates for", suburb, profile.latitude, profile.longitude);
+                return;
+            }
+
             if (suburbMap.has(suburb)) {
                 const entry = suburbMap.get(suburb)!;
                 entry.count += 1;
