@@ -1,9 +1,14 @@
-
 import { db } from "../server/db";
 import { users, musicianProfiles, bands, gigs, type UpsertUser, type InsertMusicianProfile, type InsertBand, type InsertGig } from "../shared/schema";
 import { eq, like } from "drizzle-orm";
+import { victoriaLocations } from "../lib/victoriaLocations";
 
 const TEST_EMAIL_SUFFIX = "@test.vic.band";
+
+// Helper to get random item
+function getRandomItem<T>(arr: T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
 
 // Random coordinate generator within Victoria, Australia roughly
 // Lat: -34 to -39, Long: 141 to 150
@@ -88,7 +93,13 @@ async function seed() {
 
         musicianUsers.push(user.id);
 
-        const loc = getRandomLocation();
+        // Get a random location that has coordinates
+        let randomLoc = getRandomItem(victoriaLocations);
+        // Ensure lat/long exist (interface says optional but data usually has it)
+        while (!randomLoc.latitude || !randomLoc.longitude) {
+            randomLoc = getRandomItem(victoriaLocations);
+        }
+
         const instrument = INSTRUMENTS[Math.floor(Math.random() * INSTRUMENTS.length)];
         const genre = GENRES[Math.floor(Math.random() * GENRES.length)];
 
@@ -96,12 +107,14 @@ async function seed() {
         await db.insert(musicianProfiles).values({
             userId: user.id,
             name: `Test Musician ${i}`,
-            bio: "This is a test profile generated for development.",
+            bio: `I am a musician based in ${randomLoc.suburb}. This is a test profile.`,
             instruments: [instrument],
             genres: [genre],
-            location: "Melbourne, VIC",
-            latitude: loc.latitude,
-            longitude: loc.longitude,
+            location: randomLoc.suburb, // Use real suburb name
+            // Drizzle/Postgres might handle string->decimal, but schema defines them as text or decimal?
+            // Schema view says latitude: text.
+            latitude: randomLoc.latitude,
+            longitude: randomLoc.longitude,
             profileImageUrl: PROFILE_IMAGES[i % PROFILE_IMAGES.length],
             isLookingForGroup: Math.random() > 0.5,
             isLocationShared: true,

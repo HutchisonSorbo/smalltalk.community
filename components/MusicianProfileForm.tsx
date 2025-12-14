@@ -169,6 +169,14 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
       if (localResults.length > 0 && localResults[0].latitude && localResults[0].longitude) {
         data.latitude = localResults[0].latitude;
         data.longitude = localResults[0].longitude;
+
+        // Force canonical/clean suburb name for storage so map aggregation works reliably
+        // e.g. "Richmond, VIC" -> "Richmond"
+        if (localResults[0].suburb) {
+          console.log(`Updating location string from "${data.location}" to canonical "${localResults[0].suburb}"`);
+          data.location = localResults[0].suburb;
+        }
+
         console.log("Found coordinates locally:", data.location, data.latitude, data.longitude);
 
         // Let the user know we found it
