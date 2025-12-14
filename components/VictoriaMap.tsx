@@ -31,32 +31,10 @@ export default function VictoriaMap() {
     const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
     const { data: profiles } = useQuery<MusicianProfile[]>({
-        queryKey: ["/api/musicians?hasLocation=true"],
+        // Fetch a large number of profiles to ensure we show everyone on the map
+        // The default limit of 12 was hiding users who weren't in the first page
+        queryKey: ["/api/musicians?hasLocation=true&limit=1000"],
     });
-
-    // Debug: Log all profiles received from API
-    useEffect(() => {
-        if (profiles) {
-            console.log("VictoriaMap: Received profiles:", profiles.length);
-            const validLocs = profiles.filter(p => p.isLocationShared && p.latitude && p.longitude);
-            console.log("VictoriaMap: Valid locations found:", validLocs.length);
-
-            // Check specifically for Kilmore or user's likely profile
-            const kilmore = profiles.find(p => p.location?.includes("Kilmore"));
-            if (kilmore) {
-                console.log("VictoriaMap: Found Kilmore profile:", {
-                    id: kilmore.id,
-                    name: kilmore.name,
-                    location: kilmore.location,
-                    lat: kilmore.latitude,
-                    lng: kilmore.longitude,
-                    shared: kilmore.isLocationShared
-                });
-            } else {
-                console.log("VictoriaMap: NO profile found with location 'Kilmore'");
-            }
-        }
-    }, [profiles]);
 
     const locations = profiles?.filter(p => p.isLocationShared && p.latitude && p.longitude) || [];
 
@@ -87,8 +65,6 @@ export default function VictoriaMap() {
 
         markersLayerRef.current.clearLayers();
 
-        console.log("VictoriaMap: Rendering markers for", locations.length, "locations");
-
         // Aggregate profiles by suburb to show a single marker per suburb with count tooltip
         const suburbMap = new Map<string, { lat: number; lng: number; count: number }>();
         locations.forEach(profile => {
@@ -97,9 +73,8 @@ export default function VictoriaMap() {
             if (!suburb) return;
 
             // Debug specific coordinates
-            if (suburb.includes("Kilmore")) {
-                console.log("VictoriaMap: Processing Kilmore marker:", profile.latitude, profile.longitude);
-            }
+            // Debug specific coordinates
+            // (Removed)
 
             const lat = parseFloat(profile.latitude);
             const lng = parseFloat(profile.longitude);
