@@ -37,6 +37,7 @@ import {
   type Notification,
   type InsertNotification,
   contactRequests,
+  type ContactRequest,
   type InsertContactRequest,
   classifieds,
   type Classified,
