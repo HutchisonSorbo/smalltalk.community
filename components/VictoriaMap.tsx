@@ -33,7 +33,7 @@ export default function VictoriaMap() {
     const { data: profiles } = useQuery<MusicianProfile[]>({
         // Fetch a large number of profiles to ensure we show everyone on the map
         // The default limit of 12 was hiding users who weren't in the first page
-        queryKey: ["/api/musicians?hasLocation=true&limit=1000"],
+        queryKey: ["/api/musicians?hasLocation=true&limit=2000"],
     });
 
     const locations = profiles?.filter(p => p.isLocationShared && p.latitude && p.longitude) || [];
