@@ -37,10 +37,8 @@ import {
   type Notification,
   type InsertNotification,
   contactRequests,
+  type ContactRequest,
   type InsertContactRequest,
-  classifieds,
-  type Classified,
-  type InsertClassified,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull } from "drizzle-orm";
@@ -78,15 +76,6 @@ export interface GigFilters {
 
 export interface BandFilters extends Partial<Band> {
   searchQuery?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface ClassifiedFilters {
-  location?: string;
-  instrument?: string;
-  type?: string;
-  genre?: string;
   limit?: number;
   offset?: number;
 }
@@ -142,12 +131,6 @@ export interface IStorage {
   deleteReview(id: string): Promise<boolean>;
   getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }>;
   hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean>;
-
-  // Classifieds operations
-  getClassifieds(filters?: ClassifiedFilters): Promise<Classified[]>;
-  getClassified(id: string): Promise<Classified | undefined>;
-  createClassified(classified: InsertClassified): Promise<Classified>;
-  deleteClassified(id: string): Promise<boolean>;
 
   // Band operations
   createBand(band: InsertBand): Promise<Band>;

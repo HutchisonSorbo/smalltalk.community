@@ -62,6 +62,7 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
     { href: "/musicians", label: "Musicians" },
     { href: "/bands", label: "Bands" },
     { href: "/gigs", label: "Gigs" },
+    { href: "/classifieds", label: "Auditions" },
   ];
 
   const isActive = (href: string) => location === href;

@@ -622,3 +622,43 @@ export const insertReportSchema = createInsertSchema(reports).omit({
 
 export type InsertReport = z.infer<typeof insertReportSchema>;
 export type Report = typeof reports.$inferSelect;
+
+// Classifieds table (Digital Auditions)
+export const classifieds = pgTable("classifieds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'musician_wanted' (Band looking for X) or 'band_wanted' (Musician looking for Band)
+  instrument: varchar("instrument", { length: 100 }), // The instrument needed or offered
+  genre: varchar("genre", { length: 100 }),
+  location: varchar("location", { length: 255 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("classifieds_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("classifieds_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("classifieds_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("classifieds_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("classifieds_user_id_idx").on(table.userId),
+  index("classifieds_type_idx").on(table.type),
+  index("classifieds_location_idx").on(table.location),
+]);
+
+export const classifiedsRelations = relations(classifieds, ({ one }) => ({
+  user: one(users, {
+    fields: [classifieds.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertClassifiedSchema = createInsertSchema(classifieds).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertClassified = z.infer<typeof insertClassifiedSchema>;
+export type Classified = typeof classifieds.$inferSelect;
+
