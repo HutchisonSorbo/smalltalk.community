@@ -31,7 +31,7 @@ export default function VictoriaMap() {
     const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
     const { data: profiles } = useQuery<MusicianProfile[]>({
-        queryKey: ["/api/musicians"],
+        queryKey: ["/api/musicians?hasLocation=true"],
     });
 
     const locations = profiles?.filter(p => p.isLocationShared && p.latitude && p.longitude) || [];

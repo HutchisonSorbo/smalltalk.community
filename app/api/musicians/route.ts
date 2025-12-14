@@ -11,6 +11,7 @@ const musicianFiltersSchema = z.object({
     instruments: z.string().optional(),
     genres: z.string().optional(),
     q: z.string().optional(),
+    hasLocation: z.string().optional(),
 });
 
 export async function GET(request: Request) {
@@ -32,7 +33,9 @@ export async function GET(request: Request) {
         if (qData.location) filters.location = qData.location;
         if (qData.q) filters.searchQuery = qData.q;
         if (qData.experienceLevel) filters.experienceLevel = qData.experienceLevel;
+        if (qData.experienceLevel) filters.experienceLevel = qData.experienceLevel;
         if (qData.availability) filters.availability = qData.availability;
+        if (qData.hasLocation === 'true') filters.hasLocation = true;
 
         if (qData.instruments) {
             const instruments = qData.instruments.split(',').filter(Boolean);

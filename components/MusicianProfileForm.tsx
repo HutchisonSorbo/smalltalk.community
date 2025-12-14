@@ -144,32 +144,42 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
     // If we have coords from local DB (via Autocomplete), we skip this.
     if (data.isLocationShared && data.location && (!data.latitude || !data.longitude)) {
       console.log("Coordinates missing, attempting geocode for:", data.location);
-      try {
-        const query = encodeURIComponent(`${data.location}, Victoria, Australia`);
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
-        if (res.ok) {
-          const results = await res.json();
-          if (results && results.length > 0) {
-            data.latitude = results[0].lat;
-            data.longitude = results[0].lon;
-            console.log("Geocoded:", data.location, data.latitude, data.longitude);
-            // toast({ title: "Location found", description: "Your pin has been placed on the map." }); // Optional success message
-          } else {
-            toast({
-              title: "Location not found",
-              description: `Could not find coordinates for "${data.location}". Your pin may not appear on the map.`,
-              variant: "destructive",
-            });
+
+      // Try local lookup first
+      const { searchLocations } = await import("@/lib/victoriaLocations");
+      const localResults = searchLocations(data.location, 1);
+
+      if (localResults.length > 0 && localResults[0].latitude && localResults[0].longitude) {
+        data.latitude = localResults[0].latitude;
+        data.longitude = localResults[0].longitude;
+        console.log("Found coordinates locally:", data.latitude, data.longitude);
+      } else {
+        // Fallback to external API
+        try {
+          const query = encodeURIComponent(`${data.location}, Victoria, Australia`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+          if (res.ok) {
+            const results = await res.json();
+            if (results && results.length > 0) {
+              data.latitude = results[0].lat;
+              data.longitude = results[0].lon;
+              console.log("Geocoded:", data.location, data.latitude, data.longitude);
+            } else {
+              toast({
+                title: "Location not found",
+                description: `Could not find coordinates for "${data.location}". Your pin may not appear on the map.`,
+                variant: "destructive",
+              });
+            }
           }
+        } catch (error) {
+          console.error("Geocoding failed:", error);
+          toast({
+            title: "Geocoding failed",
+            description: "There was an error finding your location on the map.",
+            variant: "destructive",
+          });
         }
-      } catch (error) {
-        console.error("Geocoding failed:", error);
-        toast({
-          title: "Geocoding failed",
-          description: "There was an error finding your location on the map.",
-          variant: "destructive",
-        });
-        // Non-blocking, just proceed without coords or old coords
       }
     } else {
       // If location is NOT shared, clear coords (safety)

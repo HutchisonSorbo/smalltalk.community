@@ -41,7 +41,7 @@ import {
   type InsertContactRequest,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt } from "drizzle-orm";
+import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull } from "drizzle-orm";
 
 export interface MusicianFilters {
   location?: string;
@@ -52,6 +52,7 @@ export interface MusicianFilters {
   searchQuery?: string;
   limit?: number;
   offset?: number;
+  hasLocation?: boolean;
 }
 
 export interface MarketplaceFilters {
@@ -218,6 +219,19 @@ export class DatabaseStorage implements IStorage {
         );
         if (searchCondition) {
           conditions.push(searchCondition);
+        }
+      }
+
+      if (filters.hasLocation) {
+        const locationCondition = and(
+          isNotNull(musicianProfiles.latitude),
+          isNotNull(musicianProfiles.longitude),
+          eq(musicianProfiles.isLocationShared, true),
+          ne(musicianProfiles.latitude, ""),
+          ne(musicianProfiles.longitude, "")
+        );
+        if (locationCondition) {
+          conditions.push(locationCondition);
         }
       }
     }
