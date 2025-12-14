@@ -3,6 +3,8 @@ import { storage } from "@/server/storage";
 import { createClient } from "@/lib/supabase-server";
 import { insertMusicianProfileSchema } from "@shared/schema";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
     request: Request,
     props: { params: Promise<{ id: string }> }

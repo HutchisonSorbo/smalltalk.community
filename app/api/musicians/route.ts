@@ -4,6 +4,8 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase-server";
 import { insertMusicianProfileSchema } from "@shared/schema";
 
+export const dynamic = 'force-dynamic';
+
 const musicianFiltersSchema = z.object({
     location: z.string().optional(),
     experienceLevel: z.string().optional(),
