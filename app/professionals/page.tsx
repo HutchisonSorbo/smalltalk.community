@@ -42,12 +42,6 @@ export default function ProfessionalsPage() {
                         <h1 className="text-3xl font-bold">Industry Professionals</h1>
                         <p className="text-muted-foreground mt-1">Connect with producers, photographers, teachers, and more.</p>
                     </div>
-                    <Button asChild>
-                        <Link href="/dashboard/professional">
-                            <Plus className="mr-2 h-4 w-4" />
-                            List Your Services
-                        </Link>
-                    </Button>
                 </div>
 
                 {/* Filters */}
@@ -95,52 +89,49 @@ export default function ProfessionalsPage() {
                         ))}
                     </div>
                 ) : professionals?.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
                         <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
                         <p className="text-lg">No professionals found matching your criteria.</p>
-                        <Button variant="link" asChild className="mt-2">
-                            <Link href="/dashboard/professional">Create a profile</Link>
-                        </Button>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {professionals?.map((pro) => (
-                            <Link key={pro.id} href={`/professionals/${pro.id}`}>
-                                <Card className="h-full hover-elevate transition-all cursor-pointer border-t-4 border-t-purple-500">
-                                    <CardHeader>
-                                        <div className="flex justify-between items-start gap-2 mb-2">
-                                            <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300">
-                                                {pro.role}
-                                            </Badge>
-                                            <div className="flex items-center text-xs text-muted-foreground">
-                                                <MapPin className="h-3 w-3 mr-1" />
-                                                {pro.location}
-                                            </div>
-                                        </div>
-                                        <CardTitle className="line-clamp-1">{pro.businessName || "Professional"}</CardTitle>
-                                        <CardDescription className="line-clamp-2">
-                                            {pro.services}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                                            {pro.bio}
-                                        </p>
-                                        <div className="flex gap-2 text-xs text-muted-foreground">
-                                            {pro.rates && (
-                                                <span className="bg-muted px-2 py-1 rounded">
-                                                    {pro.rates}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        ))}
-                    </div>
-                )}
-            </main>
-            <Footer />
+    ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {professionals?.map((pro) => (
+                <Link key={pro.id} href={`/professionals/${pro.id}`}>
+                    <Card className="h-full hover-elevate transition-all cursor-pointer border-t-4 border-t-purple-500">
+                        <CardHeader>
+                            <div className="flex justify-between items-start gap-2 mb-2">
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300">
+                                    {pro.role}
+                                </Badge>
+                                <div className="flex items-center text-xs text-muted-foreground">
+                                    <MapPin className="h-3 w-3 mr-1" />
+                                    {pro.location}
+                                </div>
+                            </div>
+                            <CardTitle className="line-clamp-1">{pro.businessName || "Professional"}</CardTitle>
+                            <CardDescription className="line-clamp-2">
+                                {pro.services}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                                {pro.bio}
+                            </p>
+                            <div className="flex gap-2 text-xs text-muted-foreground">
+                                {pro.rates && (
+                                    <span className="bg-muted px-2 py-1 rounded">
+                                        {pro.rates}
+                                    </span>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </Link>
+            ))}
         </div>
+    )
+}
+            </main >
+    <Footer />
+        </div >
     );
 }

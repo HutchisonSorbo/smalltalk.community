@@ -690,6 +690,7 @@ export const professionalProfiles = pgTable("professional_profiles", {
   contactEmail: varchar("contact_email", { length: 255 }),
   isActive: boolean("is_active").default(true),
   instagramUrl: varchar("instagram_url", { length: 255 }), // Common for creatives
+  profileImageUrl: varchar("profile_image_url"),
   verified: boolean("verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
