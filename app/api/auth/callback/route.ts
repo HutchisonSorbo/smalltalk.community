@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { storage } from '@/server/storage'
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
@@ -12,6 +13,18 @@ export async function GET(request: Request) {
         try {
             const { error } = await supabase.auth.exchangeCodeForSession(code)
             if (!error) {
+                // Sync user data to public table
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const metadata = user.user_metadata || {};
+                    await storage.upsertUser({
+                        id: user.id,
+                        email: user.email,
+                        userType: metadata.user_type || 'musician',
+                        dateOfBirth: metadata.date_of_birth ? new Date(metadata.date_of_birth) : undefined
+                    });
+                }
+
                 const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
                 const isLocalEnv = process.env.NODE_ENV === 'development'
                 if (isLocalEnv) {

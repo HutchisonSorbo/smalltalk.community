@@ -34,6 +34,7 @@ function LoginForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const [userType, setUserType] = useState<'musician' | 'professional'>('musician');
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -82,6 +83,7 @@ function LoginForm() {
                     options: {
                         data: {
                             date_of_birth: dob,
+                            user_type: userType,
                         },
                         captchaToken: captchaToken,
                         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
@@ -154,17 +156,38 @@ function LoginForm() {
                             />
                         </div>
                         {isSignUp && (
-                            <div className="grid gap-2">
-                                <label htmlFor="dob">Date of Birth</label>
-                                <Input
-                                    id="dob"
-                                    type="date"
-                                    required={isSignUp}
-                                    value={dob}
-                                    onChange={(e) => setDob(e.target.value)}
-                                    disabled={isLoading}
-                                />
-                            </div>
+                            <>
+                                <div className="grid gap-2">
+                                    <label htmlFor="dob">Date of Birth</label>
+                                    <Input
+                                        id="dob"
+                                        type="date"
+                                        required={isSignUp}
+                                        value={dob}
+                                        onChange={(e) => setDob(e.target.value)}
+                                        disabled={isLoading}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>I am a...</Label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div
+                                            className={`relative flex flex-col items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all ${userType === 'musician' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                                            onClick={() => setUserType('musician')}
+                                        >
+                                            <span className="font-semibold">Musician</span>
+                                            <span className="text-xs text-center text-muted-foreground mt-1">For bands, solo artists, and session players</span>
+                                        </div>
+                                        <div
+                                            className={`relative flex flex-col items-center justify-center p-4 rounded-lg border-2 cursor-pointer transition-all ${userType === 'professional' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'}`}
+                                            onClick={() => setUserType('professional')}
+                                        >
+                                            <span className="font-semibold">Professional</span>
+                                            <span className="text-xs text-center text-muted-foreground mt-1">For producers, photographers, managers</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
                         )}
                         <div className="grid gap-2">
                             <label htmlFor="password">Password</label>

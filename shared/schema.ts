@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   dateOfBirth: timestamp("date_of_birth"),
+  userType: varchar("user_type", { length: 50 }).default("musician"), // 'musician' | 'professional'
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Music, User, Users, MapPin, Globe } from "lucide-react"; // Added Users
+import { ProfessionalProfileForm } from "@/components/ProfessionalProfileForm";
+import { Plus, Music, User, Users, MapPin, Globe, Briefcase } from "lucide-react"; // Added Users, Briefcase
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,7 +29,54 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { MusicianProfile, Band } from "@shared/schema"; // Changed MarketplaceListing to Band
+import type { MusicianProfile, Band, ProfessionalProfile } from "@shared/schema"; // Changed MarketplaceListing to Band
+
+function ProfessionalDashboardContent({ user }: { user: any }) {
+  const { data: myProfile, isLoading } = useQuery<ProfessionalProfile>({
+    queryKey: ["professional-profile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const res = await fetch(`/api/professionals?userId=${user.id}`);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+    enabled: !!user?.id
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {myProfile ? "Edit Professional Profile" : "Create Professional Profile"}
+        </CardTitle>
+        <CardDescription>
+          {myProfile
+            ? "Update your business information and services"
+            : "List your services in the industry directory to be discovered"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ProfessionalProfileForm
+          profile={myProfile}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["professional-profile"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/professionals"] });
+          }}
+        />
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -150,8 +198,8 @@ export default function Dashboard() {
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2 mb-8">
                   <TabsTrigger value="profile" data-testid="tab-profile">
-                    <User className="h-4 w-4 mr-2" />
-                    Musician Profile
+                    {user?.userType === 'professional' ? <Briefcase className="h-4 w-4 mr-2" /> : <User className="h-4 w-4 mr-2" />}
+                    {user?.userType === 'professional' ? "Professional Profile" : "Musician Profile"}
                   </TabsTrigger>
                   <TabsTrigger value="bands" data-testid="tab-bands">
                     <Users className="h-4 w-4 mr-2" />
@@ -160,11 +208,13 @@ export default function Dashboard() {
                 </TabsList>
 
                 <TabsContent value="profile" className="space-y-6">
-                  {profilesLoading ? (
+                  {profilesLoading && user?.userType !== 'professional' ? (
                     <div className="space-y-4">
                       <Skeleton className="h-10 w-48" />
                       <Skeleton className="h-96 w-full" />
                     </div>
+                  ) : user?.userType === 'professional' ? (
+                    <ProfessionalDashboardContent user={user} />
                   ) : (
                     <Card>
                       <CardHeader>
