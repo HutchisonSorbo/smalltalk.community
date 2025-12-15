@@ -11,21 +11,8 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
-// Schema for form
-const formSchema = insertProfessionalProfileSchema.pick({
-    role: true,
-    businessName: true,
-    bio: true,
-    location: true,
-    services: true,
-    rates: true,
-    portfolioUrl: true,
-    website: true,
-    contactEmail: true,
-    instagramUrl: true,
-});
 
-type FormValues = z.infer<typeof formSchema>;
+
 
 export default function ProfessionalEditorPage() {
     const { user, isLoading: authLoading } = useAuth();
