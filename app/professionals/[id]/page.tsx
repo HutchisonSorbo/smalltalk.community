@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Globe, Mail, Instagram, ArrowLeft, ExternalLink, Briefcase } from "lucide-react";
+import { MapPin, Globe, Mail, Instagram, ArrowLeft, ExternalLink, Briefcase, Check } from "lucide-react";
 import { ProfessionalProfile } from "@shared/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfessionalDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const id = params.id as string;
 
     const { data: pro, isLoading, error } = useQuery<ProfessionalProfile & { user?: any }>({
@@ -78,9 +79,16 @@ export default function ProfessionalDetailPage() {
                     <div className="lg:col-span-1 space-y-6">
                         <Card className="border-t-4 border-t-purple-500">
                             <CardHeader className="text-center">
-                                <div className="mx-auto bg-purple-100 dark:bg-purple-900/20 p-4 rounded-full mb-4 w-24 h-24 flex items-center justify-center">
-                                    <Briefcase className="h-10 w-10 text-purple-600 dark:text-purple-300" />
-                                </div>
+                                <Avatar className="h-24 w-24 mx-auto mb-4">
+                                    <AvatarImage
+                                        src={pro.profileImageUrl || undefined}
+                                        alt={pro.businessName || "Profile"}
+                                        className="object-cover"
+                                    />
+                                    <AvatarFallback className="bg-purple-100 dark:bg-purple-900/20">
+                                        <Briefcase className="h-10 w-10 text-purple-600 dark:text-purple-300" />
+                                    </AvatarFallback>
+                                </Avatar>
                                 <CardTitle className="text-2xl">{pro.businessName}</CardTitle>
                                 <Badge variant="secondary" className="mt-2 bg-purple-100 text-purple-800">
                                     {pro.role}
@@ -112,12 +120,12 @@ export default function ProfessionalDetailPage() {
                                             <ExternalLink className="h-3 w-3 ml-1 opacity-50" />
                                         </a>
                                     )}
-                                    {pro.contactEmail && (
-                                        <a href={`mailto:${pro.contactEmail}`} className="flex items-center text-sm hover:text-primary transition-colors">
-                                            <Mail className="h-4 w-4 mr-3 text-muted-foreground" />
-                                            {pro.contactEmail}
-                                        </a>
-                                    )}
+
+                                    <ProfessionalContactSection
+                                        profile={pro}
+                                        user={user ?? null}
+                                        isAuthenticated={isAuthenticated}
+                                    />
                                 </div>
 
                                 {pro.rates && (
@@ -180,6 +188,89 @@ export default function ProfessionalDetailPage() {
                 </div>
             </main>
             <Footer />
+        </div>
+    );
+}
+
+function ProfessionalContactSection({ profile, user, isAuthenticated }: { profile: ProfessionalProfile, user: any, isAuthenticated: boolean }) {
+    const { toast } = useToast();
+
+    // Query for request status
+    const { data: requestStatus, refetch } = useQuery({
+        queryKey: ['contact-request', profile.userId],
+        queryFn: async () => {
+            if (!isAuthenticated || !user) return null;
+            try {
+                const res = await fetch(`/api/contact-requests/check?recipientId=${profile.userId}`);
+                if (res.ok) return res.json();
+                return null;
+            } catch (e) {
+                return null;
+            }
+        },
+        enabled: isAuthenticated && !profile.isContactInfoPublic && user?.id !== profile.userId
+    });
+
+    const requestMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('/api/contact-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recipientId: profile.userId })
+            });
+            if (!res.ok) {
+                if (res.status === 401) throw new Error("Please log in first");
+                throw new Error("Failed to send request");
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            toast({ title: "Request sent", description: "The professional has been notified." });
+            refetch();
+        },
+        onError: (err: any) => {
+            toast({ title: "Error", description: err.message, variant: "destructive" });
+        }
+    });
+
+    const isOwner = user?.id === profile.userId;
+    const isPublic = profile.isContactInfoPublic;
+    const hasAccess = isOwner || isPublic || requestStatus?.status === 'accepted';
+    const isPending = requestStatus?.status === 'pending';
+
+    if (hasAccess) {
+        return (
+            <>
+                {profile.contactEmail && (
+                    <a href={`mailto:${profile.contactEmail}`} className="flex items-center text-sm hover:text-primary transition-colors">
+                        <Mail className="h-4 w-4 mr-3 text-muted-foreground" />
+                        {profile.contactEmail}
+                    </a>
+                )}
+            </>
+        );
+    }
+
+    return (
+        <div className="pt-2">
+            <p className="text-xs text-muted-foreground mb-3 italic">
+                Contact info is private.
+            </p>
+            {isPending ? (
+                <Button disabled className="w-full h-8 text-xs" variant="outline">
+                    <Check className="mr-2 h-3 w-3" />
+                    Request Sent
+                </Button>
+            ) : (
+                <Button
+                    className="w-full h-8 text-xs"
+                    variant="outline"
+                    onClick={() => requestMutation.mutate()}
+                    disabled={requestMutation.isPending}
+                >
+                    Request Contact Info
+                </Button>
+            )}
         </div>
     );
 }

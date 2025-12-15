@@ -692,6 +692,7 @@ export const professionalProfiles = pgTable("professional_profiles", {
   instagramUrl: varchar("instagram_url", { length: 255 }), // Common for creatives
   profileImageUrl: varchar("profile_image_url"),
   verified: boolean("verified").default(false),
+  isContactInfoPublic: boolean("is_contact_info_public").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

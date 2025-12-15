@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -30,6 +31,7 @@ const formSchema = insertProfessionalProfileSchema.pick({
     contactEmail: true,
     instagramUrl: true,
     profileImageUrl: true,
+    isContactInfoPublic: true,
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,6 +63,7 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
             contactEmail: "",
             instagramUrl: "",
             profileImageUrl: "",
+            isContactInfoPublic: false,
         },
     });
 
@@ -79,6 +82,7 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
                 contactEmail: profile.contactEmail || "",
                 instagramUrl: profile.instagramUrl || "",
                 profileImageUrl: profile.profileImageUrl || "",
+                isContactInfoPublic: profile.isContactInfoPublic || false,
             });
         } else if (user?.email) {
             // Pre-fill email
@@ -278,6 +282,29 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
                         )}
                     />
                 </div>
+
+                <FormField
+                    control={form.control}
+                    name="isContactInfoPublic"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                                <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                                <FormLabel>
+                                    Make Contact Info Public
+                                </FormLabel>
+                                <FormDescription>
+                                    If unchecked, users must request access to see your email/phone.
+                                </FormDescription>
+                            </div>
+                        </FormItem>
+                    )}
+                />
 
                 <div className="space-y-4 pt-4 border-t">
                     <h3 className="text-sm font-medium">Links</h3>
