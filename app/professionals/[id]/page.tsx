@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Globe, Mail, Instagram, ArrowLeft, ExternalLink, Briefcase, Check } from "lucide-react";
+import { MapPin, Globe, Mail, Instagram, ArrowLeft, ExternalLink, Briefcase, Check, Phone, Facebook, Linkedin, Twitter } from "lucide-react";
 import { ProfessionalProfile } from "@shared/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -117,6 +117,27 @@ export default function ProfessionalDetailPage() {
                                         <a href={getSafeUrl(pro.instagramUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm hover:text-primary transition-colors">
                                             <Instagram className="h-4 w-4 mr-3 text-muted-foreground" />
                                             Instagram
+                                            <ExternalLink className="h-3 w-3 ml-1 opacity-50" />
+                                        </a>
+                                    )}
+                                    {pro.facebookUrl && (
+                                        <a href={getSafeUrl(pro.facebookUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm hover:text-primary transition-colors">
+                                            <Facebook className="h-4 w-4 mr-3 text-muted-foreground" />
+                                            Facebook
+                                            <ExternalLink className="h-3 w-3 ml-1 opacity-50" />
+                                        </a>
+                                    )}
+                                    {pro.linkedinUrl && (
+                                        <a href={getSafeUrl(pro.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm hover:text-primary transition-colors">
+                                            <Linkedin className="h-4 w-4 mr-3 text-muted-foreground" />
+                                            LinkedIn
+                                            <ExternalLink className="h-3 w-3 ml-1 opacity-50" />
+                                        </a>
+                                    )}
+                                    {pro.twitterUrl && (
+                                        <a href={getSafeUrl(pro.twitterUrl)} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm hover:text-primary transition-colors">
+                                            <Twitter className="h-4 w-4 mr-3 text-muted-foreground" />
+                                            Twitter
                                             <ExternalLink className="h-3 w-3 ml-1 opacity-50" />
                                         </a>
                                     )}
@@ -245,6 +266,12 @@ function ProfessionalContactSection({ profile, user, isAuthenticated }: { profil
                     <a href={`mailto:${profile.contactEmail}`} className="flex items-center text-sm hover:text-primary transition-colors">
                         <Mail className="h-4 w-4 mr-3 text-muted-foreground" />
                         {profile.contactEmail}
+                    </a>
+                )}
+                {profile.contactPhone && (
+                    <a href={`tel:${profile.contactPhone}`} className="flex items-center text-sm hover:text-primary transition-colors">
+                        <Phone className="h-4 w-4 mr-3 text-muted-foreground" />
+                        {profile.contactPhone}
                     </a>
                 )}
             </>

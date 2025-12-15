@@ -688,8 +688,12 @@ export const professionalProfiles = pgTable("professional_profiles", {
   portfolioUrl: varchar("portfolio_url", { length: 255 }),
   website: varchar("website", { length: 255 }),
   contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
   isActive: boolean("is_active").default(true),
-  instagramUrl: varchar("instagram_url", { length: 255 }), // Common for creatives
+  instagramUrl: varchar("instagram_url", { length: 255 }),
+  facebookUrl: varchar("facebook_url", { length: 255 }),
+  linkedinUrl: varchar("linkedin_url", { length: 255 }),
+  twitterUrl: varchar("twitter_url", { length: 255 }),
   profileImageUrl: varchar("profile_image_url"),
   verified: boolean("verified").default(false),
   isContactInfoPublic: boolean("is_contact_info_public").default(false),

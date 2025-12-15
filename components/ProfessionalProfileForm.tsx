@@ -29,7 +29,11 @@ const formSchema = insertProfessionalProfileSchema.pick({
     portfolioUrl: true,
     website: true,
     contactEmail: true,
+    contactPhone: true,
     instagramUrl: true,
+    facebookUrl: true,
+    linkedinUrl: true,
+    twitterUrl: true,
     profileImageUrl: true,
     isContactInfoPublic: true,
 });
@@ -61,7 +65,11 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
             portfolioUrl: "",
             website: "",
             contactEmail: "",
+            contactPhone: "",
             instagramUrl: "",
+            facebookUrl: "",
+            linkedinUrl: "",
+            twitterUrl: "",
             profileImageUrl: "",
             isContactInfoPublic: false,
         },
@@ -80,7 +88,11 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
                 portfolioUrl: profile.portfolioUrl || "",
                 website: profile.website || "",
                 contactEmail: profile.contactEmail || "",
+                contactPhone: profile.contactPhone || "",
                 instagramUrl: profile.instagramUrl || "",
+                facebookUrl: profile.facebookUrl || "",
+                linkedinUrl: profile.linkedinUrl || "",
+                twitterUrl: profile.twitterUrl || "",
                 profileImageUrl: profile.profileImageUrl || "",
                 isContactInfoPublic: profile.isContactInfoPublic || false,
             });
@@ -254,19 +266,34 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="contactEmail"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Contact Email</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="email@example.com" {...field} value={field.value || ""} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <div className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="contactEmail"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Contact Email</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="email@example.com" {...field} value={field.value || ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="contactPhone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Contact Number (Optional)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="+61 ..." {...field} value={field.value || ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
                     <FormField
                         control={form.control}
@@ -342,7 +369,46 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
                                 <FormItem>
                                     <FormLabel>Instagram</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="@username" {...field} value={field.value || ""} />
+                                        <Input placeholder="@username or URL" {...field} value={field.value || ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="facebookUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Facebook</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="URL" {...field} value={field.value || ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="linkedinUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>LinkedIn</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="URL" {...field} value={field.value || ""} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="twitterUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Twitter / X</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="URL" {...field} value={field.value || ""} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
