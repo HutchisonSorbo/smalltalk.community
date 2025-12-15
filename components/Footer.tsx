@@ -50,6 +50,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
+          <p className="mb-2">vic.band acknowledges the Traditional Owners of Country throughout Victoria. We pay our respects to Elders past and present.</p>
           <p>Made for Victoria's musicians. Not affiliated with any other platform.</p>
         </div>
       </div>
