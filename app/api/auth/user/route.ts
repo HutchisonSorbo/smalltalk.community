@@ -51,9 +51,24 @@ export async function GET(request: Request) {
                 firstName: user.user_metadata.full_name?.split(' ')[0] || 'User',
                 lastName: user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
                 dateOfBirth: user.user_metadata.date_of_birth ? new Date(user.user_metadata.date_of_birth) : undefined,
+                userType: user.user_metadata.user_type || 'musician', // Added userType
                 createdAt: new Date(),
             });
             return NextResponse.json(newUser);
+        }
+
+        if (dbUser) {
+            // Check if userType needs syncing (e.g. was created without it or changed)
+            const metadataType = user.user_metadata.user_type || 'musician';
+            if (dbUser.userType !== metadataType) {
+                console.log(`Auth User API: Syncing userType for ${user.email} from ${dbUser.userType} to ${metadataType}`);
+                const updatedUser = await storage.upsertUser({
+                    ...dbUser,
+                    userType: metadataType,
+                    updatedAt: new Date(),
+                });
+                dbUser = updatedUser;
+            }
         }
 
         console.log("Auth User API: Returning existing DB user");
