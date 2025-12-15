@@ -91,7 +91,7 @@ export default function Home() {
             {/* Victoria Map */}
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">Community Map</h2>
-              <p className="text-muted-foreground">See where other musicians are located across Victoria.</p>
+              <p className="text-muted-foreground">See where other community members are located across Victoria.</p>
               <VictoriaMap />
             </div>
           </div>

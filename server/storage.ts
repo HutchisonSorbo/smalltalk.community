@@ -101,6 +101,7 @@ export interface ProfessionalFilters {
   searchQuery?: string;
   limit?: number;
   offset?: number;
+  hasLocation?: boolean;
 }
 
 export interface IStorage {
@@ -381,6 +382,16 @@ export class DatabaseStorage implements IStorage {
           ilike(professionalProfiles.businessName, query),
           ilike(professionalProfiles.bio, query),
           ilike(professionalProfiles.services, query)
+        )!);
+      }
+
+      if (filters.hasLocation) {
+        conditions.push(and(
+          isNotNull(professionalProfiles.latitude),
+          isNotNull(professionalProfiles.longitude),
+          eq(professionalProfiles.isLocationShared, true),
+          ne(professionalProfiles.latitude, ""),
+          ne(professionalProfiles.longitude, "")
         )!);
       }
     }

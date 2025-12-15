@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { insertProfessionalProfileSchema, professionalRoles, victoriaRegions, ProfessionalProfile } from "@shared/schema";
 import { z } from "zod";
 import { ImageUpload } from "@/components/ImageUpload";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -36,6 +38,9 @@ const formSchema = insertProfessionalProfileSchema.pick({
     twitterUrl: true,
     profileImageUrl: true,
     isContactInfoPublic: true,
+    isLocationShared: true,
+    latitude: true,
+    longitude: true,
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -72,6 +77,9 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
             twitterUrl: "",
             profileImageUrl: "",
             isContactInfoPublic: false,
+            isLocationShared: false,
+            latitude: "",
+            longitude: "",
         },
     });
 
@@ -95,6 +103,9 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
                 twitterUrl: profile.twitterUrl || "",
                 profileImageUrl: profile.profileImageUrl || "",
                 isContactInfoPublic: profile.isContactInfoPublic || false,
+                isLocationShared: profile.isLocationShared || false,
+                latitude: profile.latitude || "",
+                longitude: profile.longitude || "",
             });
         } else if (user?.email) {
             // Pre-fill email
@@ -186,28 +197,57 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
                     />
                 </div>
 
-                <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Location *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Suburb *</FormLabel>
                                 <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select region" />
-                                    </SelectTrigger>
+                                    <LocationAutocomplete
+                                        value={field.value || ""}
+                                        onChange={field.onChange}
+                                        onLocationSelect={(loc) => {
+                                            if (loc.latitude && loc.longitude) {
+                                                form.setValue("latitude", loc.latitude);
+                                                form.setValue("longitude", loc.longitude);
+                                            } else {
+                                                form.setValue("latitude", "");
+                                                form.setValue("longitude", "");
+                                            }
+                                        }}
+                                        placeholder="Search suburbs..."
+                                    />
                                 </FormControl>
-                                <SelectContent>
-                                    {victoriaRegions.map((region) => (
-                                        <SelectItem key={region} value={region}>{region}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="isLocationShared"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm h-[84px] mt-auto">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-base">
+                                        Share suburb on map
+                                    </FormLabel>
+                                    <div className="text-sm text-muted-foreground line-clamp-1">
+                                        Show my suburb on the map.
+                                    </div>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                        checked={!!field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                </div>
 
                 <FormField
                     control={form.control}

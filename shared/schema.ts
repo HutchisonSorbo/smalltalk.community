@@ -697,6 +697,9 @@ export const professionalProfiles = pgTable("professional_profiles", {
   profileImageUrl: varchar("profile_image_url"),
   verified: boolean("verified").default(false),
   isContactInfoPublic: boolean("is_contact_info_public").default(false),
+  latitude: varchar("latitude"),
+  longitude: varchar("longitude"),
+  isLocationShared: boolean("is_location_shared").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
