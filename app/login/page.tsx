@@ -44,9 +44,19 @@ function LoginForm() {
         const error = searchParams.get("error");
         const errorDescription = searchParams.get("error_description");
         if (error) {
+            let title = "Authentication Error";
+            let description = errorDescription || "An error occurred during authentication.";
+
+            if (error === "auth_code_error") {
+                title = "Verification Failed";
+            } else if (error === "cross_device_verification") {
+                title = "Verification Link Expired or Invalid";
+                description = "For security reasons, please open the verification link on the same device and browser where you signed up. If that doesn't work, try signing in to resend the link.";
+            }
+
             toast({
-                title: error === "auth_code_error" ? "Verification Failed" : "Authentication Error",
-                description: errorDescription || "An error occurred during authentication.",
+                title,
+                description,
                 variant: "destructive",
             });
         }

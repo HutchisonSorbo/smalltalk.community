@@ -36,10 +36,20 @@ export async function GET(request: Request) {
                 }
             } else {
                 console.error('Auth code exchange error:', error)
+
+                // Handle PKCE cross-device issue
+                if (error.code === 'invalid_grant' || error.message.includes('code verifier')) {
+                    return NextResponse.redirect(`${origin}/login?error=cross_device_verification&error_description=${encodeURIComponent("Please open this link on the same device/browser where you signed up.")}`)
+                }
+
                 return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.name)}&error_description=${encodeURIComponent(error.message)}`)
             }
         } catch (err: any) {
             console.error('Auth callback exception:', err)
+            // Handle PKCE exceptions
+            if (err?.message?.includes('code verifier') || err?.code === 'invalid_grant') {
+                return NextResponse.redirect(`${origin}/login?error=cross_device_verification&error_description=${encodeURIComponent("Please open this link on the same device/browser where you signed up.")}`)
+            }
             return NextResponse.redirect(`${origin}/login?error=server_error&error_description=${encodeURIComponent(err.message || "Unknown error")}`)
         }
     }
