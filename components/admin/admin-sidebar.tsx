@@ -9,6 +9,7 @@ import {
     Search,
     LayoutDashboard,
     Settings,
+    Megaphone,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -59,9 +60,14 @@ const items = [
         icon: Ticket,
     },
     {
-        title: "Auditions",
+        title: "Classifieds/Auditions",
         url: "/admin/auditions",
-        icon: Search,
+        icon: Mic2,
+    },
+    {
+        title: "Announcements",
+        url: "/admin/announcements",
+        icon: Megaphone,
     },
 ]
 

@@ -3,6 +3,10 @@ import React from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { db } from "@/server/db";
+import { announcements } from "@shared/schema";
+import { desc, eq } from "drizzle-orm";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
@@ -12,17 +16,25 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
     title: "vic.band",
-    // ... existing metadata ...
     description: "Connect with Victorian musicians and buy/sell gear",
-
-
+    icons: {
+        icon: "/favicon.ico",
+        shortcut: "/favicon.ico",
+        apple: "/favicon.ico",
+    }
 };
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const activeAnnouncements = await db
+        .select()
+        .from(announcements)
+        .where(eq(announcements.isActive, true))
+        .orderBy(desc(announcements.priority), desc(announcements.createdAt));
+
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
@@ -56,6 +68,7 @@ export default function RootLayout({
                     <AccessibilityProvider>
                         <SkipToContent />
                         <div id="main-content" className="min-h-screen bg-background text-foreground font-sans antialiased">
+                            <AnnouncementBanner announcements={activeAnnouncements} />
                             {children}
                         </div>
                     </AccessibilityProvider>

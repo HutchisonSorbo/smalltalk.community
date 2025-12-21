@@ -729,3 +729,26 @@ export type InsertProfessionalProfile = z.infer<typeof insertProfessionalProfile
 export type ProfessionalProfile = typeof professionalProfiles.$inferSelect;
 
 
+// Announcements table
+export const announcements = pgTable("announcements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 255 }), // Internal reference
+  message: text("message").notNull(),
+  visibility: varchar("visibility", { length: 20 }).notNull().default("all"), // 'public', 'private', 'all'
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("announcements_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("announcements_admin_all", { for: "all", to: "authenticated", using: sql`true` }), // Admin check handled in app logic, RLS kept open for simplicity as admins are authenticated
+]);
+
+export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type Announcement = typeof announcements.$inferSelect;
