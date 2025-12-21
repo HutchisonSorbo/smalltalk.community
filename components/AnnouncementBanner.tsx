@@ -32,7 +32,7 @@ export function AnnouncementBanner({ announcements }: AnnouncementBannerProps) {
     if (!visibleAnnouncement || dismissed) return null;
 
     return (
-        <div className="relative bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 text-white">
+        <div className="relative bg-gradient-to-r from-blue-700 to-indigo-800 px-4 py-3 text-white">
             <div className="text-center text-sm font-medium">
                 {visibleAnnouncement.message}
             </div>
