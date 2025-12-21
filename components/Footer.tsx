@@ -51,7 +51,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-8">
             <AboriginalFlag className="h-4 w-6 rounded-sm" />
             <p>vic.band acknowledges the Traditional Owners of Country throughout Victoria. We pay our respects to Elders past and present.</p>
             <AboriginalFlag className="h-4 w-6 rounded-sm" />
