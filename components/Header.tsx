@@ -138,6 +138,14 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
                       )}
                     </Link>
                   </DropdownMenuItem>
+                  {user.isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="cursor-pointer font-semibold text-purple-600 focus:text-purple-600" data-testid="link-admin-dashboard">
+                        <User className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard" className="cursor-pointer" data-testid="link-dashboard">
                       <User className="mr-2 h-4 w-4" />
