@@ -1,0 +1,41 @@
+# Security Policy
+
+## Supported Versions
+
+The following versions of the project are currently being supported with security updates.
+
+| Version | Supported          |
+| ------- | ------------------ |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
+
+## Reporting a Vulnerability
+
+We take security seriously. If you discover a vulnerability, please report it responsibly.
+
+### How to Report
+
+Please do **NOT** open a public issue on GitHub. Instead, report vulnerabilities via:
+
+1.  **Email**: Contact the maintainers directly (provide email if applicable, or use a secure channel).
+2.  **Private Disclosure**: If using a platform that supports it (like GitHub Security Advisories), use the private reporting feature.
+
+### Information to Include
+
+- Description of the vulnerability.
+- Steps to reproduce (POC).
+- Potential impact.
+- Affected components/versions.
+
+### What to Expect
+
+- We will acknowledge receipt of your report within 48 hours.
+- We will provide an estimated timeline for a fix.
+- We will notify you when the fix is released.
+
+## Security Best Practices in This Codebase
+
+- **Row Level Security (RLS)**: All database tables must have RLS enabled and policies defined for `select`, `insert`, `update`, and `delete`.
+- **Authentication**: All protected routes must verify the user session server-side.
+- **Secrets**: No secrets (API keys, tokens) should be hardcoded. Use environment variables.
+- **Dependencies**: Regular `npm audit` checks are recommended.

@@ -42,7 +42,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("users_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.id}` }),
   pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.id}`, withCheck: sql`auth.uid() = ${table.id}` }),
 ]);
 
