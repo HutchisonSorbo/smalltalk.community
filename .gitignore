@@ -19,3 +19,4 @@ build/
 
 # Storage
 public/uploads/
+app/(payload)/cms/importMap.js
