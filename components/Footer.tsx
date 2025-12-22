@@ -57,7 +57,7 @@ export function Footer() {
             <AboriginalFlag className="h-4 w-6 rounded-sm" />
           </div>
           <p className="mb-8">Made for Victoria's musicians. Not affiliated with any other platform.</p>
-          <p>smalltalk.community &copy;</p>
+          <p>&copy; 2025 smalltalk.community</p>
         </div>
       </div>
     </footer>
