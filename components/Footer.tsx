@@ -56,7 +56,8 @@ export function Footer() {
             <p>vic.band acknowledges the Traditional Owners of Country throughout Victoria. We pay our respects to Elders past and present.</p>
             <AboriginalFlag className="h-4 w-6 rounded-sm" />
           </div>
-          <p>Made for Victoria's musicians. Not affiliated with any other platform.</p>
+          <p className="mb-8">Made for Victoria's musicians. Not affiliated with any other platform.</p>
+          <p>&copy; smalltalk.community</p>
         </div>
       </div>
     </footer>
