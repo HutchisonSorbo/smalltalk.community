@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MusicianActionsCell, CreateMusicianButton } from "@/components/admin/musician-actions";
+import { MusicianActionsCell, CreateMusicianButton } from "@/components/vic-band/admin/musician-actions";
 import { desc } from "drizzle-orm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 

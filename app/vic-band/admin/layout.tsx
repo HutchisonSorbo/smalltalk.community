@@ -1,4 +1,4 @@
-import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { AdminSidebar } from "@/components/vic-band/admin/admin-sidebar"
 import {
     Breadcrumb,
     BreadcrumbItem,

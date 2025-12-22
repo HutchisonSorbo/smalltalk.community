@@ -13,7 +13,7 @@ import { Calendar, MapPin, Music, Share2, Edit, Ticket, Users } from "lucide-rea
 import { format } from "date-fns";
 import { getGig } from "@/app/vic-band/actions/gigs";
 import Link from "next/link";
-import { ShareDialog } from "@/components/ShareDialog";
+import { ShareDialog } from "@/components/vic-band/ShareDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function GigDetailPage() {

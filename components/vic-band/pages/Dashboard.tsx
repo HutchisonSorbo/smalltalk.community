@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ProfessionalProfileForm } from "@/components/ProfessionalProfileForm";
+import { ProfessionalProfileForm } from "@/components/vic-band/ProfessionalProfileForm";
 import { Plus, Music, User, Users, MapPin, Globe, Briefcase } from "lucide-react"; // Added Users, Briefcase
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

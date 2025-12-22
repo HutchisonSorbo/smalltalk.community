@@ -1,6 +1,6 @@
 "use client";
 
-import { ProfessionalProfileForm } from "@/components/ProfessionalProfileForm";
+import { ProfessionalProfileForm } from "@/components/vic-band/ProfessionalProfileForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/vic-band/Header";
 import { Footer } from "@/components/vic-band/Footer";

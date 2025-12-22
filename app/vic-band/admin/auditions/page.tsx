@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AuditionActionsCell, CreateAuditionButton } from "@/components/admin/audition-actions";
+import { AuditionActionsCell, CreateAuditionButton } from "@/components/vic-band/admin/audition-actions";
 import { desc } from "drizzle-orm";
 
 export default async function AuditionsPage() {

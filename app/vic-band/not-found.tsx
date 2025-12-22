@@ -1,6 +1,6 @@
 "use client";
 
-import NotFound from "@/components/pages/not-found";
+import NotFound from "@/components/vic-band/pages/not-found";
 
 export default function NotFoundPage() {
     return <NotFound />;

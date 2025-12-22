@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import Landing from "@/components/pages/Landing";
-import Home from "@/components/pages/Home";
+import Landing from "@/components/vic-band/pages/Landing";
+import Home from "@/components/vic-band/pages/Home";
 import { Loader2 } from "lucide-react";
 
 export default function Page() {

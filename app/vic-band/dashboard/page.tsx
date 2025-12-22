@@ -1,4 +1,4 @@
-import Dashboard from "@/components/pages/Dashboard";
+import Dashboard from "@/components/vic-band/pages/Dashboard";
 
 export const dynamic = "force-dynamic";
 

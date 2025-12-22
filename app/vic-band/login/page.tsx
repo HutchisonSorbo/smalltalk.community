@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-import { AccessibilityPanel } from "@/components/AccessibilityPanel";
+import { AccessibilityPanel } from "@/components/vic-band/AccessibilityPanel";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 
