@@ -65,3 +65,4 @@ export const config = {
         "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
     ],
 };
+// Force update: Mon 22 Dec 2025 21:51:17 AEDT
