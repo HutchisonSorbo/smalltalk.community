@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Middleware updated at: 2025-12-23T10:35:00+11:00 (Renamed /marketing to /hub)
+// Middleware updated at: 2025-12-23T10:45:00+11:00 (Force Push Restore)
 
 export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
