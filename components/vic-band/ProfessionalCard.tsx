@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MapPin, Briefcase } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ReportDialog } from "@/components/ReportDialog";
+import { ReportDialog } from "@/components/vic-band/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // import { RatingBadge } from "@/components/RatingBadge"; // Temporarily omit if not ready, or enable if it works generically
 import type { ProfessionalProfile } from "@shared/schema";

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Band } from "@shared/schema";
 
-import { ReportDialog } from "@/components/ReportDialog";
+import { ReportDialog } from "@/components/vic-band/ReportDialog";
 
 interface BandCardProps {
     band: Band;

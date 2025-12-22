@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { LocationAutocomplete } from "@/components/LocationAutocomplete";
+import { LocationAutocomplete } from "@/components/vic-band/LocationAutocomplete";
 
 interface FilterOption {
   value: string;

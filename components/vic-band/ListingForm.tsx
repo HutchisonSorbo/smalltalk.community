@@ -21,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MultiImageUpload } from "@/components/ImageUpload";
-import { LocationAutocomplete } from "@/components/LocationAutocomplete";
+import { MultiImageUpload } from "@/components/vic-band/ImageUpload";
+import { LocationAutocomplete } from "@/components/vic-band/LocationAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";

@@ -14,8 +14,8 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { ImageUpload } from "@/components/ImageUpload";
-import { LocationAutocomplete } from "@/components/LocationAutocomplete";
+import { ImageUpload } from "@/components/vic-band/ImageUpload";
+import { LocationAutocomplete } from "@/components/vic-band/LocationAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
