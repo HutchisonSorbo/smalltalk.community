@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Middleware updated at: 2025-12-23T10:45:00+11:00 (Force Push Restore)
+// Middleware updated at: 2025-12-23T10:55:00+11:00 (Fix Login 404 on Hub)
 
 export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
@@ -41,7 +41,6 @@ export async function middleware(request: NextRequest) {
     const hostname = request.headers.get("host") || "";
     
     // Check if we are in dev mode (localhost) or production
-    // CRITICAL: This includes the Vercel subdomain "smalltalk-community"
     const isSmalltalk = hostname === "smalltalk.community" || hostname.includes("smalltalk-community");
     
     const url = request.nextUrl;
@@ -62,24 +61,33 @@ export async function middleware(request: NextRequest) {
     }
 
     // Rewrite Logic
-    // If the path is ALREADY starting with /vic-band or /hub, do nothing (avoid infinite loop)
+    
+    // 1. Explicit Routes: If path is explicitly /vic-band or /hub, let it pass (it will be handled by file system)
     if (path.startsWith("/vic-band") || path.startsWith("/hub")) {
         return response;
     }
 
+    // 2. Smalltalk/Hub Domain Logic
     if (isSmalltalk) {
-        // Rewrite to /hub (The Hub) - formerly /marketing
-        const newUrl = new URL(`/hub${path === "/" ? "" : path}`, request.url);
-        const rewriteResponse = NextResponse.rewrite(newUrl);
-        // Copy cookies and headers
-        rewriteResponse.headers.set("x-url", request.url);
-        response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
-        response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
-        return rewriteResponse;
+        // Only rewrite to /hub if it is the ROOT path.
+        // This allows other paths like /login, /dashboard to fall through to the App logic below.
+        if (path === "/") {
+            const newUrl = new URL("/hub", request.url);
+            const rewriteResponse = NextResponse.rewrite(newUrl);
+            rewriteResponse.headers.set("x-url", request.url);
+            response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
+            response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+            return rewriteResponse;
+        }
+        // If path is NOT /, we let it fall through to the default logic (Vic Band App).
+        // This ensures smalltalk.community/login -> /vic-band/login (Correct)
     }
 
-    // Default: Rewrite to /vic-band (The App)
-    // This covers vic.band, vic-band.vercel.app, localhost, etc.
+    // 3. Default Logic: Rewrite everything else to /vic-band (The App)
+    // This covers:
+    // - vic.band domain
+    // - smalltalk.community domain (any path other than / or /hub)
+    // - localhost
     const newUrl = new URL(`/vic-band${path === "/" ? "" : path}`, request.url);
     const rewriteResponse = NextResponse.rewrite(newUrl);
 
