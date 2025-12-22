@@ -20,16 +20,7 @@ export default buildConfig({
     },
     admin: {
         user: 'cms-users',
-        routes: {
-            login: '/cms/login',
-            logout: '/cms/logout',
-            account: '/cms/account',
-            createFirstUser: '/cms/create-first-user',
-            forgot: '/cms/forgot',
-            reset: '/cms/reset',
-            inactivity: '/cms/inactivity',
-            unauthorized: '/cms/unauthorized',
-        },
+
         importMap: {
             baseDir: path.resolve(dirname),
         },
