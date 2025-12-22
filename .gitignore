@@ -20,3 +20,5 @@ build/
 # Storage
 public/uploads/
 app/(payload)/cms/importMap.js
+# Sentry Config File
+.env.sentry-build-plugin

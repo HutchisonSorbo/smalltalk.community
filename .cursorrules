@@ -1,0 +1,45 @@
+# Sentry Implementation Rules
+
+## Exception Catching
+- Use `Sentry.captureException(error)` to capture expected exceptions in try-catch blocks.
+
+## Tracing
+- Create spans for meaningful actions (button clicks, API calls).
+- Use `Sentry.startSpan({ op: "...", name: "..." }, (span) => { ... })`.
+- **Naming**: `name` and `op` must be meaningful.
+- **Attributes**: Attach metrics and configuration values to spans.
+
+### Tracing Examples
+
+**Component Action:**
+```javascript
+Sentry.startSpan({ op: "ui.click", name: "Test Button Click" }, (span) => {
+    span.setAttribute("config", "some config");
+    doSomething();
+});
+```
+
+**API Call:**
+```javascript
+async function fetchUserData(userId) {
+  return Sentry.startSpan({ op: "http.client", name: `GET /api/users/${userId}` }, async () => {
+    // fetch logic
+  });
+}
+```
+
+## Logging
+- Import: `import * as Sentry from "@sentry/nextjs"`.
+- Init: `Sentry.init({ enableLogs: true })` in config files.
+- Enable `consoleLoggingIntegration` to capture console logs.
+
+**Logger Usage:**
+```javascript
+const { logger } = Sentry;
+logger.info("Updated profile", { profileId: 345 });
+```
+
+## Configuration File Locations
+- Client: `instrumentation-client.ts` (or equivalent in Next.js App Router)
+- Server: `sentry.server.config.ts`
+- Edge: `sentry.edge.config.ts`
