@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+// Middleware updated at: 2025-12-23T10:35:00+11:00 (Renamed /marketing to /hub)
+
 export async function middleware(request: NextRequest) {
     let response = NextResponse.next({
         request: {
@@ -37,48 +39,47 @@ export async function middleware(request: NextRequest) {
 
     // --- Domain Routing & Rewrites ---
     const hostname = request.headers.get("host") || "";
-    // Check if we are in dev mode (localhost) or production
-    const isSmalltalk = hostname === "smalltalk.community";
     
-    // We treat EVERYTHING else as VicBand by default.
-    // This covers vic.band, www.vic.band, localhost, and all *.vercel.app preview URLs.
+    // Check if we are in dev mode (localhost) or production
+    // CRITICAL: This includes the Vercel subdomain "smalltalk-community"
+    const isSmalltalk = hostname === "smalltalk.community" || hostname.includes("smalltalk-community");
     
     const url = request.nextUrl;
     const path = url.pathname;
 
     // Skip Next.js internals, static files, and Sentry monitoring
-    // Added /monitoring to exclusion list
     if (path.startsWith("/_next") || path.startsWith("/api") || path.startsWith("/cms") || path === "/monitoring" || path.includes(".")) {
         return response;
     }
 
     // Auth Protection (Legacy/VicBand)
-    // We check the original path.
     if (path.startsWith("/dashboard") && !user) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
     if (path === "/login" && user) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        const next = request.nextUrl.searchParams.get("next");
+        return NextResponse.redirect(new URL(next || "/dashboard", request.url));
     }
 
     // Rewrite Logic
-    // If the path is ALREADY starting with /vic-band or /marketing, do nothing (avoid infinite loop)
-    if (path.startsWith("/vic-band") || path.startsWith("/marketing")) {
+    // If the path is ALREADY starting with /vic-band or /hub, do nothing (avoid infinite loop)
+    if (path.startsWith("/vic-band") || path.startsWith("/hub")) {
         return response;
     }
 
     if (isSmalltalk) {
-        // Rewrite to /marketing
-        const newUrl = new URL(`/marketing${path === "/" ? "" : path}`, request.url);
+        // Rewrite to /hub (The Hub) - formerly /marketing
+        const newUrl = new URL(`/hub${path === "/" ? "" : path}`, request.url);
         const rewriteResponse = NextResponse.rewrite(newUrl);
-        // Copy cookies from Supabase response to Rewrite response
+        // Copy cookies and headers
         rewriteResponse.headers.set("x-url", request.url);
         response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
         response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
         return rewriteResponse;
     }
 
-    // Default: Rewrite to /vic-band (for vic.band, localhost, vercel.app, etc.)
+    // Default: Rewrite to /vic-band (The App)
+    // This covers vic.band, vic-band.vercel.app, localhost, etc.
     const newUrl = new URL(`/vic-band${path === "/" ? "" : path}`, request.url);
     const rewriteResponse = NextResponse.rewrite(newUrl);
 
@@ -90,14 +91,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
-         * - api/ (API routes)
-         */
         "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
     ],
 };
