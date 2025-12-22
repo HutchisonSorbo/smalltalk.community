@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Trash, Plus } from "lucide-react";
-import { deleteClassified, seedClassified } from "@/app/admin/auditions/actions";
+import { deleteClassified, seedClassified } from "@/app/(app)/admin/auditions/actions";
 import { useState } from "react";
 
 export function AuditionActionsCell({ id }: { id: string }) {

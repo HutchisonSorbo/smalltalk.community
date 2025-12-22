@@ -14,8 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ArrowLeft, Trash2, Plus, Users, Save, Upload } from "lucide-react";
-import { getGig, updateGig, addGigManager, removeGigManager } from "@/app/actions/gigs";
-import { uploadFile } from "@/app/actions/upload";
+import { getGig, updateGig, addGigManager, removeGigManager } from "@/app/(app)/actions/gigs";
+import { uploadFile } from "@/app/(app)/actions/upload";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 

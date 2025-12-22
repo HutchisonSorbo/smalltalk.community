@@ -14,7 +14,7 @@ const VictoriaMap = dynamic(() => import("@/components/VictoriaMap"), {
 
 import { DiscordWidget } from "@/components/DiscordWidget";
 import { FeaturedContent } from "@/components/FeaturedContent";
-import { updateLastActive } from "@/app/actions/featured";
+import { updateLastActive } from "@/app/(app)/actions/featured";
 
 export default function Home() {
   const { user } = useAuth();

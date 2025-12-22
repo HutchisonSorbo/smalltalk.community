@@ -67,10 +67,10 @@ export default async function RootLayout({
                 <Providers>
                     <AccessibilityProvider>
                         <SkipToContent />
-                        <div id="main-content" className="min-h-screen bg-background text-foreground font-sans antialiased">
+                        <main id="main-content" className="min-h-screen bg-background text-foreground font-sans antialiased">
                             <AnnouncementBanner announcements={activeAnnouncements} />
                             {children}
-                        </div>
+                        </main>
                     </AccessibilityProvider>
                 </Providers>
             </body>

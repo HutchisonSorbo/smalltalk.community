@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Trash } from "lucide-react";
-import { deleteUser, toggleAdminStatus } from "@/app/admin/users/actions";
+import { deleteUser, toggleAdminStatus } from "@/app/(app)/admin/users/actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

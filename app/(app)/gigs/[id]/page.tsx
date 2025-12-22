@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { Calendar, MapPin, Music, Share2, Edit, Ticket, Users } from "lucide-react";
 import { format } from "date-fns";
-import { getGig } from "@/app/actions/gigs";
+import { getGig } from "@/app/(app)/actions/gigs";
 import Link from "next/link";
 import { ShareDialog } from "@/components/ShareDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

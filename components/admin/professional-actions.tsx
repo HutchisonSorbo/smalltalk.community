@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Trash, Plus } from "lucide-react";
-import { deleteProfessional, seedProfessional } from "@/app/admin/professionals/actions";
+import { deleteProfessional, seedProfessional } from "@/app/(app)/admin/professionals/actions";
 import { useState } from "react";
 
 export function ProfessionalActionsCell({ id }: { id: string }) {

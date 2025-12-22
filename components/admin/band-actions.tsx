@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Trash, Plus } from "lucide-react";
-import { deleteBand, seedBand } from "@/app/admin/bands/actions";
+import { deleteBand, seedBand } from "@/app/(app)/admin/bands/actions";
 import { useState } from "react";
 
 export function BandActionsCell({ id }: { id: string }) {
