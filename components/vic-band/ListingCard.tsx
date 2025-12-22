@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MapPin, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { RatingBadge } from "@/components/RatingBadge";
+import { RatingBadge } from "@/components/vic-band/RatingBadge";
 import type { MarketplaceListing } from "@shared/schema";
 
 interface ListingCardProps {

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ReportDialog } from "@/components/vic-band/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { RatingBadge } from "@/components/RatingBadge";
+import { RatingBadge } from "@/components/vic-band/RatingBadge";
 import type { MusicianProfile } from "@shared/schema";
 
 interface MusicianCardProps {

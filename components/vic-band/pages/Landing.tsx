@@ -6,7 +6,7 @@ import { Header } from "@/components/vic-band/Header";
 import { Footer } from "@/components/vic-band/Footer";
 import dynamic from "next/dynamic";
 
-const VictoriaMap = dynamic(() => import("@/components/VictoriaMap"), {
+const VictoriaMap = dynamic(() => import("@/components/vic-band/VictoriaMap"), {
   ssr: false,
   loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-lg" />
 });

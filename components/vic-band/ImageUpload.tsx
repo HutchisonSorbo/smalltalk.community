@@ -3,7 +3,7 @@ import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ImageCropper } from "@/components/ImageCropper";
+import { ImageCropper } from "@/components/vic-band/ImageCropper";
 
 interface ImageUploadProps {
   value?: string | null;

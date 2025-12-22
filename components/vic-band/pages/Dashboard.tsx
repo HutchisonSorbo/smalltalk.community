@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Header } from "@/components/vic-band/Header";
 import { Footer } from "@/components/vic-band/Footer";
-import { MusicianProfileForm } from "@/components/MusicianProfileForm";
+import { MusicianProfileForm } from "@/components/vic-band/MusicianProfileForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
