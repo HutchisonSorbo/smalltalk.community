@@ -10,8 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Header } from "@/components/vic-band/Header";
 import { Footer } from "@/components/vic-band/Footer";
-import { ReviewSection } from "@/components/ReviewSection";
-import { StarRating } from "@/components/StarRating";
+import { ReviewSection } from "@/components/vic-band/ReviewSection";
+import { StarRating } from "@/components/vic-band/StarRating";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
