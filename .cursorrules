@@ -1,45 +1,18 @@
-# Sentry Implementation Rules
+# General Rules
 
-## Exception Catching
-- Use `Sentry.captureException(error)` to capture expected exceptions in try-catch blocks.
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: Supabase / Drizzle ORM
+- **State**: React Query / Zustand
 
-## Tracing
-- Create spans for meaningful actions (button clicks, API calls).
-- Use `Sentry.startSpan({ op: "...", name: "..." }, (span) => { ... })`.
-- **Naming**: `name` and `op` must be meaningful.
-- **Attributes**: Attach metrics and configuration values to spans.
+# Sentry Configuration
+- **Sentry DSN**: https://c9b0e3579848f4bbd146903260841961@o4508499244089344.ingest.us.sentry.io/4508502598975488
+- **Organization**: hutchison-sorbo
+- **Project**: javascript-nextjs
 
-### Tracing Examples
-
-**Component Action:**
-```javascript
-Sentry.startSpan({ op: "ui.click", name: "Test Button Click" }, (span) => {
-    span.setAttribute("config", "some config");
-    doSomething();
-});
-```
-
-**API Call:**
-```javascript
-async function fetchUserData(userId) {
-  return Sentry.startSpan({ op: "http.client", name: `GET /api/users/${userId}` }, async () => {
-    // fetch logic
-  });
-}
-```
-
-## Logging
-- Import: `import * as Sentry from "@sentry/nextjs"`.
-- Init: `Sentry.init({ enableLogs: true })` in config files.
-- Enable `consoleLoggingIntegration` to capture console logs.
-
-**Logger Usage:**
-```javascript
-const { logger } = Sentry;
-logger.info("Updated profile", { profileId: 345 });
-```
-
-## Configuration File Locations
-- Client: `instrumentation-client.ts` (or equivalent in Next.js App Router)
-- Server: `sentry.server.config.ts`
-- Edge: `sentry.edge.config.ts`
+# File Persistence & Deployment Protocol
+1. **Verification is Mandatory**: After using `write_to_file`, ALWAYS run `ls -la <filename>` to verify the file was actually created.
+2. **Force Write Default**: For critical components, prefer `cat > filename << 'EOF'` over `write_to_file` to bypass tool instability.
+3. **Pre-Push Cleanup**: ALWAYS run `rm -f .git/index.lock` before starting a git sequence.
+4. **Atomic Git Operations**: NEVER chain `git add && git commit && git push`. Run them as separate commands or verified steps. If `git status` is clean after write, it failed.
