@@ -21,14 +21,10 @@ export function HubHeader() {
                 {/* Right Actions */}
                 <div className="flex items-center gap-2 sm:gap-4">
                     <div className="hidden sm:flex items-center gap-2 mr-2">
-                         <Link href="/vic-band/login">
-                            <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10">
-                                Log in
-                            </Button>
-                        </Link>
-                        <Link href="/vic-band/login">
+                        {/* Single "Sign Up" button pointing to global login, matching vic-band app header style */}
+                         <Link href="/login">
                             <Button className="bg-white text-black hover:bg-neutral-200">
-                                Sign up
+                                Sign Up
                             </Button>
                         </Link>
                     </div>
@@ -38,9 +34,9 @@ export function HubHeader() {
                     <ThemeToggle />
                     <AccessibilityPanel />
                     
-                    {/* Mobile Login (Icon only or simplified) - keeping simple for now */}
-                     <Link href="/vic-band/login" className="sm:hidden">
-                        <Button size="sm" variant="secondary">Login</Button>
+                    {/* Mobile Login */}
+                     <Link href="/login" className="sm:hidden">
+                        <Button size="sm" variant="secondary">Sign Up</Button>
                     </Link>
                 </div>
             </div>
