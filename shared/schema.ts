@@ -751,6 +751,7 @@ export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
 });
 
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type Announcement = typeof announcements.$inferSelect;
 // ------------------------------------------------------------------
 // SYSTEM / RBAC TABLES (Namespaced with sys_)
 // ------------------------------------------------------------------
