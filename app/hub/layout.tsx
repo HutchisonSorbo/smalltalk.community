@@ -8,7 +8,7 @@ import { SkipToContent } from "@/components/SkipToContent";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Smalltalk Community",
+    title: "smalltalk.community",
     description: "Community Hub",
 };
 
