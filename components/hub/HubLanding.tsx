@@ -66,12 +66,11 @@ export function HubLanding() {
                                 linkText="Launch App"
                             />
                             <FeatureCard
-                                icon={<Radio className="h-6 w-6 text-blue-500" />}
-                                title="Community Vote"
-                                description="Have your say. Participate in community polls and help shape the future of the scene."
-                                link="#"
-                                linkText="Coming Soon"
-                                disabled
+                                icon={<ShieldCheck className="h-6 w-6 text-indigo-500" />}
+                                title="Volunteer Passport"
+                                description="Your digital passport for verifying credentials and finding volunteer opportunities across Victoria."
+                                link="/volunteer-passport"
+                                linkText="Launch App"
                             />
                             <FeatureCard
                                 icon={<Zap className="h-6 w-6 text-yellow-500" />}
