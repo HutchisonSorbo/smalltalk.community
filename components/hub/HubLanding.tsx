@@ -8,22 +8,22 @@ import { HubHeader } from "./HubHeader";
 
 export function HubLanding() {
     return (
-        <div className="min-h-screen bg-background text-foreground selection:bg-purple-500 selection:text-white">
+        <div className="min-h-screen bg-background text-foreground selection:bg-blue-500 selection:text-white">
             <HubHeader />
 
             <main>
                 {/* Hero Section */}
                 <section className="relative pt-20 pb-32 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-transparent pointer-events-none" />
 
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="max-w-4xl mx-auto text-center space-y-8">
                             <div className="inline-flex items-center rounded-full border border-border bg-muted/50 px-3 py-1 text-sm font-medium backdrop-blur-sm">
-                                <span className="flex h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                                <span className="flex h-2 w-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
                                 Ecosystem Live
                             </div>
 
-                            <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500 pb-2">
+                            <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 pb-2">
                                 smalltalk.community
                             </h1>
 
@@ -59,7 +59,7 @@ export function HubLanding() {
 
                         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                             <FeatureCard
-                                icon={<Music2 className="h-6 w-6 text-purple-500" />}
+                                icon={<Music2 className="h-6 w-6 text-blue-500" />}
                                 title="vic.band"
                                 description="The ultimate directory for Victorian musicians, bands, and gigs. Connect and collaborate."
                                 link="/vic-band"
@@ -87,7 +87,7 @@ export function HubLanding() {
 
                 {/* CTA Section */}
                 <section className="py-24 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-900/10 to-blue-900/10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 to-cyan-900/10" />
                     <div className="container mx-auto px-4 relative z-10 text-center">
                         <h2 className="text-4xl font-bold mb-6">One Identity. Endless Possibilities.</h2>
                         <p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
@@ -105,7 +105,7 @@ export function HubLanding() {
             <footer className="border-t py-12 bg-muted/50">
                 <div className="container mx-auto px-4 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-2 font-bold text-xl mb-4 text-foreground">
-                        <span className="h-4 w-4 rounded-full bg-purple-500"></span>
+                        <span className="h-4 w-4 rounded-full bg-blue-500"></span>
                         smalltalk.community
                     </div>
                     <p className="text-sm">
