@@ -36,12 +36,12 @@ export function HubLanding() {
                                 <Link href="/login">
                                     <Button size="lg" className="h-12 px-8 text-lg rounded-full">
                                         Join the Community <ArrowRight className="ml-2 h-5 w-5" />
-                                    Button>
+                                    </Button>
                                 </Link>
                                 <Link href="/vic-band">
                                     <Button variant="outline" size="lg" className="h-12 px-8 text-lg rounded-full">
                                         Browse Directory
-                                    </Button>
+                                    </</Button>
                                 </Link>
                             </div>
                         </div>
@@ -96,7 +96,7 @@ export function HubLanding() {
                         <Link href="/login">
                              <Button size="lg" className="h-14 px-10 text-xl rounded-full shadow-lg hover:shadow-xl transition-all">
                                 Get Started Now
-                            </Button>
+                            </</Button>
                         </Link>
                     </div>
                 </section>
