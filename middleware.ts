@@ -62,8 +62,8 @@ export async function middleware(request: NextRequest) {
 
     // Rewrite Logic
 
-    // 1. Explicit Routes: If path is explicitly /vic-band or /hub, let it pass (it will be handled by file system)
-    if (path.startsWith("/vic-band") || path.startsWith("/hub")) {
+    // 1. Explicit Routes: If path is explicitly /vic-band, /hub, or /volunteer-passport, let it pass
+    if (path.startsWith("/vic-band") || path.startsWith("/hub") || path.startsWith("/volunteer-passport")) {
         return response;
     }
 
