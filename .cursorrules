@@ -12,7 +12,9 @@
 - **Project**: javascript-nextjs
 
 # File Persistence & Deployment Protocol
-1. **Verification is Mandatory**: After using `write_to_file`, ALWAYS run `ls -la <filename>` to verify the file was actually created.
-2. **Force Write Default**: For critical components, prefer `cat > filename << 'EOF'` over `write_to_file` to bypass tool instability.
-3. **Pre-Push Cleanup**: ALWAYS run `rm -f .git/index.lock` before starting a git sequence.
-4. **Atomic Git Operations**: NEVER chain `git add && git commit && git push`. Run them as separate commands or verified steps. If `git status` is clean after write, it failed.
+1. **The "Read-Back" Rule**: After ANY file write (tool or shell), you MUST read the file back (`cat filename`) to verify content stuck. Do not trust exit status 0.
+2. **Git Integrity Check**: Before any git operation, run `git rev-parse --is-inside-work-tree`. If it fails, STOP and diagnose.
+3. **Atomic & Verified**: 
+   - Write File -> `cat` verify -> `git add` -> `git status` check -> `git commit` -> `git push`.
+   - Never chain these. Verify each step.
+4. **Lock Recovery**: If `git` locks, delete `.git/index.lock` ONLY. avoided aggressive `pkill` unless necessary to preserve environment stability.
