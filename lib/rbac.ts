@@ -1,4 +1,4 @@
-import { db } from "@/db"; // Assuming db instance is available path
+import { db } from "@/server/db"; // Fixed import path
 import { sysUserRoles, sysRoles } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 
