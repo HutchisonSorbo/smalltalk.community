@@ -24,7 +24,7 @@ export function HubLanding() {
                             </div>
 
                             <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500 pb-2">
-                                smalltalk.community hub
+                                smalltalk.community
                             </h1>
 
                             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
