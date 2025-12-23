@@ -4,12 +4,14 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, Music, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HubHeader } from "@/components/hub/HubHeader";
 
 export function HubLanding() {
     return (
         <div className="min-h-screen bg-black text-white selection:bg-purple-500/30">
+            <HubHeader />
             {/* Hero Section */}
-            <main className="flex flex-col items-center justify-center px-4 pt-24 pb-12 text-center sm:pt-40">
+            <main className="flex flex-col items-center justify-center px-4 pt-32 pb-12 text-center sm:pt-48">
                 <div className="animate-fade-in-up space-y-8">
                     <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-white/80 backdrop-blur-xl">
                         <span className="flex h-2 w-2 rounded-full bg-purple-500 mr-2 animate-pulse"></span>
