@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { storage } from "@/server/storage";
 import { createClient } from "@/lib/supabase-server";
+import { getUserRoles } from "@/lib/rbac";
 
 export async function GET(request: Request) {
     try {
@@ -72,7 +73,8 @@ export async function GET(request: Request) {
         }
 
         console.log("Auth User API: Returning existing DB user");
-        return NextResponse.json(dbUser);
+        const roles = await getUserRoles(dbUser.id);
+        return NextResponse.json({ ...dbUser, roles });
     } catch (error) {
         console.error("Error fetching user:", error);
         return NextResponse.json({ message: "Failed to fetch user" }, { status: 500 });

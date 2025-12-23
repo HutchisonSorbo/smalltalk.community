@@ -39,10 +39,10 @@ export async function middleware(request: NextRequest) {
 
     // --- Domain Routing & Rewrites ---
     const hostname = request.headers.get("host") || "";
-    
+
     // Check if we are in dev mode (localhost) or production
-    const isSmalltalk = hostname === "smalltalk.community" || hostname.includes("smalltalk-community");
-    
+    const isSmalltalk = hostname.includes("smalltalk.community") || hostname.includes("smalltalk-community");
+
     const url = request.nextUrl;
     const path = url.pathname;
 
@@ -61,7 +61,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Rewrite Logic
-    
+
     // 1. Explicit Routes: If path is explicitly /vic-band or /hub, let it pass (it will be handled by file system)
     if (path.startsWith("/vic-band") || path.startsWith("/hub")) {
         return response;
@@ -94,7 +94,7 @@ export async function middleware(request: NextRequest) {
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
     return rewriteResponse;
-    
+
 }
 
 export const config = {

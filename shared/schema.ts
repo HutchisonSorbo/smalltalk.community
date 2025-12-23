@@ -751,4 +751,48 @@ export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
 });
 
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
-export type Announcement = typeof announcements.$inferSelect;
+// ------------------------------------------------------------------
+// SYSTEM / RBAC TABLES (Namespaced with sys_)
+// ------------------------------------------------------------------
+
+// System Roles (e.g., 'super_admin', 'hub_manager', 'moderator')
+export const sysRoles = pgTable("sys_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 50 }).notNull().unique(), // e.g. 'super_admin'
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("sys_roles_read", { for: "select", to: "authenticated", using: sql`true` }),
+  pgPolicy("sys_roles_admin_write", { for: "all", to: "service_role", using: sql`true` }), // Only service role (server) can modify roles for now
+]);
+
+// Join table: Users <-> Roles
+export const sysUserRoles = pgTable("sys_user_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  roleId: varchar("role_id").notNull().references(() => sysRoles.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("sys_user_roles_read", { for: "select", to: "authenticated", using: sql`true` }),
+  pgPolicy("sys_user_roles_admin_write", { for: "all", to: "service_role", using: sql`true` }),
+  index("sys_user_roles_user_idx").on(table.userId),
+]);
+
+export const sysRolesRelations = relations(sysRoles, ({ many }) => ({
+  userRoles: many(sysUserRoles),
+}));
+
+export const sysUserRolesRelations = relations(sysUserRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [sysUserRoles.userId],
+    references: [users.id],
+  }),
+  role: one(sysRoles, {
+    fields: [sysUserRoles.roleId],
+    references: [sysRoles.id],
+  }),
+}));
+
+export type SysRole = typeof sysRoles.$inferSelect;
+export type SysUserRole = typeof sysUserRoles.$inferSelect;
+

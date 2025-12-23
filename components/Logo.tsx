@@ -1,12 +1,16 @@
 
 import React from 'react';
 
-export function Logo({ className }: { className?: string }) {
-    // Extract height classes if needed, or just let valid CSS handle it.
-    // We assume className might set height, text color, etc.
+export interface LogoProps {
+    className?: string;
+    text?: string;
+    ariaLabel?: string;
+}
+
+export function Logo({ className, text = "vic.band", ariaLabel }: LogoProps) {
     return (
-        <div className={`flex items-center gap-0.5 font-bold text-3xl tracking-tight leading-none ${className}`} aria-label="vic.band Logo">
-            <span>vic.band</span>
+        <div className={`flex items-center gap-0.5 font-bold text-3xl tracking-tight leading-none ${className}`} aria-label={ariaLabel || `${text} Logo`}>
+            <span>{text}</span>
         </div>
     );
 }
