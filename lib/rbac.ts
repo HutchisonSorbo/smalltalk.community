@@ -20,6 +20,23 @@ export async function hasRole(userId: string, roleName: string): Promise<boolean
 /**
  * Checks if a user is a System Administrator.
  */
+/**
+ * Checks if a user is a System Administrator.
+ */
 export async function isSystemAdmin(userId: string): Promise<boolean> {
     return hasRole(userId, "super_admin");
 }
+
+/**
+ * Gets all system roles for a user.
+ */
+export async function getUserRoles(userId: string): Promise<string[]> {
+    const result = await db
+        .select({ roleName: sysRoles.name })
+        .from(sysUserRoles)
+        .innerJoin(sysRoles, eq(sysUserRoles.roleId, sysRoles.id))
+        .where(eq(sysUserRoles.userId, userId));
+
+    return result.map(r => r.roleName);
+}
+
