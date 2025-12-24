@@ -30,11 +30,17 @@ export default async function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const activeAnnouncements = await db
-        .select()
-        .from(announcements)
-        .where(eq(announcements.isActive, true))
-        .orderBy(desc(announcements.priority), desc(announcements.createdAt));
+    let activeAnnouncements = [];
+    try {
+        activeAnnouncements = await db
+            .select()
+            .from(announcements)
+            .where(eq(announcements.isActive, true))
+            .orderBy(desc(announcements.priority), desc(announcements.createdAt));
+    } catch (error) {
+        console.error("Failed to fetch announcements:", error);
+        // Fallback to empty announcements to prevent build failure
+    }
 
     return (
         <html lang="en" suppressHydrationWarning>
