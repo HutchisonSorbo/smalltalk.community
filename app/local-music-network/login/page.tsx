@@ -17,6 +17,15 @@ import { AccessibilityPanel } from "@/components/local-music-network/Accessibili
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 import { Turnstile } from "@marsidev/react-turnstile";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function LoginPage() {
     return (
@@ -37,10 +46,24 @@ function LoginForm() {
     const [accountType, setAccountType] = useState("Individual");
     const [otherAccountType, setOtherAccountType] = useState("");
     const [organisationName, setOrganisationName] = useState("");
+    const [showAgeWarning, setShowAgeWarning] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const supabase = createClient();
+
+    const checkAge = (dateString: string) => {
+        const today = new Date();
+        const birthDate = new Date(dateString);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        if (age < 18) {
+            setShowAgeWarning(true);
+        }
+    };
 
     useEffect(() => {
         const error = searchParams.get("error");
@@ -222,17 +245,6 @@ function LoginForm() {
                         {isSignUp && (
                             <>
                                 <div className="grid gap-2">
-                                    <label htmlFor="dob">Date of Birth</label>
-                                    <Input
-                                        id="dob"
-                                        type="date"
-                                        required={isSignUp}
-                                        value={dob}
-                                        onChange={(e) => setDob(e.target.value)}
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
                                     <Label>Account Type</Label>
                                     <div className="flex flex-col gap-2">
                                         <select
@@ -243,6 +255,8 @@ function LoginForm() {
                                                 const val = e.target.value;
                                                 setAccountType(val);
                                                 if (val !== "Other") setOtherAccountType("");
+                                                // Reset DOB if switching away from Individual? Or keep it?
+                                                // Let's keep it simple.
                                             }}
                                             disabled={isLoading}
                                         >
@@ -281,6 +295,23 @@ function LoginForm() {
                                         </div>
                                     )}
                                 </div>
+
+                                {accountType === "Individual" && (
+                                    <div className="grid gap-2">
+                                        <label htmlFor="dob">Date of Birth</label>
+                                        <Input
+                                            id="dob"
+                                            type="date"
+                                            required={isSignUp && accountType === "Individual"}
+                                            value={dob}
+                                            onChange={(e) => {
+                                                setDob(e.target.value);
+                                                checkAge(e.target.value);
+                                            }}
+                                            disabled={isLoading}
+                                        />
+                                    </div>
+                                )}
                             </>
                         )}
                         <div className="grid gap-2">
@@ -341,6 +372,20 @@ function LoginForm() {
                     </CardFooter>
                 </form>
             </Card>
+
+            <AlertDialog open={showAgeWarning} onOpenChange={setShowAgeWarning}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Age Verification</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Welcome to smalltalk.community! As you are under 18, some features of the website will be restricted to ensure a safe environment. We're glad to have you with us!
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setShowAgeWarning(false)}>Understood</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
