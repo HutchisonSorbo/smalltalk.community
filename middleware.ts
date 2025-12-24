@@ -62,8 +62,8 @@ export async function middleware(request: NextRequest) {
 
     // Rewrite Logic
 
-    // 1. Explicit Routes: If path is explicitly /vic-band, /hub, or /volunteer-passport, let it pass
-    if (path.startsWith("/vic-band") || path.startsWith("/hub") || path.startsWith("/volunteer-passport")) {
+    // 1. Explicit Routes: If path is explicitly /local-music-network, /hub, or /volunteer-passport, let it pass
+    if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport")) {
         return response;
     }
 
@@ -79,16 +79,16 @@ export async function middleware(request: NextRequest) {
             response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
             return rewriteResponse;
         }
-        // If path is NOT /, we let it fall through to the default logic (Vic Band App).
-        // This ensures smalltalk.community/login -> /vic-band/login (Correct)
+        // If path is NOT /, we let it fall through to the default logic (Local Music Network App).
+        // This ensures smalltalk.community/login -> /local-music-network/login (Correct)
     }
 
-    // 3. Default Logic: Rewrite everything else to /vic-band (The App)
+    // 3. Default Logic: Rewrite everything else to /local-music-network (The App)
     // This covers:
-    // - vic.band domain
+    // - Local Music Network domain (if still pointed)
     // - smalltalk.community domain (any path other than / or /hub)
     // - localhost
-    const newUrl = new URL(`/vic-band${path === "/" ? "" : path}`, request.url);
+    const newUrl = new URL(`/local-music-network${path === "/" ? "" : path}`, request.url);
     const rewriteResponse = NextResponse.rewrite(newUrl);
 
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));

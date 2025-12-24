@@ -3,7 +3,7 @@ import { users, musicianProfiles, bands, gigs, type UpsertUser, type InsertMusic
 import { eq, like } from "drizzle-orm";
 import { victoriaLocations } from "../lib/victoriaLocations";
 
-const TEST_EMAIL_SUFFIX = "@test.vic.band";
+const TEST_EMAIL_SUFFIX = "@test.Local Music Network";
 
 // Helper to get random item
 function getRandomItem<T>(arr: T[]): T {

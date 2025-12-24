@@ -2,17 +2,17 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Middleware Routing', () => {
 
-    test('Host: vic.band (Default) -> Loads Vic Band App', async ({ page }) => {
+    test('Host: Local Music Network (Default) -> Loads Local Music Network App', async ({ page }) => {
         // Override headers for all requests
         await page.route('**/*', route => {
             const headers = { ...route.request().headers() };
-            headers['host'] = 'vic.band';
+            headers['host'] = 'Local Music Network';
             route.continue({ headers });
         });
 
         await page.goto('/');
 
-        // Expect to see Vic Band Landing text
+        // Expect to see Local Music Network Landing text
         await expect(page.getByText('Where Victorian Music Connects')).toBeVisible();
         await expect(page.getByText('Join the largest verified community')).toBeVisible();
     });
@@ -29,7 +29,7 @@ test.describe('Middleware Routing', () => {
         // Expect to see Hub Landing text (The new branding)
         await expect(page.getByRole('heading', { name: 'smalltalk.community', exact: true })).toBeVisible();
 
-        // Expect NOT to see Vic Band specific text
+        // Expect NOT to see Local Music Network specific text
         await expect(page.getByText('Where Victorian Music Connects')).not.toBeVisible();
     });
 

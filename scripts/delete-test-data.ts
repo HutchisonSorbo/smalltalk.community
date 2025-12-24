@@ -2,7 +2,7 @@ import { db } from "../server/db";
 import { users, musicianProfiles, bands, gigs } from "../shared/schema";
 import { eq, like } from "drizzle-orm";
 
-const TEST_EMAIL_SUFFIX = "@test.vic.band";
+const TEST_EMAIL_SUFFIX = "@test.Local Music Network";
 
 async function cleanup() {
     console.log("🧹 Starting cleanup...");

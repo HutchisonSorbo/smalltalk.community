@@ -60,9 +60,9 @@ export function HubLanding() {
                         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                             <FeatureCard
                                 icon={<Music2 className="h-6 w-6 text-blue-500" />}
-                                title="vic.band"
+                                title="Local Music Network"
                                 description="The ultimate directory for Victorian musicians, bands, and gigs. Connect and collaborate."
-                                link="/vic-band"
+                                link="/local-music-network"
                                 linkText="Launch App"
                             />
                             <FeatureCard
