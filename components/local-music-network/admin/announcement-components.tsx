@@ -21,7 +21,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
-import { createAnnouncement, deleteAnnouncement, toggleAnnouncementActive } from "@/app/Local Music Network/admin/announcements/actions";
+import { createAnnouncement, deleteAnnouncement, toggleAnnouncementActive } from "@/app/local-music-network/admin/announcements/actions";
 import { Plus, Trash, Eye, EyeOff } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 

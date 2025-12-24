@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AccessibilityPanel } from "@/components/vic-band/AccessibilityPanel";
+import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
 import {
     DropdownMenu,
     DropdownMenuContent,

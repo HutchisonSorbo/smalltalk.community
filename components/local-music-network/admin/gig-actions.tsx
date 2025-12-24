@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Trash, Plus } from "lucide-react";
-import { deleteGig, seedGig } from "@/app/Local Music Network/admin/gigs/actions";
+import { deleteGig, seedGig } from "@/app/local-music-network/admin/gigs/actions";
 import { useState } from "react";
 
 export function GigActionsCell({ id }: { id: string }) {

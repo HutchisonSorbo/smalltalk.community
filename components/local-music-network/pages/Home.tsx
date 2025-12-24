@@ -14,7 +14,7 @@ const VictoriaMap = dynamic(() => import("@/components/local-music-network/Victo
 
 import { DiscordWidget } from "@/components/local-music-network/DiscordWidget";
 import { FeaturedContent } from "@/components/local-music-network/FeaturedContent";
-import { updateLastActive } from "@/app/Local Music Network/actions/featured";
+import { updateLastActive } from "@/app/local-music-network/actions/featured";
 
 export default function Home() {
   const { user } = useAuth();

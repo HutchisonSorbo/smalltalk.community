@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { AccessibilityPanel } from "@/components/vic-band/AccessibilityPanel";
+import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
 
 export function HubHeader() {
     return (

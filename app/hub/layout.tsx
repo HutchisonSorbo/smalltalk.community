@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "@/app/vic-band/globals.css";
-import { Providers } from "@/app/vic-band/providers";
+import "@/app/local-music-network/globals.css";
+import { Providers } from "@/app/local-music-network/providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
