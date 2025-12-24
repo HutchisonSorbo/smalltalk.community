@@ -39,6 +39,7 @@ export const users = pgTable("users", {
   dateOfBirth: timestamp("date_of_birth"),
   userType: varchar("user_type", { length: 50 }).default("musician"), // 'musician' | 'professional'
   accountType: varchar("account_type", { length: 100 }).default("Individual"), // 'Individual', 'Business', 'Government Organisation', 'Charity', 'Other'
+  organisationName: varchar("organisation_name", { length: 255 }),
   isAdmin: boolean("is_admin").default(false),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),

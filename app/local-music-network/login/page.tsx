@@ -36,6 +36,7 @@ function LoginForm() {
     const [rememberMe, setRememberMe] = useState(false);
     const [accountType, setAccountType] = useState("Individual");
     const [otherAccountType, setOtherAccountType] = useState("");
+    const [organisationName, setOrganisationName] = useState("");
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -97,6 +98,7 @@ function LoginForm() {
                         data: {
                             date_of_birth: dob,
                             account_type: finalAccountType,
+                            organisation_name: accountType !== "Individual" ? organisationName : undefined,
                             // Default to musician for individual, professional for others as a heuristic, 
                             // or just default to musician. Let's default to musician for now as safe default.
                             user_type: 'musician',
@@ -265,6 +267,19 @@ function LoginForm() {
                                             Select the type of account that matches your needs.
                                         </p>
                                     </div>
+
+                                    {accountType !== "Individual" && (
+                                        <div className="grid gap-2 mt-2">
+                                            <Label>Organisation Name</Label>
+                                            <Input
+                                                placeholder="e.g. Melbourne Symphony Orchestra"
+                                                value={organisationName}
+                                                onChange={(e) => setOrganisationName(e.target.value)}
+                                                required={isSignUp}
+                                                disabled={isLoading}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}

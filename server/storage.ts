@@ -212,6 +212,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -226,6 +227,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+
 
   // Musician profile operations
   async getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]> {
