@@ -14,8 +14,8 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { ImageUpload } from "@/components/Local Music Network/ImageUpload";
-import { LocationAutocomplete } from "@/components/Local Music Network/LocationAutocomplete";
+import { ImageUpload } from "@/components/local-music-network/ImageUpload";
+import { LocationAutocomplete } from "@/components/local-music-network/LocationAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";

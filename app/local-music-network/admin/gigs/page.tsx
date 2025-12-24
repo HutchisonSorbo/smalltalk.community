@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { GigActionsCell, CreateGigButton } from "@/components/Local Music Network/admin/gig-actions";
+import { GigActionsCell, CreateGigButton } from "@/components/local-music-network/admin/gig-actions";
 import { desc } from "drizzle-orm";
 
 export default async function GigsPage() {

@@ -1,6 +1,6 @@
 "use client";
 
-import ListingDetail from "@/components/Local Music Network/pages/ListingDetail";
+import ListingDetail from "@/components/local-music-network/pages/ListingDetail";
 
 export default function ListingDetailPage() {
     return <ListingDetail />;

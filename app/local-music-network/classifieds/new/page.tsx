@@ -1,7 +1,7 @@
 "use client";
 
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

@@ -4,7 +4,7 @@ import { MapPin, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Gig } from "@shared/schema";
 
-import { ReportDialog } from "@/components/Local Music Network/ReportDialog";
+import { ReportDialog } from "@/components/local-music-network/ReportDialog";
 
 export function GigCard({ gig }: { gig: Gig }) {
     const date = new Date(gig.date);

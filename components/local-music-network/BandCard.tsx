@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Band } from "@shared/schema";
 
-import { ReportDialog } from "@/components/Local Music Network/ReportDialog";
+import { ReportDialog } from "@/components/local-music-network/ReportDialog";
 
 interface BandCardProps {
     band: Band;

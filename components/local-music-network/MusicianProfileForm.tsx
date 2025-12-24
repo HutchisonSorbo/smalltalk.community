@@ -23,8 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ImageUpload } from "@/components/Local Music Network/ImageUpload";
-import { LocationAutocomplete } from "@/components/Local Music Network/LocationAutocomplete";
+import { ImageUpload } from "@/components/local-music-network/ImageUpload";
+import { LocationAutocomplete } from "@/components/local-music-network/LocationAutocomplete";
 import { TagInput } from "@/components/ui/tag-input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";

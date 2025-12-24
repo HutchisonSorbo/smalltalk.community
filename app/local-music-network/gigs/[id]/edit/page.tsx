@@ -4,8 +4,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

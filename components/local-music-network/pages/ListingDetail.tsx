@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
-import { ReviewSection } from "@/components/Local Music Network/ReviewSection";
-import { StarRating } from "@/components/Local Music Network/StarRating";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
+import { ReviewSection } from "@/components/local-music-network/ReviewSection";
+import { StarRating } from "@/components/local-music-network/StarRating";
 import { useAuth } from "@/hooks/useAuth";
 import type { MarketplaceListing, User as UserType } from "@shared/schema";
 

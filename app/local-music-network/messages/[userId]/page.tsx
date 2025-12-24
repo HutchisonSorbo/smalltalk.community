@@ -1,6 +1,6 @@
 "use client";
 
-import Messages from "@/components/Local Music Network/pages/Messages";
+import Messages from "@/components/local-music-network/pages/Messages";
 
 export default function MessagesUserPage() {
     return <Messages />;

@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, MapPin, Music, UserIcon, Edit, Shield, Globe, Facebook, Instagram, Youtube, Headphones } from "lucide-react";

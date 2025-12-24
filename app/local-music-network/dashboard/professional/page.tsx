@@ -1,9 +1,9 @@
 "use client";
 
-import { ProfessionalProfileForm } from "@/components/Local Music Network/ProfessionalProfileForm";
+import { ProfessionalProfileForm } from "@/components/local-music-network/ProfessionalProfileForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";

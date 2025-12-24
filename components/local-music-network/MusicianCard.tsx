@@ -2,9 +2,9 @@ import Link from "next/link";
 import { MapPin, Music } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ReportDialog } from "@/components/Local Music Network/ReportDialog";
+import { ReportDialog } from "@/components/local-music-network/ReportDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { RatingBadge } from "@/components/Local Music Network/RatingBadge";
+import { RatingBadge } from "@/components/local-music-network/RatingBadge";
 import type { MusicianProfile } from "@shared/schema";
 
 interface MusicianCardProps {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import Landing from "@/components/Local Music Network/pages/Landing";
-import Home from "@/components/Local Music Network/pages/Home";
+import Landing from "@/components/local-music-network/pages/Landing";
+import Home from "@/components/local-music-network/pages/Home";
 import { Loader2 } from "lucide-react";
 
 export default function Page() {

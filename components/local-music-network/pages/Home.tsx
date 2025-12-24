@@ -2,18 +2,18 @@ import Link from "next/link";
 import { Users, ShoppingBag, Plus, Music, ArrowRight, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Header } from "@/components/Local Music Network/Header";
+import { Header } from "@/components/local-music-network/Header";
 import dynamic from "next/dynamic";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Footer } from "@/components/local-music-network/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-const VictoriaMap = dynamic(() => import("@/components/Local Music Network/VictoriaMap"), {
+const VictoriaMap = dynamic(() => import("@/components/local-music-network/VictoriaMap"), {
   ssr: false,
   loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-lg" />
 });
 
-import { DiscordWidget } from "@/components/Local Music Network/DiscordWidget";
-import { FeaturedContent } from "@/components/Local Music Network/FeaturedContent";
+import { DiscordWidget } from "@/components/local-music-network/DiscordWidget";
+import { FeaturedContent } from "@/components/local-music-network/FeaturedContent";
 import { updateLastActive } from "@/app/Local Music Network/actions/featured";
 
 export default function Home() {

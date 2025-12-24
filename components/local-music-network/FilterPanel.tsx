@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { LocationAutocomplete } from "@/components/Local Music Network/LocationAutocomplete";
+import { LocationAutocomplete } from "@/components/local-music-network/LocationAutocomplete";
 
 interface FilterOption {
   value: string;

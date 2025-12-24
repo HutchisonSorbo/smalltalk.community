@@ -1,6 +1,6 @@
 "use client";
 
-import Professionals from "@/components/Local Music Network/pages/Professionals";
+import Professionals from "@/components/local-music-network/pages/Professionals";
 
 export default function ProfessionalsPage() {
     return <Professionals />;

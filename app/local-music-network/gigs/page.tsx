@@ -2,8 +2,8 @@
 
 // Imports and Header/Footer already there
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Gig } from "@shared/schema";
 import Link from "next/link";
 import { useState } from "react";
-import { GigCard } from "@/components/Local Music Network/GigCard";
+import { GigCard } from "@/components/local-music-network/GigCard";
 
 export default function GigsPage() {
     const [searchTerm, setSearchTerm] = useState("");

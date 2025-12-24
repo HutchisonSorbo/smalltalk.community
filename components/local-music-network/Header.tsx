@@ -14,8 +14,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/Logo";
-import { AccessibilityPanel } from "@/components/Local Music Network/AccessibilityPanel";
-import { GlobalSearch } from "@/components/Local Music Network/GlobalSearch";
+import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
+import { GlobalSearch } from "@/components/local-music-network/GlobalSearch";
 import {
   DropdownMenu,
   DropdownMenuContent,

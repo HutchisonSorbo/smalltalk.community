@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ProfessionalProfileForm } from "@/components/Local Music Network/ProfessionalProfileForm";
+import { ProfessionalProfileForm } from "@/components/local-music-network/ProfessionalProfileForm";
 import { Plus, Music, User, Users, MapPin, Globe, Briefcase } from "lucide-react"; // Added Users, Briefcase
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,9 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
-import { MusicianProfileForm } from "@/components/Local Music Network/MusicianProfileForm";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
+import { MusicianProfileForm } from "@/components/local-music-network/MusicianProfileForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";

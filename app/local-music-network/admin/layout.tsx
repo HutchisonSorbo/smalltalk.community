@@ -1,4 +1,4 @@
-import { AdminSidebar } from "@/components/Local Music Network/admin/admin-sidebar"
+import { AdminSidebar } from "@/components/local-music-network/admin/admin-sidebar"
 import {
     Breadcrumb,
     BreadcrumbItem,

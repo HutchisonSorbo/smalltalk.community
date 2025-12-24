@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { Calendar, MapPin, Music, Share2, Edit, Ticket, Users } from "lucide-rea
 import { format } from "date-fns";
 import { getGig } from "@/app/Local Music Network/actions/gigs";
 import Link from "next/link";
-import { ShareDialog } from "@/components/Local Music Network/ShareDialog";
+import { ShareDialog } from "@/components/local-music-network/ShareDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function GigDetailPage() {

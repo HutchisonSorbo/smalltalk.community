@@ -21,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MultiImageUpload } from "@/components/Local Music Network/ImageUpload";
-import { LocationAutocomplete } from "@/components/Local Music Network/LocationAutocomplete";
+import { MultiImageUpload } from "@/components/local-music-network/ImageUpload";
+import { LocationAutocomplete } from "@/components/local-music-network/LocationAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";

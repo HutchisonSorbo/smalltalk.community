@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Trash2 } from "lucide-react";
 import type { Band, BandMemberWithUser } from "@shared/schema";
-import { BandProfileForm } from "@/components/Local Music Network/BandProfileForm";
+import { BandProfileForm } from "@/components/local-music-network/BandProfileForm";
 
 async function getBand(id: string): Promise<Band> {
     const res = await fetch(`/api/bands/${id}`);

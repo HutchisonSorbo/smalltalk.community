@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AnnouncementActions, CreateAnnouncementDialog } from "@/components/Local Music Network/admin/announcement-components";
+import { AnnouncementActions, CreateAnnouncementDialog } from "@/components/local-music-network/admin/announcement-components";
 import { desc } from "drizzle-orm";
 
 export default async function AnnouncementsPage() {

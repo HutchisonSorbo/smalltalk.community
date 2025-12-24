@@ -1,11 +1,11 @@
 import { storage } from "@/server/storage";
-import { Header } from "@/components/Local Music Network/Header";
-import { Footer } from "@/components/Local Music Network/Footer";
+import { Header } from "@/components/local-music-network/Header";
+import { Footer } from "@/components/local-music-network/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MusicianCard } from "@/components/Local Music Network/MusicianCard";
-import { BandCard } from "@/components/Local Music Network/BandCard";
-import { GigCard } from "@/components/Local Music Network/GigCard";
+import { MusicianCard } from "@/components/local-music-network/MusicianCard";
+import { BandCard } from "@/components/local-music-network/BandCard";
+import { GigCard } from "@/components/local-music-network/GigCard";
 import { Search } from "lucide-react";
 
 export const dynamic = "force-dynamic";
