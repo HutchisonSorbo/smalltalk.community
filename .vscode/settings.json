@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "ryan-hutchison",
+        "projectKey": "HutchisonSorbo_smalltalk.community"
+    }
+}

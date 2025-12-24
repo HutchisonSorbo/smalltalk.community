@@ -8,10 +8,10 @@ const marketplaceFiltersSchema = z.object({
     location: z.string().optional(),
     category: z.string().optional(),
     condition: z.string().optional(),
-    minPrice: z.string().refine((val) => !val || !isNaN(parseInt(val, 10)), {
+    minPrice: z.string().refine((val) => !val || !Number.isNaN(parseInt(val, 10)), {
         message: "minPrice must be a valid number",
     }).optional(),
-    maxPrice: z.string().refine((val) => !val || !isNaN(parseInt(val, 10)), {
+    maxPrice: z.string().refine((val) => !val || !Number.isNaN(parseInt(val, 10)), {
         message: "maxPrice must be a valid number",
     }).optional(),
 });
@@ -46,12 +46,12 @@ export async function GET(request: Request) {
 
         if (q.minPrice) {
             const minPrice = parseInt(q.minPrice, 10);
-            if (!isNaN(minPrice)) filters.minPrice = minPrice;
+            if (!Number.isNaN(minPrice)) filters.minPrice = minPrice;
         }
 
         if (q.maxPrice) {
             const maxPrice = parseInt(q.maxPrice, 10);
-            if (!isNaN(maxPrice)) filters.maxPrice = maxPrice;
+            if (!Number.isNaN(maxPrice)) filters.maxPrice = maxPrice;
         }
 
         const listings = await storage.getMarketplaceListings(Object.keys(filters).length > 0 ? filters : undefined);

@@ -1,6 +1,6 @@
 "use server";
 
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "path";
 import { createClient } from "@/lib/supabase-server";
 
