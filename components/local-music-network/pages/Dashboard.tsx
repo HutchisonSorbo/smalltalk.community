@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ProfessionalProfileForm } from "@/components/local-music-network/ProfessionalProfileForm";
-import { Plus, Music, User, Users, MapPin, Globe, Briefcase } from "lucide-react"; // Added Users, Briefcase
+import { User, Users, Briefcase, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -25,58 +23,13 @@ import {
 import { Header } from "@/components/local-music-network/Header";
 import { Footer } from "@/components/local-music-network/Footer";
 import { MusicianProfileForm } from "@/components/local-music-network/MusicianProfileForm";
+import { ProfessionalDashboardContent } from "@/components/local-music-network/dashboard/ProfessionalDashboardContent";
+import { BandList } from "@/components/local-music-network/dashboard/BandList";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { MusicianProfile, Band, ProfessionalProfile } from "@shared/schema"; // Changed MarketplaceListing to Band
-
-function ProfessionalDashboardContent({ user }: { user: any }) {
-  const { data: myProfile, isLoading } = useQuery<ProfessionalProfile>({
-    queryKey: ["professional-profile", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const res = await fetch(`/api/professionals?userId=${user.id}`);
-      if (res.status === 404) return null;
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
-    enabled: !!user?.id
-  });
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {myProfile ? "Edit Professional Profile" : "Create Professional Profile"}
-        </CardTitle>
-        <CardDescription>
-          {myProfile
-            ? "Update your business information and services"
-            : "List your services in the industry directory to be discovered"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ProfessionalProfileForm
-          profile={myProfile}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ["professional-profile"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/professionals"] });
-          }}
-        />
-      </CardContent>
-    </Card>
-  );
-}
+import type { MusicianProfile, Band } from "@shared/schema";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -106,7 +59,6 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
-  // Replaced Listings with Bands
   const { data: myBands, isLoading: bandsLoading } = useQuery<Band[]>({
     queryKey: ["/api/my/bands"],
     enabled: isAuthenticated,
@@ -239,90 +191,7 @@ export default function Dashboard() {
                 </TabsContent>
 
                 <TabsContent value="bands" className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Your Band Profiles</h2>
-                    <Button asChild data-testid="button-register-band">
-                      <Link href="/bands/new">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Register Band
-                      </Link>
-                    </Button>
-                  </div>
-
-                  {bandsLoading ? (
-                    <div className="grid gap-4">
-                      {Array.from({ length: 2 }).map((_, i) => (
-                        <Skeleton key={i} className="h-32 w-full" />
-                      ))}
-                    </div>
-                  ) : myBands && myBands.length > 0 ? (
-                    <div className="grid gap-4">
-                      {myBands.map((band) => (
-                        <Card key={band.id}>
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="w-24 h-24 rounded-md bg-muted overflow-hidden shrink-0">
-                                {band.profileImageUrl ? (
-                                  <img
-                                    src={band.profileImageUrl}
-                                    alt={band.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary uppercase text-2xl font-bold">
-                                    {band.name.substring(0, 2)}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-4">
-                                  <h3 className="font-semibold text-lg">{band.name}</h3>
-                                  {/* Edit/Delete functionality not fully implemented in API yet, so just display info */}
-                                </div>
-                                <div className="space-y-1 mt-1">
-                                  {band.location && (
-                                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                      <MapPin className="h-3.5 w-3.5" />
-                                      {band.location}
-                                    </div>
-                                  )}
-                                  {band.websiteUrl && (
-                                    <div className="flex items-center gap-1 text-sm text-primary">
-                                      <Globe className="h-3.5 w-3.5" />
-                                      <a href={band.websiteUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                        {band.websiteUrl}
-                                      </a>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex flex-wrap gap-2 mt-3">
-                                  {band.genres && band.genres.map(g => (
-                                    <Badge key={g} variant="secondary" className="text-xs">{g}</Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No bands registered</h3>
-                        <p className="text-muted-foreground mb-4">
-                          Create a band profile to advertise your music and gigs.
-                        </p>
-                        <Button asChild>
-                          <Link href="/bands/new">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Register Your Band
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
+                  <BandList bands={myBands} isLoading={bandsLoading} />
                 </TabsContent>
               </Tabs>
             </div>

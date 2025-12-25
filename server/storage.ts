@@ -231,52 +231,7 @@ export class DatabaseStorage implements IStorage {
 
   // Musician profile operations
   async getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]> {
-    const conditions = [eq(musicianProfiles.isActive, true)];
-
-    if (filters) {
-      if (filters.location) {
-        conditions.push(eq(musicianProfiles.location, filters.location));
-      }
-      if (filters.experienceLevel) {
-        conditions.push(eq(musicianProfiles.experienceLevel, filters.experienceLevel));
-      }
-      if (filters.availability) {
-        conditions.push(eq(musicianProfiles.availability, filters.availability));
-      }
-      if (filters.instruments && filters.instruments.length > 0) {
-        conditions.push(arrayOverlaps(musicianProfiles.instruments, filters.instruments));
-      }
-      if (filters.genres && filters.genres.length > 0) {
-        conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
-      }
-      if (filters.searchQuery) {
-        const query = `%${filters.searchQuery}%`;
-        const searchCondition = or(
-          ilike(musicianProfiles.name, query),
-          ilike(musicianProfiles.bio, query),
-          // Use array_to_string for array columns
-          sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${query}`,
-          sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${query}`
-        );
-        if (searchCondition) {
-          conditions.push(searchCondition);
-        }
-      }
-
-      if (filters.hasLocation) {
-        const locationCondition = and(
-          isNotNull(musicianProfiles.latitude),
-          isNotNull(musicianProfiles.longitude),
-          eq(musicianProfiles.isLocationShared, true),
-          ne(musicianProfiles.latitude, ""),
-          ne(musicianProfiles.longitude, "")
-        );
-        if (locationCondition) {
-          conditions.push(locationCondition);
-        }
-      }
-    }
-
+    const conditions = this._buildMusicianFilters(filters);
     return db
       .select()
       .from(musicianProfiles)
@@ -284,6 +239,54 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(musicianProfiles.createdAt))
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
+  }
+
+  private _buildMusicianFilters(filters?: MusicianFilters) {
+    const conditions = [eq(musicianProfiles.isActive, true)];
+
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(eq(musicianProfiles.location, filters.location));
+    }
+    if (filters.experienceLevel) {
+      conditions.push(eq(musicianProfiles.experienceLevel, filters.experienceLevel));
+    }
+    if (filters.availability) {
+      conditions.push(eq(musicianProfiles.availability, filters.availability));
+    }
+    if (filters.instruments && filters.instruments.length > 0) {
+      conditions.push(arrayOverlaps(musicianProfiles.instruments, filters.instruments));
+    }
+    if (filters.genres && filters.genres.length > 0) {
+      conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
+    }
+    if (filters.searchQuery) {
+      const query = `%${filters.searchQuery}%`;
+      const searchCondition = or(
+        ilike(musicianProfiles.name, query),
+        ilike(musicianProfiles.bio, query),
+        sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${query}`,
+        sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${query}`
+      );
+      if (searchCondition) {
+        conditions.push(searchCondition);
+      }
+    }
+
+    if (filters.hasLocation) {
+      const locationCondition = and(
+        isNotNull(musicianProfiles.latitude),
+        isNotNull(musicianProfiles.longitude),
+        eq(musicianProfiles.isLocationShared, true),
+        ne(musicianProfiles.latitude, ""),
+        ne(musicianProfiles.longitude, "")
+      );
+      if (locationCondition) {
+        conditions.push(locationCondition);
+      }
+    }
+    return conditions;
   }
 
   async getMusicianProfile(id: string): Promise<MusicianProfile | undefined> {
@@ -373,31 +376,7 @@ export class DatabaseStorage implements IStorage {
 
   // Professionals operations
   async getProfessionalProfiles(filters?: ProfessionalFilters): Promise<ProfessionalProfile[]> {
-    const conditions = [eq(professionalProfiles.isActive, true)];
-
-    if (filters) {
-      if (filters.location) conditions.push(ilike(professionalProfiles.location, `%${filters.location}%`));
-      if (filters.role) conditions.push(eq(professionalProfiles.role, filters.role));
-      if (filters.searchQuery) {
-        const query = `%${filters.searchQuery}%`;
-        conditions.push(or(
-          ilike(professionalProfiles.businessName, query),
-          ilike(professionalProfiles.bio, query),
-          ilike(professionalProfiles.services, query)
-        )!);
-      }
-
-      if (filters.hasLocation) {
-        conditions.push(and(
-          isNotNull(professionalProfiles.latitude),
-          isNotNull(professionalProfiles.longitude),
-          eq(professionalProfiles.isLocationShared, true),
-          ne(professionalProfiles.latitude, ""),
-          ne(professionalProfiles.longitude, "")
-        )!);
-      }
-    }
-
+    const conditions = this._buildProfessionalFilters(filters);
     return db
       .select()
       .from(professionalProfiles)
@@ -405,6 +384,33 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(professionalProfiles.createdAt))
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
+  }
+
+  private _buildProfessionalFilters(filters?: ProfessionalFilters) {
+    const conditions = [eq(professionalProfiles.isActive, true)];
+    if (!filters) return conditions;
+
+    if (filters.location) conditions.push(ilike(professionalProfiles.location, `%${filters.location}%`));
+    if (filters.role) conditions.push(eq(professionalProfiles.role, filters.role));
+    if (filters.searchQuery) {
+      const query = `%${filters.searchQuery}%`;
+      conditions.push(or(
+        ilike(professionalProfiles.businessName, query),
+        ilike(professionalProfiles.bio, query),
+        ilike(professionalProfiles.services, query)
+      )!);
+    }
+
+    if (filters.hasLocation) {
+      conditions.push(and(
+        isNotNull(professionalProfiles.latitude),
+        isNotNull(professionalProfiles.longitude),
+        eq(professionalProfiles.isLocationShared, true),
+        ne(professionalProfiles.latitude, ""),
+        ne(professionalProfiles.longitude, "")
+      )!);
+    }
+    return conditions;
   }
 
   async getProfessionalProfile(id: string): Promise<ProfessionalProfile | undefined> {
@@ -450,45 +456,49 @@ export class DatabaseStorage implements IStorage {
 
   // Marketplace listing operations
   async getMarketplaceListings(filters?: MarketplaceFilters): Promise<MarketplaceListing[]> {
-    const conditions = [eq(marketplaceListings.isActive, true)];
-
-    if (filters) {
-      if (filters.location) {
-        conditions.push(eq(marketplaceListings.location, filters.location));
-      }
-      if (filters.category && filters.category.length > 0) {
-        if (filters.category.length === 1) {
-          conditions.push(eq(marketplaceListings.category, filters.category[0]));
-        } else {
-          const categoryConditions = filters.category.map(cat =>
-            eq(marketplaceListings.category, cat)
-          );
-          conditions.push(or(...categoryConditions)!);
-        }
-      }
-      if (filters.condition && filters.condition.length > 0) {
-        if (filters.condition.length === 1) {
-          conditions.push(eq(marketplaceListings.condition, filters.condition[0]));
-        } else {
-          const conditionConditions = filters.condition.map(cond =>
-            eq(marketplaceListings.condition, cond)
-          );
-          conditions.push(or(...conditionConditions)!);
-        }
-      }
-      if (filters.minPrice !== undefined) {
-        conditions.push(gte(marketplaceListings.price, filters.minPrice));
-      }
-      if (filters.maxPrice !== undefined) {
-        conditions.push(lte(marketplaceListings.price, filters.maxPrice));
-      }
-    }
-
+    const conditions = this._buildMarketplaceFilters(filters);
     return db
       .select()
       .from(marketplaceListings)
       .where(and(...conditions))
       .orderBy(desc(marketplaceListings.createdAt));
+  }
+
+  private _buildMarketplaceFilters(filters?: MarketplaceFilters) {
+    const conditions = [eq(marketplaceListings.isActive, true)];
+
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(eq(marketplaceListings.location, filters.location));
+    }
+    if (filters.category && filters.category.length > 0) {
+      if (filters.category.length === 1) {
+        conditions.push(eq(marketplaceListings.category, filters.category[0]));
+      } else {
+        const categoryConditions = filters.category.map(cat =>
+          eq(marketplaceListings.category, cat)
+        );
+        conditions.push(or(...categoryConditions)!);
+      }
+    }
+    if (filters.condition && filters.condition.length > 0) {
+      if (filters.condition.length === 1) {
+        conditions.push(eq(marketplaceListings.condition, filters.condition[0]));
+      } else {
+        const conditionConditions = filters.condition.map(cond =>
+          eq(marketplaceListings.condition, cond)
+        );
+        conditions.push(or(...conditionConditions)!);
+      }
+    }
+    if (filters.minPrice !== undefined) {
+      conditions.push(gte(marketplaceListings.price, filters.minPrice));
+    }
+    if (filters.maxPrice !== undefined) {
+      conditions.push(lte(marketplaceListings.price, filters.maxPrice));
+    }
+    return conditions;
   }
 
   async getMarketplaceListing(id: string): Promise<MarketplaceListing | undefined> {
@@ -668,27 +678,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBands(filters?: Partial<Band> & { searchQuery?: string }): Promise<Band[]> {
+    const conditions = this._buildBandFilters(filters);
+    return await db.select().from(bands).where(and(...conditions));
+  }
+
+  private _buildBandFilters(filters?: Partial<Band> & { searchQuery?: string }) {
     const conditions = [eq(bands.isActive, true)];
 
-    if (filters) {
-      if (filters.location) {
-        conditions.push(ilike(bands.location, `%${filters.location}%`));
-      }
-      if (filters.searchQuery) {
-        const query = `%${filters.searchQuery}%`;
-        const searchCondition = or(
-          ilike(bands.name, query),
-          ilike(bands.bio, query),
-          ilike(bands.location, query),
-          sql`array_to_string(${bands.genres}, ',') ILIKE ${query}`
-        );
-        if (searchCondition) {
-          conditions.push(searchCondition);
-        }
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(ilike(bands.location, `%${filters.location}%`));
+    }
+    if (filters.searchQuery) {
+      const query = `%${filters.searchQuery}%`;
+      const searchCondition = or(
+        ilike(bands.name, query),
+        ilike(bands.bio, query),
+        ilike(bands.location, query),
+        sql`array_to_string(${bands.genres}, ',') ILIKE ${query}`
+      );
+      if (searchCondition) {
+        conditions.push(searchCondition);
       }
     }
-
-    return await db.select().from(bands).where(and(...conditions));
+    return conditions;
   }
 
   async getBandsByUser(userId: string): Promise<Band[]> {
@@ -760,38 +774,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGigs(filters?: GigFilters): Promise<Gig[]> {
-    const conditions: any[] = [];
-
-    if (filters) {
-      if (filters.location) {
-        conditions.push(ilike(gigs.location, `%${filters.location}%`));
-      }
-      if (filters.genre) {
-        conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
-      }
-      if (filters.date === 'upcoming') {
-        conditions.push(gte(gigs.date, new Date()));
-      } else if (filters.date === 'past') {
-        conditions.push(lt(gigs.date, new Date()));
-      }
-      if (filters.searchQuery) {
-        const query = `%${filters.searchQuery}%`;
-        conditions.push(
-          or(
-            ilike(gigs.title, query),
-            ilike(gigs.description, query),
-            ilike(gigs.genre, query),
-            ilike(gigs.location, query)
-          )
-        );
-      }
-    }
-
+    const conditions = this._buildGigFilters(filters);
     return await db.select().from(gigs)
       .where(and(...conditions))
       .orderBy(gigs.date)
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
+  }
+
+  private _buildGigFilters(filters?: GigFilters) {
+    const conditions: any[] = [];
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(ilike(gigs.location, `%${filters.location}%`));
+    }
+    if (filters.genre) {
+      conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
+    }
+    if (filters.date === 'upcoming') {
+      conditions.push(gte(gigs.date, new Date()));
+    } else if (filters.date === 'past') {
+      conditions.push(lt(gigs.date, new Date()));
+    }
+    if (filters.searchQuery) {
+      const query = `%${filters.searchQuery}%`;
+      conditions.push(
+        or(
+          ilike(gigs.title, query),
+          ilike(gigs.description, query),
+          ilike(gigs.genre, query),
+          ilike(gigs.location, query)
+        )
+      );
+    }
+    return conditions;
   }
 
   async getGigsByBand(bandId: string): Promise<Gig[]> {

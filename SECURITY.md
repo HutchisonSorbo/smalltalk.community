@@ -17,8 +17,8 @@ We take security seriously. If you discover a vulnerability, please report it re
 
 Please do **NOT** open a public issue on GitHub. Instead, report vulnerabilities via:
 
-1.  **Email**: Contact the maintainers directly (provide email if applicable, or use a secure channel).
-2.  **Private Disclosure**: If using a platform that supports it (like GitHub Security Advisories), use the private reporting feature.
+1. **Email**: Contact the maintainers directly (provide email if applicable, or use a secure channel).
+2. **Private Disclosure**: If using a platform that supports it (like GitHub Security Advisories), use the private reporting feature.
 
 ### Information to Include
 
@@ -35,7 +35,10 @@ Please do **NOT** open a public issue on GitHub. Instead, report vulnerabilities
 
 ## Security Best Practices in This Codebase
 
-- **Row Level Security (RLS)**: All database tables must have RLS enabled and policies defined for `select`, `insert`, `update`, and `delete`.
+- **Row Level Security (RLS)**: All database tables must have RLS enabled and policies defined. Critical tables (e.g., Announcements) are restricted to admin roles.
 - **Authentication**: All protected routes must verify the user session server-side.
+- **Headers**: Strict `Content-Security-Policy`, `HSTS`, and other security headers are enforced in `next.config.mjs`.
+- **Rate Limiting**: Critical actions (e.g., file uploads) are rate-limited per user.
+- **Input Validation**: All API inputs are validated using `zod` schemas.
 - **Secrets**: No secrets (API keys, tokens) should be hardcoded. Use environment variables.
 - **Dependencies**: Regular `npm audit` checks are recommended.

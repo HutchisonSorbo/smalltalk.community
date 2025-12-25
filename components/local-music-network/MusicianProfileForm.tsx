@@ -137,84 +137,80 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
     },
   });
 
+  async function resolveCoordinates(location: string): Promise<{ latitude: string; longitude: string; location?: string } | null> {
+    console.log("Resolving coordinates for:", location);
+    const { searchLocations, parseLocationForStorage } = await import("@/lib/victoriaLocations");
+
+    // 1. Try local lookup
+    let localResults = searchLocations(location, 1);
+    if (localResults.length === 0) {
+      const parsed = parseLocationForStorage(location);
+      if (parsed !== location) localResults = searchLocations(parsed, 1);
+    }
+    if (localResults.length === 0) {
+      localResults = searchLocations(location.replace(/[.,]/g, ""), 1);
+    }
+
+    if (localResults.length > 0 && localResults[0].latitude && localResults[0].longitude) {
+      console.log("Found coordinates locally:", localResults[0]);
+      return {
+        latitude: localResults[0].latitude,
+        longitude: localResults[0].longitude,
+        location: localResults[0].suburb // Canonical name
+      };
+    }
+
+    // 2. Fallback to external API
+    try {
+      const query = encodeURIComponent(`${location}, Victoria, Australia`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+      if (res.ok) {
+        const results = await res.json();
+        if (results && results.length > 0) {
+          console.log("Geocoded:", results[0]);
+          return {
+            latitude: results[0].lat,
+            longitude: results[0].lon
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Geocoding failed:", error);
+      throw new Error("Geocoding failed");
+    }
+    return null;
+  }
+
   const onSubmit = async (data: FormData) => {
     console.log("Form submitted with data:", data);
 
-    // Geocode if location sharing is enabled and location is present
-    // ALWAYS re-resolve to ensure coordinates match the text (fixes bug where editing text kept old coords)
     if (data.isLocationShared && data.location) {
-      console.log("Resolving coordinates for:", data.location);
+      try {
+        const coords = await resolveCoordinates(data.location);
+        if (coords) {
+          data.latitude = coords.latitude;
+          data.longitude = coords.longitude;
+          if (coords.location) data.location = coords.location;
 
-      // Try local lookup first
-      // Try local lookup first with sanitized query
-      const { searchLocations, parseLocationForStorage } = await import("@/lib/victoriaLocations");
-
-      // 1. Try exact/raw lookup
-      let localResults = searchLocations(data.location, 1);
-
-      // 2. If no result, try parsing (removes state/postcode suffix)
-      if (localResults.length === 0) {
-        const parsed = parseLocationForStorage(data.location);
-        if (parsed !== data.location) {
-          localResults = searchLocations(parsed, 1);
-        }
-      }
-
-      // 3. If still no result, try removing punctuation (e.g. "St. Kilda" -> "St Kilda")
-      if (localResults.length === 0) {
-        const punctuationRemoved = data.location.replace(/[.,]/g, "");
-        localResults = searchLocations(punctuationRemoved, 1);
-      }
-
-      if (localResults.length > 0 && localResults[0].latitude && localResults[0].longitude) {
-        data.latitude = localResults[0].latitude;
-        data.longitude = localResults[0].longitude;
-
-        // Force canonical/clean suburb name for storage so map aggregation works reliably
-        // e.g. "Richmond, VIC" -> "Richmond"
-        if (localResults[0].suburb) {
-          console.log(`Updating location string from "${data.location}" to canonical "${localResults[0].suburb}"`);
-          data.location = localResults[0].suburb;
-        }
-
-        console.log("Found coordinates locally:", data.location, data.latitude, data.longitude);
-
-        // Let the user know we found it
-        toast({ title: "Location verified", description: `Map pin placed for ${localResults[0].suburb}` });
-      } else {
-        // Fallback to external API
-        try {
-          const query = encodeURIComponent(`${data.location}, Victoria, Australia`);
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
-          if (res.ok) {
-            const results = await res.json();
-            if (results && results.length > 0) {
-              data.latitude = results[0].lat;
-              data.longitude = results[0].lon;
-              console.log("Geocoded:", data.location, data.latitude, data.longitude);
-            } else {
-              toast({
-                title: "Location not found",
-                description: `Could not find coordinates for "${data.location}". Your pin may not appear on the map.`,
-                variant: "destructive",
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Geocoding failed:", error);
+          toast({ title: "Location verified", description: `Map pin placed for ${data.location}` });
+        } else {
           toast({
-            title: "Geocoding failed",
-            description: "There was an error finding your location on the map.",
+            title: "Location not found",
+            description: `Could not find coordinates for "${data.location}". Your pin may not appear on the map.`,
             variant: "destructive",
           });
         }
+      } catch (error) {
+        toast({
+          title: "Geocoding failed",
+          description: "There was an error finding your location on the map.",
+          variant: "destructive",
+        });
       }
-    } else {
-      // If location is NOT shared, clear coords (safety)
-      if (!data.isLocationShared) {
-        data.latitude = "";
-        data.longitude = "";
-      }
+    } else if (!data.isLocationShared) {
+      // Clear coords if not shared
+      data.latitude = "";
+      data.longitude = "";
     }
 
     mutation.mutate(data);

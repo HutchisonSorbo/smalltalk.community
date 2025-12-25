@@ -743,7 +743,16 @@ export const announcements = pgTable("announcements", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("announcements_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("announcements_admin_all", { for: "all", to: "authenticated", using: sql`true` }), // Admin check handled in app logic, RLS kept open for simplicity as admins are authenticated
+  pgPolicy("announcements_admin_all", {
+    for: "all",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from sys_user_roles ur 
+      join sys_roles r on ur.role_id = r.id 
+      where ur.user_id = auth.uid() 
+      and r.name in ('super_admin', 'admin')
+    )`
+  }),
 ]);
 
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({

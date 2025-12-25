@@ -9,11 +9,6 @@ export async function GET() {
     try {
         console.log("Database Health Check: Starting...");
 
-        // Log the sanitized URL to check format (masking password)
-        const dbUrl = process.env.DATABASE_URL || "NOT_SET";
-        const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ":***@");
-        console.log("Database URL (Masked):", maskedUrl);
-
         // Attempt a simple query
         const start = Date.now();
         const result = await db.execute(sql`SELECT NOW() as time`);
@@ -23,23 +18,15 @@ export async function GET() {
 
         return NextResponse.json({
             status: "ok",
-            message: "Database connection successful",
             timestamp: result[0]?.time,
-            latency: `${duration}ms`,
-            config: {
-                url_masked: maskedUrl
-            }
         });
 
     } catch (error: any) {
-        console.error("Database Health Check: Failed", error);
+        console.error("Database Health Check: Failed"); // Don't log full error object to stdout if sensitive
 
         return NextResponse.json({
             status: "error",
             message: "Database connection failed",
-            error: error.message,
-            code: error.code || "UNKNOWN",
-            details: error.toString()
         }, { status: 500 });
     }
 }
