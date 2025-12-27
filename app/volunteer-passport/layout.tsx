@@ -14,9 +14,9 @@ export const metadata: Metadata = {
     title: "Volunteer Passport | Smalltalk Community",
     description: "Your digital passport for volunteering in Victoria",
     icons: {
-        icon: "/favicon.ico",
-        shortcut: "/favicon.ico",
-        apple: "/favicon.ico",
+        icon: "/face-smile-regular-full.svg",
+        shortcut: "/face-smile-regular-full.svg",
+        apple: "/face-smile-regular-full.svg",
     }
 };
 

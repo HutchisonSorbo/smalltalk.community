@@ -11,6 +11,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "smalltalk.community",
     description: "Community Hub",
+    icons: {
+        icon: "/face-smile-regular-full.svg",
+        shortcut: "/face-smile-regular-full.svg",
+        apple: "/face-smile-regular-full.svg",
+    }
 };
 
 export default function HubLayout({
