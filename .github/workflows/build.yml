@@ -26,8 +26,8 @@ jobs:
           ls -la coverage/
           echo "Original lcov.info:"
           head -n 5 coverage/lcov.info
-          # Only prepend GITHUB_WORKSPACE if path is relative (does not start with /)
-          sed -i 's|^SF:\([^/]\)|SF:'"$GITHUB_WORKSPACE"'/\1|g' coverage/lcov.info
+          # Prepend /github/workspace/ (Docker container path) to relative paths
+          sed -i 's|^SF:\([^/]\)|SF:/github/workspace/\1|g' coverage/lcov.info
           echo "Modified lcov.info:"
           head -n 5 coverage/lcov.info
       - name: SonarQube Scan
