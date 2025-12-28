@@ -21,12 +21,6 @@ jobs:
         run: npm install
       - name: Run Tests
         run: npm run test
-      - name: Upload coverage for debugging
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-debug
-          path: |
-            coverage/lcov.info
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4.2.1
         env:
