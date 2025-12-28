@@ -2,6 +2,19 @@
   "mcpServers": {
     "Sentry": {
       "url": "https://mcp.sentry.dev/mcp/ryan-hutchison/javascript-nextjs"
+    },
+    "SonarQube": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-sonarqube"
+      ],
+      "env": {
+        "SONAR_TOKEN": "8fdce1a6d6a159fff8325a9e6fd898902c8da78e",
+        "SONAR_HOST_URL": "https://sonarcloud.io",
+        "SONAR_ORG": "ryan-hutchison",
+        "SONAR_PROJECT_KEY": "HutchisonSorbo_smalltalk.community"
+      }
     }
   }
 }
