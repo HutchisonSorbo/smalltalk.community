@@ -23,3 +23,4 @@ app/(payload)/cms/importMap.js
 # Playwright
 test-results/
 playwright-report/
+.kiro/
