@@ -12,7 +12,20 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html', 'lcov'],
-            include: ['app/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}', 'lib/**/*.{ts,tsx}'],
+            include: [
+                'app/**/*.{ts,tsx}',
+                'components/**/*.{ts,tsx}',
+                'lib/**/*.{ts,tsx}',
+                'server/**/*.{ts,tsx}',
+                'shared/**/*.{ts,tsx}',
+                'hooks/**/*.{ts,tsx}',
+                'collections/**/*.{ts,tsx}',
+                'scripts/**/*.{ts,tsx}',
+                'middleware.ts',
+                'payload.config.ts',
+                'instrumentation.ts',
+                'instrumentation-client.ts'
+            ],
             exclude: ['**/*.d.ts', '**/*.test.{ts,tsx}', '**/node_modules/**'],
         },
         alias: {
