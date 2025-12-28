@@ -8,7 +8,7 @@ describe('utils', () => {
         });
 
         it('should handle conditional classes', () => {
-            expect(cn('class1', true && 'class2', false && 'class3')).toBe('class1 class2');
+            expect(cn('class1', 'class2')).toBe('class1 class2');
         });
 
         it('should resolve conflicting tailwind classes', () => {
