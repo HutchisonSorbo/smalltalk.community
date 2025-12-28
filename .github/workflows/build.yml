@@ -28,8 +28,13 @@ jobs:
           head -n 5 coverage/lcov.info
           # Prepend /github/workspace/ (Docker container path) to relative paths
           sed -i 's|^SF:\([^/]\)|SF:/github/workspace/\1|g' coverage/lcov.info
-          echo "Modified lcov.info:"
           head -n 5 coverage/lcov.info
+      - name: Upload coverage for debugging
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-debug
+          path: |
+            coverage/lcov.info
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4.2.1
         env:
