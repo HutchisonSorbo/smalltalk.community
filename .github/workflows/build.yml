@@ -21,10 +21,6 @@ jobs:
         run: npm install
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4.2.1
-        with:
-          args: >
-            -Dsonar.verbose=true
-            -X
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_SCANNER_OPTS: "-Xmx2048m"
