@@ -21,13 +21,6 @@ jobs:
         run: npm install
       - name: Run Tests
         run: npm run test
-      - name: Fix Coverage Paths for Sonar
-        run: |
-          ls -la coverage/
-          echo "Original lcov.info:"
-          head -n 5 coverage/lcov.info
-          # NOTE: We are now trusting SonarScanner to resolve relative paths (e.g. lib/utils.ts)
-          # against the explicitly set sonar.projectBaseDir=/github/workspace
       - name: Upload coverage for debugging
         uses: actions/upload-artifact@v4
         with:
