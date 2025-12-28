@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/254</span>
+                <span class='fraction'>0/256</span>
             </div>
         
             
@@ -1639,17 +1639,17 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2461,18 +2461,18 @@ export interface IStorage {
 &nbsp;
 export class DatabaseStorage implements IStorage {
   // User operations
-  async <span class="fstat-no" title="function not covered" >getUser(i</span>d: string): Promise&lt;User | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etUser(id: string): Promise&lt;User | undefined&gt; {
     const [user] = <span class="cstat-no" title="statement not covered" >await db.select().from(users).where(eq(users.id, id));</span>
 <span class="cstat-no" title="statement not covered" >    return user;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getUserByEmail(e</span>mail: string): Promise&lt;User | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etUserByEmail(email: string): Promise&lt;User | undefined&gt; {
     const [user] = <span class="cstat-no" title="statement not covered" >await db.select().from(users).where(eq(users.email, email));</span>
 <span class="cstat-no" title="statement not covered" >    return user;</span>
   }
 &nbsp;
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >upsertUser(u</span>serData: UpsertUser): Promise&lt;User&gt; {
+<span class="fstat-no" title="function not covered" >  async u</span>psertUser(userData: UpsertUser): Promise&lt;User&gt; {
     const [user] = <span class="cstat-no" title="statement not covered" >await db</span>
       .insert(users)
       .values(userData)
@@ -2489,7 +2489,7 @@ export class DatabaseStorage implements IStorage {
 &nbsp;
 &nbsp;
   // Musician profile operations
-  async <span class="fstat-no" title="function not covered" >getMusicianProfiles(f</span>ilters?: MusicianFilters): Promise&lt;MusicianProfile[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etMusicianProfiles(filters?: MusicianFilters): Promise&lt;MusicianProfile[]&gt; {
     const conditions = <span class="cstat-no" title="statement not covered" >this._buildMusicianFilters(filters);</span>
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
@@ -2522,7 +2522,7 @@ export class DatabaseStorage implements IStorage {
     }
 <span class="cstat-no" title="statement not covered" >    if (filters.searchQuery) {</span>
       const query = <span class="cstat-no" title="statement not covered" >`%${filters.searchQuery}%`;</span>
-      const <span class="cstat-no" title="statement not covered" >searchCondition = or(</span>
+      const searchCondition = <span class="cstat-no" title="statement not covered" >or(</span>
         ilike(musicianProfiles.name, query),
         ilike(musicianProfiles.bio, query),
         sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${query}`,
@@ -2534,7 +2534,7 @@ export class DatabaseStorage implements IStorage {
     }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (filters.hasLocation) {</span>
-      const <span class="cstat-no" title="statement not covered" >locationCondition = and(</span>
+      const locationCondition = <span class="cstat-no" title="statement not covered" >and(</span>
         isNotNull(musicianProfiles.latitude),
         isNotNull(musicianProfiles.longitude),
         eq(musicianProfiles.isLocationShared, true),
@@ -2548,7 +2548,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return conditions;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getMusicianProfile(i</span>d: string): Promise&lt;MusicianProfile | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etMusicianProfile(id: string): Promise&lt;MusicianProfile | undefined&gt; {
     const [profile] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(musicianProfiles)
@@ -2556,7 +2556,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return profile;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getMusicianProfilesByUser(u</span>serId: string): Promise&lt;MusicianProfile[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etMusicianProfilesByUser(userId: string): Promise&lt;MusicianProfile[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
       .from(musicianProfiles)
@@ -2564,7 +2564,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(musicianProfiles.createdAt));
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >createMusicianProfile(p</span>rofile: InsertMusicianProfile): Promise&lt;MusicianProfile&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateMusicianProfile(profile: InsertMusicianProfile): Promise&lt;MusicianProfile&gt; {
     const [created] = <span class="cstat-no" title="statement not covered" >await db</span>
       .insert(musicianProfiles)
       .values(profile)
@@ -2572,7 +2572,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return created;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >updateMusicianProfile(i</span>d: string, profile: Partial&lt;InsertMusicianProfile&gt;): Promise&lt;MusicianProfile | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async u</span>pdateMusicianProfile(id: string, profile: Partial&lt;InsertMusicianProfile&gt;): Promise&lt;MusicianProfile | undefined&gt; {
     const [updated] = <span class="cstat-no" title="statement not covered" >await db</span>
       .update(musicianProfiles)
       .set({ ...profile, updatedAt: new Date() })
@@ -2581,7 +2581,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return updated;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >deleteMusicianProfile(i</span>d: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async d</span>eleteMusicianProfile(id: string): Promise&lt;boolean&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db</span>
       .delete(musicianProfiles)
       .where(eq(musicianProfiles.id, id))
@@ -2590,7 +2590,7 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Classifieds operations
-  async <span class="fstat-no" title="function not covered" >getClassifieds(f</span>ilters?: ClassifiedFilters): Promise&lt;Classified[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etClassifieds(filters?: ClassifiedFilters): Promise&lt;Classified[]&gt; {
     const conditions = <span class="cstat-no" title="statement not covered" >[eq(classifieds.isActive, true)];</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (filters) {</span>
@@ -2609,7 +2609,7 @@ export class DatabaseStorage implements IStorage {
       .offset(filters?.offset || 0);
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getClassified(i</span>d: string): Promise&lt;Classified | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etClassified(id: string): Promise&lt;Classified | undefined&gt; {
     const [item] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(classifieds)
@@ -2617,7 +2617,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return item;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >createClassified(d</span>ata: InsertClassified): Promise&lt;Classified&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateClassified(data: InsertClassified): Promise&lt;Classified&gt; {
     const [item] = <span class="cstat-no" title="statement not covered" >await db</span>
       .insert(classifieds)
       .values(data)
@@ -2625,7 +2625,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return item;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >deleteClassified(i</span>d: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async d</span>eleteClassified(id: string): Promise&lt;boolean&gt; {
     const [deleted] = <span class="cstat-no" title="statement not covered" >await db</span>
       .delete(classifieds)
       .where(eq(classifieds.id, id))
@@ -2634,7 +2634,7 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Professionals operations
-  async <span class="fstat-no" title="function not covered" >getProfessionalProfiles(f</span>ilters?: ProfessionalFilters): Promise&lt;ProfessionalProfile[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etProfessionalProfiles(filters?: ProfessionalFilters): Promise&lt;ProfessionalProfile[]&gt; {
     const conditions = <span class="cstat-no" title="statement not covered" >this._buildProfessionalFilters(filters);</span>
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
@@ -2672,7 +2672,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return conditions;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getProfessionalProfile(i</span>d: string): Promise&lt;ProfessionalProfile | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etProfessionalProfile(id: string): Promise&lt;ProfessionalProfile | undefined&gt; {
     const [profile] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(professionalProfiles)
@@ -2680,7 +2680,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return profile;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getProfessionalProfileByUserId(u</span>serId: string): Promise&lt;ProfessionalProfile | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etProfessionalProfileByUserId(userId: string): Promise&lt;ProfessionalProfile | undefined&gt; {
     const [profile] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(professionalProfiles)
@@ -2688,7 +2688,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return profile;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >createProfessionalProfile(p</span>rofile: InsertProfessionalProfile): Promise&lt;ProfessionalProfile&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateProfessionalProfile(profile: InsertProfessionalProfile): Promise&lt;ProfessionalProfile&gt; {
     const [created] = <span class="cstat-no" title="statement not covered" >await db</span>
       .insert(professionalProfiles)
       .values(profile)
@@ -2696,7 +2696,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return created;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >updateProfessionalProfile(i</span>d: string, profile: Partial&lt;InsertProfessionalProfile&gt;): Promise&lt;ProfessionalProfile | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async u</span>pdateProfessionalProfile(id: string, profile: Partial&lt;InsertProfessionalProfile&gt;): Promise&lt;ProfessionalProfile | undefined&gt; {
     const [updated] = <span class="cstat-no" title="statement not covered" >await db</span>
       .update(professionalProfiles)
       .set({ ...profile, updatedAt: new Date() })
@@ -2705,7 +2705,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return updated;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >deleteProfessionalProfile(i</span>d: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async d</span>eleteProfessionalProfile(id: string): Promise&lt;boolean&gt; {
     const [deleted] = <span class="cstat-no" title="statement not covered" >await db</span>
       .delete(professionalProfiles)
       .where(eq(professionalProfiles.id, id))
@@ -2714,7 +2714,7 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Marketplace listing operations
-  async <span class="fstat-no" title="function not covered" >getMarketplaceListings(f</span>ilters?: MarketplaceFilters): Promise&lt;MarketplaceListing[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etMarketplaceListings(filters?: MarketplaceFilters): Promise&lt;MarketplaceListing[]&gt; {
     const conditions = <span class="cstat-no" title="statement not covered" >this._buildMarketplaceFilters(filters);</span>
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
@@ -2735,8 +2735,8 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >      if (filters.category.length === 1) {</span>
 <span class="cstat-no" title="statement not covered" >        conditions.push(eq(marketplaceListings.category, filters.category[0]));</span>
       } else {
-        const categoryConditions = <span class="cstat-no" title="statement not covered" >filters.category.map(<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >cat =&gt;</span></span></span>
-          eq(marketplaceListings.category, cat)
+        const categoryConditions = <span class="cstat-no" title="statement not covered" >filters.category.map(<span class="fstat-no" title="function not covered" >cat =&gt;</span></span>
+<span class="cstat-no" title="statement not covered" >          eq(marketplaceListings.category, cat)</span>
         );
 <span class="cstat-no" title="statement not covered" >        conditions.push(or(...categoryConditions)!);</span>
       }
@@ -2745,8 +2745,8 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >      if (filters.condition.length === 1) {</span>
 <span class="cstat-no" title="statement not covered" >        conditions.push(eq(marketplaceListings.condition, filters.condition[0]));</span>
       } else {
-        const conditionConditions = <span class="cstat-no" title="statement not covered" >filters.condition.map(<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >cond =&gt;</span></span></span>
-          eq(marketplaceListings.condition, cond)
+        const conditionConditions = <span class="cstat-no" title="statement not covered" >filters.condition.map(<span class="fstat-no" title="function not covered" >cond =&gt;</span></span>
+<span class="cstat-no" title="statement not covered" >          eq(marketplaceListings.condition, cond)</span>
         );
 <span class="cstat-no" title="statement not covered" >        conditions.push(or(...conditionConditions)!);</span>
       }
@@ -2760,7 +2760,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return conditions;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getMarketplaceListing(i</span>d: string): Promise&lt;MarketplaceListing | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etMarketplaceListing(id: string): Promise&lt;MarketplaceListing | undefined&gt; {
     const [listing] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(marketplaceListings)
@@ -2768,7 +2768,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return listing;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getMarketplaceListingsByUser(u</span>serId: string): Promise&lt;MarketplaceListing[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etMarketplaceListingsByUser(userId: string): Promise&lt;MarketplaceListing[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
       .from(marketplaceListings)
@@ -2776,7 +2776,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(marketplaceListings.createdAt));
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >createMarketplaceListing(l</span>isting: InsertMarketplaceListing): Promise&lt;MarketplaceListing&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateMarketplaceListing(listing: InsertMarketplaceListing): Promise&lt;MarketplaceListing&gt; {
     const [created] = <span class="cstat-no" title="statement not covered" >await db</span>
       .insert(marketplaceListings)
       .values(listing)
@@ -2784,7 +2784,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return created;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >updateMarketplaceListing(i</span>d: string, listing: Partial&lt;InsertMarketplaceListing&gt;): Promise&lt;MarketplaceListing | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async u</span>pdateMarketplaceListing(id: string, listing: Partial&lt;InsertMarketplaceListing&gt;): Promise&lt;MarketplaceListing | undefined&gt; {
     const [updated] = <span class="cstat-no" title="statement not covered" >await db</span>
       .update(marketplaceListings)
       .set({ ...listing, updatedAt: new Date() })
@@ -2793,7 +2793,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return updated;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >deleteMarketplaceListing(i</span>d: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async d</span>eleteMarketplaceListing(id: string): Promise&lt;boolean&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db</span>
       .delete(marketplaceListings)
       .where(eq(marketplaceListings.id, id))
@@ -2802,7 +2802,7 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Message operations
-  async <span class="fstat-no" title="function not covered" >getConversations(u</span>serId: string): Promise&lt;Conversation[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etConversations(userId: string): Promise&lt;Conversation[]&gt; {
     const allMessages = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(messages)
@@ -2849,7 +2849,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return conversations;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getConversation(u</span>serId: string, otherUserId: string): Promise&lt;Message[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etConversation(userId: string, otherUserId: string): Promise&lt;Message[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
       .from(messages)
@@ -2862,12 +2862,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(messages.createdAt);
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >sendMessage(m</span>essage: InsertMessage): Promise&lt;Message&gt; {
+<span class="fstat-no" title="function not covered" >  async s</span>endMessage(message: InsertMessage): Promise&lt;Message&gt; {
     const [created] = <span class="cstat-no" title="statement not covered" >await db.insert(messages).values(message).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return created;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >markMessagesAsRead(u</span>serId: string, otherUserId: string): Promise&lt;void&gt; {
+<span class="fstat-no" title="function not covered" >  async m</span>arkMessagesAsRead(userId: string, otherUserId: string): Promise&lt;void&gt; {
 <span class="cstat-no" title="statement not covered" >    await db</span>
       .update(messages)
       .set({ isRead: true })
@@ -2880,7 +2880,7 @@ export class DatabaseStorage implements IStorage {
       );
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getUnreadMessageCount(u</span>serId: string): Promise&lt;number&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etUnreadMessageCount(userId: string): Promise&lt;number&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db</span>
       .select({ count: sql&lt;number&gt;`count(*):: int` })
       .from(messages)
@@ -2889,7 +2889,7 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Review operations
-  async <span class="fstat-no" title="function not covered" >getReview(i</span>d: string): Promise&lt;Review | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etReview(id: string): Promise&lt;Review | undefined&gt; {
     const [review] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(reviews)
@@ -2897,7 +2897,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return review;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getReviewsForTarget(t</span>argetType: string, targetId: string): Promise&lt;ReviewWithReviewer[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etReviewsForTarget(targetType: string, targetId: string): Promise&lt;ReviewWithReviewer[]&gt; {
     const reviewList = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(reviews)
@@ -2912,7 +2912,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return reviewsWithReviewers;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getReviewsByUser(u</span>serId: string): Promise&lt;Review[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etReviewsByUser(userId: string): Promise&lt;Review[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
       .from(reviews)
@@ -2920,23 +2920,23 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(reviews.createdAt));
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >createReview(r</span>eview: InsertReview): Promise&lt;Review&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateReview(review: InsertReview): Promise&lt;Review&gt; {
     const [newReview] = <span class="cstat-no" title="statement not covered" >await db.insert(reviews).values(review).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return newReview;</span>
   }
 &nbsp;
   // Bands
-  async <span class="fstat-no" title="function not covered" >createBand(b</span>and: InsertBand): Promise&lt;Band&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateBand(band: InsertBand): Promise&lt;Band&gt; {
     const [newBand] = <span class="cstat-no" title="statement not covered" >await db.insert(bands).values(band).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return newBand;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getBand(i</span>d: string): Promise&lt;Band | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etBand(id: string): Promise&lt;Band | undefined&gt; {
     const [band] = <span class="cstat-no" title="statement not covered" >await db.select().from(bands).where(eq(bands.id, id));</span>
 <span class="cstat-no" title="statement not covered" >    return band;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getBands(f</span>ilters?: Partial&lt;Band&gt; &amp; { searchQuery?: string }): Promise&lt;Band[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etBands(filters?: Partial&lt;Band&gt; &amp; { searchQuery?: string }): Promise&lt;Band[]&gt; {
     const conditions = <span class="cstat-no" title="statement not covered" >this._buildBandFilters(filters);</span>
 <span class="cstat-no" title="statement not covered" >    return await db.select().from(bands).where(and(...conditions));</span>
   }
@@ -2951,7 +2951,7 @@ export class DatabaseStorage implements IStorage {
     }
 <span class="cstat-no" title="statement not covered" >    if (filters.searchQuery) {</span>
       const query = <span class="cstat-no" title="statement not covered" >`%${filters.searchQuery}%`;</span>
-      const <span class="cstat-no" title="statement not covered" >searchCondition = or(</span>
+      const searchCondition = <span class="cstat-no" title="statement not covered" >or(</span>
         ilike(bands.name, query),
         ilike(bands.bio, query),
         ilike(bands.location, query),
@@ -2964,11 +2964,11 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return conditions;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getBandsByUser(u</span>serId: string): Promise&lt;Band[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etBandsByUser(userId: string): Promise&lt;Band[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return await db.select().from(bands).where(eq(bands.userId, userId));</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >updateBand(i</span>d: string, band: Partial&lt;InsertBand&gt;): Promise&lt;Band | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async u</span>pdateBand(id: string, band: Partial&lt;InsertBand&gt;): Promise&lt;Band | undefined&gt; {
     const [updated] = <span class="cstat-no" title="statement not covered" >await db</span>
       .update(bands)
       .set({ ...band, updatedAt: new Date() })
@@ -2978,12 +2978,12 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Band Members
-  async <span class="fstat-no" title="function not covered" >addBandMember(m</span>ember: InsertBandMember): Promise&lt;BandMember&gt; {
+<span class="fstat-no" title="function not covered" >  async a</span>ddBandMember(member: InsertBandMember): Promise&lt;BandMember&gt; {
     const [newMember] = <span class="cstat-no" title="statement not covered" >await db.insert(bandMembers).values(member).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return newMember;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >removeBandMember(b</span>andId: string, userId: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async r</span>emoveBandMember(bandId: string, userId: string): Promise&lt;boolean&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db</span>
       .delete(bandMembers)
       .where(and(eq(bandMembers.bandId, bandId), eq(bandMembers.userId, userId)))
@@ -2991,7 +2991,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return result.length &gt; 0;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getBandMembers(b</span>andId: string): Promise&lt;BandMemberWithUser[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etBandMembers(bandId: string): Promise&lt;BandMemberWithUser[]&gt; {
     const members = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(bandMembers)
@@ -3007,7 +3007,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return membersWithUsers;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >isBandAdmin(b</span>andId: string, userId: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async i</span>sBandAdmin(bandId: string, userId: string): Promise&lt;boolean&gt; {
     // Check if owner
     const band = <span class="cstat-no" title="statement not covered" >await this.getBand(bandId);</span>
 <span class="cstat-no" title="statement not covered" >    if (band &amp;&amp; band.userId === userId) <span class="cstat-no" title="statement not covered" >return true;</span></span>
@@ -3027,12 +3027,12 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Gigs
-  async <span class="fstat-no" title="function not covered" >createGig(g</span>ig: InsertGig): Promise&lt;Gig&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateGig(gig: InsertGig): Promise&lt;Gig&gt; {
     const [newGig] = <span class="cstat-no" title="statement not covered" >await db.insert(gigs).values(gig).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return newGig;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getGigs(f</span>ilters?: GigFilters): Promise&lt;Gig[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etGigs(filters?: GigFilters): Promise&lt;Gig[]&gt; {
     const conditions = <span class="cstat-no" title="statement not covered" >this._buildGigFilters(filters);</span>
 <span class="cstat-no" title="statement not covered" >    return await db.select().from(gigs)</span>
       .where(and(...conditions))
@@ -3070,19 +3070,19 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return conditions;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getGigsByBand(b</span>andId: string): Promise&lt;Gig[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etGigsByBand(bandId: string): Promise&lt;Gig[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return await db.select().from(gigs)</span>
       .where(and(eq(gigs.bandId, bandId), gte(gigs.date, new Date())))
       .orderBy(gigs.date);
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getGigsByMusician(m</span>usicianId: string): Promise&lt;Gig[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etGigsByMusician(musicianId: string): Promise&lt;Gig[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return await db.select().from(gigs)</span>
       .where(and(eq(gigs.musicianId, musicianId), gte(gigs.date, new Date())))
       .orderBy(gigs.date);
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >updateReview(i</span>d: string, review: Partial&lt;InsertReview&gt;): Promise&lt;Review | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async u</span>pdateReview(id: string, review: Partial&lt;InsertReview&gt;): Promise&lt;Review | undefined&gt; {
     const [updated] = <span class="cstat-no" title="statement not covered" >await db</span>
       .update(reviews)
       .set({ ...review, updatedAt: new Date() })
@@ -3091,12 +3091,12 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return updated;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >deleteReview(i</span>d: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async d</span>eleteReview(id: string): Promise&lt;boolean&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db.delete(reviews).where(eq(reviews.id, id)).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return result.length &gt; 0;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getAverageRating(t</span>argetType: string, targetId: string): Promise&lt;{ average: number; count: number }&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etAverageRating(targetType: string, targetId: string): Promise&lt;{ average: number; count: number }&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db</span>
       .select({
         average: sql&lt;number&gt;`COALESCE(AVG(${reviews.rating}), 0)::float`,
@@ -3110,7 +3110,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >hasUserReviewed(u</span>serId: string, targetType: string, targetId: string): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async h</span>asUserReviewed(userId: string, targetType: string, targetId: string): Promise&lt;boolean&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(reviews)
@@ -3124,7 +3124,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return result.length &gt; 0;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >checkRateLimit(u</span>serId: string, type: string, limit: number, windowSeconds: number): Promise&lt;boolean&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>heckRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise&lt;boolean&gt; {
     const now = <span class="cstat-no" title="statement not covered" >new Date();</span>
     const windowStartThreshold = <span class="cstat-no" title="statement not covered" >new Date(now.getTime() - windowSeconds * 1000);</span>
 &nbsp;
@@ -3168,7 +3168,7 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Notifications
-  async <span class="fstat-no" title="function not covered" >getNotifications(u</span>serId: string): Promise&lt;Notification[]&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etNotifications(userId: string): Promise&lt;Notification[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return db</span>
       .select()
       .from(notifications)
@@ -3176,7 +3176,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(notifications.createdAt));
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getUnreadNotificationCount(u</span>serId: string): Promise&lt;number&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etUnreadNotificationCount(userId: string): Promise&lt;number&gt; {
     const result = <span class="cstat-no" title="statement not covered" >await db</span>
       .select({ count: sql&lt;number&gt;`count(*)::int` })
       .from(notifications)
@@ -3184,19 +3184,19 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return result[0]?.count || 0;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >createNotification(n</span>otification: InsertNotification): Promise&lt;Notification&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateNotification(notification: InsertNotification): Promise&lt;Notification&gt; {
     const [created] = <span class="cstat-no" title="statement not covered" >await db.insert(notifications).values(notification).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return created;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >markNotificationAsRead(i</span>d: string): Promise&lt;void&gt; {
+<span class="fstat-no" title="function not covered" >  async m</span>arkNotificationAsRead(id: string): Promise&lt;void&gt; {
 <span class="cstat-no" title="statement not covered" >    await db</span>
       .update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.id, id));
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >markAllNotificationsAsRead(u</span>serId: string): Promise&lt;void&gt; {
+<span class="fstat-no" title="function not covered" >  async m</span>arkAllNotificationsAsRead(userId: string): Promise&lt;void&gt; {
 <span class="cstat-no" title="statement not covered" >    await db</span>
       .update(notifications)
       .set({ isRead: true })
@@ -3204,12 +3204,12 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Contact Requests
-  async <span class="fstat-no" title="function not covered" >createContactRequest(r</span>equest: InsertContactRequest): Promise&lt;ContactRequest&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateContactRequest(request: InsertContactRequest): Promise&lt;ContactRequest&gt; {
     const [created] = <span class="cstat-no" title="statement not covered" >await db.insert(contactRequests).values(request).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return created;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getContactRequest(r</span>equesterId: string, recipientId: string): Promise&lt;ContactRequest | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etContactRequest(requesterId: string, recipientId: string): Promise&lt;ContactRequest | undefined&gt; {
     const [request] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(contactRequests)
@@ -3222,7 +3222,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return request;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getContactRequestById(i</span>d: string): Promise&lt;ContactRequest | undefined&gt; {
+<span class="fstat-no" title="function not covered" >  async g</span>etContactRequestById(id: string): Promise&lt;ContactRequest | undefined&gt; {
     const [request] = <span class="cstat-no" title="statement not covered" >await db</span>
       .select()
       .from(contactRequests)
@@ -3230,7 +3230,7 @@ export class DatabaseStorage implements IStorage {
 <span class="cstat-no" title="statement not covered" >    return request;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >updateContactRequestStatus(i</span>d: string, status: string): Promise&lt;void&gt; {
+<span class="fstat-no" title="function not covered" >  async u</span>pdateContactRequestStatus(id: string, status: string): Promise&lt;void&gt; {
 <span class="cstat-no" title="statement not covered" >    await db</span>
       .update(contactRequests)
       .set({ status })
@@ -3238,12 +3238,12 @@ export class DatabaseStorage implements IStorage {
   }
 &nbsp;
   // Reports
-  async <span class="fstat-no" title="function not covered" >createReport(r</span>eport: InsertReport): Promise&lt;Report&gt; {
+<span class="fstat-no" title="function not covered" >  async c</span>reateReport(report: InsertReport): Promise&lt;Report&gt; {
     const [created] = <span class="cstat-no" title="statement not covered" >await db.insert(reports).values(report).returning();</span>
 <span class="cstat-no" title="statement not covered" >    return created;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >migrateUserId(o</span>ldId: string, newId: string): Promise&lt;void&gt; {
+<span class="fstat-no" title="function not covered" >  async m</span>igrateUserId(oldId: string, newId: string): Promise&lt;void&gt; {
     const oldUser = <span class="cstat-no" title="statement not covered" >await this.getUser(oldId);</span>
 <span class="cstat-no" title="statement not covered" >    if (!oldUser) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error(`User ${oldId} not found`);</span>
@@ -3361,7 +3361,7 @@ export const storage = <span class="cstat-no" title="statement not covered" >new
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-28T21:17:29.097Z
+                at 2025-12-28T22:55:31.456Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

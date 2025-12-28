@@ -2212,7 +2212,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 &nbsp;
 // Session storage table for Replit Auth
-export const <span class="cstat-no" title="statement not covered" >sessions = pgTable(</span>
+export const sessions = <span class="cstat-no" title="statement not covered" >pgTable(</span>
   "sessions",
   {
     sid: varchar("sid").primaryKey(),
@@ -2227,7 +2227,7 @@ export const <span class="cstat-no" title="statement not covered" >sessions = pg
 );
 &nbsp;
 // User storage table for Replit Auth
-export const <span class="cstat-no" title="statement not covered" >users = pgTable("users", {</span>
+export const users = <span class="cstat-no" title="statement not covered" >pgTable("users", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
@@ -2250,7 +2250,7 @@ export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 &nbsp;
 // Musician profiles table
-export const <span class="cstat-no" title="statement not covered" >musicianProfiles = pgTable("musician_profiles", {</span>
+export const musicianProfiles = <span class="cstat-no" title="statement not covered" >pgTable("musician_profiles", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   name: varchar("name", { length: 255 }).notNull(),
@@ -2287,14 +2287,14 @@ export const <span class="cstat-no" title="statement not covered" >musicianProfi
   index("musicians_user_id_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >musicianProfilesRelations = relations(musicianProfiles, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const musicianProfilesRelations = <span class="cstat-no" title="statement not covered" >relations(musicianProfiles, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [musicianProfiles.userId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertMusicianProfileSchema = createInsertSchema(musicianProfiles).omit({</span>
+export const insertMusicianProfileSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(musicianProfiles).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2304,7 +2304,7 @@ export type InsertMusicianProfile = z.infer&lt;typeof insertMusicianProfileSchem
 export type MusicianProfile = typeof musicianProfiles.$inferSelect;
 &nbsp;
 // Marketplace listings table
-export const <span class="cstat-no" title="statement not covered" >marketplaceListings = pgTable("marketplace_listings", {</span>
+export const marketplaceListings = <span class="cstat-no" title="statement not covered" >pgTable("marketplace_listings", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   title: varchar("title", { length: 255 }).notNull(),
@@ -2328,14 +2328,14 @@ export const <span class="cstat-no" title="statement not covered" >marketplaceLi
   index("marketplace_user_id_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >marketplaceListingsRelations = relations(marketplaceListings, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const marketplaceListingsRelations = <span class="cstat-no" title="statement not covered" >relations(marketplaceListings, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [marketplaceListings.userId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertMarketplaceListingSchema = createInsertSchema(marketplaceListings).omit({</span>
+export const insertMarketplaceListingSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(marketplaceListings).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2345,7 +2345,7 @@ export type InsertMarketplaceListing = z.infer&lt;typeof insertMarketplaceListin
 export type MarketplaceListing = typeof marketplaceListings.$inferSelect;
 &nbsp;
 // Notifications table
-export const <span class="cstat-no" title="statement not covered" >notifications = pgTable("notifications", {</span>
+export const notifications = <span class="cstat-no" title="statement not covered" >pgTable("notifications", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   type: varchar("type", { length: 50 }).notNull(), // 'message', 'invite', 'system'
@@ -2363,14 +2363,14 @@ export const <span class="cstat-no" title="statement not covered" >notifications
   index("notifications_user_id_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >notificationsRelations = relations(notifications, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const notificationsRelations = <span class="cstat-no" title="statement not covered" >relations(notifications, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [notifications.userId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertNotificationSchema = createInsertSchema(notifications).omit({</span>
+export const insertNotificationSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(notifications).omit({</span>
   id: true,
   createdAt: true,
 });
@@ -2379,7 +2379,7 @@ export type InsertNotification = z.infer&lt;typeof insertNotificationSchema&gt;;
 export type Notification = typeof notifications.$inferSelect;
 &nbsp;
 // Contact Requests table
-export const <span class="cstat-no" title="statement not covered" >contactRequests = pgTable("contact_requests", {</span>
+export const contactRequests = <span class="cstat-no" title="statement not covered" >pgTable("contact_requests", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   requesterId: varchar("requester_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   recipientId: varchar("recipient_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>, // Linking to User ID for easier notification routing
@@ -2393,7 +2393,7 @@ export const <span class="cstat-no" title="statement not covered" >contactReques
   index("contact_requests_recipient_id_idx").on(table.recipientId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >contactRequestsRelations = relations(contactRequests, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const contactRequestsRelations = <span class="cstat-no" title="statement not covered" >relations(contactRequests, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   requester: one(users, {
     fields: [contactRequests.requesterId],
     references: [users.id],
@@ -2406,7 +2406,7 @@ export const <span class="cstat-no" title="statement not covered" >contactReques
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertContactRequestSchema = createInsertSchema(contactRequests).omit({</span>
+export const insertContactRequestSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(contactRequests).omit({</span>
   id: true,
   createdAt: true,
 });
@@ -2525,7 +2525,7 @@ export const itemConditions = <span class="cstat-no" title="statement not covere
 ] as const;
 &nbsp;
 // Messages table for direct user communication
-export const <span class="cstat-no" title="statement not covered" >messages = pgTable("messages", {</span>
+export const messages = <span class="cstat-no" title="statement not covered" >pgTable("messages", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   senderId: varchar("sender_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   receiverId: varchar("receiver_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
@@ -2539,7 +2539,7 @@ export const <span class="cstat-no" title="statement not covered" >messages = pg
   index("messages_receiver_id_idx").on(table.receiverId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >messagesRelations = relations(messages, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const messagesRelations = <span class="cstat-no" title="statement not covered" >relations(messages, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   sender: one(users, {
     fields: [messages.senderId],
     references: [users.id],
@@ -2552,7 +2552,7 @@ export const <span class="cstat-no" title="statement not covered" >messagesRelat
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertMessageSchema = createInsertSchema(messages).omit({</span>
+export const insertMessageSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(messages).omit({</span>
   id: true,
   createdAt: true,
   isRead: true,
@@ -2574,7 +2574,7 @@ export interface Conversation {
 }
 &nbsp;
 // Reviews table for musician profiles and marketplace listings
-export const <span class="cstat-no" title="statement not covered" >reviews = pgTable("reviews", {</span>
+export const reviews = <span class="cstat-no" title="statement not covered" >pgTable("reviews", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   reviewerId: varchar("reviewer_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   targetType: varchar("target_type", { length: 50 }).notNull(),
@@ -2591,14 +2591,14 @@ export const <span class="cstat-no" title="statement not covered" >reviews = pgT
   index("reviews_reviewer_id_idx").on(table.reviewerId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >reviewsRelations = relations(reviews, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const reviewsRelations = <span class="cstat-no" title="statement not covered" >relations(reviews, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   reviewer: one(users, {
     fields: [reviews.reviewerId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertReviewSchema = createInsertSchema(reviews).omit({</span>
+export const insertReviewSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(reviews).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2612,7 +2612,7 @@ export interface ReviewWithReviewer extends Review {
 }
 &nbsp;
 // Bands table
-export const <span class="cstat-no" title="statement not covered" >bands = pgTable("bands", {</span>
+export const bands = <span class="cstat-no" title="statement not covered" >pgTable("bands", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   name: varchar("name", { length: 255 }).notNull(),
@@ -2643,14 +2643,14 @@ export const <span class="cstat-no" title="statement not covered" >bands = pgTab
   index("bands_user_id_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >bandsRelations = relations(bands, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const bandsRelations = <span class="cstat-no" title="statement not covered" >relations(bands, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [bands.userId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertBandSchema = createInsertSchema(bands).omit({</span>
+export const insertBandSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(bands).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2659,7 +2659,7 @@ export const <span class="cstat-no" title="statement not covered" >insertBandSch
 export type InsertBand = z.infer&lt;typeof insertBandSchema&gt;;
 export type Band = typeof bands.$inferSelect;
 // Rate Limiting table
-export const <span class="cstat-no" title="statement not covered" >rateLimits = pgTable("rate_limits", {</span>
+export const rateLimits = <span class="cstat-no" title="statement not covered" >pgTable("rate_limits", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   type: varchar("type", { length: 50 }).notNull(), // e.g., 'upload', 'login_attempt'
@@ -2673,7 +2673,7 @@ export const <span class="cstat-no" title="statement not covered" >rateLimits = 
 export type RateLimit = typeof rateLimits.$inferSelect;
 &nbsp;
 // Band Members table (for Admin/Member roles)
-export const <span class="cstat-no" title="statement not covered" >bandMembers = pgTable("band_members", {</span>
+export const bandMembers = <span class="cstat-no" title="statement not covered" >pgTable("band_members", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   bandId: varchar("band_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >b</span>ands.id)</span>,
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
@@ -2689,7 +2689,7 @@ export const <span class="cstat-no" title="statement not covered" >bandMembers =
   index("band_members_user_id_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >bandMembersRelations = relations(bandMembers, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const bandMembersRelations = <span class="cstat-no" title="statement not covered" >relations(bandMembers, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   band: one(bands, {
     fields: [bandMembers.bandId],
     references: [bands.id],
@@ -2700,7 +2700,7 @@ export const <span class="cstat-no" title="statement not covered" >bandMembersRe
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertBandMemberSchema = createInsertSchema(bandMembers).omit({</span>
+export const insertBandMemberSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(bandMembers).omit({</span>
   id: true,
   joinedAt: true,
 });
@@ -2713,7 +2713,7 @@ export interface BandMemberWithUser extends BandMember {
 }
 &nbsp;
 // Gigs table
-export const <span class="cstat-no" title="statement not covered" >gigs = pgTable("gigs", {</span>
+export const gigs = <span class="cstat-no" title="statement not covered" >pgTable("gigs", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   creatorId: varchar("creator_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   bandId: varchar("band_id").references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >b</span>ands.id)</span>, // Nullable if solo musician
@@ -2740,7 +2740,7 @@ export const <span class="cstat-no" title="statement not covered" >gigs = pgTabl
 ]);
 &nbsp;
 // Gig Managers table for collaborative editing
-export const <span class="cstat-no" title="statement not covered" >gigManagers = pgTable("gig_managers", {</span>
+export const gigManagers = <span class="cstat-no" title="statement not covered" >pgTable("gig_managers", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   gigId: varchar("gig_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >g</span>igs.id)</span>,
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
@@ -2754,7 +2754,7 @@ export const <span class="cstat-no" title="statement not covered" >gigManagers =
   index("gig_managers_user_id_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >gigsRelations = relations(gigs, <span class="fstat-no" title="function not covered" >({</span> one, many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const gigsRelations = <span class="cstat-no" title="statement not covered" >relations(gigs, <span class="fstat-no" title="function not covered" >({</span> one, many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   creator: one(users, {
     fields: [gigs.creatorId],
     references: [users.id],
@@ -2770,7 +2770,7 @@ export const <span class="cstat-no" title="statement not covered" >gigsRelations
   managers: many(gigManagers),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >gigManagersRelations = relations(gigManagers, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const gigManagersRelations = <span class="cstat-no" title="statement not covered" >relations(gigManagers, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   gig: one(gigs, {
     fields: [gigManagers.gigId],
     references: [gigs.id],
@@ -2782,7 +2782,7 @@ export const <span class="cstat-no" title="statement not covered" >gigManagersRe
 }));
 &nbsp;
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertGigSchema = createInsertSchema(gigs).omit({</span>
+export const insertGigSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(gigs).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2791,7 +2791,7 @@ export const <span class="cstat-no" title="statement not covered" >insertGigSche
 export type InsertGig = z.infer&lt;typeof insertGigSchema&gt;;
 export type Gig = typeof gigs.$inferSelect;
 // Reports table
-export const <span class="cstat-no" title="statement not covered" >reports = pgTable("reports", {</span>
+export const reports = <span class="cstat-no" title="statement not covered" >pgTable("reports", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   reporterId: varchar("reporter_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   targetType: varchar("target_type", { length: 50 }).notNull(), // 'user', 'band', 'gig', 'listing', 'message'
@@ -2807,14 +2807,14 @@ export const <span class="cstat-no" title="statement not covered" >reports = pgT
   index("reports_reporter_id_idx").on(table.reporterId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >reportsRelations = relations(reports, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const reportsRelations = <span class="cstat-no" title="statement not covered" >relations(reports, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   reporter: one(users, {
     fields: [reports.reporterId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertReportSchema = createInsertSchema(reports).omit({</span>
+export const insertReportSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(reports).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2825,7 +2825,7 @@ export type InsertReport = z.infer&lt;typeof insertReportSchema&gt;;
 export type Report = typeof reports.$inferSelect;
 &nbsp;
 // Classifieds table (Digital Auditions)
-export const <span class="cstat-no" title="statement not covered" >classifieds = pgTable("classifieds", {</span>
+export const classifieds = <span class="cstat-no" title="statement not covered" >pgTable("classifieds", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   title: varchar("title", { length: 255 }).notNull(),
@@ -2847,14 +2847,14 @@ export const <span class="cstat-no" title="statement not covered" >classifieds =
   index("classifieds_location_idx").on(table.location),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >classifiedsRelations = relations(classifieds, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const classifiedsRelations = <span class="cstat-no" title="statement not covered" >relations(classifieds, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [classifieds.userId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertClassifiedSchema = createInsertSchema(classifieds).omit({</span>
+export const insertClassifiedSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(classifieds).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2876,7 +2876,7 @@ export const professionalRoles = <span class="cstat-no" title="statement not cov
   "Other"
 ] as const;
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >professionalProfiles = pgTable("professional_profiles", {</span>
+export const professionalProfiles = <span class="cstat-no" title="statement not covered" >pgTable("professional_profiles", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   role: varchar("role", { length: 50 }).notNull(),
@@ -2910,14 +2910,14 @@ export const <span class="cstat-no" title="statement not covered" >professionalP
   index("pro_location_idx").on(table.location),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >professionalProfilesRelations = relations(professionalProfiles, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const professionalProfilesRelations = <span class="cstat-no" title="statement not covered" >relations(professionalProfiles, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [professionalProfiles.userId],
     references: [users.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertProfessionalProfileSchema = createInsertSchema(professionalProfiles).omit({</span>
+export const insertProfessionalProfileSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(professionalProfiles).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2929,7 +2929,7 @@ export type ProfessionalProfile = typeof professionalProfiles.$inferSelect;
 &nbsp;
 &nbsp;
 // Announcements table
-export const <span class="cstat-no" title="statement not covered" >announcements = pgTable("announcements", {</span>
+export const announcements = <span class="cstat-no" title="statement not covered" >pgTable("announcements", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title", { length: 255 }), // Internal reference
   message: text("message").notNull(),
@@ -2952,7 +2952,7 @@ export const <span class="cstat-no" title="statement not covered" >announcements
   }),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertAnnouncementSchema = createInsertSchema(announcements).omit({</span>
+export const insertAnnouncementSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(announcements).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -2965,7 +2965,7 @@ export type Announcement = typeof announcements.$inferSelect;
 // ------------------------------------------------------------------
 &nbsp;
 // System Roles (e.g., 'super_admin', 'hub_manager', 'moderator')
-export const <span class="cstat-no" title="statement not covered" >sysRoles = pgTable("sys_roles", {</span>
+export const sysRoles = <span class="cstat-no" title="statement not covered" >pgTable("sys_roles", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 50 }).notNull().unique(), // e.g. 'super_admin'
   description: text("description"),
@@ -2976,7 +2976,7 @@ export const <span class="cstat-no" title="statement not covered" >sysRoles = pg
 ]);
 &nbsp;
 // Join table: Users &lt;-&gt; Roles
-export const <span class="cstat-no" title="statement not covered" >sysUserRoles = pgTable("sys_user_roles", {</span>
+export const sysUserRoles = <span class="cstat-no" title="statement not covered" >pgTable("sys_user_roles", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   roleId: varchar("role_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>ysRoles.id)</span>,
@@ -2987,11 +2987,11 @@ export const <span class="cstat-no" title="statement not covered" >sysUserRoles 
   index("sys_user_roles_user_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >sysRolesRelations = relations(sysRoles, <span class="fstat-no" title="function not covered" >({</span> many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const sysRolesRelations = <span class="cstat-no" title="statement not covered" >relations(sysRoles, <span class="fstat-no" title="function not covered" >({</span> many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   userRoles: many(sysUserRoles),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >sysUserRolesRelations = relations(sysUserRoles, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const sysUserRolesRelations = <span class="cstat-no" title="statement not covered" >relations(sysUserRoles, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [sysUserRoles.userId],
     references: [users.id],
@@ -3008,7 +3008,7 @@ export const <span class="cstat-no" title="statement not covered" >sysUserRolesR
 // ------------------------------------------------------------------
 &nbsp;
 // Volunteer Profiles
-export const <span class="cstat-no" title="statement not covered" >volunteerProfiles = pgTable("volunteer_profiles", {</span>
+export const volunteerProfiles = <span class="cstat-no" title="statement not covered" >pgTable("volunteer_profiles", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
   headline: varchar("headline", { length: 255 }),
@@ -3026,7 +3026,7 @@ export const <span class="cstat-no" title="statement not covered" >volunteerProf
   index("volunteer_profiles_user_id_idx").on(table.userId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >volunteerProfilesRelations = relations(volunteerProfiles, <span class="fstat-no" title="function not covered" >({</span> one, many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const volunteerProfilesRelations = <span class="cstat-no" title="statement not covered" >relations(volunteerProfiles, <span class="fstat-no" title="function not covered" >({</span> one, many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   user: one(users, {
     fields: [volunteerProfiles.userId],
     references: [users.id],
@@ -3036,7 +3036,7 @@ export const <span class="cstat-no" title="statement not covered" >volunteerProf
   applications: many(volunteerApplications),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertVolunteerProfileSchema = createInsertSchema(volunteerProfiles).omit({</span>
+export const insertVolunteerProfileSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(volunteerProfiles).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -3047,7 +3047,7 @@ export type InsertVolunteerProfile = z.infer&lt;typeof insertVolunteerProfileSch
 export type VolunteerProfile = typeof volunteerProfiles.$inferSelect;
 &nbsp;
 // Organisations
-export const <span class="cstat-no" title="statement not covered" >organisations = pgTable("organisations", {</span>
+export const organisations = <span class="cstat-no" title="statement not covered" >pgTable("organisations", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
@@ -3063,12 +3063,12 @@ export const <span class="cstat-no" title="statement not covered" >organisations
   // Write policies are complex and handled via organisationMembers usually, or initially by creator
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >organisationsRelations = relations(organisations, <span class="fstat-no" title="function not covered" >({</span> many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const organisationsRelations = <span class="cstat-no" title="statement not covered" >relations(organisations, <span class="fstat-no" title="function not covered" >({</span> many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   members: many(organisationMembers),
   roles: many(volunteerRoles),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertOrganisationSchema = createInsertSchema(organisations).omit({</span>
+export const insertOrganisationSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(organisations).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -3079,7 +3079,7 @@ export type InsertOrganisation = z.infer&lt;typeof insertOrganisationSchema&gt;;
 export type Organisation = typeof organisations.$inferSelect;
 &nbsp;
 // Organisation Members
-export const <span class="cstat-no" title="statement not covered" >orgRoleEnum = pgTable("organisation_members", {</span>
+export const orgRoleEnum = <span class="cstat-no" title="statement not covered" >pgTable("organisation_members", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   organisationId: varchar("organisation_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >o</span>rganisations.id)</span>,
   userId: varchar("user_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>sers.id)</span>,
@@ -3093,7 +3093,7 @@ export const <span class="cstat-no" title="statement not covered" >orgRoleEnum =
 // Alias for cleaner export
 export const organisationMembers = <span class="cstat-no" title="statement not covered" >orgRoleEnum;</span>
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >organisationMembersRelations = relations(organisationMembers, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const organisationMembersRelations = <span class="cstat-no" title="statement not covered" >relations(organisationMembers, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   organisation: one(organisations, {
     fields: [organisationMembers.organisationId],
     references: [organisations.id],
@@ -3104,7 +3104,7 @@ export const <span class="cstat-no" title="statement not covered" >organisationM
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertOrganisationMemberSchema = createInsertSchema(organisationMembers).omit({</span>
+export const insertOrganisationMemberSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(organisationMembers).omit({</span>
   id: true,
   createdAt: true,
 });
@@ -3113,7 +3113,7 @@ export type InsertOrganisationMember = z.infer&lt;typeof insertOrganisationMembe
 export type OrganisationMember = typeof organisationMembers.$inferSelect;
 &nbsp;
 // Skills
-export const <span class="cstat-no" title="statement not covered" >skills = pgTable("skills", {</span>
+export const skills = <span class="cstat-no" title="statement not covered" >pgTable("skills", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 255 }).unique().notNull(),
   category: varchar("category", { length: 100 }),
@@ -3122,14 +3122,14 @@ export const <span class="cstat-no" title="statement not covered" >skills = pgTa
   pgPolicy("skills_public_read", { for: "select", to: "public", using: sql`true` }),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >skillsRelations = relations(skills, <span class="fstat-no" title="function not covered" >({</span> many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const skillsRelations = <span class="cstat-no" title="statement not covered" >relations(skills, <span class="fstat-no" title="function not covered" >({</span> many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   profiles: many(profileSkills),
 }));
 &nbsp;
 export type Skill = typeof skills.$inferSelect;
 &nbsp;
 // Profile Skills (Junction)
-export const <span class="cstat-no" title="statement not covered" >profileSkills = pgTable("profile_skills", {</span>
+export const profileSkills = <span class="cstat-no" title="statement not covered" >pgTable("profile_skills", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   profileId: varchar("profile_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >v</span>olunteerProfiles.id)</span>,
   skillId: varchar("skill_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>kills.id)</span>,
@@ -3141,7 +3141,7 @@ export const <span class="cstat-no" title="statement not covered" >profileSkills
   index("profile_skills_skill_idx").on(table.skillId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >profileSkillsRelations = relations(profileSkills, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const profileSkillsRelations = <span class="cstat-no" title="statement not covered" >relations(profileSkills, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   profile: one(volunteerProfiles, {
     fields: [profileSkills.profileId],
     references: [volunteerProfiles.id],
@@ -3155,7 +3155,7 @@ export const <span class="cstat-no" title="statement not covered" >profileSkills
 export type ProfileSkill = typeof profileSkills.$inferSelect;
 &nbsp;
 // Credentials
-export const <span class="cstat-no" title="statement not covered" >credentials = pgTable("credentials", {</span>
+export const credentials = <span class="cstat-no" title="statement not covered" >pgTable("credentials", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   profileId: varchar("profile_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >v</span>olunteerProfiles.id)</span>,
   type: varchar("type", { length: 100 }).notNull(), // 'WWCC', 'Police Check'
@@ -3173,14 +3173,14 @@ export const <span class="cstat-no" title="statement not covered" >credentials =
   index("credentials_profile_idx").on(table.profileId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >credentialsRelations = relations(credentials, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const credentialsRelations = <span class="cstat-no" title="statement not covered" >relations(credentials, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   profile: one(volunteerProfiles, {
     fields: [credentials.profileId],
     references: [volunteerProfiles.id],
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertCredentialSchema = createInsertSchema(credentials).omit({</span>
+export const insertCredentialSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(credentials).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -3192,7 +3192,7 @@ export type InsertCredential = z.infer&lt;typeof insertCredentialSchema&gt;;
 export type Credential = typeof credentials.$inferSelect;
 &nbsp;
 // Volunteer Roles (Opportunities)
-export const <span class="cstat-no" title="statement not covered" >volunteerRoles = pgTable("volunteer_roles", {</span>
+export const volunteerRoles = <span class="cstat-no" title="statement not covered" >pgTable("volunteer_roles", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   organisationId: varchar("organisation_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >o</span>rganisations.id)</span>,
   title: varchar("title", { length: 255 }).notNull(),
@@ -3208,7 +3208,7 @@ export const <span class="cstat-no" title="statement not covered" >volunteerRole
   index("volunteer_roles_org_idx").on(table.organisationId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >volunteerRolesRelations = relations(volunteerRoles, <span class="fstat-no" title="function not covered" >({</span> one, many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const volunteerRolesRelations = <span class="cstat-no" title="statement not covered" >relations(volunteerRoles, <span class="fstat-no" title="function not covered" >({</span> one, many }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   organisation: one(organisations, {
     fields: [volunteerRoles.organisationId],
     references: [organisations.id],
@@ -3216,7 +3216,7 @@ export const <span class="cstat-no" title="statement not covered" >volunteerRole
   applications: many(volunteerApplications),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertVolunteerRoleSchema = createInsertSchema(volunteerRoles).omit({</span>
+export const insertVolunteerRoleSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(volunteerRoles).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -3226,7 +3226,7 @@ export type InsertVolunteerRole = z.infer&lt;typeof insertVolunteerRoleSchema&gt
 export type VolunteerRole = typeof volunteerRoles.$inferSelect;
 &nbsp;
 // Applications
-export const <span class="cstat-no" title="statement not covered" >volunteerApplications = pgTable("volunteer_applications", {</span>
+export const volunteerApplications = <span class="cstat-no" title="statement not covered" >pgTable("volunteer_applications", {</span>
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   roleId: varchar("role_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >v</span>olunteerRoles.id)</span>,
   applicantId: varchar("applicant_id").notNull().references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >v</span>olunteerProfiles.id)</span>,
@@ -3240,7 +3240,7 @@ export const <span class="cstat-no" title="statement not covered" >volunteerAppl
   index("applications_applicant_idx").on(table.applicantId),
 ]);
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >volunteerApplicationsRelations = relations(volunteerApplications, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+export const volunteerApplicationsRelations = <span class="cstat-no" title="statement not covered" >relations(volunteerApplications, <span class="fstat-no" title="function not covered" >({</span> one }) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
   role: one(volunteerRoles, {
     fields: [volunteerApplications.roleId],
     references: [volunteerRoles.id],
@@ -3251,7 +3251,7 @@ export const <span class="cstat-no" title="statement not covered" >volunteerAppl
   }),
 }));
 &nbsp;
-export const <span class="cstat-no" title="statement not covered" >insertVolunteerApplicationSchema = createInsertSchema(volunteerApplications).omit({</span>
+export const insertVolunteerApplicationSchema = <span class="cstat-no" title="statement not covered" >createInsertSchema(volunteerApplications).omit({</span>
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -3268,7 +3268,7 @@ export type VolunteerApplication = typeof volunteerApplications.$inferSelect;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-28T21:17:29.097Z
+                at 2025-12-28T22:55:31.456Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

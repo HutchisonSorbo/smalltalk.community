@@ -773,35 +773,35 @@ import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 &nbsp;
 export default function <span class="fstat-no" title="function not covered" >EditGigPage() {</span>
-    const <span class="cstat-no" title="statement not covered" >params = useParams();</span>
-    const <span class="cstat-no" title="statement not covered" >router = useRouter();</span>
+    const params = <span class="cstat-no" title="statement not covered" >useParams();</span>
+    const router = <span class="cstat-no" title="statement not covered" >useRouter();</span>
     const gigId = <span class="cstat-no" title="statement not covered" >params?.id as string;</span>
-    const { user, isLoading: authLoading <span class="cstat-no" title="statement not covered" >} = useAuth();</span>
-    const { toast <span class="cstat-no" title="statement not covered" >} = useToast();</span>
-    const <span class="cstat-no" title="statement not covered" >queryClient = useQueryClient();</span>
+    const { user, isLoading: authLoading } = <span class="cstat-no" title="statement not covered" >useAuth();</span>
+    const { toast } = <span class="cstat-no" title="statement not covered" >useToast();</span>
+    const queryClient = <span class="cstat-no" title="statement not covered" >useQueryClient();</span>
 &nbsp;
     // Form State
-    const [title, setTitle<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [date, setDate<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [location, setLocation<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [description, setDescription<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [genre, setGenre<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [price, setPrice<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [ticketUrl, setTicketUrl<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [imageUrl, setImageUrl<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [coverImageUrl, setCoverImageUrl<span class="cstat-no" title="statement not covered" >] = useState("");</span>
+    const [title, setTitle] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [date, setDate] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [location, setLocation] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [description, setDescription] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [genre, setGenre] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [price, setPrice] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [ticketUrl, setTicketUrl] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [imageUrl, setImageUrl] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [coverImageUrl, setCoverImageUrl] = <span class="cstat-no" title="statement not covered" >useState("");</span>
 &nbsp;
     // Upload State
-    const [uploadingField, setUploadingField<span class="cstat-no" title="statement not covered" >] = useState&lt;"poster" | "cover" | null&gt;(null);</span>
-    const <span class="cstat-no" title="statement not covered" >posterInputRef = useRef&lt;HTMLInputElement&gt;(null);</span>
-    const <span class="cstat-no" title="statement not covered" >coverInputRef = useRef&lt;HTMLInputElement&gt;(null);</span>
+    const [uploadingField, setUploadingField] = <span class="cstat-no" title="statement not covered" >useState&lt;"poster" | "cover" | null&gt;(null);</span>
+    const posterInputRef = <span class="cstat-no" title="statement not covered" >useRef&lt;HTMLInputElement&gt;(null);</span>
+    const coverInputRef = <span class="cstat-no" title="statement not covered" >useRef&lt;HTMLInputElement&gt;(null);</span>
 &nbsp;
     // Manager State
-    const [newManagerEmail, setNewManagerEmail<span class="cstat-no" title="statement not covered" >] = useState("");</span>
+    const [newManagerEmail, setNewManagerEmail] = <span class="cstat-no" title="statement not covered" >useState("");</span>
 &nbsp;
-    const { data: gig, isLoading: gigLoading <span class="cstat-no" title="statement not covered" >} = useQuery({</span>
+    const { data: gig, isLoading: gigLoading } = <span class="cstat-no" title="statement not covered" >useQuery({</span>
         queryKey: ["gig", gigId],
-        queryFn: <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >() =&gt; g</span>etGig(gigId),</span>
+        queryFn: <span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >g</span>etGig(gigId),</span>
         enabled: !!gigId
     });
 &nbsp;
@@ -854,7 +854,7 @@ export default function <span class="fstat-no" title="function not covered" >Edi
         }
     };
 &nbsp;
-    const <span class="cstat-no" title="statement not covered" >updateMutation = useMutation({</span>
+    const updateMutation = <span class="cstat-no" title="statement not covered" >useMutation({</span>
         mutationFn: <span class="fstat-no" title="function not covered" >async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >            await updateGig(gigId, {</span>
                 title,
@@ -878,7 +878,7 @@ export default function <span class="fstat-no" title="function not covered" >Edi
         }
     });
 &nbsp;
-    const <span class="cstat-no" title="statement not covered" >addManagerMutation = useMutation({</span>
+    const addManagerMutation = <span class="cstat-no" title="statement not covered" >useMutation({</span>
         mutationFn: <span class="fstat-no" title="function not covered" >async (e</span>mail: string) =&gt; {
 <span class="cstat-no" title="statement not covered" >            await addGigManager(gigId, email);</span>
         },
@@ -892,7 +892,7 @@ export default function <span class="fstat-no" title="function not covered" >Edi
         }
     });
 &nbsp;
-    const <span class="cstat-no" title="statement not covered" >removeManagerMutation = useMutation({</span>
+    const removeManagerMutation = <span class="cstat-no" title="statement not covered" >useMutation({</span>
         mutationFn: <span class="fstat-no" title="function not covered" >async (u</span>serId: string) =&gt; {
 <span class="cstat-no" title="statement not covered" >            await removeGigManager(gigId, userId);</span>
         },
@@ -1102,7 +1102,7 @@ export default function <span class="fstat-no" title="function not covered" >Edi
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-28T21:17:29.097Z
+                at 2025-12-28T22:55:31.456Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

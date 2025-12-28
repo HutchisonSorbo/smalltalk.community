@@ -883,21 +883,21 @@ export default function <span class="fstat-no" title="function not covered" >Log
 }
 &nbsp;
 function <span class="fstat-no" title="function not covered" >LoginForm() {</span>
-    const [email, setEmail<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [password, setPassword<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [dob, setDob<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [captchaToken, setCaptchaToken<span class="cstat-no" title="statement not covered" >] = useState&lt;string | null&gt;(null);</span>
-    const [isLoading, setIsLoading<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-    const [isSignUp, setIsSignUp<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-    const [rememberMe, setRememberMe<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-    const [accountType, setAccountType<span class="cstat-no" title="statement not covered" >] = useState("Individual");</span>
-    const [otherAccountType, setOtherAccountType<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [organisationName, setOrganisationName<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-    const [showAgeWarning, setShowAgeWarning<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-    const <span class="cstat-no" title="statement not covered" >router = useRouter();</span>
-    const <span class="cstat-no" title="statement not covered" >searchParams = useSearchParams();</span>
-    const { toast <span class="cstat-no" title="statement not covered" >} = useToast();</span>
-    const <span class="cstat-no" title="statement not covered" >supabase = createClient();</span>
+    const [email, setEmail] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [password, setPassword] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [dob, setDob] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [captchaToken, setCaptchaToken] = <span class="cstat-no" title="statement not covered" >useState&lt;string | null&gt;(null);</span>
+    const [isLoading, setIsLoading] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
+    const [isSignUp, setIsSignUp] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
+    const [rememberMe, setRememberMe] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
+    const [accountType, setAccountType] = <span class="cstat-no" title="statement not covered" >useState("Individual");</span>
+    const [otherAccountType, setOtherAccountType] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [organisationName, setOrganisationName] = <span class="cstat-no" title="statement not covered" >useState("");</span>
+    const [showAgeWarning, setShowAgeWarning] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
+    const router = <span class="cstat-no" title="statement not covered" >useRouter();</span>
+    const searchParams = <span class="cstat-no" title="statement not covered" >useSearchParams();</span>
+    const { toast } = <span class="cstat-no" title="statement not covered" >useToast();</span>
+    const supabase = <span class="cstat-no" title="statement not covered" >createClient();</span>
 &nbsp;
     const checkAge = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ateString: string) =&gt; {</span>
         const today = <span class="cstat-no" title="statement not covered" >new Date();</span>
@@ -954,7 +954,7 @@ function <span class="fstat-no" title="function not covered" >LoginForm() {</spa
         }
 &nbsp;
         // Create a fresh client to pick up the preference
-        const <span class="cstat-no" title="statement not covered" >authClient = createClient();</span>
+        const authClient = <span class="cstat-no" title="statement not covered" >createClient();</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        try {</span>
 <span class="cstat-no" title="statement not covered" >            if (isSignUp) {</span>
@@ -1036,7 +1036,7 @@ function <span class="fstat-no" title="function not covered" >LoginForm() {</spa
                             type="button"
                             className="w-full flex gap-2"
                             onClick={<span class="fstat-no" title="function not covered" >async () =&gt; {</span>
-                                const <span class="cstat-no" title="statement not covered" >authClient = createClient();</span>
+                                const authClient = <span class="cstat-no" title="statement not covered" >createClient();</span>
 <span class="cstat-no" title="statement not covered" >                                await authClient.auth.signInWithOAuth({</span>
                                     provider: 'google',
                                     options: {
@@ -1243,7 +1243,7 @@ function <span class="fstat-no" title="function not covered" >LoginForm() {</spa
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-28T21:17:28.863Z
+                at 2025-12-28T22:55:31.112Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
