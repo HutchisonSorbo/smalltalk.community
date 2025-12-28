@@ -23,7 +23,13 @@ jobs:
         run: npm run test
       - name: Fix Coverage Paths for Sonar
         run: |
-          sed -i "s|SF:|SF:$GITHUB_WORKSPACE/|g" coverage/lcov.info
+          ls -la coverage/
+          echo "Original lcov.info:"
+          head -n 5 coverage/lcov.info
+          # Only prepend GITHUB_WORKSPACE if path is relative (does not start with /)
+          sed -i 's|^SF:\([^/]\)|SF:'"$GITHUB_WORKSPACE"'/\1|g' coverage/lcov.info
+          echo "Modified lcov.info:"
+          head -n 5 coverage/lcov.info
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4.2.1
         env:
