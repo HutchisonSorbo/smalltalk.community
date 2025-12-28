@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v4.2.1
         with:
           args: >
             -Dsonar.verbose=true
