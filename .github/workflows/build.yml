@@ -21,8 +21,10 @@ jobs:
         run: npm install
       - name: Run Tests
         run: npm run test
-      - name: Verify Coverage File
-        run: ls -la coverage/
+      - name: Fix Coverage Paths
+        run: |
+          sed -i "s|SF:|SF:$GITHUB_WORKSPACE/|g" coverage/lcov.info
+          head -n 5 coverage/lcov.info
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4.2.1
         env:
