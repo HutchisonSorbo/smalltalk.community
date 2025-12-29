@@ -10,8 +10,8 @@ import { PlatformHeader } from "@/components/platform/PlatformHeader";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Apps | smalltalk.community",
-    description: "App Catalogue",
+    title: "Dashboard | smalltalk.community",
+    description: "Your Hub",
     icons: {
         icon: "/face-smile-regular-full.svg",
         shortcut: "/face-smile-regular-full.svg",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     }
 };
 
-export default function AppsLayout({
+export default function DashboardLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;

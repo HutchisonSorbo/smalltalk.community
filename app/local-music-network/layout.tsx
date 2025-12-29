@@ -2,8 +2,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from "next";
 import React from "react";
 import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "./providers";
+import "../globals.css";
+import { Providers } from "../providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";

@@ -99,22 +99,9 @@ export function AppsSelectionStep() {
 
         if (!errorOccurred) {
             router.push("/onboarding/welcome");
-        } else if (errorOccurred && selectedAppIds.size > 0 && !isSubmitting) {
-            // If we already showed a toast for partial failure, we might strictly stop.
-            // But the original code just set isSubmitting(false) in the else block.
-            // We need to ensure we don't act as if totally successful if there were errors.
         } else {
-            // Fallback generic error if not handled above (e.g. unexpected catch)
-            if (!errorOccurred) {
-                // Should not happen if logic holds, but keeps TS happy if we re-flag
-            }
-        }
-
-        // Final cleanup
-        if (errorOccurred) {
             setIsSubmitting(false);
-            if (handleNext.length === 0) { // Just a dummy check to keep logic block structure or just remove
-            }
+            // Toast for failures is handled above in the try/catch block
         }
     };
 

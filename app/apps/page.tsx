@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlatformHeader } from "@/components/platform/PlatformHeader";
 import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -95,7 +94,6 @@ export default function AppsPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <PlatformHeader />
             <main className="container mx-auto px-4 py-8">
                 <div className="mb-8 space-y-4">
                     <h1 className="text-3xl font-bold tracking-tight">App Catalogue</h1>
@@ -130,7 +128,6 @@ export default function AppsPage() {
                                             key={app.id}
                                             app={app}
                                             variant="catalogue"
-                                            isInstalled={false}
                                             onAdd={() => handleAddApp(app.id)}
                                         />
                                     ))}
@@ -148,7 +145,6 @@ export default function AppsPage() {
                                             key={app.id}
                                             app={app}
                                             variant="catalogue"
-                                            isInstalled={true}
                                             onRemove={() => handleRemoveApp(app.id)}
                                         />
                                     ))}
