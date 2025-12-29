@@ -362,7 +362,7 @@ function LoginForm() {
                         </div>
                         <p className="text-xs text-center text-muted-foreground mt-2">
                             Not seeing the security check? <br />
-                            You may need to disable your adblocker or Pi-hole.
+                            You may need to disable your adblocker.
                         </p>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">
