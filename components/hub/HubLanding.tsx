@@ -59,7 +59,7 @@ export function HubLanding() {
                                 Ecosystem Live
                             </div>
 
-                            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 pb-2 break-all sm:break-normal">
+                            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 pb-2 break-words sm:break-normal">
                                 smalltalk.community
                             </h1>
 
