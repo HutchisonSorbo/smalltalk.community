@@ -349,10 +349,21 @@ function LoginForm() {
                             <Turnstile
                                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
                                 onSuccess={(token) => setCaptchaToken(token)}
-                                onError={() => setCaptchaToken(null)}
+                                onError={() => {
+                                    setCaptchaToken(null);
+                                    toast({
+                                        title: "Security Check Failed",
+                                        description: "Please disable adblockers or try a different network.",
+                                        variant: "destructive"
+                                    });
+                                }}
                                 onExpire={() => setCaptchaToken(null)}
                             />
                         </div>
+                        <p className="text-xs text-center text-muted-foreground mt-2">
+                            Not seeing the security check? <br />
+                            You may need to disable your adblocker or Pi-hole.
+                        </p>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">
                         <Button className="w-full" type="submit" disabled={isLoading}>
