@@ -191,6 +191,7 @@ const Sidebar = React.forwardRef<
   if (collapsible === "none") {
     return (
       <div
+        ref={ref}
         data-slot="sidebar"
         className={cn(
           "bg-sidebar text-sidebar-foreground flex h-full w-[var(--sidebar-width)] flex-col",
@@ -207,6 +208,7 @@ const Sidebar = React.forwardRef<
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
+          ref={ref}
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
@@ -230,6 +232,7 @@ const Sidebar = React.forwardRef<
 
   return (
     <div
+      ref={ref}
       className="group peer text-sidebar-foreground hidden md:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
