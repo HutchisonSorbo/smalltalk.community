@@ -81,13 +81,14 @@ export async function middleware(request: NextRequest) {
             return rewriteResponse;
         }
         // If path is NOT /, we let it fall through to the default logic (Local Music Network App).
-        // This ensures smalltalk.community/login -> /local-music-network/login (Correct)
+        // This ensures smalltalk.community/login -> /login (passes through)
     }
 
     // 3. Default Logic: 
     if (path === "/") {
         const newUrl = new URL("/hub", request.url);
         const rewriteResponse = NextResponse.rewrite(newUrl);
+        rewriteResponse.headers.set("x-url", response.headers.get("x-url") || request.url);
         response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
         response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
         return rewriteResponse;
