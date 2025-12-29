@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "smalltalk.community",
-    description: "Community Hub",
+    description: "Join your local music community",
 };
 
-export default function HubLayout({
+export default function LoginLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;

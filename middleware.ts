@@ -64,7 +64,7 @@ export async function middleware(request: NextRequest) {
 
     // 1. Explicit Routes: If path is explicitly /local-music-network, /hub, /volunteer-passport, /onboarding, /dashboard, /apps, or /settings, let it pass
     if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport") ||
-        path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings")) {
+        path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings") || path.startsWith("/login")) {
         return response;
     }
 
@@ -73,23 +73,19 @@ export async function middleware(request: NextRequest) {
         // Only rewrite to /hub if it is the ROOT path.
         // This allows other paths like /login, /dashboard to fall through to the App logic below.
         if (path === "/") {
-            const newUrl = new URL("/hub", request.url);
-            const rewriteResponse = NextResponse.rewrite(newUrl);
-            rewriteResponse.headers.set("x-url", request.url);
-            response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
-            response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
-            return rewriteResponse;
+            return rewriteRootToHub(request, response);
         }
         // If path is NOT /, we let it fall through to the default logic (Local Music Network App).
-        // This ensures smalltalk.community/login -> /local-music-network/login (Correct)
+        // This ensures smalltalk.community/login -> /login (passes through)
     }
 
-    // 3. Default Logic: Rewrite everything else to /local-music-network (The App)
-    // This covers:
-    // - Local Music Network domain (if still pointed)
-    // - smalltalk.community domain (any path other than / or /hub)
-    // - localhost
-    const newUrl = new URL(`/local-music-network${path === "/" ? "" : path}`, request.url);
+    // 3. Default Logic: 
+    if (path === "/") {
+        return rewriteRootToHub(request, response);
+    }
+
+    // Rewrite everything else to /local-music-network (The App)
+    const newUrl = new URL(`/local-music-network${path}`, request.url);
     const rewriteResponse = NextResponse.rewrite(newUrl);
 
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
@@ -103,3 +99,13 @@ export const config = {
         "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
     ],
 };
+
+function rewriteRootToHub(request: NextRequest, response: NextResponse) {
+    const newUrl = new URL("/hub", request.url);
+    const rewriteResponse = NextResponse.rewrite(newUrl);
+    rewriteResponse.headers.set("x-url", request.url);
+    response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
+    response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    return rewriteResponse;
+}
+
