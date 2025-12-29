@@ -65,7 +65,7 @@ export function PlatformHeader() {
                             {navLinks.map((link) => (
                                 <Button
                                     key={link.href}
-                                    variant={isActive(link.href) ? "secondary" : "ghost"}
+                                    variant={link.label === "Home" ? "ghost" : (isActive(link.href) ? "secondary" : "ghost")}
                                     size="sm"
                                     className="gap-2"
                                     asChild

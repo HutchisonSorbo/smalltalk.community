@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+
 import {
     User,
     Building2,
@@ -72,7 +72,7 @@ const accountTypes: { id: AccountType; label: string; icon: any; description: st
     },
     {
         id: "Community Group",
-        label: "Community Group",
+        label: "Community Groups",
         icon: Users,
         description: "Local clubs, associations, and collectives."
     },
