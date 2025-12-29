@@ -1,0 +1,36 @@
+# CodeRabbit Configuration File
+# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "en-US"
+early_access: false
+reviews:
+  # Enable high-level summary of changes
+  summary: true
+  # Enable line-level code review comments
+  line_review: true
+  # Enable different review profiles
+  profile: "strict" # Options: assert, chill (default), strict
+  # Auto-review behavior
+  auto_review:
+    enabled: true
+    drafts: false
+  # Filter out low-value files
+  ignore:
+    - "**/*.lock"
+    - "**/*.min.js"
+    - "**/*.svg"
+    - "dist/**"
+    - "out/**"
+    - "public/**"
+    - ".next/**"
+    - "coverage/**"
+    - "node_modules/**"
+  # Instructions for the AI reviewer
+  instructions: |
+    - This is a Next.js 14+ (App Router) project using TypeScript and Tailwind CSS.
+    - We use Shadcn UI for components.
+    - We use Supabase for the backend.
+    - Strict adherence to accessibility (a11y) standards is required.
+    - Ensure all external links use the `safeUrl` utility from `@/lib/utils`.
+    - Flag any use of `dangerouslySetInnerHTML` as a high-risk security issue.
+    - Suggest using Zod schemas for input validation if missing.

@@ -42,3 +42,13 @@ Please do **NOT** open a public issue on GitHub. Instead, report vulnerabilities
 - **Input Validation**: All API inputs are validated using `zod` schemas.
 - **Secrets**: No secrets (API keys, tokens) should be hardcoded. Use environment variables.
 - **Dependencies**: Regular `npm audit` checks are recommended.
+
+## XSS Prevention Rules
+
+1. **Contextual Escaping**: React escapes content by default. Do not bypass this with `dangerouslySetInnerHTML` unless verifying the content source is trusted (e.g., static configuration).
+2. **URL Handling**:
+    - Use `safeUrl()` for any dynamic `href` or `src`.
+    - Validate that protocols are `http:` or `https:` only.
+    - Never allow `javascript:` or `data:` URIs from user input.
+3. **Content Security Policy (CSP)**: Maintain strict CSP headers in `next.config.mjs` to block unauthorized scripts and styles.
+4. **Input Validation**: Validate all incoming data against strict schemas (Zod). Strip dangerous tags if rich text is required (use a sanitizer library like `dompurify`).

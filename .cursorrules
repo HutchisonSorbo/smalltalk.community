@@ -18,3 +18,10 @@
    - Write File -> `cat` verify -> `git add` -> `git status` check -> `git commit` -> `git push`.
    - Never chain these. Verify each step.
 4. **Lock Recovery**: If `git` locks, delete `.git/index.lock` ONLY. avoided aggressive `pkill` unless necessary to preserve environment stability.
+
+# Security Rules
+1. **No `dangerouslySetInnerHTML`**: Never use this unless absolutely necessary for third-party scripts. If used, strict code review is required.
+2. **URL Sanitization**: ALL external links or user-provided URLs must be sanitized using `safeUrl(url)` from `@/lib/utils` before rendering in `href` or `src`.
+3. **No `javascript:` URIs**: Explain why they are banned.
+4. **Input Validation**: Use Zod schemas for all API routes and form inputs.
+5. **No Direct DOM Manipulation**: Avoid `document.*` or `window.*` for rendering. Use React state.
