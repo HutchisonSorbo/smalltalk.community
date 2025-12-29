@@ -18,3 +18,5 @@ export function safeUrl(url: string | null | undefined): string | undefined {
   }
   return undefined;
 }
+
+// CodeRabbit Audit Trigger

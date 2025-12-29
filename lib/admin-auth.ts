@@ -22,3 +22,5 @@ export async function requireAdmin() {
 
     return dbUser;
 }
+
+// CodeRabbit Audit Trigger

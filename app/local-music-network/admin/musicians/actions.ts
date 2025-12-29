@@ -47,3 +47,5 @@ export async function seedMusician() {
 
     revalidatePath("/admin/musicians");
 }
+
+// CodeRabbit Audit Trigger

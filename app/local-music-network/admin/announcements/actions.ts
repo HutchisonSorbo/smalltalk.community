@@ -38,3 +38,5 @@ export async function toggleAnnouncementActive(id: string, isActive: boolean) {
     revalidatePath("/admin/announcements");
     revalidatePath("/");
 }
+
+// CodeRabbit Audit Trigger

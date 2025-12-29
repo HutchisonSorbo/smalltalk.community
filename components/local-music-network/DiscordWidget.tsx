@@ -187,3 +187,5 @@ export function DiscordWidget() {
         </Card>
     );
 }
+
+// CodeRabbit Audit Trigger

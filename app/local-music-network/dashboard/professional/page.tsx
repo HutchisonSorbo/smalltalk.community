@@ -62,3 +62,5 @@ export default function ProfessionalEditorPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

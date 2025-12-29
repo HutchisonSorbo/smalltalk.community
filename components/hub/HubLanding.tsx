@@ -140,3 +140,5 @@ function FeatureCard({ icon, title, description, link, linkText, disabled }: { i
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

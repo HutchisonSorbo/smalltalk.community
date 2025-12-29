@@ -338,3 +338,5 @@ export function ListingForm({ listing, onSuccess, onCancel }: ListingFormProps) 
     </Form>
   );
 }
+
+// CodeRabbit Audit Trigger

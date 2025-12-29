@@ -277,3 +277,5 @@ export default function ListingDetail() {
     </div>
   );
 }
+
+// CodeRabbit Audit Trigger

@@ -49,3 +49,5 @@ export default async function AdminLayout({
         </SidebarProvider>
     )
 }
+
+// CodeRabbit Audit Trigger

@@ -225,3 +225,5 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
     </header>
   );
 }
+
+// CodeRabbit Audit Trigger

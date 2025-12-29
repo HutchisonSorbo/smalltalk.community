@@ -479,3 +479,5 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
     );
 }
 
+
+// CodeRabbit Audit Trigger

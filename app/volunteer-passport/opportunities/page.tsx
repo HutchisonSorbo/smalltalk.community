@@ -15,3 +15,5 @@ export default function OpportunitiesPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

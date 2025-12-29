@@ -223,3 +223,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// CodeRabbit Audit Trigger

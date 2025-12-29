@@ -148,3 +148,5 @@ export function ShareDialog({ title, description, url, trigger }: ShareDialogPro
         </Dialog>
     );
 }
+
+// CodeRabbit Audit Trigger

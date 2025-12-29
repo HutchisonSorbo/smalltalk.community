@@ -77,3 +77,5 @@ export default async function MusiciansPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

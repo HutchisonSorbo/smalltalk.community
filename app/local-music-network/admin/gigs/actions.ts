@@ -47,3 +47,5 @@ export async function seedGig() {
 
     revalidatePath("/admin/gigs");
 }
+
+// CodeRabbit Audit Trigger

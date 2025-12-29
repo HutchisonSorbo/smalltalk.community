@@ -494,3 +494,5 @@ function ContactInfoSection({ musician, user, isAuthenticated }: { musician: Mus
     </div>
   );
 }
+
+// CodeRabbit Audit Trigger

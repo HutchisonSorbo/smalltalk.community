@@ -132,3 +132,5 @@ export function GlobalSearch({ className, placeholder = "Search musicians, bands
         </>
     );
 }
+
+// CodeRabbit Audit Trigger

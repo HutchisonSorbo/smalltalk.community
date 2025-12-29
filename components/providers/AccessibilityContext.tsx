@@ -112,3 +112,5 @@ export function useAccessibility() {
     }
     return context;
 }
+
+// CodeRabbit Audit Trigger

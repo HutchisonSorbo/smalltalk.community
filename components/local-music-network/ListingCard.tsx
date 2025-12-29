@@ -70,3 +70,5 @@ export function ListingCard({ listing }: ListingCardProps) {
     </Link>
   );
 }
+
+// CodeRabbit Audit Trigger

@@ -45,3 +45,5 @@ export function HubHeader() {
         </header>
     );
 }
+
+// CodeRabbit Audit Trigger

@@ -69,3 +69,5 @@ export async function POST(
         return NextResponse.json({ message: "Failed to add member" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

@@ -40,3 +40,5 @@ export async function getUserRoles(userId: string): Promise<string[]> {
     return result.map(r => r.roleName);
 }
 
+
+// CodeRabbit Audit Trigger

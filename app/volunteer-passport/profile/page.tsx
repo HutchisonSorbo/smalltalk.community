@@ -27,3 +27,5 @@ export default async function VolunteerProfilePage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

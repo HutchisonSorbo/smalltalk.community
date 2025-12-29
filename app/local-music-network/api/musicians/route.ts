@@ -108,3 +108,5 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Failed to create profile" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

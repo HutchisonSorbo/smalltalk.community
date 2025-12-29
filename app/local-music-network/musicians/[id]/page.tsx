@@ -5,3 +5,5 @@ import MusicianDetail from "@/components/local-music-network/pages/MusicianDetai
 export default function MusicianDetailPage() {
     return <MusicianDetail />;
 }
+
+// CodeRabbit Audit Trigger

@@ -68,3 +68,5 @@ export default function CreateBandPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

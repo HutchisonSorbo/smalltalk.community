@@ -63,3 +63,5 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

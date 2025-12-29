@@ -63,3 +63,5 @@ export default async function AnnouncementsPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

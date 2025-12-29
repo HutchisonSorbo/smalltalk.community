@@ -96,3 +96,5 @@ export async function DELETE(
         return NextResponse.json({ message: "Failed to delete listing" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

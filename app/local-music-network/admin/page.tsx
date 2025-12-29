@@ -85,3 +85,5 @@ export default async function AdminDashboard() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

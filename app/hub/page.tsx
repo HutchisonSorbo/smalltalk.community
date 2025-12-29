@@ -10,3 +10,5 @@ const HubLanding = dynamic(
 export default function HubPage() {
     return <HubLanding />;
 }
+
+// CodeRabbit Audit Trigger

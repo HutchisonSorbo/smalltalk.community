@@ -301,3 +301,5 @@ function ProfessionalContactSection({ profile, user, isAuthenticated }: { profil
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

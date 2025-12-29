@@ -62,3 +62,5 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
         return NextResponse.json({ message: "Failed to update band" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

@@ -62,3 +62,5 @@ export function GigCard({ gig }: { gig: Gig }) {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

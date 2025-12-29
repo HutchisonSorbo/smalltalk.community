@@ -38,3 +38,5 @@ export function AccessibilityScript() {
         />
     );
 }
+
+// CodeRabbit Audit Trigger

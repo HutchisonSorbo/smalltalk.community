@@ -225,3 +225,5 @@ export function AccessibilityPanel({ variant = "fixed" }: { variant?: "fixed" | 
         </Sheet>
     );
 }
+
+// CodeRabbit Audit Trigger

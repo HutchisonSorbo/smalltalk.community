@@ -14,3 +14,5 @@ export function Logo({ className, text = "Local Music Network", ariaLabel }: Log
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

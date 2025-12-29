@@ -67,3 +67,5 @@ export function CreateProfessionalButton() {
         </Button>
     );
 }
+
+// CodeRabbit Audit Trigger

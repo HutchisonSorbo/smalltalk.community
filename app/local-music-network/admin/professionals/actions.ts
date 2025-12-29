@@ -43,3 +43,5 @@ export async function seedProfessional() {
 
     revalidatePath("/admin/professionals");
 }
+
+// CodeRabbit Audit Trigger

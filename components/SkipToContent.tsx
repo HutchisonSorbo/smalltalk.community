@@ -17,3 +17,5 @@ export function SkipToContent() {
         </a>
     );
 }
+
+// CodeRabbit Audit Trigger

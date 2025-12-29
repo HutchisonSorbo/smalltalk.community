@@ -254,3 +254,5 @@ export default function GigDetailPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

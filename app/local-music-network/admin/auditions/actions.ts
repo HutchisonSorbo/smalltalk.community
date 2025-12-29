@@ -44,3 +44,5 @@ export async function seedClassified() {
 
     revalidatePath("/admin/auditions");
 }
+
+// CodeRabbit Audit Trigger

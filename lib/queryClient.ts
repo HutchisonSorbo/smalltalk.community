@@ -55,3 +55,5 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// CodeRabbit Audit Trigger

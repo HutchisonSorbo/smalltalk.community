@@ -123,3 +123,5 @@ export async function removeGigManager(gigId: string, managerId: string) {
 
     return { success: true };
 }
+
+// CodeRabbit Audit Trigger

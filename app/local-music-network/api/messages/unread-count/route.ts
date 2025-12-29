@@ -18,3 +18,5 @@ export async function GET(request: Request) {
         return NextResponse.json({ message: "Failed to fetch unread count" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

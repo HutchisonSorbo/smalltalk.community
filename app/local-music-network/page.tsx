@@ -24,3 +24,5 @@ export default function Page() {
 
     return <Home />;
 }
+
+// CodeRabbit Audit Trigger
