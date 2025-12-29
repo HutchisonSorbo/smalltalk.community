@@ -40,8 +40,6 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-6">
-
-
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => (
                 <Link key={link.href} href={link.href}>

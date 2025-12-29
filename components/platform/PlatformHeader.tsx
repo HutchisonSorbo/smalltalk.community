@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, User, LayoutGrid, Home, Grid2X2, MessageCircle, Bell } from "lucide-react";
 import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,7 +39,7 @@ export function PlatformHeader() {
 
     const unreadCount = unreadData?.count || 0;
     const unreadNotifications = notificationsData?.count || 0;
-    const totalUnread = unreadCount + unreadNotifications;
+    const totalUnread = useMemo(() => unreadCount + unreadNotifications, [unreadCount, unreadNotifications]);
 
     const navLinks = [
         { href: "/hub", label: "Home", icon: Home },
@@ -58,14 +58,13 @@ export function PlatformHeader() {
                     <div className="flex items-center gap-6">
                         <Link href="/hub" className="flex items-center gap-2" aria-label="Smalltalk Community Home">
                             <Logo className="h-8 w-auto" text="smalltalk.community" />
-                            <span className="font-bold text-xl tracking-tight hidden sm:inline-block">smalltalk.community</span>
                         </Link>
 
                         <nav className="hidden md:flex items-center gap-1">
                             {navLinks.map((link) => (
                                 <Button
                                     key={link.href}
-                                    variant={link.label === "Home" ? "ghost" : (isActive(link.href) ? "secondary" : "ghost")}
+                                    variant={isActive(link.href) ? "secondary" : "ghost"}
                                     size="sm"
                                     className="gap-2"
                                     asChild
@@ -96,7 +95,7 @@ export function PlatformHeader() {
                                             </AvatarFallback>
                                         </Avatar>
                                         {totalUnread > 0 && (
-                                            <span className="absolute -top-1 -right-4 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-medium text-white ring-2 ring-background">
+                                            <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-medium text-white ring-2 ring-background">
                                                 {totalUnread > 99 ? '99+' : totalUnread}
                                             </span>
                                         )}
@@ -152,9 +151,15 @@ export function PlatformHeader() {
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
-                                        <a href="/api/logout" className="cursor-pointer">
+                                        <button
+                                            onClick={() => {
+                                                fetch("/api/logout", { method: "POST" })
+                                                    .then(() => window.location.href = "/login");
+                                            }}
+                                            className="cursor-pointer w-full text-left flex items-center"
+                                        >
                                             Log out
-                                        </a>
+                                        </button>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
