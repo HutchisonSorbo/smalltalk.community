@@ -41,7 +41,7 @@ export function PlatformHeader() {
     const totalUnread = unreadCount + unreadNotifications;
 
     const navLinks = [
-        { href: "/", label: "Home", icon: Home },
+        { href: "/hub", label: "Home", icon: Home },
         ...(isAuthenticated ? [
             { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
             { href: "/apps", label: "Apps", icon: Grid2X2 },
@@ -55,22 +55,24 @@ export function PlatformHeader() {
             <div className="container mx-auto px-4">
                 <div className="flex h-16 items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
-                        <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
+                        <Link href="/hub" className="flex items-center gap-2 font-bold text-xl tracking-tight">
                             smalltalk.community
                         </Link>
 
                         <nav className="hidden md:flex items-center gap-1">
                             {navLinks.map((link) => (
-                                <Link key={link.href} href={link.href}>
-                                    <Button
-                                        variant={isActive(link.href) ? "secondary" : "ghost"}
-                                        size="sm"
-                                        className="gap-2"
-                                    >
+                                <Button
+                                    key={link.href}
+                                    variant={isActive(link.href) ? "secondary" : "ghost"}
+                                    size="sm"
+                                    className="gap-2"
+                                    asChild
+                                >
+                                    <Link href={link.href}>
                                         {link.icon && <link.icon className="h-4 w-4" />}
                                         {link.label}
-                                    </Button>
-                                </Link>
+                                    </Link>
+                                </Button>
                             ))}
                         </nav>
                     </div>
