@@ -1,5 +1,5 @@
 
-import React from 'react';
+import Image from "next/image";
 
 export interface LogoProps {
     className?: string;
@@ -9,9 +9,12 @@ export interface LogoProps {
 
 export function Logo({ className, text = "Local Music Network", ariaLabel }: Readonly<LogoProps>) {
     return (
-        <img
+        <Image
             src="/logo.png"
             alt={ariaLabel || `${text} Logo`}
+            width={32}
+            height={32}
+            priority
             className={`h-8 w-auto ${className}`}
         />
     );

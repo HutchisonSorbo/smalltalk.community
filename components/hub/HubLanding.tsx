@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { PlatformHeader } from "@/components/platform/PlatformHeader";
 import { AppCard, AppData } from "@/components/platform/AppCard";
 import dynamic from "next/dynamic";
+import { safeUrl } from "@/lib/utils";
 
 const VictoriaMap = dynamic(() => import("@/components/local-music-network/VictoriaMap"), {
     ssr: false,
@@ -147,7 +148,7 @@ export function HubLanding() {
                         &copy; {new Date().getFullYear()} Hutchison Sorbo. All rights reserved.
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">
-                        <a href="https://www.flaticon.com/free-icons/strong" title="strong icons" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        <a href={safeUrl("https://www.flaticon.com/free-icons/strong") || "#"} title="strong icons" target="_blank" rel="noopener noreferrer" className="hover:underline">
                             Strong icons created by Freepik - Flaticon
                         </a>
                     </p>
