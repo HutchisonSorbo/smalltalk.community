@@ -73,12 +73,7 @@ export async function middleware(request: NextRequest) {
         // Only rewrite to /hub if it is the ROOT path.
         // This allows other paths like /login, /dashboard to fall through to the App logic below.
         if (path === "/") {
-            const newUrl = new URL("/hub", request.url);
-            const rewriteResponse = NextResponse.rewrite(newUrl);
-            rewriteResponse.headers.set("x-url", request.url);
-            response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
-            response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
-            return rewriteResponse;
+            return rewriteRootToHub(request, response);
         }
         // If path is NOT /, we let it fall through to the default logic (Local Music Network App).
         // This ensures smalltalk.community/login -> /login (passes through)
@@ -86,12 +81,7 @@ export async function middleware(request: NextRequest) {
 
     // 3. Default Logic: 
     if (path === "/") {
-        const newUrl = new URL("/hub", request.url);
-        const rewriteResponse = NextResponse.rewrite(newUrl);
-        rewriteResponse.headers.set("x-url", response.headers.get("x-url") || request.url);
-        response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
-        response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
-        return rewriteResponse;
+        return rewriteRootToHub(request, response);
     }
 
     // Rewrite everything else to /local-music-network (The App)
