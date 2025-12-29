@@ -7,7 +7,6 @@ import { Menu, X, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Logo } from "@/components/Logo";
 import { GlobalSearch } from "@/components/local-music-network/GlobalSearch";
 
 interface HeaderProps {
@@ -41,9 +40,7 @@ export function Header({ onSearch, searchPlaceholder = "Search musicians, equipm
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-              <Logo className="h-10 w-auto" />
-            </Link>
+
 
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => (
