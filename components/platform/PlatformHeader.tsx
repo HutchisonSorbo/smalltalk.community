@@ -55,8 +55,8 @@ export function PlatformHeader() {
             <div className="container mx-auto px-4">
                 <div className="flex h-16 items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
-                        <Link href="/hub" className="flex items-center gap-2" aria-label="Smalltown Community Home">
-                            <img src="/logo.png" alt="Smalltown Community Logo" className="h-8 w-auto" />
+                        <Link href="/hub" className="flex items-center gap-2" aria-label="Smalltalk Community Home">
+                            <img src="/logo.png" alt="smalltalk.community Logo" className="h-8 w-auto" />
                             <span className="font-bold text-xl tracking-tight hidden sm:inline-block">smalltalk.community</span>
                         </Link>
 
