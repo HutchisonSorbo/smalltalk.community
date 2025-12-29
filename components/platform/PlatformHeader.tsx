@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, LayoutGrid, Home, Grid2X2 } from "lucide-react";
+import { Menu, X, User, LayoutGrid, Home, Grid2X2, MessageCircle, Bell } from "lucide-react";
+import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,6 +23,22 @@ export function PlatformHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const location = usePathname();
     const { user, isAuthenticated, isLoading } = useAuth();
+
+    const { data: unreadData } = useQuery<{ count: number }>({
+        queryKey: ["/api/messages/unread-count"],
+        enabled: isAuthenticated,
+        refetchInterval: 30000,
+    });
+
+    const { data: notificationsData } = useQuery<{ count: number }>({
+        queryKey: ["/api/notifications/unread-count"],
+        enabled: isAuthenticated,
+        refetchInterval: 30000,
+    });
+
+    const unreadCount = unreadData?.count || 0;
+    const unreadNotifications = notificationsData?.count || 0;
+    const totalUnread = unreadCount + unreadNotifications;
 
     const navLinks = [
         { href: "/", label: "Home", icon: Home },
@@ -57,6 +76,7 @@ export function PlatformHeader() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <AccessibilityPanel variant="inline" />
                         <ThemeToggle />
 
                         {isLoading ? (
@@ -71,6 +91,11 @@ export function PlatformHeader() {
                                                 {user.firstName?.[0] || user.email?.[0]?.toUpperCase() || "U"}
                                             </AvatarFallback>
                                         </Avatar>
+                                        {totalUnread > 0 && (
+                                            <span className="absolute -top-1 -right-4 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-[10px] font-medium text-white ring-2 ring-background">
+                                                {totalUnread > 99 ? '99+' : totalUnread}
+                                            </span>
+                                        )}
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56">
@@ -80,9 +105,39 @@ export function PlatformHeader() {
                                     </div>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
+                                        <Link href="/notifications" className="cursor-pointer">
+                                            <Bell className="mr-2 h-4 w-4" />
+                                            Notifications
+                                            {unreadNotifications > 0 && (
+                                                <Badge variant="default" className="ml-auto text-xs">
+                                                    {unreadNotifications}
+                                                </Badge>
+                                            )}
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    {(user.isAdmin || (user as any).roles?.includes("super_admin")) && (
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/admin" className="cursor-pointer font-semibold text-purple-600 focus:text-purple-600">
+                                                <User className="mr-2 h-4 w-4" />
+                                                Admin Panel
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem asChild>
                                         <Link href="/dashboard" className="cursor-pointer">
                                             <LayoutGrid className="mr-2 h-4 w-4" />
                                             Dashboard
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link href="/messages" className="cursor-pointer">
+                                            <MessageCircle className="mr-2 h-4 w-4" />
+                                            Messages
+                                            {unreadCount > 0 && (
+                                                <Badge variant="default" className="ml-auto text-xs">
+                                                    {unreadCount}
+                                                </Badge>
+                                            )}
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild>
