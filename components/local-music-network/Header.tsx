@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Menu, X, Search } from "lucide-react";
 
 import { useState } from "react";
@@ -19,9 +17,6 @@ interface HeaderProps {
 }
 
 export function Header({ onSearch, searchPlaceholder = "Search musicians, equipment...", showSearch = true }: HeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const location = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const location = usePathname();
