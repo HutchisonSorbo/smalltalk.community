@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 import { createClient } from "@/lib/supabase";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 function isValidUser(data: unknown): data is User {
   if (typeof data !== "object" || data === null) return false;
@@ -33,7 +33,7 @@ function isValidUser(data: unknown): data is User {
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["auth-user"],
@@ -72,7 +72,13 @@ export function useAuth() {
   // Listen for auth state changes to invalidate query
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+      if (
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "INITIAL_SESSION" ||
+        event === "USER_UPDATED"
+      ) {
         queryClient.invalidateQueries({ queryKey: ["auth-user"] });
       }
     });
@@ -88,5 +94,7 @@ export function useAuth() {
     isAuthenticated: !!user,
   };
 }
+
+
 
 // CodeRabbit Audit Trigger
