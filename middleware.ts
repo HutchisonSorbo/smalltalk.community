@@ -99,3 +99,13 @@ export const config = {
         "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
     ],
 };
+
+function rewriteRootToHub(request: NextRequest, response: NextResponse) {
+    const newUrl = new URL("/hub", request.url);
+    const rewriteResponse = NextResponse.rewrite(newUrl);
+    rewriteResponse.headers.set("x-url", request.url);
+    response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
+    response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    return rewriteResponse;
+}
+
