@@ -146,6 +146,11 @@ export function HubLanding() {
                     <p className="text-sm">
                         &copy; {new Date().getFullYear()} Hutchison Sorbo. All rights reserved.
                     </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                        <a href="https://www.flaticon.com/free-icons/strong" title="strong icons" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            Strong icons created by Freepik - Flaticon
+                        </a>
+                    </p>
                 </div>
             </footer>
         </div>

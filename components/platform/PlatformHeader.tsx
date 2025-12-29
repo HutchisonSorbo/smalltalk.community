@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Logo } from "@/components/Logo";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -56,7 +57,7 @@ export function PlatformHeader() {
                 <div className="flex h-16 items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
                         <Link href="/hub" className="flex items-center gap-2" aria-label="Smalltalk Community Home">
-                            <img src="/logo.png" alt="smalltalk.community Logo" className="h-8 w-auto" />
+                            <Logo className="h-8 w-auto" text="smalltalk.community" />
                             <span className="font-bold text-xl tracking-tight hidden sm:inline-block">smalltalk.community</span>
                         </Link>
 

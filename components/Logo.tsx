@@ -7,11 +7,13 @@ export interface LogoProps {
     ariaLabel?: string;
 }
 
-export function Logo({ className, text = "Local Music Network", ariaLabel }: LogoProps) {
+export function Logo({ className, text = "Local Music Network", ariaLabel }: Readonly<LogoProps>) {
     return (
-        <div className={`flex items-center gap-0.5 font-bold text-3xl tracking-tight leading-none ${className}`} aria-label={ariaLabel || `${text} Logo`}>
-            <span>{text}</span>
-        </div>
+        <img
+            src="/logo.png"
+            alt={ariaLabel || `${text} Logo`}
+            className={`h-8 w-auto ${className}`}
+        />
     );
 }
 
