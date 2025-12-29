@@ -3,8 +3,14 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Music2, Users, Radio, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, Music2, ShieldCheck, Zap } from "lucide-react";
 import { HubHeader } from "./HubHeader";
+import dynamic from "next/dynamic";
+
+const VictoriaMap = dynamic(() => import("@/components/local-music-network/VictoriaMap"), {
+    ssr: false,
+    loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-xl" />
+});
 
 export function HubLanding() {
     return (
@@ -80,6 +86,21 @@ export function HubLanding() {
                                 linkText="Coming Soon"
                                 disabled
                             />
+                        </div>
+                    </div>
+                </section>
+
+                {/* Community Map Section */}
+                <section className="py-24 bg-background">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center mb-12">
+                            <h2 className="text-3xl font-bold mb-4">Explore the Community</h2>
+                            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                                See where musicians and professionals are located across Victoria.
+                            </p>
+                        </div>
+                        <div className="max-w-5xl mx-auto border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <VictoriaMap />
                         </div>
                     </div>
                 </section>
