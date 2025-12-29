@@ -9,7 +9,7 @@ reviews:
   # Enable line-level code review comments
   line_review: true
   # Enable different review profiles
-  profile: "strict" # Options: assert, chill (default), strict
+  profile: "assertive" # Options: chill, assertive
   # Auto-review behavior
   auto_review:
     enabled: true
