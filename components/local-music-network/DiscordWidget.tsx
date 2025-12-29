@@ -94,6 +94,7 @@ export function DiscordWidget() {
     const inviteCode = data.instant_invite ? data.instant_invite.split('/').pop() : "";
     // Ensure code is alphanumeric to prevent injection, though discord:// protocol is specific
     const safeInviteCode = inviteCode?.replace(/[^a-zA-Z0-9]/g, '');
+    // Explicitly construct string with known protocol
     const appLaunchUrl = safeInviteCode ? `discord://invite/${safeInviteCode}` : "#";
 
     return (

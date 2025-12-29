@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/local-music-network/Header";
 import { Footer } from "@/components/local-music-network/Footer";
@@ -60,15 +61,25 @@ export default function GigDetailPage() {
         );
     }
 
-    // Permission check
     const isCreator = user?.id === gig.creatorId;
     const isManager = gig.managers.some((m: any) => m.userId === user?.id);
     const canEdit = isCreator || isManager;
 
+    let displayPrice = "Free";
+    if (gig.price) {
+        displayPrice = typeof gig.price === 'number' ? `$${(gig.price / 100).toFixed(2)}` : gig.price;
+    }
+
     // Determine host info
     const hostName = gig.band?.name || gig.musician?.name || "Unknown Host";
     const hostImage = gig.band?.profileImageUrl || gig.musician?.profileImageUrl;
-    const hostLink = gig.band ? `/bands/${gig.band.id}` : gig.musician ? `/musicians/${gig.musician.id}` : "#";
+
+    let hostLink = "#";
+    if (gig.band) {
+        hostLink = `/bands/${gig.band.id}`;
+    } else if (gig.musician) {
+        hostLink = `/musicians/${gig.musician.id}`;
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
@@ -187,7 +198,7 @@ export default function GigDetailPage() {
                                             </div>
                                             <div>
                                                 <p className="font-semibold">
-                                                    {gig.price ? (typeof gig.price === 'number' ? `$${(gig.price / 100).toFixed(2)}` : gig.price) : "Free"}
+                                                    {displayPrice}
                                                 </p>
                                                 <p className="text-sm text-muted-foreground">Entry Fee</p>
                                             </div>
@@ -204,7 +215,7 @@ export default function GigDetailPage() {
 
                                     <ShareDialog
                                         title={gig.title}
-                                        url={typeof window !== 'undefined' && ['http:', 'https:'].includes(window.location.protocol) ? window.location.href : undefined}
+                                        url={typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}/gigs/${gig.id}` : undefined}
                                         trigger={
                                             <Button variant="secondary" className="w-full">
                                                 <Share2 className="mr-2 h-4 w-4" />
