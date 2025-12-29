@@ -10,6 +10,7 @@ import {
   integer,
   boolean,
   pgPolicy,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1100,6 +1101,8 @@ export const userApps = pgTable("user_apps", {
   pgPolicy("user_apps_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
   pgPolicy("user_apps_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
   index("user_apps_user_idx").on(table.userId),
+  index("user_apps_app_idx").on(table.appId),
+  uniqueIndex("user_apps_user_app_unique").on(table.userId, table.appId),
 ]);
 
 export const appsRelations = relations(apps, ({ many }) => ({

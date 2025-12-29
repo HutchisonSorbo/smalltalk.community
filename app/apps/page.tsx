@@ -24,6 +24,10 @@ export default function AppsPage() {
                     fetch("/api/user/apps")
                 ]);
 
+                if (!appsRes.ok || !userAppsRes.ok) {
+                    throw new Error("Failed to fetch data");
+                }
+
                 const appsData = await appsRes.json();
                 const userAppsData = await userAppsRes.json();
 

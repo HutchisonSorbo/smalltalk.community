@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, LayoutGrid, Home } from "lucide-react";
+import { Menu, X, User, LayoutGrid, Home, Grid2X2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -25,7 +25,7 @@ export function PlatformHeader() {
         { href: "/", label: "Home", icon: Home },
         ...(isAuthenticated ? [
             { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
-            { href: "/apps", label: "Apps", icon: LayoutGrid },
+            { href: "/apps", label: "Apps", icon: Grid2X2 },
         ] : []),
     ];
 

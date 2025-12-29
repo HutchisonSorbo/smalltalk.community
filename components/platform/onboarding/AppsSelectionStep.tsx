@@ -23,8 +23,8 @@ export function AppsSelectionStep() {
                 // Ensure data is array
                 if (Array.isArray(data)) {
                     setApps(data);
-                    // Default select Local Music Network if it exists
-                    const lmn = data.find(a => a.name.includes("Music") || a.route.includes("local-music-network"));
+                    // Default select Local Music Network by route
+                    const lmn = data.find(a => a.route === "/local-music-network");
                     if (lmn) {
                         setSelectedAppIds(new Set([lmn.id]));
                     }
@@ -66,20 +66,12 @@ export function AppsSelectionStep() {
         setIsSubmitting(true);
         let errorOccurred = false;
 
-        // We add apps one by one. In a real app we might want a bulk endpoint.
-        // For now we iterate.
-        // We assume the API /api/user/apps/route.ts handles POST to add.
-        // Current route POST just adds one.
-        // We should probably optimize this in the future, but <10 apps is fine.
-
-        // We also need to mark onboardingCompleted.
-        // We can do that via a separate call or update the user API.
-        // Let's call /api/user/account-type to update onboarding status? Or create a dedicated endpoint.
-
+        // Add selected apps via API and mark onboarding complete; consider batching in future
         try {
             const promises = Array.from(selectedAppIds).map(appId =>
                 fetch("/api/user/apps", {
                     method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ appId }),
                 })
             );

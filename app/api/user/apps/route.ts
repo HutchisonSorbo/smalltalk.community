@@ -42,30 +42,41 @@ export async function GET(request: Request) {
     }
 }
 
-// POST: Add an app to user's list
-export async function POST(request: Request) {
+export async function POST(req: Request) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     try {
-        const supabase = await createClient();
-        const { data: { user }, error } = await supabase.auth.getUser();
-
-        if (error || !user) {
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-        }
-
-        const json = await request.json();
-        const parsed = toggleAppSchema.safeParse(json);
+        const body = await req.json();
+        const parsed = toggleAppSchema.safeParse(body);
 
         if (!parsed.success) {
-            return NextResponse.json({ message: "Invalid data" }, { status: 400 });
+            return NextResponse.json({ error: "Invalid input" }, { status: 400 });
         }
 
-        // Check if already exists
-        const existing = await db.select().from(userApps).where(
-            and(
-                eq(userApps.userId, user.id),
-                eq(userApps.appId, parsed.data.appId)
-            )
-        );
+        const { appId } = parsed.data;
+
+        // Verify app exists and is active
+        const appExists = await db
+            .select({ id: apps.id })
+            .from(apps)
+            .where(and(eq(apps.id, appId), eq(apps.isActive, true)))
+            .limit(1);
+
+        if (appExists.length === 0) {
+            return NextResponse.json({ error: "App not found or inactive" }, { status: 404 });
+        }
+
+        // Check if already added
+        const existing = await db
+            .select()
+            .from(userApps)
+            .where(and(eq(userApps.userId, user.id), eq(userApps.appId, appId)))
+            .limit(1);
 
         if (existing.length > 0) {
             return NextResponse.json({ message: "App already added" }, { status: 200 });
@@ -73,13 +84,13 @@ export async function POST(request: Request) {
 
         await db.insert(userApps).values({
             userId: user.id,
-            appId: parsed.data.appId,
+            appId: appId,
         });
 
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error adding app:", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
 
