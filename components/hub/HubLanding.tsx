@@ -93,7 +93,7 @@ export function HubLanding() {
                             </p>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                             {SHOWCASE_APPS.map(app => (
                                 <AppCard
                                     key={app.id}
