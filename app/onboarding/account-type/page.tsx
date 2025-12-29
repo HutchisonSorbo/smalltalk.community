@@ -43,4 +43,3 @@ export default async function AccountTypePage() {
 
     return <AccountTypeStep />;
 }
-}

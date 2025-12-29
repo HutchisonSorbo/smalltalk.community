@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import React from "react";
 import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "@/app/local-music-network/providers";
+import "@/app/globals.css";
+import { Providers } from "@/app/providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
