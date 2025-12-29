@@ -4,11 +4,30 @@ import { createClient } from "@/lib/supabase";
 import { useEffect } from "react";
 
 function isValidUser(data: unknown): data is User {
+  if (typeof data !== "object" || data === null) return false;
+
+  const d = data as Record<string, unknown>;
+
+  // Critical fields validation
+  // Note: Supabase might return timestamps as strings (ISO 8601), so we allow string dates
+  const hasValidId = typeof d.id === "string" && d.id.length > 0;
+  const hasValidEmail = typeof d.email === "string" && d.email.length > 0;
+  // userType has default 'musician', checking it exists and is string
+  const hasValidUserType = typeof d.userType === "string";
+  // isAdmin has default false
+  const hasValidIsAdmin = typeof d.isAdmin === "boolean";
+
+  // createdAt check: can be Date object or ISO string that is valid date
+  const hasValidCreatedAt =
+    d.createdAt instanceof Date ||
+    (typeof d.createdAt === "string" && !isNaN(Date.parse(d.createdAt)));
+
   return (
-    typeof data === "object" &&
-    data !== null &&
-    "id" in data &&
-    "email" in data
+    hasValidId &&
+    hasValidEmail &&
+    hasValidUserType &&
+    hasValidIsAdmin &&
+    hasValidCreatedAt
   );
 }
 
