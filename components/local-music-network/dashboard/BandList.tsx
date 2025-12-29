@@ -73,20 +73,22 @@ export function BandList({ bands, isLoading }: BandListProps) {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-4">
-                                        <h3 className="font-semibold text-lg">{band.name}</h3>
+                                        <h3 className="font-semibold text-lg truncate">{band.name}</h3>
                                     </div>
                                     <div className="space-y-1 mt-1">
                                         {band.location && (
                                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                                 <MapPin className="h-3.5 w-3.5" />
-                                                {band.location}
+                                                <span className="truncate">{band.location}</span>
                                             </div>
                                         )}
                                         {band.websiteUrl && (
                                             <div className="flex items-center gap-1 text-sm text-primary">
                                                 <Globe className="h-3.5 w-3.5" />
                                                 <a href={band.websiteUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                                    {band.websiteUrl}
+                                                    <span className="truncate max-w-[200px] block">
+                                                        {band.websiteUrl}
+                                                    </span>
                                                 </a>
                                             </div>
                                         )}

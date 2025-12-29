@@ -7,21 +7,37 @@
 - **State**: React Query / Zustand
 
 # Sentry Configuration
-- **Sentry DSN**: https://c9b0e3579848f4bbd146903260841961@o4508499244089344.ingest.us.sentry.io/4508502598975488
+
+- **Sentry DSN**: <https://c9b0e3579848f4bbd146903260841961@o4508499244089344.ingest.us.sentry.io/4508502598975488>
 - **Organization**: hutchison-sorbo
 - **Project**: javascript-nextjs
 
 # File Persistence & Deployment Protocol
+
 1. **The "Read-Back" Rule**: After ANY file write (tool or shell), you MUST read the file back (`cat filename`) to verify content stuck. Do not trust exit status 0.
 2. **Git Integrity Check**: Before any git operation, run `git rev-parse --is-inside-work-tree`. If it fails, STOP and diagnose.
-3. **Atomic & Verified**: 
+3. **Atomic & Verified**:
    - Write File -> `cat` verify -> `git add` -> `git status` check -> `git commit` -> `git push`.
    - Never chain these. Verify each step.
 4. **Lock Recovery**: If `git` locks, delete `.git/index.lock` ONLY. avoided aggressive `pkill` unless necessary to preserve environment stability.
 
-# Security Rules
-1. **No `dangerouslySetInnerHTML`**: Never use this unless absolutely necessary for third-party scripts. If used, strict code review is required.
-2. **URL Sanitization**: ALL external links or user-provided URLs must be sanitized using `safeUrl(url)` from `@/lib/utils` before rendering in `href` or `src`.
-3. **No `javascript:` URIs**: Explain why they are banned.
-4. **Input Validation**: Use Zod schemas for all API routes and form inputs.
-5. **No Direct DOM Manipulation**: Avoid `document.*` or `window.*` for rendering. Use React state.
+- **Security Rules**:
+  - **No `dangerouslySetInnerHTML`**: Never use this unless absolutely necessary for third-party scripts. If used, strict code review is required.
+  - **URL Sanitization**: ALL external links or user-provided URLs must be sanitized using `safeUrl(url)` from `@/lib/utils` before rendering in `href` or `src`.
+  - **No `javascript:` URIs**: Explain why they are banned.
+  - **Input Validation**: Use Zod schemas for all API routes and form inputs.
+  - **No Direct DOM Manipulation**: Avoid `document.*` or `window.*` for rendering. Use React state.
+
+# Design & Mobile Responsiveness Rules
+
+1. **Truncate User Content**: ALWAYS use `truncate` (Tailwind) or `line-clamp-n` for user-generated text (names, bios, titles) in Cards and Lists.
+2. **Responsive Tables**: ALWAYS wrap `Table` components in `<div className="overflow-x-auto">` or ensure the component handles it.
+3. **No Horizontal Scroll**: Ensure the root container of any page does not exceed `100vw`. Use `max-w-full`.
+4. **Mobile First**: Design navigation and grids for mobile first (`grid-cols-1`) then expand (`md:grid-cols-3`).
+
+# Workflow Rules
+
+1. **Feature Branches Only**: ALL work must be done on specific feature branches (e.g., `feat/`, `fix/`, `chore/`).
+2. **Protected Main**: NEVER push directly to `main`.
+3. **Pull Requests**: Changes must go through a Pull Request to trigger CodeRabbit and SonarQube.
+4. **Strict Approval**: You MUST ask for explicit user permission before merging any PR or pushing to `main`.

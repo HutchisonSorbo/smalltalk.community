@@ -38,7 +38,7 @@ export function GigCard({ gig }: { gig: Gig }) {
                     {gig.genre && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Music className="h-4 w-4" />
-                            <span>{gig.genre}</span>
+                            <span className="truncate">{gig.genre}</span>
                         </div>
                     )}
                 </div>
