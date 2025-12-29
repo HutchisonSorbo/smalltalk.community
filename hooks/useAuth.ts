@@ -20,7 +20,7 @@ function isValidUser(data: unknown): data is User {
   // createdAt check: can be Date object or ISO string that is valid date
   const hasValidCreatedAt =
     d.createdAt instanceof Date ||
-    (typeof d.createdAt === "string" && !isNaN(Date.parse(d.createdAt)));
+    (typeof d.createdAt === "string" && !Number.isNaN(Date.parse(d.createdAt)));
 
   return (
     hasValidId &&
