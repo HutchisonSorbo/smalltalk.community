@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createClient } from "@/lib/supabase"; // Client-side client
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, Suspense } from "react";
+
 import { useToast } from "@/hooks/use-toast";
 
 import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
@@ -50,7 +50,7 @@ function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
-    const supabase = createClient();
+
 
     const checkAge = (dateString: string) => {
         const today = new Date();
@@ -102,7 +102,7 @@ function LoginForm() {
         setIsLoading(true);
 
         // Save remember me preference
-        if (typeof window !== "undefined") {
+        if (typeof globalThis !== "undefined") {
             localStorage.setItem("remember_me", rememberMe.toString());
         }
 
@@ -121,13 +121,13 @@ function LoginForm() {
                         data: {
                             date_of_birth: dob,
                             account_type: finalAccountType,
-                            organisation_name: accountType !== "Individual" ? organisationName : undefined,
+                            organisation_name: accountType === "Individual" ? undefined : organisationName,
                             // Default to musician for individual, professional for others as a heuristic, 
                             // or just default to musician. Let's default to musician for now as safe default.
                             user_type: 'musician',
                         },
                         captchaToken: captchaToken,
-                        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+                        emailRedirectTo: `${globalThis.location.origin}/api/auth/callback`,
                     },
                 });
                 console.log("Sign up result:", { data, error });
@@ -193,7 +193,7 @@ function LoginForm() {
                                 await authClient.auth.signInWithOAuth({
                                     provider: 'google',
                                     options: {
-                                        redirectTo: `${window.location.origin}/api/auth/callback`,
+                                        redirectTo: `${globalThis.location.origin}/api/auth/callback`,
                                     }
                                 });
                             }}
