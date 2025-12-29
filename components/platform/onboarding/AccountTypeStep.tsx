@@ -37,15 +37,24 @@ export function AccountTypeStep() {
             });
 
             if (!response.ok) {
-                throw new Error("Failed to update account type");
+                let errorMessage = "Failed to update account type";
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } catch {
+                    const errorText = await response.text();
+                    if (errorText) errorMessage = errorText;
+                }
+                throw new Error(errorMessage);
             }
 
+            setIsSubmitting(false);
             router.push("/onboarding/apps");
         } catch (error) {
             console.error(error);
             toast({
                 title: "Error",
-                description: "Something went wrong. Please try again.",
+                description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
                 variant: "destructive",
             });
             setIsSubmitting(false);
