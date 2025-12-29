@@ -15,3 +15,5 @@ export default function DashboardPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

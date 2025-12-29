@@ -168,3 +168,5 @@ export function FeaturedContent() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

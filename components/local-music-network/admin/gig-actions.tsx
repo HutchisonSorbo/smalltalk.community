@@ -67,3 +67,5 @@ export function CreateGigButton() {
         </Button>
     );
 }
+
+// CodeRabbit Audit Trigger

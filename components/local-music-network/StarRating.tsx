@@ -82,3 +82,5 @@ export function StarRating({
     </div>
   );
 }
+
+// CodeRabbit Audit Trigger

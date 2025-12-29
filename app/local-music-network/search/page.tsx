@@ -124,3 +124,5 @@ export default async function SearchPage(props: {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

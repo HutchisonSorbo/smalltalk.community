@@ -129,3 +129,5 @@ export function AnnouncementActions({ id, isActive }: { id: string, isActive: bo
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

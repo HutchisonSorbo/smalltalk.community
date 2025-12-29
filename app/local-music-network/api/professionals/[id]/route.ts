@@ -53,3 +53,5 @@ export async function PATCH(
     const updated = await storage.updateProfessionalProfile(resolvedParams.id, parseResult.data);
     return NextResponse.json(updated);
 }
+
+// CodeRabbit Audit Trigger

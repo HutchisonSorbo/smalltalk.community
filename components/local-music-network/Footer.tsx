@@ -63,3 +63,5 @@ export function Footer() {
     </footer>
   );
 }
+
+// CodeRabbit Audit Trigger

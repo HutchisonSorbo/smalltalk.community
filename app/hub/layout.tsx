@@ -41,3 +41,5 @@ export default function HubLayout({
         </html>
     );
 }
+
+// CodeRabbit Audit Trigger

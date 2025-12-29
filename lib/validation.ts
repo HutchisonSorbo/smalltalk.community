@@ -43,3 +43,5 @@ export function validateImageMagicBytes(buffer: Buffer | Uint8Array, mimetype: s
     }
     return false;
 }
+
+// CodeRabbit Audit Trigger

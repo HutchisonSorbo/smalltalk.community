@@ -97,3 +97,5 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel, open, isGif =
         </Dialog>
     );
 }
+
+// CodeRabbit Audit Trigger

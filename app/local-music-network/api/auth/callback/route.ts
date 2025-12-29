@@ -67,3 +67,5 @@ export async function GET(request: Request) {
         return NextResponse.redirect(getErrorRedirect(origin, err))
     }
 }
+
+// CodeRabbit Audit Trigger

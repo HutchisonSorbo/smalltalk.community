@@ -22,3 +22,5 @@ export async function GET(
         return NextResponse.json({ message: "Failed to fetch reviews" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

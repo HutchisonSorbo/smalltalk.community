@@ -62,3 +62,5 @@ export default async function GigsPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

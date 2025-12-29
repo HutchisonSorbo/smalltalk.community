@@ -319,3 +319,5 @@ export function MultiImageUpload({ value = [], onChange, maxImages = 5, label = 
     </div>
   );
 }
+
+// CodeRabbit Audit Trigger

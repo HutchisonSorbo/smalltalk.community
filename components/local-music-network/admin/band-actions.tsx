@@ -67,3 +67,5 @@ export function CreateBandButton() {
         </Button>
     );
 }
+
+// CodeRabbit Audit Trigger

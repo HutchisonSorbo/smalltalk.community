@@ -212,3 +212,5 @@ function AddMemberForm({ bandId }: { bandId: string }) {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

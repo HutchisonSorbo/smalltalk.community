@@ -67,3 +67,5 @@ export function CreateMusicianButton() {
         </Button>
     );
 }
+
+// CodeRabbit Audit Trigger

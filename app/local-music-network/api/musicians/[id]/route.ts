@@ -126,3 +126,5 @@ export async function DELETE(
         return NextResponse.json({ message: "Failed to delete profile" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

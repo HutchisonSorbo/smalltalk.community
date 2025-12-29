@@ -68,3 +68,5 @@ export function ProfessionalCard({ professional }: ProfessionalCardProps) {
         </Link>
     );
 }
+
+// CodeRabbit Audit Trigger

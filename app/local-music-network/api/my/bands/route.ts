@@ -18,3 +18,5 @@ export async function GET() {
         return NextResponse.json({ message: "Failed to fetch your bands" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

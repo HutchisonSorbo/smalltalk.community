@@ -25,3 +25,5 @@ export default function GlobalError({
     </html>
   );
 }
+
+// CodeRabbit Audit Trigger

@@ -28,3 +28,5 @@ export async function GET(
         return NextResponse.json({ message: "Failed to check review status" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

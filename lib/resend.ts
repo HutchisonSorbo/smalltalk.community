@@ -12,3 +12,5 @@ export const resend = process.env.RESEND_API_KEY
 export const isEmailConfigured = (): boolean => {
     return !!resend;
 };
+
+// CodeRabbit Audit Trigger

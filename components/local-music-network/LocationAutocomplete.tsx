@@ -180,3 +180,5 @@ export function LocationAutocomplete({
     </div>
   );
 }
+
+// CodeRabbit Audit Trigger

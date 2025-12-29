@@ -77,3 +77,5 @@ export function BandCard({ band }: BandCardProps) {
         </Link>
     );
 }
+
+// CodeRabbit Audit Trigger

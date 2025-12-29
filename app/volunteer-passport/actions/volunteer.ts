@@ -66,3 +66,5 @@ export async function upsertVolunteerProfile(data: {
     revalidatePath("/volunteer-passport/profile");
     return { success: true };
 }
+
+// CodeRabbit Audit Trigger

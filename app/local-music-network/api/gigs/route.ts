@@ -95,3 +95,5 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: "Failed to create gig" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

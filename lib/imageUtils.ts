@@ -91,3 +91,5 @@ export async function getCroppedImg(
         }, 'image/jpeg');
     });
 }
+
+// CodeRabbit Audit Trigger

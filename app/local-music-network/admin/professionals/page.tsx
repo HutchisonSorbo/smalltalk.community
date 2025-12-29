@@ -72,3 +72,5 @@ export default async function ProfessionalsPage() {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

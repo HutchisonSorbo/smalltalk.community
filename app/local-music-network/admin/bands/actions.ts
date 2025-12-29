@@ -40,3 +40,5 @@ export async function seedBand() {
 
     revalidatePath("/admin/bands");
 }
+
+// CodeRabbit Audit Trigger

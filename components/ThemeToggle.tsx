@@ -21,3 +21,5 @@ export function ThemeToggle() {
     </Button>
   );
 }
+
+// CodeRabbit Audit Trigger

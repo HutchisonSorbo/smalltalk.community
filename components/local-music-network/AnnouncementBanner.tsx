@@ -47,3 +47,5 @@ export function AnnouncementBanner({ announcements }: AnnouncementBannerProps) {
         </div>
     );
 }
+
+// CodeRabbit Audit Trigger

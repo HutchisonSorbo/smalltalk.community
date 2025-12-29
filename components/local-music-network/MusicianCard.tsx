@@ -94,3 +94,5 @@ export function MusicianCard({ musician }: MusicianCardProps) {
     </Link>
   );
 }
+
+// CodeRabbit Audit Trigger

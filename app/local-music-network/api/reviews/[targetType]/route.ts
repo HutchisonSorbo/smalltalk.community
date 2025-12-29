@@ -76,3 +76,5 @@ export async function DELETE(
         return NextResponse.json({ message: "Failed to delete review" }, { status: 500 });
     }
 }
+
+// CodeRabbit Audit Trigger

@@ -101,3 +101,5 @@ const AvatarFallback = React.forwardRef<
 AvatarFallback.displayName = "AvatarFallback"
 
 export { Avatar, AvatarImage, AvatarFallback }
+
+// CodeRabbit Audit Trigger

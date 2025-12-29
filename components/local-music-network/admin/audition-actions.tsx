@@ -67,3 +67,5 @@ export function CreateAuditionButton() {
         </Button>
     );
 }
+
+// CodeRabbit Audit Trigger

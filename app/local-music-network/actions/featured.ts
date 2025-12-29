@@ -91,3 +91,5 @@ export async function getFeaturedContent() {
         featuredGig: randomGig[0] || null
     };
 }
+
+// CodeRabbit Audit Trigger

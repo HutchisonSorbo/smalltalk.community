@@ -66,3 +66,5 @@ export function UserActionsCell({ userId, isAdmin }: UserActionsCellProps) {
         </DropdownMenu>
     );
 }
+
+// CodeRabbit Audit Trigger

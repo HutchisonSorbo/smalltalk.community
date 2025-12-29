@@ -53,3 +53,5 @@ export function ProfessionalDashboardContent({ user }: { user: any }) {
         </Card>
     );
 }
+
+// CodeRabbit Audit Trigger

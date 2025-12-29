@@ -8,3 +8,5 @@ export const DELETE = REST_DELETE(configPromise)
 export const PATCH = REST_PATCH(configPromise)
 export const PUT = REST_PUT(configPromise)
 export const OPTIONS = REST_OPTIONS(configPromise)
+
+// CodeRabbit Audit Trigger

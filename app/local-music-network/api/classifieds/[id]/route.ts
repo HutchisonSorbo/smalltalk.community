@@ -44,3 +44,5 @@ export async function DELETE(
     await storage.deleteClassified(resolvedParams.id);
     return new NextResponse(null, { status: 204 });
 }
+
+// CodeRabbit Audit Trigger

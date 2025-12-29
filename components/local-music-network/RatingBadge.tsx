@@ -33,3 +33,5 @@ export function RatingBadge({ targetType, targetId }: RatingBadgeProps) {
     </div>
   );
 }
+
+// CodeRabbit Audit Trigger

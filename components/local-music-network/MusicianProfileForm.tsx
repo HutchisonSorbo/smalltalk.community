@@ -654,3 +654,5 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
     </Form >
   );
 }
+
+// CodeRabbit Audit Trigger

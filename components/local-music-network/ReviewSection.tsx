@@ -274,3 +274,5 @@ export function ReviewSection({ targetType, targetId, currentUser, ownerId }: Re
     </Card>
   );
 }
+
+// CodeRabbit Audit Trigger

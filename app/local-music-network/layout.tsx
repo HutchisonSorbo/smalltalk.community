@@ -47,3 +47,5 @@ export default function RootLayout({
         </html>
     );
 }
+
+// CodeRabbit Audit Trigger

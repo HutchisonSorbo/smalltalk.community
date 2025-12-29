@@ -399,3 +399,5 @@ export function BandProfileForm({ band, onSuccess, onCancel }: BandProfileFormPr
         </Form>
     );
 }
+
+// CodeRabbit Audit Trigger
