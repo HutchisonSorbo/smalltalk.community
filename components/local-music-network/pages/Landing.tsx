@@ -1,15 +1,9 @@
 import Link from "next/link";
-import { Music, Users, ShoppingBag, MapPin, ArrowRight, Guitar, Mic2, Drum, Calendar } from "lucide-react";
+import { Music, Users, MapPin, ArrowRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/local-music-network/Header";
 import { Footer } from "@/components/local-music-network/Footer";
-import dynamic from "next/dynamic";
-
-const VictoriaMap = dynamic(() => import("@/components/local-music-network/VictoriaMap"), {
-  ssr: false,
-  loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-lg" />
-});
 
 export default function Landing() {
   return (
@@ -127,9 +121,7 @@ export default function Landing() {
                 </Link>
               </Button>
 
-              <div className="pt-8 w-full max-w-4xl mx-auto">
-                <VictoriaMap />
-              </div>
+
             </div>
           </div>
         </section>
