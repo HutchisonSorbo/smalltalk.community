@@ -137,6 +137,7 @@ const SidebarProvider = React.forwardRef<
       <SidebarContext.Provider value={contextValue}>
         <TooltipProvider delayDuration={0}>
           <div
+            ref={ref}
             data-slot="sidebar-wrapper"
             style={
               {
