@@ -62,8 +62,9 @@ export async function middleware(request: NextRequest) {
 
     // Rewrite Logic
 
-    // 1. Explicit Routes: If path is explicitly /local-music-network, /hub, or /volunteer-passport, let it pass
-    if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport")) {
+    // 1. Explicit Routes: If path is explicitly /local-music-network, /hub, /volunteer-passport, /onboarding, /dashboard, /apps, or /settings, let it pass
+    if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport") ||
+        path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings")) {
         return response;
     }
 

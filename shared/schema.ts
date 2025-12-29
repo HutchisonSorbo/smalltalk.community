@@ -39,6 +39,8 @@ export const users = pgTable("users", {
   dateOfBirth: timestamp("date_of_birth"),
   userType: varchar("user_type", { length: 50 }).default("musician"), // 'musician' | 'professional'
   accountType: varchar("account_type", { length: 100 }).default("Individual"), // 'Individual', 'Business', 'Government Organisation', 'Charity', 'Other'
+  accountTypeSpecification: varchar("account_type_specification", { length: 255 }), // For 'Other' type details
+  onboardingCompleted: boolean("onboarding_completed").default(false),
   organisationName: varchar("organisation_name", { length: 255 }),
   isAdmin: boolean("is_admin").default(false),
   lastActiveAt: timestamp("last_active_at"),
@@ -1063,4 +1065,72 @@ export const insertVolunteerApplicationSchema = createInsertSchema(volunteerAppl
 
 export type InsertVolunteerApplication = z.infer<typeof insertVolunteerApplicationSchema>;
 export type VolunteerApplication = typeof volunteerApplications.$inferSelect;
+
+
+// ------------------------------------------------------------------
+// APP REGISTRY & MANAGEMENT
+// ------------------------------------------------------------------
+
+// Apps Registry
+export const apps = pgTable("apps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  iconUrl: varchar("icon_url", { length: 255 }).notNull(),
+  route: varchar("route", { length: 100 }).notNull(), // e.g., '/local-music-network'
+  category: varchar("category", { length: 50 }), // e.g., 'Music', 'Community', 'Utility'
+  isBeta: boolean("is_beta").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("apps_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("apps_admin_write", { for: "all", to: "service_role", using: sql`true` }),
+]);
+
+// User <-> Apps Join Table
+export const userApps = pgTable("user_apps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  appId: varchar("app_id").notNull().references(() => apps.id),
+  isPinned: boolean("is_pinned").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("user_apps_self_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("user_apps_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("user_apps_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  index("user_apps_user_idx").on(table.userId),
+]);
+
+export const appsRelations = relations(apps, ({ many }) => ({
+  users: many(userApps),
+}));
+
+export const userAppsRelations = relations(userApps, ({ one }) => ({
+  user: one(users, {
+    fields: [userApps.userId],
+    references: [users.id],
+  }),
+  app: one(apps, {
+    fields: [userApps.appId],
+    references: [apps.id],
+  }),
+}));
+
+export const insertAppSchema = createInsertSchema(apps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type App = typeof apps.$inferSelect;
+export type InsertApp = z.infer<typeof insertAppSchema>;
+
+export const insertUserAppSchema = createInsertSchema(userApps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserApp = typeof userApps.$inferSelect;
+export type InsertUserApp = z.infer<typeof insertUserAppSchema>;
 

@@ -7,6 +7,7 @@ import { Providers } from "./providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
+import { PlatformHeader } from "@/components/platform/PlatformHeader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -36,6 +37,7 @@ export default function RootLayout({
                 <Providers>
                     <AccessibilityProvider>
                         <SkipToContent />
+                        <PlatformHeader />
                         <main id="main-content" className="min-h-screen bg-background text-foreground font-sans antialiased">
                             {/* <AnnouncementBanner announcements={[]} /> */}
                             {children}
