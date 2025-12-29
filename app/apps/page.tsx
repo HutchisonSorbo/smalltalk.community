@@ -6,7 +6,7 @@ import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Search } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AppsPage() {
     const [allApps, setAllApps] = useState<AppData[]>([]);
