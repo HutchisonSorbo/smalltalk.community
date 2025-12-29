@@ -3,19 +3,50 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Music2, ShieldCheck, Zap } from "lucide-react";
-import { HubHeader } from "./HubHeader";
+import { ArrowRight } from "lucide-react";
+import { PlatformHeader } from "@/components/platform/PlatformHeader";
+import { AppCard, AppData } from "@/components/platform/AppCard";
 import dynamic from "next/dynamic";
+import { safeUrl } from "@/lib/utils";
 
 const VictoriaMap = dynamic(() => import("@/components/local-music-network/VictoriaMap"), {
     ssr: false,
     loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-xl" />
 });
 
+// Hardcoded apps for showcase until seed is ready/consistent
+const SHOWCASE_APPS: AppData[] = [
+    {
+        id: "lmn",
+        name: "Local Music Network",
+        description: "The ultimate directory for Victorian musicians, bands, and gigs. Connect and collaborate.",
+        iconUrl: "/icons/music-icon.png", // Placeholder
+        route: "/local-music-network",
+        category: "Music"
+    },
+    {
+        id: "vp",
+        name: "Volunteer Passport",
+        description: "Your digital passport for verifying credentials and finding volunteer opportunities across Victoria.",
+        iconUrl: "/icons/shield-icon.png", // Placeholder
+        route: "/volunteer-passport",
+        category: "Community"
+    },
+    {
+        id: "mp",
+        name: "Marketplace",
+        description: "Buy, sell, and trade gear with verified locals. Safe, secure, and community-driven.",
+        iconUrl: "/icons/zap-icon.png", // Placeholder
+        route: "#",
+        category: "Commerce",
+        isBeta: true
+    }
+];
+
 export function HubLanding() {
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-blue-500 selection:text-white">
-            <HubHeader />
+            <PlatformHeader />
 
             <main>
                 {/* Hero Section */}
@@ -29,7 +60,7 @@ export function HubLanding() {
                                 Ecosystem Live
                             </div>
 
-                            <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 pb-2">
+                            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500 pb-2 break-words sm:break-normal">
                                 smalltalk.community
                             </h1>
 
@@ -63,29 +94,14 @@ export function HubLanding() {
                             </p>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                            <FeatureCard
-                                icon={<Music2 className="h-6 w-6 text-blue-500" />}
-                                title="Local Music Network"
-                                description="The ultimate directory for Victorian musicians, bands, and gigs. Connect and collaborate."
-                                link="/local-music-network"
-                                linkText="Launch App"
-                            />
-                            <FeatureCard
-                                icon={<ShieldCheck className="h-6 w-6 text-indigo-500" />}
-                                title="Volunteer Passport"
-                                description="Your digital passport for verifying credentials and finding volunteer opportunities across Victoria."
-                                link="/volunteer-passport"
-                                linkText="Launch App"
-                            />
-                            <FeatureCard
-                                icon={<Zap className="h-6 w-6 text-yellow-500" />}
-                                title="Marketplace"
-                                description="Buy, sell, and trade gear with verified locals. Safe, secure, and community-driven."
-                                link="#"
-                                linkText="Coming Soon"
-                                disabled
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                            {SHOWCASE_APPS.map(app => (
+                                <AppCard
+                                    key={app.id}
+                                    app={app}
+                                    variant="showcase"
+                                />
+                            ))}
                         </div>
                     </div>
                 </section>
@@ -131,35 +147,16 @@ export function HubLanding() {
                     <p className="text-sm">
                         &copy; {new Date().getFullYear()} Hutchison Sorbo. All rights reserved.
                     </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                        <a href={safeUrl("https://www.flaticon.com/free-icons/strong") || "#"} title="strong icons" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            Strong icons created by Freepik - Flaticon
+                        </a>
+                    </p>
                 </div>
             </footer>
         </div>
     );
 }
 
-function FeatureCard({ icon, title, description, link, linkText, disabled }: { icon: React.ReactNode, title: string, description: string, link?: string, linkText?: string, disabled?: boolean }) {
-    return (
-        <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors shadow-sm flex flex-col h-full">
-            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                {icon}
-            </div>
-            <h3 className="text-xl font-semibold mb-2 text-foreground">{title}</h3>
-            <p className="text-muted-foreground leading-relaxed mb-6 flex-1">{description}</p>
-            {link && (
-                <div className="mt-auto">
-                    {disabled ? (
-                        <span className="text-sm font-medium text-muted-foreground inline-flex items-center cursor-not-allowed opacity-70">
-                            {linkText}
-                        </span>
-                    ) : (
-                        <Link href={link} className="text-sm font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center">
-                            {linkText} <ArrowRight className="ml-1 h-3 w-3" />
-                        </Link>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
 
 // CodeRabbit Audit Trigger

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Music } from "lucide-react";
 import { AboriginalFlag } from "./AboriginalFlag";
+import { safeUrl } from "@/lib/utils";
 
 export function Footer() {
   return (
@@ -58,6 +59,11 @@ export function Footer() {
           </div>
           <p className="mb-8">Made for Victoria's musicians. Not affiliated with any other platform.</p>
           <p>&copy; 2025 smalltalk.community</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            <a href={safeUrl("https://www.flaticon.com/free-icons/strong") || "#"} title="strong icons" target="_blank" rel="noopener noreferrer" className="hover:underline">
+              Strong icons created by Freepik - Flaticon
+            </a>
+          </p>
         </div>
       </div>
     </footer>

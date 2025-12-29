@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import React from "react";
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
-import { VolunteerHeader } from "@/components/volunteer-passport/Header";
+import { PlatformHeader } from "@/components/platform/PlatformHeader";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Volunteer Passport | Smalltalk Community",
-    description: "Your digital passport for volunteering in Victoria",
+    title: "Dashboard | smalltalk.community",
+    description: "Your Hub",
     icons: {
         icon: "/face-smile-regular-full.svg",
         shortcut: "/face-smile-regular-full.svg",
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
     }
 };
 
-export default function RootLayout({
+export default function DashboardLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
@@ -34,11 +33,9 @@ export default function RootLayout({
                 <Providers>
                     <AccessibilityProvider>
                         <SkipToContent />
+                        <PlatformHeader />
                         <main id="main-content" className="min-h-screen bg-background text-foreground font-sans antialiased">
-                            <VolunteerHeader />
-                            <div className="container mx-auto py-6">
-                                {children}
-                            </div>
+                            {children}
                         </main>
                     </AccessibilityProvider>
                 </Providers>
@@ -46,5 +43,3 @@ export default function RootLayout({
         </html>
     );
 }
-
-// CodeRabbit Audit Trigger

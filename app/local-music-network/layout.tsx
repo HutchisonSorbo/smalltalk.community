@@ -2,11 +2,12 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from "next";
 import React from "react";
 import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "./providers";
+import "../globals.css";
+import { Providers } from "../providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
+import { PlatformHeader } from "@/components/platform/PlatformHeader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -36,6 +37,7 @@ export default function RootLayout({
                 <Providers>
                     <AccessibilityProvider>
                         <SkipToContent />
+                        <PlatformHeader />
                         <main id="main-content" className="min-h-screen bg-background text-foreground font-sans antialiased">
                             {/* <AnnouncementBanner announcements={[]} /> */}
                             {children}
