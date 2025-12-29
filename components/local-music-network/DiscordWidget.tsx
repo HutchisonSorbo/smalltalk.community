@@ -8,6 +8,7 @@ import { MessageSquare, Users, ExternalLink, MonitorPlay } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { safeUrl } from "@/lib/utils";
 
 interface DiscordMember {
     id: string;
@@ -91,7 +92,9 @@ export function DiscordWidget() {
     if (!data) return null;
 
     const inviteCode = data.instant_invite ? data.instant_invite.split('/').pop() : "";
-    const appLaunchUrl = inviteCode ? `discord://invite/${inviteCode}` : "#";
+    // Ensure code is alphanumeric to prevent injection, though discord:// protocol is specific
+    const safeInviteCode = inviteCode?.replace(/[^a-zA-Z0-9]/g, '');
+    const appLaunchUrl = safeInviteCode ? `discord://invite/${safeInviteCode}` : "#";
 
     return (
         <Card className="max-w-6xl w-full mx-auto hover-elevate overflow-hidden border-l-4 border-l-[#5865F2] shadow-md">
@@ -121,7 +124,7 @@ export function DiscordWidget() {
                         </h4>
 
                         <Button variant="outline" size="sm" className="h-7 border-[#5865F2]/50 text-[#5865F2] hover:bg-[#5865F2]/10 font-bold text-[10px] uppercase tracking-widest mb-3" asChild>
-                            <a href={data.instant_invite || `https://discord.com/channels/${SERVER_ID}`} target="_blank" rel="noopener noreferrer">
+                            <a href={safeUrl(data.instant_invite) || `https://discord.com/channels/${SERVER_ID}`} target="_blank" rel="noopener noreferrer">
                                 Connect to Server
                             </a>
                         </Button>
@@ -136,7 +139,7 @@ export function DiscordWidget() {
                                         </a>
                                     </Button>
                                     <Button size="lg" variant="secondary" className="bg-background border shadow-sm hover:bg-accent" asChild>
-                                        <a href={data.instant_invite} target="_blank" rel="noopener noreferrer">
+                                        <a href={safeUrl(data.instant_invite)} target="_blank" rel="noopener noreferrer">
                                             Join Server
                                             <ExternalLink className="ml-2 h-4 w-4" />
                                         </a>

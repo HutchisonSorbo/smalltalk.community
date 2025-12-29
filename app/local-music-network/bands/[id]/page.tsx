@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Band, BandMemberWithUser, Gig } from "@shared/schema";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { safeUrl } from "@/lib/utils";
 
 // Helper to fetch band details
 async function getBand(id: string): Promise<Band> {
@@ -82,29 +83,29 @@ export default function BandDetailsPage() {
                                     <span>{band.location}</span>
                                 </div>
                             )}
-                            {band.websiteUrl && (
-                                <a href={band.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                            {safeUrl(band.websiteUrl) && (
+                                <a href={safeUrl(band.websiteUrl)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1" aria-label="Visit Website">
                                     <Globe className="h-4 w-4" />
                                     <span>Website</span>
                                 </a>
                             )}
-                            {(band.socialLinks as any)?.facebook && (
-                                <a href={(band.socialLinks as any).facebook} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                            {safeUrl((band.socialLinks as any)?.facebook) && (
+                                <a href={safeUrl((band.socialLinks as any).facebook)} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80" aria-label="Visit Facebook">
                                     <Facebook className="h-4 w-4" />
                                 </a>
                             )}
-                            {(band.socialLinks as any)?.instagram && (
-                                <a href={(band.socialLinks as any).instagram} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                            {safeUrl((band.socialLinks as any)?.instagram) && (
+                                <a href={safeUrl((band.socialLinks as any).instagram)} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80" aria-label="Visit Instagram">
                                     <Instagram className="h-4 w-4" />
                                 </a>
                             )}
-                            {(band.socialLinks as any)?.tiktok && (
-                                <a href={(band.socialLinks as any).tiktok} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                            {safeUrl((band.socialLinks as any)?.tiktok) && (
+                                <a href={safeUrl((band.socialLinks as any).tiktok)} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80" aria-label="Visit TikTok">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg>
                                 </a>
                             )}
-                            {(band.socialLinks as any)?.snapchat && (
-                                <a href={(band.socialLinks as any).snapchat} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                            {safeUrl((band.socialLinks as any)?.snapchat) && (
+                                <a href={safeUrl((band.socialLinks as any).snapchat)} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80" aria-label="Visit Snapchat">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M12 2c-3 0-5.3 1.3-6.1 3.5C5 7.7 5.7 8.7 5.7 8.7s-.9.7-.9 2c0 1.2 1 2.2 1 2.2s.5 4.6 6.2 4.6 6.2-4.6 6.2-4.6 1-1 1-2.2c0-1.3-.9-2-.9-2s.7-1 .2-3.2C17.3 3.3 15 2 12 2z" /></svg>
                                 </a>
                             )}
@@ -119,8 +120,8 @@ export default function BandDetailsPage() {
                     </div>
                     {/* Image placeholder or component */}
                     <div className="w-full md:w-1/3 aspect-video bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
-                        {band.profileImageUrl ? (
-                            <img src={band.profileImageUrl} alt={band.name} className="w-full h-full object-cover rounded-lg" />
+                        {safeUrl(band.profileImageUrl) ? (
+                            <img src={safeUrl(band.profileImageUrl)} alt={band.name} className="w-full h-full object-cover rounded-lg" />
                         ) : (
                             <Music className="h-16 w-16 opacity-20" />
                         )}
@@ -177,8 +178,8 @@ export default function BandDetailsPage() {
                             {members?.map((member) => (
                                 <div key={member.id} className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
                                     <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                        {member.user.profileImageUrl ? (
-                                            <img src={member.user.profileImageUrl} className="h-12 w-12 rounded-full object-cover" />
+                                        {safeUrl(member.user.profileImageUrl) ? (
+                                            <img src={safeUrl(member.user.profileImageUrl)} alt={`${member.user.firstName} ${member.user.lastName}`} className="h-12 w-12 rounded-full object-cover" />
                                         ) : <UserIcon className="h-6 w-6 text-primary" />}
                                     </div>
                                     <div>
@@ -228,6 +229,7 @@ export default function BandDetailsPage() {
                                         allowFullScreen
                                         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                                         loading="lazy"
+                                        title="Spotify Music Player"
                                     ></iframe>
                                 </div>
                             )}
@@ -241,6 +243,7 @@ export default function BandDetailsPage() {
                                         frameBorder="0"
                                         allow="autoplay"
                                         src={`https://w.soundcloud.com/player/?url=${encodeURIComponent((band.socialLinks as any).soundcloud)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`}
+                                        title="SoundCloud Music Player"
                                     ></iframe>
                                 </div>
                             )}
@@ -254,6 +257,7 @@ export default function BandDetailsPage() {
                                         style={{ width: "100%", maxWidth: "660px", overflow: "hidden", borderRadius: "10px" }}
                                         sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
                                         src={`https://embed.music.apple.com/${(band.socialLinks as any).appleMusic.split('music.apple.com/')[1]}`}
+                                        title="Apple Music Player"
                                     ></iframe>
                                 </div>
                             )}

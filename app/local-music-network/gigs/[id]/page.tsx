@@ -204,7 +204,7 @@ export default function GigDetailPage() {
 
                                     <ShareDialog
                                         title={gig.title}
-                                        url={typeof window !== 'undefined' ? window.location.href : undefined}
+                                        url={typeof window !== 'undefined' && ['http:', 'https:'].includes(window.location.protocol) ? window.location.href : undefined}
                                         trigger={
                                             <Button variant="secondary" className="w-full">
                                                 <Share2 className="mr-2 h-4 w-4" />
