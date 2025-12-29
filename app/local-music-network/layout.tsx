@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from "next";
 import React from "react";
 import { Inter } from "next/font/google";
@@ -39,6 +40,7 @@ export default function RootLayout({
                             {/* <AnnouncementBanner announcements={[]} /> */}
                             {children}
                         </main>
+                        <SpeedInsights />
                     </AccessibilityProvider>
                 </Providers>
             </body>
