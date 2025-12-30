@@ -1,0 +1,810 @@
+{
+  "vulnerabilities": [
+    {
+      "id": "SNYK-JS-BSONOBJECTID-570765",
+      "title": "Insufficient Input Validation",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+      "credit": [
+        "Feng Xiao (xiaofen9)"
+      ],
+      "semver": {
+        "vulnerable": [
+          "*"
+        ]
+      },
+      "exploit": "Proof of Concept",
+      "fixedIn": [],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "js",
+      "severity": "low",
+      "cvssScore": 3.7,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "bson-objectid",
+      "references": [
+        {
+          "url": "https://github.com/williamkapke/bson-objectid/issues/30",
+          "title": "GitHub Issue"
+        }
+      ],
+      "cvssDetails": [
+        {
+          "assigner": "NVD",
+          "severity": "high",
+          "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "cvssV3BaseScore": 7.5,
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+          "assigner": "Snyk",
+          "severity": "low",
+          "baseScore": 3.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-06T13:55:29.777450Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "assigner": "NVD",
+          "severity": "high",
+          "baseScore": 7.5,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "description": "## Overview\n[bson-objectid](None) is a library that allows you to construct ObjectIDs without the mongodb driver or bson module.\n\nAffected versions of this package are vulnerable to Insufficient Input Validation. The `ObjectID()` function allows an attacker to generate a malformed `objectid` by inserting an additional property to the user-input, because bson-objectid will return early if it detects `_bsontype==ObjectID` in the user-input object. As a result, objects in arbitrary forms can bypass formatting if they have a valid bsontype.\r\n\r\n### PoC by Feng Xiao (xiaofen9)\r\n```\r\nvar ObjectID = require(\"bson-objectid\");\r\n\r\nvar json = {\r\n    \"mal_formkey\": {\r\n        \"payload\": \"xxxx\"\r\n    },\r\n    \"_bsontype\" : \"ObjectID\"\r\n};\r\n\r\nconsole.log(ObjectID(json));\r\nconsole.log(ObjectID.isValid(ObjectID(json)));\r\n```\n## Remediation\nThere is no fixed version for `bson-objectid`.\n## References\n- [GitHub Issue](https://github.com/williamkapke/bson-objectid/issues/30)\n",
+      "epssDetails": {
+        "percentile": "0.45446",
+        "probability": "0.00227",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2019-19729"
+        ],
+        "CWE": [
+          "CWE-284"
+        ]
+      },
+      "packageName": "bson-objectid",
+      "proprietary": false,
+      "creationTime": "2020-06-01T09:49:20.324368Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2019-11-12T09:49:49Z",
+      "exploitDetails": {
+        "sources": [
+          "Snyk"
+        ],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Proof of Concept",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Proof of Concept",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "npm",
+      "publicationTime": "2020-06-01T15:51:52Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2024-03-11T09:48:05.369499Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "low",
+      "from": [
+        "local-music-network@1.0.0",
+        "@payloadcms/ui@3.69.0",
+        "bson-objectid@2.0.4"
+      ],
+      "upgradePath": [],
+      "isUpgradable": false,
+      "isPatchable": false,
+      "name": "bson-objectid",
+      "version": "2.0.4"
+    },
+    {
+      "id": "SNYK-JS-BSONOBJECTID-570765",
+      "title": "Insufficient Input Validation",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+      "credit": [
+        "Feng Xiao (xiaofen9)"
+      ],
+      "semver": {
+        "vulnerable": [
+          "*"
+        ]
+      },
+      "exploit": "Proof of Concept",
+      "fixedIn": [],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "js",
+      "severity": "low",
+      "cvssScore": 3.7,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "bson-objectid",
+      "references": [
+        {
+          "url": "https://github.com/williamkapke/bson-objectid/issues/30",
+          "title": "GitHub Issue"
+        }
+      ],
+      "cvssDetails": [
+        {
+          "assigner": "NVD",
+          "severity": "high",
+          "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "cvssV3BaseScore": 7.5,
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+          "assigner": "Snyk",
+          "severity": "low",
+          "baseScore": 3.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-06T13:55:29.777450Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "assigner": "NVD",
+          "severity": "high",
+          "baseScore": 7.5,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "description": "## Overview\n[bson-objectid](None) is a library that allows you to construct ObjectIDs without the mongodb driver or bson module.\n\nAffected versions of this package are vulnerable to Insufficient Input Validation. The `ObjectID()` function allows an attacker to generate a malformed `objectid` by inserting an additional property to the user-input, because bson-objectid will return early if it detects `_bsontype==ObjectID` in the user-input object. As a result, objects in arbitrary forms can bypass formatting if they have a valid bsontype.\r\n\r\n### PoC by Feng Xiao (xiaofen9)\r\n```\r\nvar ObjectID = require(\"bson-objectid\");\r\n\r\nvar json = {\r\n    \"mal_formkey\": {\r\n        \"payload\": \"xxxx\"\r\n    },\r\n    \"_bsontype\" : \"ObjectID\"\r\n};\r\n\r\nconsole.log(ObjectID(json));\r\nconsole.log(ObjectID.isValid(ObjectID(json)));\r\n```\n## Remediation\nThere is no fixed version for `bson-objectid`.\n## References\n- [GitHub Issue](https://github.com/williamkapke/bson-objectid/issues/30)\n",
+      "epssDetails": {
+        "percentile": "0.45446",
+        "probability": "0.00227",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2019-19729"
+        ],
+        "CWE": [
+          "CWE-284"
+        ]
+      },
+      "packageName": "bson-objectid",
+      "proprietary": false,
+      "creationTime": "2020-06-01T09:49:20.324368Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2019-11-12T09:49:49Z",
+      "exploitDetails": {
+        "sources": [
+          "Snyk"
+        ],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Proof of Concept",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Proof of Concept",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "npm",
+      "publicationTime": "2020-06-01T15:51:52Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2024-03-11T09:48:05.369499Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "low",
+      "from": [
+        "local-music-network@1.0.0",
+        "@payloadcms/richtext-lexical@3.69.0",
+        "bson-objectid@2.0.4"
+      ],
+      "upgradePath": [],
+      "isUpgradable": false,
+      "isPatchable": false,
+      "name": "bson-objectid",
+      "version": "2.0.4"
+    },
+    {
+      "id": "SNYK-JS-BSONOBJECTID-570765",
+      "title": "Insufficient Input Validation",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+      "credit": [
+        "Feng Xiao (xiaofen9)"
+      ],
+      "semver": {
+        "vulnerable": [
+          "*"
+        ]
+      },
+      "exploit": "Proof of Concept",
+      "fixedIn": [],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "js",
+      "severity": "low",
+      "cvssScore": 3.7,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "bson-objectid",
+      "references": [
+        {
+          "url": "https://github.com/williamkapke/bson-objectid/issues/30",
+          "title": "GitHub Issue"
+        }
+      ],
+      "cvssDetails": [
+        {
+          "assigner": "NVD",
+          "severity": "high",
+          "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "cvssV3BaseScore": 7.5,
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+          "assigner": "Snyk",
+          "severity": "low",
+          "baseScore": 3.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-06T13:55:29.777450Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "assigner": "NVD",
+          "severity": "high",
+          "baseScore": 7.5,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "description": "## Overview\n[bson-objectid](None) is a library that allows you to construct ObjectIDs without the mongodb driver or bson module.\n\nAffected versions of this package are vulnerable to Insufficient Input Validation. The `ObjectID()` function allows an attacker to generate a malformed `objectid` by inserting an additional property to the user-input, because bson-objectid will return early if it detects `_bsontype==ObjectID` in the user-input object. As a result, objects in arbitrary forms can bypass formatting if they have a valid bsontype.\r\n\r\n### PoC by Feng Xiao (xiaofen9)\r\n```\r\nvar ObjectID = require(\"bson-objectid\");\r\n\r\nvar json = {\r\n    \"mal_formkey\": {\r\n        \"payload\": \"xxxx\"\r\n    },\r\n    \"_bsontype\" : \"ObjectID\"\r\n};\r\n\r\nconsole.log(ObjectID(json));\r\nconsole.log(ObjectID.isValid(ObjectID(json)));\r\n```\n## Remediation\nThere is no fixed version for `bson-objectid`.\n## References\n- [GitHub Issue](https://github.com/williamkapke/bson-objectid/issues/30)\n",
+      "epssDetails": {
+        "percentile": "0.45446",
+        "probability": "0.00227",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2019-19729"
+        ],
+        "CWE": [
+          "CWE-284"
+        ]
+      },
+      "packageName": "bson-objectid",
+      "proprietary": false,
+      "creationTime": "2020-06-01T09:49:20.324368Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2019-11-12T09:49:49Z",
+      "exploitDetails": {
+        "sources": [
+          "Snyk"
+        ],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Proof of Concept",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Proof of Concept",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "npm",
+      "publicationTime": "2020-06-01T15:51:52Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2024-03-11T09:48:05.369499Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "low",
+      "from": [
+        "local-music-network@1.0.0",
+        "payload@3.69.0",
+        "bson-objectid@2.0.4"
+      ],
+      "upgradePath": [],
+      "isUpgradable": false,
+      "isPatchable": false,
+      "name": "bson-objectid",
+      "version": "2.0.4"
+    },
+    {
+      "id": "SNYK-JS-BSONOBJECTID-570765",
+      "title": "Insufficient Input Validation",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+      "credit": [
+        "Feng Xiao (xiaofen9)"
+      ],
+      "semver": {
+        "vulnerable": [
+          "*"
+        ]
+      },
+      "exploit": "Proof of Concept",
+      "fixedIn": [],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "js",
+      "severity": "low",
+      "cvssScore": 3.7,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "bson-objectid",
+      "references": [
+        {
+          "url": "https://github.com/williamkapke/bson-objectid/issues/30",
+          "title": "GitHub Issue"
+        }
+      ],
+      "cvssDetails": [
+        {
+          "assigner": "NVD",
+          "severity": "high",
+          "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "cvssV3BaseScore": 7.5,
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+          "assigner": "Snyk",
+          "severity": "low",
+          "baseScore": 3.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-06T13:55:29.777450Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "assigner": "NVD",
+          "severity": "high",
+          "baseScore": 7.5,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "description": "## Overview\n[bson-objectid](None) is a library that allows you to construct ObjectIDs without the mongodb driver or bson module.\n\nAffected versions of this package are vulnerable to Insufficient Input Validation. The `ObjectID()` function allows an attacker to generate a malformed `objectid` by inserting an additional property to the user-input, because bson-objectid will return early if it detects `_bsontype==ObjectID` in the user-input object. As a result, objects in arbitrary forms can bypass formatting if they have a valid bsontype.\r\n\r\n### PoC by Feng Xiao (xiaofen9)\r\n```\r\nvar ObjectID = require(\"bson-objectid\");\r\n\r\nvar json = {\r\n    \"mal_formkey\": {\r\n        \"payload\": \"xxxx\"\r\n    },\r\n    \"_bsontype\" : \"ObjectID\"\r\n};\r\n\r\nconsole.log(ObjectID(json));\r\nconsole.log(ObjectID.isValid(ObjectID(json)));\r\n```\n## Remediation\nThere is no fixed version for `bson-objectid`.\n## References\n- [GitHub Issue](https://github.com/williamkapke/bson-objectid/issues/30)\n",
+      "epssDetails": {
+        "percentile": "0.45446",
+        "probability": "0.00227",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2019-19729"
+        ],
+        "CWE": [
+          "CWE-284"
+        ]
+      },
+      "packageName": "bson-objectid",
+      "proprietary": false,
+      "creationTime": "2020-06-01T09:49:20.324368Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2019-11-12T09:49:49Z",
+      "exploitDetails": {
+        "sources": [
+          "Snyk"
+        ],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Proof of Concept",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Proof of Concept",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "npm",
+      "publicationTime": "2020-06-01T15:51:52Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2024-03-11T09:48:05.369499Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "low",
+      "from": [
+        "local-music-network@1.0.0",
+        "@payloadcms/next@3.69.0",
+        "@payloadcms/ui@3.69.0",
+        "bson-objectid@2.0.4"
+      ],
+      "upgradePath": [],
+      "isUpgradable": false,
+      "isPatchable": false,
+      "name": "bson-objectid",
+      "version": "2.0.4"
+    },
+    {
+      "id": "SNYK-JS-BSONOBJECTID-570765",
+      "title": "Insufficient Input Validation",
+      "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+      "credit": [
+        "Feng Xiao (xiaofen9)"
+      ],
+      "semver": {
+        "vulnerable": [
+          "*"
+        ]
+      },
+      "exploit": "Proof of Concept",
+      "fixedIn": [],
+      "patches": [],
+      "insights": {
+        "triageAdvice": null
+      },
+      "language": "js",
+      "severity": "low",
+      "cvssScore": 3.7,
+      "functions": [],
+      "malicious": false,
+      "isDisputed": false,
+      "moduleName": "bson-objectid",
+      "references": [
+        {
+          "url": "https://github.com/williamkapke/bson-objectid/issues/30",
+          "title": "GitHub Issue"
+        }
+      ],
+      "cvssDetails": [
+        {
+          "assigner": "NVD",
+          "severity": "high",
+          "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "cvssV3BaseScore": 7.5,
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "cvssSources": [
+        {
+          "type": "primary",
+          "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+          "assigner": "Snyk",
+          "severity": "low",
+          "baseScore": 3.7,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-06T13:55:29.777450Z"
+        },
+        {
+          "type": "secondary",
+          "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "assigner": "NVD",
+          "severity": "high",
+          "baseScore": 7.5,
+          "cvssVersion": "3.1",
+          "modificationTime": "2024-03-11T09:48:05.369499Z"
+        }
+      ],
+      "description": "## Overview\n[bson-objectid](None) is a library that allows you to construct ObjectIDs without the mongodb driver or bson module.\n\nAffected versions of this package are vulnerable to Insufficient Input Validation. The `ObjectID()` function allows an attacker to generate a malformed `objectid` by inserting an additional property to the user-input, because bson-objectid will return early if it detects `_bsontype==ObjectID` in the user-input object. As a result, objects in arbitrary forms can bypass formatting if they have a valid bsontype.\r\n\r\n### PoC by Feng Xiao (xiaofen9)\r\n```\r\nvar ObjectID = require(\"bson-objectid\");\r\n\r\nvar json = {\r\n    \"mal_formkey\": {\r\n        \"payload\": \"xxxx\"\r\n    },\r\n    \"_bsontype\" : \"ObjectID\"\r\n};\r\n\r\nconsole.log(ObjectID(json));\r\nconsole.log(ObjectID.isValid(ObjectID(json)));\r\n```\n## Remediation\nThere is no fixed version for `bson-objectid`.\n## References\n- [GitHub Issue](https://github.com/williamkapke/bson-objectid/issues/30)\n",
+      "epssDetails": {
+        "percentile": "0.45446",
+        "probability": "0.00227",
+        "modelVersion": "v2025.03.14"
+      },
+      "identifiers": {
+        "CVE": [
+          "CVE-2019-19729"
+        ],
+        "CWE": [
+          "CWE-284"
+        ]
+      },
+      "packageName": "bson-objectid",
+      "proprietary": false,
+      "creationTime": "2020-06-01T09:49:20.324368Z",
+      "functions_new": [],
+      "alternativeIds": [],
+      "disclosureTime": "2019-11-12T09:49:49Z",
+      "exploitDetails": {
+        "sources": [
+          "Snyk"
+        ],
+        "maturityLevels": [
+          {
+            "type": "secondary",
+            "level": "Proof of Concept",
+            "format": "CVSSv3"
+          },
+          {
+            "type": "primary",
+            "level": "Proof of Concept",
+            "format": "CVSSv4"
+          }
+        ]
+      },
+      "packageManager": "npm",
+      "publicationTime": "2020-06-01T15:51:52Z",
+      "severityBasedOn": "CVSS",
+      "modificationTime": "2024-03-11T09:48:05.369499Z",
+      "socialTrendAlert": false,
+      "severityWithCritical": "low",
+      "from": [
+        "local-music-network@1.0.0",
+        "@payloadcms/richtext-lexical@3.69.0",
+        "@payloadcms/ui@3.69.0",
+        "bson-objectid@2.0.4"
+      ],
+      "upgradePath": [],
+      "isUpgradable": false,
+      "isPatchable": false,
+      "name": "bson-objectid",
+      "version": "2.0.4"
+    }
+  ],
+  "ok": false,
+  "dependencyCount": 783,
+  "org": "hutchisonsorbo",
+  "policy": "# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.\nversion: v1.25.1\nignore: {}\npatch: {}\n",
+  "isPrivate": true,
+  "licensesPolicy": {
+    "severities": {},
+    "orgLicenseRules": {
+      "AGPL-1.0": {
+        "licenseType": "AGPL-1.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "AGPL-3.0": {
+        "licenseType": "AGPL-3.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "Artistic-1.0": {
+        "licenseType": "Artistic-1.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "Artistic-2.0": {
+        "licenseType": "Artistic-2.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "CDDL-1.0": {
+        "licenseType": "CDDL-1.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "CPOL-1.02": {
+        "licenseType": "CPOL-1.02",
+        "severity": "high",
+        "instructions": ""
+      },
+      "EPL-1.0": {
+        "licenseType": "EPL-1.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "GPL-2.0": {
+        "licenseType": "GPL-2.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "GPL-3.0": {
+        "licenseType": "GPL-3.0",
+        "severity": "high",
+        "instructions": ""
+      },
+      "LGPL-2.0": {
+        "licenseType": "LGPL-2.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "LGPL-2.1": {
+        "licenseType": "LGPL-2.1",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "LGPL-3.0": {
+        "licenseType": "LGPL-3.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "MPL-1.1": {
+        "licenseType": "MPL-1.1",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "MPL-2.0": {
+        "licenseType": "MPL-2.0",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "MS-RL": {
+        "licenseType": "MS-RL",
+        "severity": "medium",
+        "instructions": ""
+      },
+      "SimPL-2.0": {
+        "licenseType": "SimPL-2.0",
+        "severity": "high",
+        "instructions": ""
+      }
+    }
+  },
+  "packageManager": "npm",
+  "ignoreSettings": {
+    "adminOnly": false,
+    "reasonRequired": false,
+    "disregardFilesystemIgnores": false
+  },
+  "summary": "5 vulnerable dependency paths",
+  "remediation": {
+    "unresolved": [
+      {
+        "id": "SNYK-JS-BSONOBJECTID-570765",
+        "title": "Insufficient Input Validation",
+        "CVSSv3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+        "credit": [
+          "Feng Xiao (xiaofen9)"
+        ],
+        "semver": {
+          "vulnerable": [
+            "*"
+          ]
+        },
+        "exploit": "Proof of Concept",
+        "fixedIn": [],
+        "patches": [],
+        "insights": {
+          "triageAdvice": null
+        },
+        "language": "js",
+        "severity": "low",
+        "cvssScore": 3.7,
+        "functions": [],
+        "malicious": false,
+        "isDisputed": false,
+        "moduleName": "bson-objectid",
+        "references": [
+          {
+            "url": "https://github.com/williamkapke/bson-objectid/issues/30",
+            "title": "GitHub Issue"
+          }
+        ],
+        "cvssDetails": [
+          {
+            "assigner": "NVD",
+            "severity": "high",
+            "cvssV3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+            "cvssV3BaseScore": 7.5,
+            "modificationTime": "2024-03-11T09:48:05.369499Z"
+          }
+        ],
+        "cvssSources": [
+          {
+            "type": "primary",
+            "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N/E:P/RL:U/RC:R",
+            "assigner": "Snyk",
+            "severity": "low",
+            "baseScore": 3.7,
+            "cvssVersion": "3.1",
+            "modificationTime": "2024-03-06T13:55:29.777450Z"
+          },
+          {
+            "type": "secondary",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+            "assigner": "NVD",
+            "severity": "high",
+            "baseScore": 7.5,
+            "cvssVersion": "3.1",
+            "modificationTime": "2024-03-11T09:48:05.369499Z"
+          }
+        ],
+        "description": "## Overview\n[bson-objectid](None) is a library that allows you to construct ObjectIDs without the mongodb driver or bson module.\n\nAffected versions of this package are vulnerable to Insufficient Input Validation. The `ObjectID()` function allows an attacker to generate a malformed `objectid` by inserting an additional property to the user-input, because bson-objectid will return early if it detects `_bsontype==ObjectID` in the user-input object. As a result, objects in arbitrary forms can bypass formatting if they have a valid bsontype.\r\n\r\n### PoC by Feng Xiao (xiaofen9)\r\n```\r\nvar ObjectID = require(\"bson-objectid\");\r\n\r\nvar json = {\r\n    \"mal_formkey\": {\r\n        \"payload\": \"xxxx\"\r\n    },\r\n    \"_bsontype\" : \"ObjectID\"\r\n};\r\n\r\nconsole.log(ObjectID(json));\r\nconsole.log(ObjectID.isValid(ObjectID(json)));\r\n```\n## Remediation\nThere is no fixed version for `bson-objectid`.\n## References\n- [GitHub Issue](https://github.com/williamkapke/bson-objectid/issues/30)\n",
+        "epssDetails": {
+          "percentile": "0.45446",
+          "probability": "0.00227",
+          "modelVersion": "v2025.03.14"
+        },
+        "identifiers": {
+          "CVE": [
+            "CVE-2019-19729"
+          ],
+          "CWE": [
+            "CWE-284"
+          ]
+        },
+        "packageName": "bson-objectid",
+        "proprietary": false,
+        "creationTime": "2020-06-01T09:49:20.324368Z",
+        "functions_new": [],
+        "alternativeIds": [],
+        "disclosureTime": "2019-11-12T09:49:49Z",
+        "exploitDetails": {
+          "sources": [
+            "Snyk"
+          ],
+          "maturityLevels": [
+            {
+              "type": "secondary",
+              "level": "Proof of Concept",
+              "format": "CVSSv3"
+            },
+            {
+              "type": "primary",
+              "level": "Proof of Concept",
+              "format": "CVSSv4"
+            }
+          ]
+        },
+        "packageManager": "npm",
+        "publicationTime": "2020-06-01T15:51:52Z",
+        "severityBasedOn": "CVSS",
+        "modificationTime": "2024-03-11T09:48:05.369499Z",
+        "socialTrendAlert": false,
+        "packagePopularityRank": 97,
+        "from": [
+          "local-music-network@1.0.0",
+          "@payloadcms/richtext-lexical@3.69.0",
+          "@payloadcms/ui@3.69.0",
+          "bson-objectid@2.0.4"
+        ],
+        "upgradePath": [],
+        "isUpgradable": false,
+        "isPatchable": false,
+        "isPinnable": false,
+        "isRuntime": false,
+        "name": "bson-objectid",
+        "version": "2.0.4",
+        "severityWithCritical": "low"
+      }
+    ],
+    "upgrade": {},
+    "patch": {},
+    "ignore": {},
+    "pin": {}
+  },
+  "filesystemPolicy": false,
+  "filtered": {
+    "ignore": [],
+    "patch": []
+  },
+  "uniqueCount": 1,
+  "projectName": "local-music-network",
+  "foundProjectCount": 2,
+  "displayTargetFile": "package-lock.json",
+  "hasUnknownVersions": false,
+  "path": "/home/ryan/Documents/Projects/smalltalk.community"
+}
