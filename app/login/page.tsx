@@ -87,6 +87,24 @@ function LoginForm() {
         }
     }, [searchParams, toast]);
 
+    const handleGoogleSignIn = async () => {
+        const authClient = createClient();
+        const { error } = await authClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${globalThis.location.origin}/api/auth/callback`,
+            }
+        });
+        if (error) {
+            console.error("Google Sign In Error:", error);
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -189,23 +207,7 @@ function LoginForm() {
                             variant="outline"
                             type="button"
                             className="w-full flex gap-2"
-                            onClick={async () => {
-                                const authClient = createClient();
-                                const { error } = await authClient.auth.signInWithOAuth({
-                                    provider: 'google',
-                                    options: {
-                                        redirectTo: `${globalThis.location.origin}/api/auth/callback`,
-                                    }
-                                });
-                                if (error) {
-                                    console.error("Google Sign In Error:", error);
-                                    toast({
-                                        title: "Error",
-                                        description: error.message,
-                                        variant: "destructive",
-                                    });
-                                }
-                            }}
+                            onClick={handleGoogleSignIn}
                             disabled={isLoading}
                         >
                             <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">

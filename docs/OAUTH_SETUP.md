@@ -17,11 +17,11 @@ To enable "Sign in with Google", you must configure the Google OAuth client in t
 2. Select your **OAuth 2.0 Client ID** (or create one).
 3. Under **Authorized redirect URIs**, add the following URL:
 
-    ```
-    https://jgtgvxzxgkudctocoxsq.supabase.co/auth/v1/callback
+    ```text
+    https://YOUR_PROJECT_ID.supabase.co/auth/v1/callback
     ```
 
-    *(Note: Replace `jgtgvxzxgkudctocoxsq` with your actual Supabase project ID if it changes)*.
+    *(Note: Replace `YOUR_PROJECT_ID` with your actual Supabase project ID found in your Supabase dashboard URL)*.
 4. Save changes.
 
 ### 2. Supabase Dashboard
