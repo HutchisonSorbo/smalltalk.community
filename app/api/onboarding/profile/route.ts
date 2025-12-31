@@ -100,11 +100,10 @@ export async function POST(req: Request) {
                 // Create Org
                 const [org] = await tx.insert(organisations).values({
                     name: userRec.organisationName || "New Organization",
+                    slug: (userRec.organisationName || "new-organization").toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Math.random().toString(36).substring(7),
                     description: profileData.bio, // Mapping bio to description
-                    location: profileData.location,
                     logoUrl: profileData.profileImageUrl,
-                    type: accType || "Business",
-                    // serviceArea mapping?
+                    // location and type are not in organisations schema
                 }).returning();
 
                 // Link User to Org

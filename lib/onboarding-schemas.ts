@@ -5,7 +5,6 @@ import { users, userOnboardingResponses, userPrivacySettings, userNotificationPr
 // --- Registration Schema ---
 // Used for step 1 account creation
 export const registerSchema = createInsertSchema(users).pick({
-    email: true,
     firstName: true,
     lastName: true,
     dateOfBirth: true, // We will validate age in the handler but basic schema is date
@@ -14,6 +13,7 @@ export const registerSchema = createInsertSchema(users).pick({
     accountTypeSpecification: true,
     organisationName: true,
 }).extend({
+    email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
     // Additional validations
