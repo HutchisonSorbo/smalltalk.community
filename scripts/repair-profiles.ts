@@ -29,36 +29,38 @@ async function repairProfiles() {
 
         console.log(`Found ${missingProfiles.length} users with missing profiles. Fixing...`);
 
-        for (const user of missingProfiles) {
-            const meta = user.raw_user_meta_data || {};
+        await sql.begin(async sql => {
+            for (const user of missingProfiles) {
+                const meta = user.raw_user_meta_data || {};
 
-            await sql`
-                INSERT INTO public.users (
-                    id,
-                    email,
-                    first_name,
-                    last_name,
-                    user_type,
-                    account_type,
-                    organisation_name,
-                    date_of_birth,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    ${user.id},
-                    ${user.email},
-                    ${meta.first_name || 'Unknown'},
-                    ${meta.last_name || 'User'},
-                    ${meta.user_type || 'musician'},
-                    ${meta.account_type || 'Individual'},
-                    ${meta.organisation_name || null},
-                    ${meta.date_of_birth ? new Date(meta.date_of_birth) : null},
-                    ${user.created_at},
-                    ${user.updated_at}
-                )
-            `;
-            console.log(`✅ Created profile for ${user.email} (${user.id})`);
-        }
+                await sql`
+                    INSERT INTO public.users (
+                        id,
+                        email,
+                        first_name,
+                        last_name,
+                        user_type,
+                        account_type,
+                        organisation_name,
+                        date_of_birth,
+                        created_at,
+                        updated_at
+                    ) VALUES (
+                        ${user.id},
+                        ${user.email},
+                        ${meta.first_name || 'Unknown'},
+                        ${meta.last_name || 'User'},
+                        ${meta.user_type || 'musician'},
+                        ${meta.account_type || 'Individual'},
+                        ${meta.organisation_name || null},
+                        ${meta.date_of_birth ? new Date(meta.date_of_birth) : null},
+                        ${user.created_at},
+                        ${user.updated_at}
+                    )
+                `;
+                console.log(`✅ Created profile for ${user.email} (${user.id})`);
+            }
+        });
 
         console.log("✨ Repair complete.");
 
