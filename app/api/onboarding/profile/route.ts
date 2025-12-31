@@ -29,6 +29,19 @@ function generateSlug(name: string): string {
     return `${base}-${suffix}`;
 }
 
+const ONBOARDING_STEPS = {
+    REGISTRATION: 0,
+    PROFILE_SETUP: 1,
+    INTENT: 2,
+    APPS: 3,
+    PRIVACY: 4,
+};
+
+const PROFILE_COMPLETION_STAGES = {
+    ACCOUNT_CREATED: 10,
+    PROFILE_SETUP_DONE: 30,
+};
+
 export async function POST(req: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -87,7 +100,7 @@ export async function POST(req: Request) {
                     // Create Professional Profile
                     await tx.insert(professionalProfiles).values({
                         userId,
-                        role: "Other", // Default, user should refine this? or we map profileData.headline?
+                        role: (profileData.headline?.trim().substring(0, 50)) || "Professional",
                         bio: profileData.bio || "",
                         location: profileData.location || "",
                         profileImageUrl: profileData.profileImageUrl,
@@ -97,7 +110,7 @@ export async function POST(req: Request) {
                     // Musician Profile (Default)
                     await tx.insert(musicianProfiles).values({
                         userId,
-                        name: `${userRec.firstName} ${userRec.lastName}`,
+                        name: [userRec.firstName, userRec.lastName].filter(Boolean).join(" ").trim() || "Unnamed Musician",
                         bio: profileData.bio,
                         location: profileData.location,
                         profileImageUrl: profileData.profileImageUrl,
@@ -124,13 +137,10 @@ export async function POST(req: Request) {
             }
 
             // 5. Update User Onboarding Step
-            const targetStep = 2; // Move to Intent (Step 3? 0=Reg, 1=Profile, 2=Intent...)
-            // If current is 0 (Reg done), set to 1 (Profile done)?
-            // Plan: Step 0: Reg. Step 1: Profile. Step 2: Intent. Step 3: Apps. Step 4: Privacy.
             // If they just finished Profile, they are now at Step 2 (Intent).
             await tx.update(users).set({
-                onboardingStep: 2,
-                profileCompletionPercentage: 30
+                onboardingStep: ONBOARDING_STEPS.INTENT,
+                profileCompletionPercentage: PROFILE_COMPLETION_STAGES.PROFILE_SETUP_DONE
             }).where(eq(users.id, userId));
         });
 
