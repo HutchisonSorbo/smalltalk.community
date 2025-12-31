@@ -8,6 +8,7 @@ const gigFiltersSchema = z.object({
     location: z.string().optional(),
     date: z.string().optional(), // 'upcoming', 'past', 'today'
     genre: z.string().optional(),
+    bandId: z.string().optional(),
 });
 
 export async function GET(request: Request) {
