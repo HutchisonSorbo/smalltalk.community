@@ -8,10 +8,9 @@ import { generateRecommendations } from "../../../../lib/recommendation-engine";
 
 export const dynamic = 'force-dynamic';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
 export async function POST(req: Request) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     try {
         // 1. Authenticate
         const authHeader = req.headers.get('Authorization');

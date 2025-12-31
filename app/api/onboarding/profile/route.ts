@@ -20,12 +20,9 @@ import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
 
 export const dynamic = 'force-dynamic'; // Ensure not cached
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // using service key to verify any token strictly? No, to verify token we usually use Anon key?
-// Actually, getUser() works with Anon key if token is passed.
-const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
 export async function POST(req: Request) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     try {
         // 1. Authenticate
         // We can get the session from headers if we forward them, or just use the token

@@ -6,10 +6,9 @@ import { eq, desc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
 export async function GET(req: Request) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     try {
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

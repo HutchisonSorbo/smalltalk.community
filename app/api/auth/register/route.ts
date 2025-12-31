@@ -11,12 +11,13 @@ import { eq } from "drizzle-orm";
 // If RLS allows "insert own", we need to be authenticated?
 // But "register" happens BEFORE authentication.
 // So we probably need to use SERVICE_ROLE key here to insert into public.users on behalf of the new user.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: Request) {
     try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
         const body = await req.json();
 
         // 1. Validate Input
