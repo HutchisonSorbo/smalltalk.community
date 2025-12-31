@@ -75,6 +75,7 @@ export interface GigFilters {
   location?: string;
   date?: string; // 'upcoming', 'past', 'today'
   genre?: string;
+  bandId?: string;
   searchQuery?: string;
   limit?: number;
   offset?: number;
@@ -795,6 +796,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters.genre) {
       conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
+    }
+    if (filters.bandId) {
+      conditions.push(eq(gigs.bandId, filters.bandId));
     }
     if (filters.date === 'upcoming') {
       conditions.push(gte(gigs.date, new Date()));
