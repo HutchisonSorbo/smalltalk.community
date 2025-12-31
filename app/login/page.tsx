@@ -136,6 +136,7 @@ function LoginForm() {
                     title: "Check your email",
                     description: "We sent you a confirmation link.",
                 });
+                router.push("/");
             } else {
                 const { error } = await authClient.auth.signInWithPassword({
                     email,

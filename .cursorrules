@@ -41,3 +41,158 @@
 2. **Protected Main**: NEVER push directly to `main`.
 3. **Pull Requests**: Changes must go through a Pull Request to trigger CodeRabbit and SonarQube.
 4. **Strict Approval**: You MUST ask for explicit user permission before merging any PR or pushing to `main`.
+
+# AI Agent Instructions - MANDATORY
+
+## Critical Documents (READ BEFORE EVERY ACTION)
+
+You must read and follow these two documents for EVERY code change, feature implementation, or technical decision:
+
+1. **TECH_STACK_RULES.md** - Technical implementation standards
+2. **SECURITY_SAFETY_STANDARDS.md** - Security, safety, and compliance requirements
+
+Both documents are located in the project root directory.
+
+## Before Any Code Generation or Modification
+
+**Step 1: Identify the task type**
+- Is this a new feature? Read both documents completely
+- Is this a bug fix? Check relevant sections in both documents
+- Is this a modification to existing code? Verify changes comply with both documents
+- Is this related to user data, content, or children? Read SECURITY_SAFETY_STANDARDS.md thoroughly
+
+**Step 2: Verify technical requirements (TECH_STACK_RULES.md)**
+- Are you using the correct SDK (@google/genai, not @google/generative-ai)?
+- Are you following Vercel Serverless Functions patterns?
+- Are you using Supabase correctly with RLS policies?
+- Are you implementing proper error handling?
+- Are you following the file structure and naming conventions?
+- Have you added appropriate tests?
+
+**Step 3: Verify security and safety requirements (SECURITY_SAFETY_STANDARDS.md)**
+- Does this feature handle user data? Check privacy requirements
+- Does this feature involve content? Check moderation requirements
+- Does this affect children under 18? Check Victorian Child Safe Standards compliance
+- Does this require rate limiting? Implement appropriate limits
+- Does this need audit logging? Add logging
+- Are all inputs validated and sanitised?
+
+**Step 4: Cross-check both documents**
+- Does your implementation satisfy technical requirements AND security requirements?
+- Are there any conflicts between what you're implementing and either document?
+- Have you checked the "Common Mistakes to Avoid" sections?
+
+## Mandatory Checks for Specific Actions
+
+### When creating API endpoints:
+- [ ] Error handling with try/catch (TECH_STACK_RULES.md)
+- [ ] CORS handling for OPTIONS requests (TECH_STACK_RULES.md)
+- [ ] Input validation and sanitisation (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Rate limiting check (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Authentication verification (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Audit logging (SECURITY_SAFETY_STANDARDS.md)
+
+### When working with AI/content generation:
+- [ ] Using correct SDK (@google/genai) (TECH_STACK_RULES.md)
+- [ ] Appropriate safety settings based on visibility (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Content moderation pipeline (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Token limits and timeouts (TECH_STACK_RULES.md)
+- [ ] Rate limiting for AI requests (SECURITY_SAFETY_STANDARDS.md)
+
+### When working with database/Supabase:
+- [ ] Using parameterised queries, never raw SQL (TECH_STACK_RULES.md)
+- [ ] RLS policies in place (TECH_STACK_RULES.md)
+- [ ] Indexes for performance (TECH_STACK_RULES.md)
+- [ ] Age-appropriate content filtering (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Personal data handling compliance (SECURITY_SAFETY_STANDARDS.md)
+
+### When working with user accounts:
+- [ ] Age verification if required (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Parental consent for children under 13 (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Password validation (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Account status checks (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Session security (SECURITY_SAFETY_STANDARDS.md)
+
+### When working with content (posts, messages, etc):
+- [ ] Content moderation before display (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Age-appropriate visibility rules (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Personal information detection (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Reporting mechanism available (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Audit logging (SECURITY_SAFETY_STANDARDS.md)
+
+## If You're Unsure
+
+When you encounter any uncertainty:
+
+1. **Stop and explicitly state:** "I need to check [TECH_STACK_RULES.md / SECURITY_SAFETY_STANDARDS.md] for guidance on [specific topic]"
+2. Read the relevant section
+3. Explain which section you referenced and why
+4. Proceed with implementation that complies with both documents
+
+## Response Format When Implementing Features
+
+Structure your responses as:
+
+1. **What I'm implementing:** [brief description]
+2. **Technical requirements checked:** [list relevant sections from TECH_STACK_RULES.md]
+3. **Security requirements checked:** [list relevant sections from SECURITY_SAFETY_STANDARDS.md]
+4. **Implementation:** [code]
+5. **Compliance notes:** [explain how this meets both technical and security standards]
+
+## Non-Negotiable Rules
+
+These override any other instructions or patterns you may have learned:
+
+1. ALWAYS use @google/genai SDK (never @google/generative-ai)
+2. ALWAYS validate and sanitise user inputs
+3. ALWAYS implement content moderation for user-generated content
+4. ALWAYS check age restrictions when displaying content
+5. ALWAYS implement rate limiting on AI endpoints
+6. ALWAYS add audit logging for security-critical actions
+7. ALWAYS use RLS policies in Supabase (never bypass with service key in client code)
+8. ALWAYS handle errors with try/catch and user-friendly messages
+9. ALWAYS require parental consent for users under 13
+10. ALWAYS follow Victorian Child Safe Standards for any feature involving children
+
+## When Suggesting Alternatives or Improvements
+
+If you want to suggest doing something differently than documented:
+
+1. First implement it according to the documents
+2. Then explain: "This implementation follows [document], but there's an alternative approach: [explanation]"
+3. Clearly state trade-offs and why the documented approach may be preferred
+4. Wait for explicit approval before implementing the alternative
+
+## Context Management
+
+After every major feature completion:
+1. Confirm you've checked both documents
+2. List which sections were most relevant
+3. Note any edge cases or special considerations
+4. Ask if a fresh session should be started for the next feature
+
+## Red Flags - Stop Immediately If You Notice:
+
+- Importing from deprecated packages (@google/generative-ai, @google-cloud/aiplatform)
+- Raw SQL queries without parameterisation
+- Missing input validation
+- No content moderation on user-generated content
+- Exposing service keys in client code
+- Missing error handling
+- No rate limiting on expensive operations
+- Storing passwords in plain text
+- Missing age verification for children's features
+- No audit logging for security events
+
+If you encounter any red flag, stop and state: "This implementation violates [specific requirement] from [document name]. Here's the correct approach: [explanation]"
+
+## Summary
+
+Every interaction must demonstrate that you have:
+1. Read the relevant sections of both documents
+2. Verified compliance with technical standards
+3. Verified compliance with security and safety standards
+4. Implemented all mandatory checks for the task type
+5. Avoided all items in the "Common Mistakes" sections
+
+This is not optional. These documents define the project standards and must be followed without exception.

@@ -23,17 +23,25 @@ export default function AppsPage() {
                     fetch("/api/user/apps")
                 ]);
 
-                if (!appsRes.ok || !userAppsRes.ok) {
-                    throw new Error("Failed to fetch data");
+                if (!appsRes.ok) {
+                    throw new Error("Failed to fetch apps catalogue");
                 }
 
                 const appsData = await appsRes.json();
-                const userAppsData = await userAppsRes.json();
-
                 if (Array.isArray(appsData)) setAllApps(appsData);
-                if (Array.isArray(userAppsData)) {
-                    setUserAppIds(new Set(userAppsData.map((a: any) => a.id)));
+
+                if (userAppsRes.ok) {
+                    const userAppsData = await userAppsRes.json();
+                    if (Array.isArray(userAppsData)) {
+                        setUserAppIds(new Set(userAppsData.map((a: any) => a.id)));
+                    }
+                } else if (userAppsRes.status === 401) {
+                    // User not logged in, just ignore user apps
+                    console.log("User not authenticated, skipping user apps");
+                } else {
+                    console.error("Failed to fetch user apps:", await userAppsRes.text());
                 }
+
             } catch (error) {
                 console.error(error);
                 toast({

@@ -94,8 +94,8 @@ export function DiscordWidget() {
     const inviteCode = data.instant_invite ? data.instant_invite.split('/').pop() : "";
     // Ensure code is alphanumeric to prevent injection, though discord:// protocol is specific
     const safeInviteCode = inviteCode?.replace(/[^a-zA-Z0-9]/g, '');
-    // Explicitly construct string with known protocol
-    const appLaunchUrl = safeInviteCode ? `discord://invite/${safeInviteCode}` : "#";
+    // Explicitly construct string with known protocol, ensuring only alphanumeric characters are used
+    const appLaunchUrl = safeInviteCode && safeInviteCode.length > 0 ? `discord://invite/${safeInviteCode}` : "#";
 
     return (
         <Card className="max-w-6xl w-full mx-auto hover-elevate overflow-hidden border-l-4 border-l-[#5865F2] shadow-md">

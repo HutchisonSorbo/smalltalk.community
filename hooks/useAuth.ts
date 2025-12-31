@@ -45,21 +45,65 @@ export function useAuth() {
       }
 
       // Fetch profile from public.users table
-      const { data: profile, error: profileError } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from("users")
         .select("*")
-        .eq("id", authUser.id)
-        .single();
+        .eq("id", authUser.id);
 
       if (profileError) {
-        // If profile doesn't exist but auth does, we might want to return basic info or null
-        // For now, logging error and returning null to be safe
-        console.error("Error fetching user profile:", profileError);
+        console.error("Error fetching user profile:", {
+          message: profileError.message,
+          code: profileError.code,
+          details: profileError.details,
+          hint: profileError.hint,
+          authUser: authUser
+        });
+        return null;
+      }
+
+      let profile: User | null = null;
+
+      if (profiles && profiles.length > 0) {
+        const raw = profiles[0];
+        // Map snake_case from Supabase -> camelCase for application
+        profile = {
+          ...raw,
+          firstName: raw.first_name,
+          lastName: raw.last_name,
+          profileImageUrl: raw.profile_image_url,
+          dateOfBirth: raw.date_of_birth ? new Date(raw.date_of_birth) : null,
+          userType: raw.user_type,
+          accountType: raw.account_type,
+          accountTypeSpecification: raw.account_type_specification,
+          onboardingCompleted: raw.onboarding_completed,
+          organisationName: raw.organisation_name,
+          isAdmin: raw.is_admin,
+          isMinor: raw.is_minor,
+          messagePrivacy: raw.message_privacy,
+          lastActiveAt: raw.last_active_at ? new Date(raw.last_active_at) : null,
+          createdAt: raw.created_at ? new Date(raw.created_at) : null,
+          updatedAt: raw.updated_at ? new Date(raw.updated_at) : null,
+        } as User;
+      }
+
+      if (!profile) {
+        console.warn("No profile found for user:", authUser.id);
         return null;
       }
 
       if (!isValidUser(profile)) {
-        console.error("Invalid user profile shape:", profile);
+        console.error("Invalid user profile shape. Received:", profile);
+        console.error("Validation details:", {
+          id: typeof (profile as any).id,
+          email: typeof (profile as any).email,
+          userType: typeof (profile as any).userType,
+          isAdmin: typeof (profile as any).isAdmin,
+          createdAt: (profile as any).createdAt,
+          // Check snake_case versions too
+          user_type: typeof (profile as any).user_type,
+          is_admin: typeof (profile as any).is_admin,
+          created_at: (profile as any).created_at
+        });
         return null;
       }
 
