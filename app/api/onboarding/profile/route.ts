@@ -20,6 +20,15 @@ import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
 
 export const dynamic = 'force-dynamic'; // Ensure not cached
 
+function generateSlug(name: string): string {
+    const base = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+    const suffix = crypto.randomUUID().substring(0, 8);
+    return `${base}-${suffix}`;
+}
+
 export async function POST(req: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -100,7 +109,7 @@ export async function POST(req: Request) {
                 // Create Org
                 const [org] = await tx.insert(organisations).values({
                     name: userRec.organisationName || "New Organization",
-                    slug: (userRec.organisationName || "new-organization").toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Math.random().toString(36).substring(7),
+                    slug: generateSlug(userRec.organisationName || "New Organization"),
                     description: profileData.bio, // Mapping bio to description
                     logoUrl: profileData.profileImageUrl,
                     // location and type are not in organisations schema
