@@ -191,12 +191,20 @@ function LoginForm() {
                             className="w-full flex gap-2"
                             onClick={async () => {
                                 const authClient = createClient();
-                                await authClient.auth.signInWithOAuth({
+                                const { error } = await authClient.auth.signInWithOAuth({
                                     provider: 'google',
                                     options: {
                                         redirectTo: `${globalThis.location.origin}/api/auth/callback`,
                                     }
                                 });
+                                if (error) {
+                                    console.error("Google Sign In Error:", error);
+                                    toast({
+                                        title: "Error",
+                                        description: error.message,
+                                        variant: "destructive",
+                                    });
+                                }
                             }}
                             disabled={isLoading}
                         >
