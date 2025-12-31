@@ -23,6 +23,12 @@ const nextConfig = {
         ],
     },
     async headers() {
+        const isProduction = process.env.NODE_ENV === 'production';
+        // Only allow Vercel Live in development/preview (or if strictly needed in prod, adjust this check)
+        // Vercel Live scripts
+        const vercelLive = isProduction ? '' : 'https://vercel.live';
+        const vercelScripts = isProduction ? '' : 'https://va.vercel-scripts.com';
+
         return [
             {
                 source: '/:path*',
@@ -53,7 +59,7 @@ const nextConfig = {
                     },
                     {
                         key: 'Content-Security-Policy',
-                        value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://va.vercel-scripts.com https://challenges.cloudflare.com https://vercel.live; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://jgtgvxzxgkudctocoxsq.supabase.co https://images.unsplash.com https://*.tile.openstreetmap.org https://unpkg.com https://raw.githubusercontent.com https://cdnjs.cloudflare.com; font-src 'self' data:; connect-src 'self' https://jgtgvxzxgkudctocoxsq.supabase.co https://*.sentry.io https://vercel.live https://va.vercel-scripts.com; frame-src 'self' https://challenges.cloudflare.com https://vercel.live; worker-src 'self' blob:; frame-ancestors 'none'; upgrade-insecure-requests"
+                        value: `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://challenges.cloudflare.com ${vercelScripts} ${vercelLive}; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://jgtgvxzxgkudctocoxsq.supabase.co https://images.unsplash.com https://*.tile.openstreetmap.org https://unpkg.com https://raw.githubusercontent.com https://cdnjs.cloudflare.com; font-src 'self' data:; connect-src 'self' https://jgtgvxzxgkudctocoxsq.supabase.co https://*.sentry.io ${vercelScripts} ${vercelLive}; frame-src 'self' https://challenges.cloudflare.com ${vercelLive}; worker-src 'self' blob:; frame-ancestors 'none'; upgrade-insecure-requests`
                     }
                 ]
             }
