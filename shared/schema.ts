@@ -63,7 +63,7 @@ export type User = typeof users.$inferSelect;
 // Musician profiles table
 export const musicianProfiles = pgTable("musician_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
   bio: text("bio"),
   instruments: text("instruments").array().notNull().default(sql`'{}'::text[]`),
@@ -117,7 +117,7 @@ export type MusicianProfile = typeof musicianProfiles.$inferSelect;
 // Marketplace listings table
 export const marketplaceListings = pgTable("marketplace_listings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   category: varchar("category", { length: 100 }).notNull(),
@@ -158,7 +158,7 @@ export type MarketplaceListing = typeof marketplaceListings.$inferSelect;
 // Notifications table
 export const notifications = pgTable("notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 50 }).notNull(), // 'message', 'invite', 'system'
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
@@ -192,8 +192,8 @@ export type Notification = typeof notifications.$inferSelect;
 // Contact Requests table
 export const contactRequests = pgTable("contact_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  requesterId: varchar("requester_id").notNull().references(() => users.id),
-  recipientId: varchar("recipient_id").notNull().references(() => users.id), // Linking to User ID for easier notification routing
+  requesterId: varchar("requester_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  recipientId: varchar("recipient_id").notNull().references(() => users.id, { onDelete: "cascade" }), // Linking to User ID for easier notification routing
   status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, declined
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
@@ -338,8 +338,8 @@ export const itemConditions = [
 // Messages table for direct user communication
 export const messages = pgTable("messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  senderId: varchar("sender_id").notNull().references(() => users.id),
-  receiverId: varchar("receiver_id").notNull().references(() => users.id),
+  senderId: varchar("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  receiverId: varchar("receiver_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -387,7 +387,7 @@ export interface Conversation {
 // Reviews table for musician profiles and marketplace listings
 export const reviews = pgTable("reviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  reviewerId: varchar("reviewer_id").notNull().references(() => users.id),
+  reviewerId: varchar("reviewer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   targetType: varchar("target_type", { length: 50 }).notNull(),
   targetId: varchar("target_id").notNull(),
   rating: integer("rating").notNull(),
@@ -425,7 +425,7 @@ export interface ReviewWithReviewer extends Review {
 // Bands table
 export const bands = pgTable("bands", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
   bio: text("bio"),
   genres: text("genres").array().notNull().default(sql`'{}'::text[]`),
@@ -472,7 +472,7 @@ export type Band = typeof bands.$inferSelect;
 // Rate Limiting table
 export const rateLimits = pgTable("rate_limits", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 50 }).notNull(), // e.g., 'upload', 'login_attempt'
   hits: integer("hits").notNull().default(1),
   windowStart: timestamp("window_start").defaultNow().notNull(),
@@ -486,8 +486,8 @@ export type RateLimit = typeof rateLimits.$inferSelect;
 // Band Members table (for Admin/Member roles)
 export const bandMembers = pgTable("band_members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bandId: varchar("band_id").notNull().references(() => bands.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  bandId: varchar("band_id").notNull().references(() => bands.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   role: varchar("role", { length: 50 }).notNull().default("member"), // 'admin', 'member'
   instrument: varchar("instrument", { length: 100 }),
   joinedAt: timestamp("joined_at").defaultNow(),
@@ -526,9 +526,9 @@ export interface BandMemberWithUser extends BandMember {
 // Gigs table
 export const gigs = pgTable("gigs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  creatorId: varchar("creator_id").notNull().references(() => users.id),
-  bandId: varchar("band_id").references(() => bands.id), // Nullable if solo musician
-  musicianId: varchar("musician_id").references(() => musicianProfiles.id), // Nullable if band
+  creatorId: varchar("creator_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bandId: varchar("band_id").references(() => bands.id, { onDelete: "cascade" }), // Nullable if solo musician. If band deleted, gig should go? Probably.
+  musicianId: varchar("musician_id").references(() => musicianProfiles.id, { onDelete: "cascade" }), // Nullable if band. If profile deleted...
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   location: varchar("location", { length: 255 }).notNull(),
@@ -553,8 +553,8 @@ export const gigs = pgTable("gigs", {
 // Gig Managers table for collaborative editing
 export const gigManagers = pgTable("gig_managers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  gigId: varchar("gig_id").notNull().references(() => gigs.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  gigId: varchar("gig_id").notNull().references(() => gigs.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   pgPolicy("gig_managers_read", { for: "select", to: "authenticated", using: sql`true` }),
@@ -604,7 +604,7 @@ export type Gig = typeof gigs.$inferSelect;
 // Reports table
 export const reports = pgTable("reports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  reporterId: varchar("reporter_id").notNull().references(() => users.id),
+  reporterId: varchar("reporter_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   targetType: varchar("target_type", { length: 50 }).notNull(), // 'user', 'band', 'gig', 'listing', 'message'
   targetId: varchar("target_id").notNull(),
   reason: varchar("reason", { length: 100 }).notNull(), // 'harassment', 'spam', 'inappropriate_content', 'other'
@@ -638,7 +638,7 @@ export type Report = typeof reports.$inferSelect;
 // Classifieds table (Digital Auditions)
 export const classifieds = pgTable("classifieds", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
   type: varchar("type", { length: 50 }).notNull(), // 'musician_wanted' (Band looking for X) or 'band_wanted' (Musician looking for Band)
@@ -689,7 +689,7 @@ export const professionalRoles = [
 
 export const professionalProfiles = pgTable("professional_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   role: varchar("role", { length: 50 }).notNull(),
   businessName: varchar("business_name", { length: 100 }),
   bio: text("bio").notNull(),
@@ -794,7 +794,7 @@ export const sysRoles = pgTable("sys_roles", {
 // Join table: Users <-> Roles
 export const sysUserRoles = pgTable("sys_user_roles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   roleId: varchar("role_id").notNull().references(() => sysRoles.id),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
@@ -938,7 +938,7 @@ export const sysUserRolesRelations = relations(sysUserRoles, ({ one }) => ({
 // Volunteer Profiles
 export const volunteerProfiles = pgTable("volunteer_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   headline: varchar("headline", { length: 255 }),
   bio: text("bio"),
   locationSuburb: varchar("location_suburb", { length: 100 }),
@@ -1009,8 +1009,8 @@ export type Organisation = typeof organisations.$inferSelect;
 // Organisation Members
 export const orgRoleEnum = pgTable("organisation_members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  organisationId: varchar("organisation_id").notNull().references(() => organisations.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   role: varchar("role", { length: 50 }).default("viewer"), // 'admin', 'coordinator', 'viewer'
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
@@ -1059,8 +1059,8 @@ export type Skill = typeof skills.$inferSelect;
 // Profile Skills (Junction)
 export const profileSkills = pgTable("profile_skills", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  profileId: varchar("profile_id").notNull().references(() => volunteerProfiles.id),
-  skillId: varchar("skill_id").notNull().references(() => skills.id),
+  profileId: varchar("profile_id").notNull().references(() => volunteerProfiles.id, { onDelete: "cascade" }),
+  skillId: varchar("skill_id").notNull().references(() => skills.id, { onDelete: "cascade" }),
   proficiencyLevel: varchar("proficiency_level", { length: 50 }), // 'beginner', 'intermediate', 'expert'
   endorsementCount: integer("endorsement_count").default(0),
 }, (table) => [
@@ -1085,7 +1085,7 @@ export type ProfileSkill = typeof profileSkills.$inferSelect;
 // Credentials
 export const credentials = pgTable("credentials", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  profileId: varchar("profile_id").notNull().references(() => volunteerProfiles.id),
+  profileId: varchar("profile_id").notNull().references(() => volunteerProfiles.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 100 }).notNull(), // 'WWCC', 'Police Check'
   identifier: varchar("identifier", { length: 255 }),
   issuingAuthority: varchar("issuing_authority", { length: 255 }),
@@ -1122,7 +1122,7 @@ export type Credential = typeof credentials.$inferSelect;
 // Volunteer Roles (Opportunities)
 export const volunteerRoles = pgTable("volunteer_roles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  organisationId: varchar("organisation_id").notNull().references(() => organisations.id),
+  organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
   roleType: varchar("role_type", { length: 50 }).default("ongoing"), // 'ongoing', 'one_off', 'event_based'
@@ -1156,8 +1156,8 @@ export type VolunteerRole = typeof volunteerRoles.$inferSelect;
 // Applications
 export const volunteerApplications = pgTable("volunteer_applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  roleId: varchar("role_id").notNull().references(() => volunteerRoles.id),
-  applicantId: varchar("applicant_id").notNull().references(() => volunteerProfiles.id),
+  roleId: varchar("role_id").notNull().references(() => volunteerRoles.id, { onDelete: "cascade" }),
+  applicantId: varchar("applicant_id").notNull().references(() => volunteerProfiles.id, { onDelete: "cascade" }),
   status: varchar("status", { length: 50 }).default("submitted"), // 'submitted', 'under_review', 'shortlisted', 'accepted', 'declined'
   coverMessage: text("cover_message"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -1218,8 +1218,8 @@ export const apps = pgTable("apps", {
 // User <-> Apps Join Table
 export const userApps = pgTable("user_apps", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  appId: varchar("app_id").notNull().references(() => apps.id),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  appId: varchar("app_id").notNull().references(() => apps.id, { onDelete: "cascade" }),
   position: integer("position"),
   isPinned: boolean("is_pinned").default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -1263,4 +1263,3 @@ export const insertUserAppSchema = createInsertSchema(userApps).omit({
 
 export type UserApp = typeof userApps.$inferSelect;
 export type InsertUserApp = z.infer<typeof insertUserAppSchema>;
-
