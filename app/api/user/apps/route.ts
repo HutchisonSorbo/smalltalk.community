@@ -38,7 +38,10 @@ export async function GET(request: Request) {
         return NextResponse.json(userAppsList);
     } catch (error) {
         console.error("Error fetching user apps:", error);
-        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+        return NextResponse.json({
+            message: "Internal server error",
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
     }
 }
 

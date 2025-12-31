@@ -44,12 +44,17 @@ export const users = pgTable("users", {
   onboardingCompleted: boolean("onboarding_completed").default(false),
   organisationName: varchar("organisation_name", { length: 255 }),
   isAdmin: boolean("is_admin").default(false),
+  isMinor: boolean("is_minor").default(false),
+  messagePrivacy: varchar("message_privacy", { length: 20 }).default("everyone"), // 'everyone' | 'verified_only' | 'nobody'
   lastActiveAt: timestamp("last_active_at"),
+  onboardingStep: integer("onboarding_step").default(0),
+  profileCompletionPercentage: integer("profile_completion_percentage").default(0),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.id}` }),
-  pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.id}`, withCheck: sql`auth.uid() = ${table.id}` }),
+  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}` }),
+  pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}`, withCheck: sql`auth.uid()::text::text = ${table.id}` }),
 ]);
 
 export type UpsertUser = typeof users.$inferInsert;
@@ -87,9 +92,9 @@ export const musicianProfiles = pgTable("musician_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("musicians_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("musicians_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("musicians_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("musicians_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("musicians_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("musicians_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("musicians_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("musicians_user_id_idx").on(table.userId),
 ]);
 
@@ -128,9 +133,9 @@ export const marketplaceListings = pgTable("marketplace_listings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("marketplace_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("marketplace_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("marketplace_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("marketplace_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("marketplace_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("marketplace_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("marketplace_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("marketplace_user_id_idx").on(table.userId),
 ]);
 
@@ -162,10 +167,10 @@ export const notifications = pgTable("notifications", {
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("notifications_self_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("notifications_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("notifications_self_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("notifications_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("notifications_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("notifications_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("notifications_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("notifications_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("notifications_user_id_idx").on(table.userId),
 ]);
 
@@ -192,9 +197,9 @@ export const contactRequests = pgTable("contact_requests", {
   status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, declined
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("contact_requests_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.requesterId} OR auth.uid() = ${table.recipientId}` }),
-  pgPolicy("contact_requests_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.requesterId}` }),
-  pgPolicy("contact_requests_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.recipientId} OR auth.uid() = ${table.requesterId}` }),
+  pgPolicy("contact_requests_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.requesterId} OR auth.uid()::text = ${table.recipientId}` }),
+  pgPolicy("contact_requests_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.requesterId}` }),
+  pgPolicy("contact_requests_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.recipientId} OR auth.uid()::text = ${table.requesterId}` }),
   index("contact_requests_requester_id_idx").on(table.requesterId),
   index("contact_requests_recipient_id_idx").on(table.recipientId),
 ]);
@@ -339,8 +344,8 @@ export const messages = pgTable("messages", {
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("messages_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.senderId} OR auth.uid() = ${table.receiverId}` }),
-  pgPolicy("messages_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.senderId}` }),
+  pgPolicy("messages_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.senderId} OR auth.uid()::text = ${table.receiverId}` }),
+  pgPolicy("messages_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.senderId}` }),
   index("messages_sender_id_idx").on(table.senderId),
   index("messages_receiver_id_idx").on(table.receiverId),
 ]);
@@ -391,9 +396,9 @@ export const reviews = pgTable("reviews", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("reviews_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("reviews_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.reviewerId}` }),
-  pgPolicy("reviews_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.reviewerId}`, withCheck: sql`auth.uid() = ${table.reviewerId}` }),
-  pgPolicy("reviews_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.reviewerId}`, withCheck: sql`auth.uid()::text = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.reviewerId}` }),
   index("reviews_reviewer_id_idx").on(table.reviewerId),
 ]);
 
@@ -443,9 +448,9 @@ export const bands = pgTable("bands", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("bands_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("bands_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("bands_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("bands_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("bands_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("bands_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("bands_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("bands_user_id_idx").on(table.userId),
 ]);
 
@@ -488,9 +493,9 @@ export const bandMembers = pgTable("band_members", {
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   pgPolicy("band_members_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("band_members_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("band_members_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("band_members_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("band_members_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("band_members_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("band_members_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("band_members_band_id_idx").on(table.bandId),
   index("band_members_user_id_idx").on(table.userId),
 ]);
@@ -537,9 +542,9 @@ export const gigs = pgTable("gigs", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("gigs_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("gigs_creator_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.creatorId}` }),
-  pgPolicy("gigs_creator_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.creatorId}`, withCheck: sql`auth.uid() = ${table.creatorId}` }),
-  pgPolicy("gigs_creator_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.creatorId}`, withCheck: sql`auth.uid()::text = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.creatorId}` }),
   index("gigs_creator_id_idx").on(table.creatorId),
   index("gigs_band_id_idx").on(table.bandId),
   index("gigs_musician_id_idx").on(table.musicianId),
@@ -553,9 +558,9 @@ export const gigManagers = pgTable("gig_managers", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   pgPolicy("gig_managers_read", { for: "select", to: "authenticated", using: sql`true` }),
-  pgPolicy("gig_managers_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("gig_managers_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("gig_managers_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("gig_managers_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("gig_managers_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("gig_managers_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("gig_managers_gig_id_idx").on(table.gigId),
   index("gig_managers_user_id_idx").on(table.userId),
 ]);
@@ -608,7 +613,7 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("reports_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.reporterId}` }),
+  pgPolicy("reports_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.reporterId}` }),
   pgPolicy("reports_admin_read", { for: "select", to: "service_role", using: sql`true` }),
   index("reports_reporter_id_idx").on(table.reporterId),
 ]);
@@ -645,9 +650,9 @@ export const classifieds = pgTable("classifieds", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("classifieds_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("classifieds_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("classifieds_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("classifieds_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("classifieds_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("classifieds_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("classifieds_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("classifieds_user_id_idx").on(table.userId),
   index("classifieds_type_idx").on(table.type),
   index("classifieds_location_idx").on(table.location),
@@ -702,6 +707,11 @@ export const professionalProfiles = pgTable("professional_profiles", {
   twitterUrl: varchar("twitter_url", { length: 255 }),
   profileImageUrl: varchar("profile_image_url"),
   verified: boolean("verified").default(false),
+  wwccNumber: varchar("wwcc_number", { length: 50 }),
+  wwccSurname: varchar("wwcc_surname", { length: 100 }),
+  wwccExpiry: timestamp("wwcc_expiry"),
+  wwccStatus: varchar("wwcc_status", { length: 20 }).default("pending"), // 'pending' | 'verified' | 'rejected' | 'expired'
+  wwccValidatedAt: timestamp("wwcc_validated_at"),
   isContactInfoPublic: boolean("is_contact_info_public").default(false),
   latitude: varchar("latitude"),
   longitude: varchar("longitude"),
@@ -710,8 +720,8 @@ export const professionalProfiles = pgTable("professional_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("pro_profiles_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("pro_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("pro_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("pro_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("pro_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
   index("pro_role_idx").on(table.role),
   index("pro_location_idx").on(table.location),
 ]);
@@ -752,7 +762,7 @@ export const announcements = pgTable("announcements", {
     using: sql`exists (
       select 1 from sys_user_roles ur 
       join sys_roles r on ur.role_id = r.id 
-      where ur.user_id = auth.uid() 
+      where ur.user_id = auth.uid()::text 
       and r.name in ('super_admin', 'admin')
     )`
   }),
@@ -793,6 +803,118 @@ export const sysUserRoles = pgTable("sys_user_roles", {
   index("sys_user_roles_user_idx").on(table.userId),
 ]);
 
+// ------------------------------------------------------------------
+// ONBOARDING TABLES
+// ------------------------------------------------------------------
+
+export const userOnboardingResponses = pgTable("user_onboarding_responses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  questionKey: text("question_key").notNull(),
+  response: jsonb("response").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("onboarding_responses_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("onboarding_responses_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("onboarding_responses_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  index("idx_onboarding_user_id").on(table.userId),
+]);
+
+export const userPrivacySettings = pgTable("user_privacy_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  profileVisibility: text("profile_visibility").default("community_members"),
+  showRealName: boolean("show_real_name").default(false),
+  showLocation: boolean("show_location").default(true),
+  showAge: boolean("show_age").default(true),
+  allowEmailLookup: boolean("allow_email_lookup").default(false),
+  defaultPostVisibility: text("default_post_visibility").default("community"),
+  settingsUpdatedAt: timestamp("settings_updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("privacy_settings_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("privacy_settings_self_modify", { for: "all", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  uniqueIndex("uidx_privacy_settings_user").on(table.userId),
+]);
+
+export const userNotificationPreferences = pgTable("user_notification_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  emailWeeklyDigest: boolean("email_weekly_digest").default(true),
+  emailEventReminders: boolean("email_event_reminders").default(true),
+  emailMessages: boolean("email_messages").default(true),
+  emailRecommendations: boolean("email_recommendations").default(true),
+  emailNewsletter: boolean("email_newsletter").default(true),
+  pushEnabled: boolean("push_enabled").default(false),
+  soundEnabled: boolean("sound_enabled").default(true),
+  preferencesUpdatedAt: timestamp("preferences_updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("notification_prefs_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("notification_prefs_self_modify", { for: "all", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  uniqueIndex("uidx_notification_prefs_user").on(table.userId),
+]);
+
+export const userRecommendedApps = pgTable("user_recommended_apps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  appId: varchar("app_id").notNull().references(() => apps.id),
+  recommendationScore: integer("recommendation_score"),
+  shownAt: timestamp("shown_at").defaultNow(),
+  accepted: boolean("accepted").default(false),
+  acceptedAt: timestamp("accepted_at"),
+}, (table) => [
+  pgPolicy("recommended_apps_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("recommended_apps_self_modify", { for: "all", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  index("idx_recommended_apps_user_id").on(table.userId),
+]);
+
+export const onboardingMetrics = pgTable("onboarding_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  metricDate: text("metric_date").notNull(), // storing as text YYYY-MM-DD for simplicity in aggregation
+  metricName: text("metric_name").notNull(),
+  accountType: text("account_type"),
+  ageGroup: text("age_group"),
+  metricValue: integer("metric_value"), // using integer for counts/percentages (scaled)
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("metrics_service_all", { for: "all", to: "service_role", using: sql`true` }),
+  index("idx_metrics_date").on(table.metricDate),
+]);
+
+// Relations for new tables
+export const userOnboardingResponsesRelations = relations(userOnboardingResponses, ({ one }) => ({
+  user: one(users, {
+    fields: [userOnboardingResponses.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userPrivacySettingsRelations = relations(userPrivacySettings, ({ one }) => ({
+  user: one(users, {
+    fields: [userPrivacySettings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userNotificationPreferencesRelations = relations(userNotificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userNotificationPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userRecommendedAppsRelations = relations(userRecommendedApps, ({ one }) => ({
+  user: one(users, {
+    fields: [userRecommendedApps.userId],
+    references: [users.id],
+  }),
+  app: one(apps, {
+    fields: [userRecommendedApps.appId],
+    references: [apps.id],
+  }),
+}));
+
 export const sysRolesRelations = relations(sysRoles, ({ many }) => ({
   userRoles: many(sysUserRoles),
 }));
@@ -827,8 +949,8 @@ export const volunteerProfiles = pgTable("volunteer_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("volunteer_profiles_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("volunteer_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("volunteer_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid() = ${table.userId}`, withCheck: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("volunteer_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("volunteer_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
   index("volunteer_profiles_user_id_idx").on(table.userId),
 ]);
 
@@ -975,7 +1097,7 @@ export const credentials = pgTable("credentials", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("credentials_owner_read", { for: "select", to: "authenticated", using: sql`auth.uid() = (select user_id from volunteer_profiles where id = ${table.profileId})` }),
+  pgPolicy("credentials_owner_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = (select user_id from volunteer_profiles where id = ${table.profileId})` }),
   index("credentials_profile_idx").on(table.profileId),
 ]);
 
@@ -1041,7 +1163,7 @@ export const volunteerApplications = pgTable("volunteer_applications", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("applications_applicant_read", { for: "select", to: "authenticated", using: sql`auth.uid() = (select user_id from volunteer_profiles where id = ${table.applicantId})` }),
+  pgPolicy("applications_applicant_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = (select user_id from volunteer_profiles where id = ${table.applicantId})` }),
   index("applications_role_idx").on(table.roleId),
   index("applications_applicant_idx").on(table.applicantId),
 ]);
@@ -1078,8 +1200,12 @@ export const apps = pgTable("apps", {
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description").notNull(),
   iconUrl: varchar("icon_url", { length: 255 }).notNull(),
-  route: varchar("route", { length: 100 }).notNull(), // e.g., '/local-music-network'
+  route: varchar("route", { length: 100 }), // e.g., '/local-music-network', nullable for recommended apps
   category: varchar("category", { length: 50 }), // e.g., 'Music', 'Community', 'Utility'
+  ageRestriction: text("age_restriction"), // 'all_ages', 'teens_and_up', 'adults_only'
+  suitableForAccountTypes: text("suitable_for_account_types").array(),
+  relevantInterests: text("relevant_interests").array(),
+  relevantIntents: text("relevant_intents").array(),
   isBeta: boolean("is_beta").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -1094,12 +1220,13 @@ export const userApps = pgTable("user_apps", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   appId: varchar("app_id").notNull().references(() => apps.id),
+  position: integer("position"),
   isPinned: boolean("is_pinned").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("user_apps_self_read", { for: "select", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("user_apps_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid() = ${table.userId}` }),
-  pgPolicy("user_apps_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid() = ${table.userId}` }),
+  pgPolicy("user_apps_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("user_apps_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("user_apps_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("user_apps_user_idx").on(table.userId),
   index("user_apps_app_idx").on(table.appId),
   uniqueIndex("user_apps_user_app_unique").on(table.userId, table.appId),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlatformHeader } from "@/components/platform/PlatformHeader";
+
 import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <PlatformHeader />
+
             <main className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-3xl font-bold tracking-tight">Your Dashboard</h1>

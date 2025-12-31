@@ -1,5 +1,5 @@
 import { db } from "../server/db";
-import { users, musicianProfiles, bands, gigs, type UpsertUser, type InsertMusicianProfile, type InsertBand, type InsertGig } from "../shared/schema";
+import { users, musicianProfiles, bands, gigs, apps, type UpsertUser, type InsertMusicianProfile, type InsertBand, type InsertGig } from "../shared/schema";
 import { eq, like } from "drizzle-orm";
 import { victoriaLocations } from "../lib/victoriaLocations";
 
@@ -171,6 +171,94 @@ async function seed() {
             bandId: isBandGig ? bandIds[i % bandIds.length] : undefined,
             // musicianId could be set if solo, but let's stick to simple
         });
+    }
+
+    // 5. Seed Apps
+    console.log("📱 Seeding apps...");
+    const INITIAL_APPS = [
+        {
+            name: "Community Events",
+            description: "Find and join local events, markets, and workshops.",
+            category: "Events",
+            ageRestriction: "all_ages",
+            suitableForAccountTypes: ["Individual", "Community Group", "Business", "Government Organisation", "Charity"],
+            relevantInterests: ["events", "community service", "arts", "music", "sports", "food"],
+            relevantIntents: ["Find local events and activities", "Organise and manage events", "Promote our services"],
+            iconUrl: "https://api.iconify.design/lucide:calendar.svg",
+            route: "/events",
+            isActive: true
+        },
+        {
+            name: "Volunteer Connection",
+            description: "Find volunteering opportunities or recruit volunteers for your cause.",
+            category: "Community",
+            ageRestriction: "teens_and_up",
+            suitableForAccountTypes: ["Individual", "Charity", "Community Group"],
+            relevantInterests: ["community service", "health", "environment", "education"],
+            relevantIntents: ["Find volunteer opportunities", "Recruit volunteers", "Support local causes"],
+            iconUrl: "https://api.iconify.design/lucide:heart-handshake.svg",
+            route: "/volunteer",
+            isActive: true
+        },
+        {
+            name: "Local Marketplace",
+            description: "Buy, sell, and swap goods with your neighbors.",
+            category: "Marketplace",
+            ageRestriction: "teens_and_up",
+            suitableForAccountTypes: ["Individual", "Business"],
+            relevantInterests: ["technology", "arts", "music", "food"],
+            relevantIntents: ["Share my skills or talents", "Promote our services"],
+            iconUrl: "https://api.iconify.design/lucide:store.svg",
+            route: "/marketplace",
+            isActive: true
+        },
+        {
+            name: "Skill Share",
+            description: "Teach what you know, learn what you love.",
+            category: "Education",
+            ageRestriction: "all_ages",
+            suitableForAccountTypes: ["Individual", "Community Group", "School"],
+            relevantInterests: ["education", "arts", "technology", "music"],
+            relevantIntents: ["Learn new things", "Share my skills or talents"],
+            iconUrl: "https://api.iconify.design/lucide:graduation-cap.svg",
+            route: "/skills",
+            isActive: true
+        },
+        {
+            name: "Neighbourhood Watch",
+            description: "Stay informed and keep your community safe.",
+            category: "Safety",
+            ageRestriction: "adults_only",
+            suitableForAccountTypes: ["Individual", "Government Organisation", "Community Group"],
+            relevantInterests: ["community service", "health"],
+            relevantIntents: ["Stay informed about local news", "Connect with community members"],
+            iconUrl: "https://api.iconify.design/lucide:shield-check.svg",
+            route: "/safety",
+            isActive: true
+        },
+        {
+            name: "Council Services",
+            description: "Access local government services and reporting.",
+            category: "Government",
+            ageRestriction: "adults_only",
+            suitableForAccountTypes: ["Individual", "Business"],
+            relevantInterests: ["community service", "environment"],
+            relevantIntents: ["Access community resources", "Gather community feedback"],
+            iconUrl: "https://api.iconify.design/lucide:building-2.svg",
+            route: "/council",
+            isActive: true
+        }
+    ];
+
+    for (const app of INITIAL_APPS) {
+        // Upsert apps based on name
+        const existing = await db.query.apps.findFirst({
+            where: eq(apps.name, app.name)
+        });
+
+        if (!existing) {
+            await db.insert(apps).values(app);
+        }
     }
 
     console.log("✨ Seeding complete!");

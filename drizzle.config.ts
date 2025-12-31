@@ -32,6 +32,9 @@ export default defineConfig({
     "classifieds",
     "announcements",
     "rate_limits",
-    "sessions"
+    "sessions",
+    "user_*",
+    "apps",
+    "onboarding*"
   ],
 });

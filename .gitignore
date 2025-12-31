@@ -24,3 +24,6 @@ app/(payload)/cms/importMap.js
 test-results/
 playwright-report/
 .kiro/
+
+.gemini/
+gha-creds-*.json
