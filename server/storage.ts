@@ -214,13 +214,17 @@ export class DatabaseStorage implements IStorage {
 
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // Exclude createdAt from the update set to prevent overwriting on conflict
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { createdAt, ...updateData } = userData;
+
     const [user] = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          ...userData,
+          ...updateData,
           updatedAt: new Date(),
         },
       })
