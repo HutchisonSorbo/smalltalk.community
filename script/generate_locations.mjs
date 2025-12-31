@@ -13,8 +13,9 @@ function toTitleCase(str) {
 
 // Helper to fix Mc/Mac (simple heuristic, can be improved)
 function fixMc(str) {
-    return str.replace(/\bMc([a-z])/g, (_, char) => 'Mc' + char.toUpperCase())
-        .replace(/\bMac([a-z])/g, (_, char) => 'Mac' + char.toUpperCase());
+    return str
+        .replace(/\bMc([a-z])/g, (_, char) => 'Mc' + char.toUpperCase())
+        .replace(/\bMc\b/g, 'MC'); // Handle "Mc" whole word as "MC" (e.g. Mail Centre)
 }
 
 async function main() {
