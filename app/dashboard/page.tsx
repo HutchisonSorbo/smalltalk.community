@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlatformHeader } from "@/components/platform/PlatformHeader";
+
 import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
