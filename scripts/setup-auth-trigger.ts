@@ -21,12 +21,36 @@ async function setupAuthTrigger() {
       language plpgsql
       security definer set search_path = public
       as $$
+      declare
+        avatar_url text;
+        dob_val text;
+        dob_timestamp timestamp;
       begin
+        -- Try to find avatar url in common locations
+        avatar_url := coalesce(
+          new.raw_user_meta_data ->> 'picture',
+          new.raw_user_meta_data ->> 'avatar_url',
+          new.raw_user_meta_data ->> 'avatar'
+        );
+
+        -- Safe date handling
+        dob_val := new.raw_user_meta_data ->> 'date_of_birth';
+        begin
+          if dob_val is not null and dob_val != '' then
+            dob_timestamp := dob_val::timestamp;
+          else
+            dob_timestamp := null;
+          end if;
+        exception when others then
+          dob_timestamp := null;
+        end;
+
         insert into public.users (
           id,
           email,
           first_name,
           last_name,
+          profile_image_url,
           user_type,
           account_type,
           organisation_name,
@@ -39,13 +63,16 @@ async function setupAuthTrigger() {
           new.email,
           new.raw_user_meta_data ->> 'first_name',
           new.raw_user_meta_data ->> 'last_name',
+          avatar_url,
           coalesce(new.raw_user_meta_data ->> 'user_type', 'musician'),
           coalesce(new.raw_user_meta_data ->> 'account_type', 'Individual'),
           new.raw_user_meta_data ->> 'organisation_name',
-          (new.raw_user_meta_data ->> 'date_of_birth')::timestamp,
+          dob_timestamp,
           new.created_at,
           new.updated_at
-        );
+        )
+        on conflict (id) do nothing; -- Prevent errors on duplicate/retry
+
         return new;
       end;
       $$;
