@@ -707,11 +707,11 @@ export const professionalProfiles = pgTable("professional_profiles", {
   twitterUrl: varchar("twitter_url", { length: 255 }),
   profileImageUrl: varchar("profile_image_url"),
   verified: boolean("verified").default(false),
-  wwccNumber: varchar("wwcc_number", { length: 50 }),
-  wwccSurname: varchar("wwcc_surname", { length: 100 }),
-  wwccExpiry: timestamp("wwcc_expiry"),
-  wwccStatus: varchar("wwcc_status", { length: 20 }).default("pending"), // 'pending' | 'verified' | 'rejected' | 'expired'
-  wwccValidatedAt: timestamp("wwcc_validated_at"),
+  // wwccNumber: varchar("wwcc_number", { length: 50 }),
+  // wwccSurname: varchar("wwcc_surname", { length: 100 }),
+  // wwccExpiry: timestamp("wwcc_expiry"),
+  // wwccStatus: varchar("wwcc_status", { length: 20 }).default("pending"), // 'pending' | 'verified' | 'rejected' | 'expired'
+  // wwccValidatedAt: timestamp("wwcc_validated_at"),
   isContactInfoPublic: boolean("is_contact_info_public").default(false),
   latitude: varchar("latitude"),
   longitude: varchar("longitude"),

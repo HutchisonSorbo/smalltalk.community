@@ -23,6 +23,9 @@ export async function GET() {
         return NextResponse.json(allApps);
     } catch (error) {
         console.error("Error fetching apps:", error);
-        return NextResponse.json({ message: "Failed to fetch apps" }, { status: 500 });
+        return NextResponse.json({
+            message: "Failed to fetch apps",
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
     }
 }

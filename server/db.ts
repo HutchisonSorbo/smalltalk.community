@@ -1,6 +1,10 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@shared/schema";
+import dns from "dns";
+
+// Force IPv4 for Supabase connection
+dns.setDefaultResultOrder('ipv4first');
 
 
 declare global {

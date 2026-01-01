@@ -8,27 +8,35 @@ import { createClient } from "@/lib/supabase-server";
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    try {
+        const { searchParams } = new URL(request.url);
+        const userId = searchParams.get('userId');
 
-    // If userId provided, return single profile for that user (check logic)
-    if (userId) {
-        const profile = await storage.getProfessionalProfileByUserId(userId);
-        if (!profile) return new NextResponse("Not Found", { status: 404 });
-        return NextResponse.json(profile);
+        // If userId provided, return single profile for that user (check logic)
+        if (userId) {
+            const profile = await storage.getProfessionalProfileByUserId(userId);
+            if (!profile) return new NextResponse("Not Found", { status: 404 });
+            return NextResponse.json(profile);
+        }
+
+        const filters = {
+            location: searchParams.get('location') || undefined,
+            role: searchParams.get('role') || undefined,
+            searchQuery: searchParams.get('query') || undefined,
+            limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+            offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
+            hasLocation: searchParams.get('hasLocation') === 'true',
+        };
+
+        const items = await storage.getProfessionalProfiles(filters);
+        return NextResponse.json(items);
+    } catch (error) {
+        console.error("Error fetching professionals:", error);
+        return NextResponse.json({
+            message: "Failed to fetch professionals",
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
     }
-
-    const filters = {
-        location: searchParams.get('location') || undefined,
-        role: searchParams.get('role') || undefined,
-        searchQuery: searchParams.get('query') || undefined,
-        limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
-        offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
-        hasLocation: searchParams.get('hasLocation') === 'true',
-    };
-
-    const items = await storage.getProfessionalProfiles(filters);
-    return NextResponse.json(items);
 }
 
 export async function POST(request: Request) {
