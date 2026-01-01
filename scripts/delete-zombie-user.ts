@@ -2,16 +2,17 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import postgres from "postgres";
-
-// We need a way to prompt. We can uses 'readline' for node.
+import { createClient } from "@supabase/supabase-js";
 import { createInterface } from 'readline';
 
-if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set");
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
 }
 
-const sql = postgres(process.env.DATABASE_URL, { ssl: "require" });
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 async function deleteZombie() {
     const email = process.argv[2];
@@ -23,7 +24,7 @@ async function deleteZombie() {
     }
 
     console.log(`\n⚠️  WARNING: You are about to DELETE the user: ${email}`);
-    console.log("This action cannot be undone.\n");
+    console.log("This action cannot be undone and will cascade to all user data.\n");
 
     const rl = createInterface({
         input: process.stdin,
@@ -39,51 +40,43 @@ async function deleteZombie() {
 
     if (!confirmed) {
         console.log("Operation cancelled.");
-        await sql.end();
         process.exit(0);
     }
 
     console.log("Processing delete in 3 seconds... (Ctrl+C to cancel)");
     await new Promise(r => setTimeout(r, 3000));
 
-    console.log(`🧹 Deleting zombie user: ${email}...`);
+    console.log(`🧹 Deleting user: ${email}...`);
 
     try {
-        const result = await sql`
-            DELETE FROM public.users WHERE email = ${email}
-            RETURNING id, email;
-        `;
+        // Get the user by email
+        const { data: users, error: listError } = await supabase.auth.admin.listUsers();
 
-        // Also check/delete from auth.users? Usually cascade handles it, 
-        // but often we need to delete from Auth first to trigger cascade?
-        // Actually, deleting from public.users might just be local.
-        // For Supabase, we usually delete from auth.users via Admin API.
-        // Direct SQL delete on auth.users is possible if using postgres connection.
-
-        // Let's check if we deleted from public.
-        if (result.length > 0) {
-            console.log("✅ Deleted from public.users:", result[0]);
-        } else {
-            console.log("⚠️  No record found in public.users to delete.");
+        if (listError) {
+            console.error("❌ Error listing users:", listError);
+            process.exit(1);
         }
 
-        // Try deleting from auth.users
-        const authResult = await sql`
-            DELETE FROM auth.users WHERE email = ${email}
-            RETURNING id, email;
-        `;
+        const user = users?.users.find(u => u.email === email);
 
-        if (authResult.length > 0) {
-            console.log("✅ Deleted from auth.users:", authResult[0]);
-        } else {
-            console.log("⚠️  No record found in auth.users to delete (or already gone).");
+        if (!user) {
+            console.log("⚠️  No user found with that email.");
+            process.exit(0);
         }
 
+        // Delete using Admin API - handles all cleanup automatically
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+
+        if (deleteError) {
+            console.error("❌ Error deleting user:", deleteError);
+            process.exit(1);
+        } else {
+            console.log(`✅ Successfully deleted user: ${email} (ID: ${user.id})`);
+        }
 
     } catch (error) {
-        console.error("❌ Error deleting user:", error);
-    } finally {
-        await sql.end();
+        console.error("❌ Unexpected error:", error);
+        process.exit(1);
     }
 }
 

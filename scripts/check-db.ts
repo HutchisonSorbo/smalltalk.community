@@ -1,8 +1,17 @@
 import "dotenv/config";
-import { db } from "../lib/db";
+import { db } from "../server/db";
 import { apps } from "@shared/schema";
 import { sql } from "drizzle-orm";
 
+/**
+ * Checks database connectivity and table accessibility.
+ * Takes no parameters.
+ * @returns {Promise<void>}
+ * Side effects: Logs to console and exits process with code 0 (success) or 1 (failure).
+ * Exit codes:
+ * 0: Connection successful and 'apps' table accessible.
+ * 1: Missing DATABASE_URL, connection failure, table access failure, or unexpected error.
+ */
 async function main() {
     console.log("Starting DB Connectivity Check...");
 
