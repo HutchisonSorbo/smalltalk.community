@@ -60,8 +60,7 @@ export async function GET(request: Request) {
     } catch (error) {
         console.error("Error fetching musicians:", error);
         return NextResponse.json({
-            message: "Failed to fetch musicians",
-            details: error instanceof Error ? error.message : String(error)
+            message: "Failed to fetch musicians"
         }, { status: 500 });
     }
 }

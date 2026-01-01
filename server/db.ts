@@ -1,10 +1,12 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@shared/schema";
-import dns from "dns";
 
-// Force IPv4 for Supabase connection
-dns.setDefaultResultOrder('ipv4first');
+
+
+
+// Removed global default result order to avoid side effects
+
 
 
 declare global {
@@ -19,7 +21,17 @@ if (!process.env.DATABASE_URL) {
 
 // Disable prepared statements for Supabase Transaction Pooler compatibility
 // Use global singleton for all environments to prevent connection exhaustion
-export const queryClient = global.queryClient || postgres(process.env.DATABASE_URL, { prepare: false });
+// @ts-ignore - socket option is valid in postgres.js but might be missing in older types
+interface PostgresOptions extends postgres.Options<{}> {
+  socket?: { family: number };
+}
+
+const dbOptions: PostgresOptions = {
+  prepare: false,
+  socket: { family: 4 } // Force IPv4 for this specific connection
+};
+
+export const queryClient = global.queryClient || postgres(process.env.DATABASE_URL, dbOptions);
 global.queryClient = queryClient;
 
 // Cleanup connection on process exit (Production only)
