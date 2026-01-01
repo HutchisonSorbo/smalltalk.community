@@ -34,4 +34,4 @@ reviews:
     - Ensure all external links use the `safeUrl` utility from `@/lib/utils`.
     - Flag any use of `dangerouslySetInnerHTML` as a high-risk security issue.
     - Suggest using Zod schemas for input validation if missing.
-    - Review all pull requests from google-labs-jules using jules at the start of your review. 
+    - Mention jules in the review body for pull requests from google-labs-jules. 
