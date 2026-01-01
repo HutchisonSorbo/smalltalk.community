@@ -6,7 +6,15 @@ if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL must be set");
 }
 
-export const client = postgres(process.env.DATABASE_URL, { prepare: false });
+const client = global.queryClient || postgres(process.env.DATABASE_URL, { prepare: false });
+
+if (process.env.NODE_ENV !== "production") {
+    global.queryClient = client;
+}
+
 export const db = drizzle(client, { schema });
 
-// CodeRabbit Audit Trigger
+// Add global type definition for queryClient
+declare global {
+    var queryClient: postgres.Sql | undefined;
+}
