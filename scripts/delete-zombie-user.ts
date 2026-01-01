@@ -4,6 +4,7 @@ dotenv.config();
 
 import { createClient } from "@supabase/supabase-js";
 import { createInterface } from 'readline';
+import { queryClient } from "../server/db";
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
@@ -49,29 +50,26 @@ async function deleteZombie() {
     console.log(`🧹 Deleting user: ${email}...`);
 
     try {
-        // Get the user by email
-        const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+        // Direct SQL lookup to avoid listing all users
+        const users = await queryClient`
+            SELECT id FROM auth.users WHERE email = ${email}
+        `;
 
-        if (listError) {
-            console.error("❌ Error listing users:", listError);
-            process.exit(1);
-        }
-
-        const user = users?.users.find(u => u.email === email);
-
-        if (!user) {
+        if (!users || users.length === 0) {
             console.log("⚠️  No user found with that email.");
             process.exit(0);
         }
 
+        const userId = users[0].id;
+
         // Delete using Admin API - handles all cleanup automatically
-        const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
 
         if (deleteError) {
             console.error("❌ Error deleting user:", deleteError);
             process.exit(1);
         } else {
-            console.log(`✅ Successfully deleted user: ${email} (ID: ${user.id})`);
+            console.log(`✅ Successfully deleted user: ${email} (ID: ${userId})`);
         }
 
     } catch (error) {

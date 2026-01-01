@@ -2,6 +2,11 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@shared/schema";
 
+
+declare global {
+  var queryClient: postgres.Sql | undefined;
+}
+
 if (!process.env.DATABASE_URL) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
@@ -14,16 +19,40 @@ export const queryClient = global.queryClient || postgres(process.env.DATABASE_U
 global.queryClient = queryClient;
 
 // Cleanup connection on process exit (Production only)
-if (process.env.NODE_ENV === "production") {
-  process.once('SIGTERM', () => {
-    queryClient.end().then(() => {
-      console.log('Database connection closed');
+
+// Connection cleanup handling
+let isClosing = false;
+const handleExit = async (signal: string) => {
+  if (isClosing) return;
+  isClosing = true;
+  console.log(`Received ${signal}, closing database connection...`);
+  try {
+    await queryClient.end();
+    console.log('Database connection closed');
+    if (signal !== 'beforeExit' && signal !== 'module.hot.dispose') {
       process.exit(0);
-    }).catch((err) => {
-      console.error('Error closing database connection:', err);
-      process.exit(1);
+    }
+  } catch (err) {
+    console.error('Error closing database connection:', err);
+    process.exit(1);
+  }
+};
+
+if (process.env.NODE_ENV === "production") {
+  process.once('SIGTERM', () => handleExit('SIGTERM'));
+} else {
+  // Development-safe cleanup
+  process.once('SIGINT', () => handleExit('SIGINT'));
+  process.once('SIGUSR2', () => handleExit('SIGUSR2')); // Nodemon restart
+  process.once('beforeExit', () => handleExit('beforeExit'));
+
+  // @ts-ignore - Hot Module Replacement
+  if (typeof module !== 'undefined' && module.hot) {
+    // @ts-ignore
+    module.hot.dispose(async () => {
+      await handleExit('module.hot.dispose');
     });
-  });
+  }
 }
 
 /**
@@ -33,7 +62,3 @@ if (process.env.NODE_ENV === "production") {
  */
 export const db = drizzle(queryClient, { schema });
 
-// Add global type definition for queryClient
-declare global {
-  var queryClient: postgres.Sql | undefined;
-}

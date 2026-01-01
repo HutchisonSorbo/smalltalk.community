@@ -1,7 +1,6 @@
 import "dotenv/config";
-import { db } from "../server/db";
+import { db, queryClient } from "../server/db";
 import { apps } from "@shared/schema";
-import { sql } from "drizzle-orm";
 
 /**
  * Checks database connectivity and table accessibility.
@@ -33,7 +32,7 @@ async function main() {
         // 2. Explicit Connection Check (Ping)
         console.log("Testing connection...");
         try {
-            await db.execute(sql`SELECT 1`);
+            await queryClient`SELECT 1`;
             console.log("✅ Connection: Success");
         } catch (connError) {
             console.error("❌ Link connection failed. Unable to reach or authenticate with database.");
