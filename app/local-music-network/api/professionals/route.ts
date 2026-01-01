@@ -23,6 +23,7 @@ export async function GET(request: Request) {
         role: searchParams.get('role') || undefined,
         searchQuery: searchParams.get('query') || undefined,
         limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+        offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
         hasLocation: searchParams.get('hasLocation') === 'true',
     };
 
