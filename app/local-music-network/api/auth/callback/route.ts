@@ -8,7 +8,7 @@ async function syncUserToStorage(user: any) {
     await storage.upsertUser({
         id: user.id,
         email: user.email,
-        userType: metadata.user_type || 'musician',
+        userType: metadata.user_type || 'individual',
         accountType: metadata.account_type || 'Individual',
         organisationName: metadata.organisation_name,
         dateOfBirth: metadata.date_of_birth ? new Date(metadata.date_of_birth) : undefined

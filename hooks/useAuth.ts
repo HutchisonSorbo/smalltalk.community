@@ -12,7 +12,7 @@ function isValidUser(data: unknown): data is User {
   // Note: Supabase might return timestamps as strings (ISO 8601), so we allow string dates
   const hasValidId = typeof d.id === "string" && d.id.length > 0;
   const hasValidEmail = typeof d.email === "string" && d.email.length > 0;
-  // userType has default 'musician', checking it exists and is string
+  // userType has default 'individual', checking it exists and is string
   const hasValidUserType = typeof d.userType === "string";
   // isAdmin has default false
   const hasValidIsAdmin = typeof d.isAdmin === "boolean";

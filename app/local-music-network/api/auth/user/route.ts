@@ -27,13 +27,13 @@ async function createNewUser(user: any) {
         firstName: user.user_metadata.full_name?.split(' ')[0] || 'User',
         lastName: user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
         dateOfBirth: user.user_metadata.date_of_birth ? new Date(user.user_metadata.date_of_birth) : undefined,
-        userType: user.user_metadata.user_type || 'musician',
+        userType: user.user_metadata.user_type || 'individual',
         createdAt: new Date(),
     });
 }
 
 async function syncUserMetadata(dbUser: any, user: any) {
-    const metadataType = user.user_metadata.user_type || 'musician';
+    const metadataType = user.user_metadata.user_type || 'individual';
     if (dbUser.userType !== metadataType) {
         console.log(`Auth User API: Syncing userType for ${user.email} from ${dbUser.userType} to ${metadataType}`);
         return await storage.upsertUser({
