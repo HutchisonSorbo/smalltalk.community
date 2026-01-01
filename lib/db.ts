@@ -6,10 +6,18 @@ if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL must be set");
 }
 
+// Use global singleton for all environments to prevent connection exhaustion
 const client = global.queryClient || postgres(process.env.DATABASE_URL, { prepare: false });
+global.queryClient = client;
 
+// Cleanup connection on process exit
 if (process.env.NODE_ENV !== "production") {
-    global.queryClient = client;
+    // In dev, Next.js handles cleanup on reloads
+} else {
+    // In production, ensure graceful shutdown if needed
+    process.on('SIGTERM', async () => {
+        await client.end();
+    });
 }
 
 /**
