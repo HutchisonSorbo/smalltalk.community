@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,49 +56,53 @@ export default function AppsPage() {
         loadData();
     }, [toast]);
 
-    const handleAddApp = async (appId: string) => {
+    const handleAddApp = useCallback(async (appId: string) => {
         try {
             const res = await fetch("/api/user/apps", {
                 method: "POST",
                 body: JSON.stringify({ appId })
             });
             if (res.ok) {
-                const newSet = new Set(userAppIds);
-                newSet.add(appId);
-                setUserAppIds(newSet);
+                setUserAppIds(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(appId);
+                    return newSet;
+                });
                 toast({ title: "App added" });
             }
         } catch (e) {
             console.error(e);
             toast({ title: "Error adding app", variant: "destructive" });
         }
-    };
+    }, [toast]);
 
-    const handleRemoveApp = async (appId: string) => {
+    const handleRemoveApp = useCallback(async (appId: string) => {
         try {
             const res = await fetch("/api/user/apps", {
                 method: "DELETE",
                 body: JSON.stringify({ appId })
             });
             if (res.ok) {
-                const newSet = new Set(userAppIds);
-                newSet.delete(appId);
-                setUserAppIds(newSet);
+                setUserAppIds(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(appId);
+                    return newSet;
+                });
                 toast({ title: "App removed" });
             }
         } catch (e) {
             console.error(e);
             toast({ title: "Error removing app", variant: "destructive" });
         }
-    };
+    }, [toast]);
 
-    const filteredApps = allApps.filter(app =>
+    const filteredApps = useMemo(() => allApps.filter(app =>
         app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         app.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ), [allApps, searchQuery]);
 
-    const myApps = filteredApps.filter(app => userAppIds.has(app.id));
-    const availableApps = filteredApps.filter(app => !userAppIds.has(app.id));
+    const myApps = useMemo(() => filteredApps.filter(app => userAppIds.has(app.id)), [filteredApps, userAppIds]);
+    const availableApps = useMemo(() => filteredApps.filter(app => !userAppIds.has(app.id)), [filteredApps, userAppIds]);
 
     return (
         <div className="min-h-screen bg-background">

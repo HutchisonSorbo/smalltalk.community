@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, Plus, ExternalLink, MoreVertical, Trash2, Info } from "lucide-react";
@@ -17,7 +18,6 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
 
 export interface AppData {
     id: string;
@@ -38,7 +38,7 @@ interface AppCardProps {
     onAdd?: (appId: string) => void;
 }
 
-export function AppCard({
+function AppCardComponent({
     app,
     variant,
     isSelected = false,
@@ -191,3 +191,5 @@ export function AppCard({
         </div>
     );
 }
+
+export const AppCard = memo(AppCardComponent);
