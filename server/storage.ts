@@ -75,6 +75,7 @@ export interface GigFilters {
   location?: string;
   date?: string; // 'upcoming', 'past', 'today'
   genre?: string;
+  bandId?: string;
   searchQuery?: string;
   limit?: number;
   offset?: number;
@@ -214,13 +215,17 @@ export class DatabaseStorage implements IStorage {
 
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // Exclude createdAt from the update set to prevent overwriting on conflict
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { createdAt, ...updateData } = userData;
+
     const [user] = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          ...userData,
+          ...updateData,
           updatedAt: new Date(),
         },
       })
@@ -791,6 +796,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters.genre) {
       conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
+    }
+    if (filters.bandId) {
+      conditions.push(eq(gigs.bandId, filters.bandId));
     }
     if (filters.date === 'upcoming') {
       conditions.push(gte(gigs.date, new Date()));

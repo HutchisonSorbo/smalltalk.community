@@ -203,7 +203,7 @@ function LoginForm() {
                 </CardHeader>
                 <form onSubmit={handleAuth}>
                     <CardContent className="grid gap-4">
-                        <Button
+                        {/* <Button
                             variant="outline"
                             type="button"
                             className="w-full flex gap-2"
@@ -229,8 +229,8 @@ function LoginForm() {
                                 />
                             </svg>
                             Sign in with Google
-                        </Button>
-                        <div className="relative">
+                        </Button> */}
+                        {/* <div className="relative">
                             <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t" />
                             </div>
@@ -239,7 +239,7 @@ function LoginForm() {
                                     Or continue with email
                                 </span>
                             </div>
-                        </div>
+                        </div> */}
 
                         <div className="grid gap-2">
                             <label htmlFor="email">Email</label>

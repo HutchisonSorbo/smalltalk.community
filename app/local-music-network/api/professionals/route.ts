@@ -23,6 +23,7 @@ export async function GET(request: Request) {
         role: searchParams.get('role') || undefined,
         searchQuery: searchParams.get('query') || undefined,
         limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+        offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
         hasLocation: searchParams.get('hasLocation') === 'true',
     };
 
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
         return NextResponse.json(item);
     } catch (error) {
         console.error("Failed to create professional profile:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
 

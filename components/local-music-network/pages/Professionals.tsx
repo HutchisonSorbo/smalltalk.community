@@ -29,22 +29,10 @@ export default function Professionals() {
         initialPageParam: 0,
         queryFn: async ({ pageParam = 0 }: { pageParam: any }) => {
             const limit = 12;
-            const offset = pageParam * limit; // storage uses offset, but infinite query usually tracks pages. 
-            // Checking storage.ts: getProfessionalProfiles uses limit/offset.
-            // API route uses limit/offset derived from query params??
-            // Let's check api/professionals route again. It takes limit. It doesn't seem to explicitly take offset/page?
-            // Wait, storage.ts supports offset. api/professionals ROUTE takes 'limit', but DOES IT TAKE OFFSET?
-            // Re-reading api/professionals/route.ts:
-            // const filters = { ..., limit: ... } -> It does NOT parse offset/page!
-            // I need to update the API route to support offset/page if I want infinite scroll to work correctly.
-            // For now, I will assume it renders everything or I'll fix the API route next. 
-            // Actually Musicians API handled it:
-            // Musicians API: header indicates pagination?
-            // Let's check Musicians API route implementation first to be consistent. 
 
             const params = new URLSearchParams({
                 limit: limit.toString(),
-                offset: (pageParam * limit).toString() // Attempting to send offset
+                offset: (pageParam * limit).toString()
             });
 
             if (searchQuery) params.append("query", searchQuery);

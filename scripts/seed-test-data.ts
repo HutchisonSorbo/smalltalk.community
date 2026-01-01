@@ -56,23 +56,11 @@ async function seed() {
 
     if (usersToDelete.length > 0) {
         console.log(`Found ${usersToDelete.length} test users to delete.`);
-        // We rely on cascade delete if configured, but to be safe and explicit:
-        // Note: Drizzle schema definition defines foreign keys but we need to check DB level constraints or delete manually.
-        // Given the schema file doesn't explicitly show `onDelete: 'cascade'`, we should delete children first or rely on DB.
-        // Let's assume manual deletion is safer for this script to avoid FK errors if cascades aren't there.
+        // Note: Drizzle schema definition now includes `onDelete: 'cascade'` for relevant foreign keys.
+        // We can rely on the database to clean up related records (musicianProfiles, bands, etc.) when the user is deleted.
 
         for (const u of usersToDelete) {
-            // Delete things linked to user
-            await db.delete(musicianProfiles).where(eq(musicianProfiles.userId, u.id));
-            await db.delete(gigs).where(eq(gigs.creatorId, u.id)); // And other FKs... 
-            // Bands is tricky because of band members etc, but let's try simplified approach first.
-            const userBands = await db.query.bands.findMany({ where: eq(bands.userId, u.id) });
-            for (const b of userBands) {
-                await db.delete(gigs).where(eq(gigs.bandId, b.id)); // Delete band gigs
-                await db.delete(bands).where(eq(bands.id, b.id));
-            }
-
-            await db.delete(users).where(eq(users.id, u.id));
+             await db.delete(users).where(eq(users.id, u.id));
         }
         console.log("✅ Cleanup complete.");
     }
