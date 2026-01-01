@@ -59,7 +59,7 @@ export async function GET(request: Request) {
         return NextResponse.json(profiles);
     } catch (error) {
         console.error("Error fetching musicians:", error);
-        return NextResponse.json({ message: "Failed to fetch musicians" }, { status: 500 });
+        return NextResponse.json({ message: "Failed to fetch musicians", error: error instanceof Error ? error.message : String(error) }, { status: 500 });
     }
 }
 

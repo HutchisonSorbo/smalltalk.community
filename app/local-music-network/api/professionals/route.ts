@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         return NextResponse.json(item);
     } catch (error) {
         console.error("Failed to create professional profile:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
+        return new NextResponse(JSON.stringify({ message: "Internal Server Error", error: error instanceof Error ? error.message : String(error) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
 

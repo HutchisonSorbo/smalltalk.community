@@ -26,8 +26,8 @@ const nextConfig = {
         const isProduction = process.env.NODE_ENV === 'production';
         // Only allow Vercel Live in development/preview (or if strictly needed in prod, adjust this check)
         // Vercel Live scripts
-        const vercelLive = isProduction ? '' : ' https://vercel.live';
-        const vercelScripts = isProduction ? '' : ' https://va.vercel-scripts.com';
+        const vercelLive = ' https://vercel.live';
+        const vercelScripts = ' https://va.vercel-scripts.com';
 
         return [
             {
