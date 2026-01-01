@@ -6,10 +6,7 @@ import { sql } from "drizzle-orm";
 
 async function main() {
     try {
-        console.log("Checking DB connection...");
-        // Simple query to check connection
-        const result = await db.execute(sql`SELECT 1`);
-        console.log("Connection successful:", result);
+        console.log("Checking DB connection via Drizzle...");
 
         console.log("Checking 'apps' table...");
         try {

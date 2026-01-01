@@ -12,6 +12,12 @@ if (process.env.NODE_ENV !== "production") {
     global.queryClient = client;
 }
 
+/**
+ * Single shared Drizzle DB instance for running queries/migrations.
+ * Usage: Import `db` to execute queries, e.g., `await db.select().from(table)`.
+ * @export
+ * @returns {ReturnType<typeof drizzle>} The Drizzle ORM database instance.
+ */
 export const db = drizzle(client, { schema });
 
 // Add global type definition for queryClient
