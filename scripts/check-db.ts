@@ -2,7 +2,7 @@
 import "dotenv/config";
 import { db } from "../lib/db";
 import { apps } from "@shared/schema";
-import { sql } from "drizzle-orm";
+
 
 async function main() {
     try {
