@@ -11,8 +11,15 @@ if (!process.env.DATABASE_URL) {
 const sql = postgres(process.env.DATABASE_URL, { ssl: "require" });
 
 async function checkZombie() {
-    console.log("🔍 Checking for existing user...");
-    const email = "smalltalkcommunity.backup@gmail.com";
+    const email = process.argv[2] || process.env.CHECK_ZOMBIE_EMAIL;
+
+    if (!email) {
+        console.error("❌ Error: Please provide an email address.");
+        console.log("Usage: tsx scripts/check-zombie-user.ts user@example.com");
+        process.exit(1);
+    }
+
+    console.log(`🔍 Checking for existing user: ${email}`);
 
     try {
         const users = await sql`

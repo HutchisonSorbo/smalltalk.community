@@ -7,8 +7,7 @@ import { Providers } from "@/app/providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
-import { AuthCodeHandler } from "@/components/auth/AuthCodeHandler";
-import { Suspense } from "react";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,9 +41,6 @@ export default function RootLayout({
                         {children}
                         <SpeedInsights />
                         <Analytics />
-                        <Suspense fallback={null}>
-                            <AuthCodeHandler />
-                        </Suspense>
                     </AccessibilityProvider>
                 </Providers>
             </body>

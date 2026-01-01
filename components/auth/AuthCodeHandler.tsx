@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -12,14 +12,7 @@ export function AuthCodeHandler() {
     const { toast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    useEffect(() => {
-        const code = searchParams.get("code");
-        if (code && !isProcessing) {
-            handleAuthCode(code);
-        }
-    }, [searchParams]);
-
-    const handleAuthCode = async (code: string) => {
+    const handleAuthCode = useCallback(async (code: string) => {
         setIsProcessing(true);
         const supabase = createClient();
 
@@ -71,7 +64,14 @@ export function AuthCodeHandler() {
         } finally {
             setIsProcessing(false);
         }
-    };
+    }, [router, toast]);
+
+    useEffect(() => {
+        const code = searchParams.get("code");
+        if (code && !isProcessing) {
+            handleAuthCode(code);
+        }
+    }, [searchParams, isProcessing, handleAuthCode]);
 
     if (isProcessing) {
         return (
