@@ -22,14 +22,10 @@ if (!process.env.DATABASE_URL) {
 // Disable prepared statements for Supabase Transaction Pooler compatibility
 // Use global singleton for all environments to prevent connection exhaustion
 
-interface PostgresOptions extends postgres.Options<{}> {
-  socket?: { family: number };
-}
-
-const dbOptions: PostgresOptions = {
+const dbOptions: postgres.Options<{}> = {
   prepare: false,
-  socket: { family: 4 } // Force IPv4 for this specific connection
 };
+
 
 export const queryClient = global.queryClient || postgres(process.env.DATABASE_URL, dbOptions);
 global.queryClient = queryClient;
