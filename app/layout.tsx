@@ -8,6 +8,7 @@ import { AccessibilityProvider } from "@/components/providers/AccessibilityConte
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
 
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
