@@ -329,7 +329,7 @@ function LoginForm() {
                             <div className="flex items-center justify-between">
                                 <label htmlFor="password">Password</label>
                                 {!isSignUp && (
-                                    <Button variant="link" size="sm" className="px-0 font-normal h-auto" onClick={() => router.push("/forgot-password")}>
+                                    <Button variant="link" size="sm" className="px-0 font-normal h-auto dark:text-white" onClick={() => router.push("/forgot-password")}>
                                         Forgot?
                                     </Button>
                                 )}
