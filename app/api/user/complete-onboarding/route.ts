@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
-import { db } from "@/lib/db";
+import { db } from "@/server/db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod"; // Added Zod import
