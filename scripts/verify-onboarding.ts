@@ -36,7 +36,7 @@ async function run() {
             lastName: "User",
             dateOfBirth: "1990-01-01", // Adult
             accountType: "Individual",
-            userType: "musician"
+            userType: "individual"
         })
     });
 

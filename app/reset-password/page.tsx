@@ -5,30 +5,53 @@ import { createClient } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
 import { z } from "zod";
 
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+// Strict password schema
+const passwordSchema = z.string()
+    .min(12, "Password must be at least 12 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character")
+    .regex(/^\S*$/, "Password must not contain spaces");
+
+const formSchema = z.object({
+    password: passwordSchema,
+    confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+});
 
 export default function ResetPasswordPage() {
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<{ password?: string; confirmPassword?: string }>({});
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+        setFieldErrors({});
 
-        // Validate password
-        const result = passwordSchema.safeParse(password);
+        // Validate form
+        const result = formSchema.safeParse({ password, confirmPassword });
         if (!result.success) {
-            setError(result.error.errors[0].message);
+            const formattedErrors: { password?: string; confirmPassword?: string } = {};
+            result.error.errors.forEach((err) => {
+                if (err.path[0] === "password") formattedErrors.password = err.message;
+                if (err.path[0] === "confirmPassword") formattedErrors.confirmPassword = err.message;
+            });
+            setFieldErrors(formattedErrors);
             return;
         }
 
@@ -104,7 +127,7 @@ export default function ResetPasswordPage() {
                 <form onSubmit={handleSubmit}>
                     <CardContent className="grid gap-4">
                         <div className="grid gap-2">
-                            <label htmlFor="password" classname="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 New Password
                             </label>
                             <Input
@@ -115,17 +138,46 @@ export default function ResetPasswordPage() {
                                 onChange={(e) => {
                                     setPassword(e.target.value);
                                     if (error) setError(null);
+                                    setFieldErrors((prev) => ({ ...prev, password: undefined }));
                                 }}
                                 disabled={isLoading}
-                                aria-invalid={!!error}
-                                aria-describedby={error ? "password-error" : undefined}
+                                aria-invalid={!!fieldErrors.password}
+                                aria-describedby={fieldErrors.password ? "password-error" : undefined}
                             />
-                            {error && (
+                            {fieldErrors.password && (
                                 <p id="password-error" className="text-sm font-medium text-destructive">
-                                    {error}
+                                    {fieldErrors.password}
                                 </p>
                             )}
                         </div>
+                        <div className="grid gap-2">
+                            <label htmlFor="confirmPassword" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                Confirm Password
+                            </label>
+                            <Input
+                                id="confirmPassword"
+                                type="password"
+                                required
+                                value={confirmPassword}
+                                onChange={(e) => {
+                                    setConfirmPassword(e.target.value);
+                                    setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                                }}
+                                disabled={isLoading}
+                                aria-invalid={!!fieldErrors.confirmPassword}
+                                aria-describedby={fieldErrors.confirmPassword ? "confirmPassword-error" : undefined}
+                            />
+                            {fieldErrors.confirmPassword && (
+                                <p id="confirmPassword-error" className="text-sm font-medium text-destructive">
+                                    {fieldErrors.confirmPassword}
+                                </p>
+                            )}
+                        </div>
+                        {error && (
+                            <div className="text-sm font-medium text-destructive text-center">
+                                {error}
+                            </div>
+                        )}
                     </CardContent>
                     <CardFooter>
                         <Button className="w-full" type="submit" disabled={isLoading}>

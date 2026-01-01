@@ -64,7 +64,7 @@ async function setupAuthTrigger() {
           new.raw_user_meta_data ->> 'first_name',
           new.raw_user_meta_data ->> 'last_name',
           avatar_url,
-          coalesce(new.raw_user_meta_data ->> 'user_type', 'musician'),
+          coalesce(new.raw_user_meta_data ->> 'user_type', 'individual'),
           coalesce(new.raw_user_meta_data ->> 'account_type', 'Individual'),
           new.raw_user_meta_data ->> 'organisation_name',
           dob_timestamp,

@@ -107,39 +107,41 @@ export default function ForgotPasswordPage() {
                         Enter your email address and we'll send you a link to reset your password.
                     </CardDescription>
                 </CardHeader>
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
-                            </div>
-                            <p className="text-center text-sm text-muted-foreground">
-                                Check your email for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.
-                            </p>
-                            <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => setIsSubmitted(false)}
-                            >
-                                Try another email
-                            </Button>
-                        </div >
-                    )
-}
-                </CardContent >
-    <CardFooter>
-        <Link
-            href="/login"
-            className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to login
-        </Link>
-    </CardFooter>
-            </Card >
-        </div >
+                <form onSubmit={handleSubmit}>
+                    <CardContent className="grid gap-4">
+                        <div className="grid gap-2">
+                            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                Email
+                            </label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="m@example.com"
+                                required
+                                value={email}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    if (error) setError(null);
+                                }}
+                                disabled={isLoading}
+                                aria-invalid={!!error}
+                                aria-describedby={error ? "email-error" : undefined}
+                            />
+                            {error && (
+                                <p id="email-error" className="text-sm font-medium text-destructive">
+                                    {error}
+                                </p>
+                            )}
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button className="w-full" type="submit" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Send Reset Link
+                        </Button>
+                    </CardFooter>
+                </form>
+            </Card>
+        </div>
     );
 }

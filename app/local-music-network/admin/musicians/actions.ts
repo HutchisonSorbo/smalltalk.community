@@ -30,7 +30,7 @@ export async function seedMusician() {
         email,
         firstName,
         lastName,
-        userType: "musician",
+        userType: "individual",
     }).returning();
 
     // Create Profile

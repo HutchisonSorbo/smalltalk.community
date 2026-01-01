@@ -88,7 +88,7 @@ export async function POST(req: Request) {
             firstName: firstName,
             lastName: lastName,
             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-            userType: userType || 'musician', // Default
+            userType: userType || 'individual', // Default
             accountType: accountType,
             accountTypeSpecification: accountTypeSpecification,
             organisationName: organisationName,
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
                 firstName: firstName,
                 lastName: lastName,
                 dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-                userType: userType || 'musician',
+                userType: userType || 'individual',
                 accountType: accountType,
                 accountTypeSpecification: accountTypeSpecification,
                 organisationName: organisationName,
