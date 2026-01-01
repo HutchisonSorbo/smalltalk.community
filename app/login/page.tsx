@@ -140,9 +140,8 @@ function LoginForm() {
                             date_of_birth: dob,
                             account_type: finalAccountType,
                             organisation_name: accountType === "Individual" ? undefined : organisationName,
-                            // Default to musician for individual, professional for others as a heuristic, 
-                            // or just default to musician. Let's default to musician for now as safe default.
-                            user_type: 'musician',
+                            // Assign 'individual' or 'organisation' based on account type
+                            user_type: accountType === "Individual" ? 'individual' : 'organisation',
                         },
                         captchaToken: captchaToken,
                         emailRedirectTo: `${globalThis.location.origin}/api/auth/callback`,
@@ -329,7 +328,7 @@ function LoginForm() {
                             <div className="flex items-center justify-between">
                                 <label htmlFor="password">Password</label>
                                 {!isSignUp && (
-                                    <Button variant="link" size="sm" className="px-0 font-normal h-auto" onClick={() => router.push("/forgot-password")}>
+                                    <Button variant="link" size="sm" className="px-0 font-normal h-auto dark:text-white" onClick={() => router.push("/forgot-password")}>
                                         Forgot?
                                     </Button>
                                 )}

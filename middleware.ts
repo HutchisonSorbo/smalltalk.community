@@ -46,6 +46,16 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl;
     const path = url.pathname;
 
+    // Explicitly rewrite specific API routes that are part of the local-music-network app
+    // This must happen BEFORE the global API skip below
+    if (path.startsWith("/api/musicians") || path.startsWith("/api/professionals")) {
+        const newUrl = new URL(`/local-music-network${path}`, request.url);
+        const rewriteResponse = NextResponse.rewrite(newUrl);
+        response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
+        response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+        return rewriteResponse;
+    }
+
     // Skip Next.js internals, static files, and Sentry monitoring
     if (path.startsWith("/_next") || path.startsWith("/api") || path.startsWith("/cms") || path === "/monitoring" || path.includes(".")) {
         return response;
@@ -64,7 +74,7 @@ export async function middleware(request: NextRequest) {
 
     // 1. Explicit Routes: If path is explicitly /local-music-network, /hub, /volunteer-passport, /onboarding, /dashboard, /apps, or /settings, let it pass
     if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport") ||
-        path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings") || path.startsWith("/login")) {
+        path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings") || path.startsWith("/login") || path.startsWith("/forgot-password")) {
         return response;
     }
 

@@ -38,7 +38,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   dateOfBirth: timestamp("date_of_birth"),
-  userType: varchar("user_type", { length: 50 }).default("musician"), // 'musician' | 'professional'
+  userType: varchar("user_type", { length: 50 }).default("individual"), // 'individual' | 'organisation'
   accountType: varchar("account_type", { length: 100 }).default("Individual"), // 'Individual', 'Business', 'Government Organisation', 'Charity', 'Other'
   accountTypeSpecification: varchar("account_type_specification", { length: 255 }), // For 'Other' type details
   onboardingCompleted: boolean("onboarding_completed").default(false),

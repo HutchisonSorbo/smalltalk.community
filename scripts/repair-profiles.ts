@@ -50,7 +50,7 @@ async function repairProfiles() {
                         ${user.email},
                         ${meta.first_name || 'Unknown'},
                         ${meta.last_name || 'User'},
-                        ${meta.user_type || 'musician'},
+                        ${meta.user_type || 'individual'},
                         ${meta.account_type || 'Individual'},
                         ${meta.organisation_name || null},
                         ${meta.date_of_birth ? new Date(meta.date_of_birth) : null},
