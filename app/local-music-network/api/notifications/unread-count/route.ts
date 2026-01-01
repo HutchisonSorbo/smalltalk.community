@@ -14,6 +14,7 @@ export async function GET() {
         const count = await storage.getUnreadNotificationCount(user.id);
         return NextResponse.json({ count });
     } catch (error) {
+        console.error("Error fetching unread notifications count:", error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
