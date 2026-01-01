@@ -28,6 +28,7 @@ const handleExit = async (signal: string) => {
   console.log(`Received ${signal}, closing database connection...`);
   try {
     await queryClient.end();
+    global.queryClient = undefined;
     console.log('Database connection closed');
     if (signal !== 'beforeExit' && signal !== 'module.hot.dispose') {
       process.exit(0);
