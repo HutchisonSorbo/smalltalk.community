@@ -21,7 +21,7 @@ if (!process.env.DATABASE_URL) {
 
 // Disable prepared statements for Supabase Transaction Pooler compatibility
 // Use global singleton for all environments to prevent connection exhaustion
-// @ts-ignore - socket option is valid in postgres.js but might be missing in older types
+
 interface PostgresOptions extends postgres.Options<{}> {
   socket?: { family: number };
 }
