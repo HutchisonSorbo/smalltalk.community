@@ -1,0 +1,11 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circle background -->
+  <circle cx="32" cy="32" r="30" fill="#003870"/>
+  <!-- Hand -->
+  <path d="M32 44C24 44 18 38 18 30C18 22 24 16 32 16C40 16 46 22 46 30C46 38 40 44 32 44Z" fill="white" fill-opacity="0.3"/>
+  <!-- Heart in hand -->
+  <path d="M32 38C32 38 24 32 24 27C24 24 26 22 29 22C30.5 22 31.5 23 32 24C32.5 23 33.5 22 35 22C38 22 40 24 40 27C40 32 32 38 32 38Z" fill="white"/>
+  <!-- Passport lines -->
+  <rect x="24" y="42" width="16" height="2" rx="1" fill="white"/>
+  <rect x="26" y="46" width="12" height="2" rx="1" fill="white"/>
+</svg>
