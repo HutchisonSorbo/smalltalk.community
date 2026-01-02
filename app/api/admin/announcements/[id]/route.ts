@@ -4,24 +4,41 @@ import { db } from "@/server/db";
 import { announcements, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
+import { z } from "zod";
+
+// Zod schema for announcement update
+const updateAnnouncementSchema = z.object({
+    title: z.string().max(200).optional().nullable(),
+    message: z.string().min(1).max(2000).optional(),
+    visibility: z.enum(["all", "public", "private"]).optional(),
+    priority: z.number().int().min(0).max(100).optional(),
+    isActive: z.boolean().optional(),
+}).refine(data => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+});
 
 async function verifyAdmin() {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error || !user) {
+        if (error || !user) {
+            return { authorized: false, adminId: null };
+        }
+
+        const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, user.id),
+        });
+
+        if (!dbUser || !dbUser.isAdmin) {
+            return { authorized: false, adminId: null };
+        }
+
+        return { authorized: true, adminId: user.id };
+    } catch (error) {
+        console.error("[Admin API] Auth verification error:", error);
         return { authorized: false, adminId: null };
     }
-
-    const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, user.id),
-    });
-
-    if (!dbUser || !dbUser.isAdmin) {
-        return { authorized: false, adminId: null };
-    }
-
-    return { authorized: true, adminId: user.id };
 }
 
 // PATCH /api/admin/announcements/[id] - Update announcement
@@ -38,18 +55,28 @@ export async function PATCH(
 
     try {
         const body = await request.json();
-        const { title, message, visibility, priority, isActive } = body;
+
+        // Validate with Zod
+        const parseResult = updateAnnouncementSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.errors[0]?.message || "Invalid input" },
+                { status: 400 }
+            );
+        }
+
+        const { title, message, visibility, priority, isActive } = parseResult.data;
+
+        const updateValues: Record<string, unknown> = { updatedAt: new Date() };
+        if (title !== undefined) updateValues.title = title;
+        if (message !== undefined) updateValues.message = message;
+        if (visibility !== undefined) updateValues.visibility = visibility;
+        if (priority !== undefined) updateValues.priority = priority;
+        if (isActive !== undefined) updateValues.isActive = isActive;
 
         const [updated] = await db
             .update(announcements)
-            .set({
-                title: title !== undefined ? title : undefined,
-                message: message !== undefined ? message : undefined,
-                visibility: visibility !== undefined ? visibility : undefined,
-                priority: priority !== undefined ? priority : undefined,
-                isActive: isActive !== undefined ? isActive : undefined,
-                updatedAt: new Date(),
-            })
+            .set(updateValues)
             .where(eq(announcements.id, id))
             .returning();
 
@@ -62,7 +89,7 @@ export async function PATCH(
             action: AdminActions.ANNOUNCEMENT_UPDATE,
             targetType: TargetTypes.ANNOUNCEMENT,
             targetId: id,
-            details: { updatedFields: Object.keys(body) },
+            details: { updatedFields: Object.keys(parseResult.data) },
         });
 
         return NextResponse.json(updated);

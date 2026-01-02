@@ -55,52 +55,62 @@ interface SearchParams {
 }
 
 async function getActivityLogs(searchParams: SearchParams) {
-    const page = parseInt(searchParams.page || "1", 10);
-    const pageSize = 50;
-    const offset = (page - 1) * pageSize;
+    try {
+        const page = parseInt(searchParams.page || "1", 10);
+        const pageSize = 50;
+        const offset = (page - 1) * pageSize;
 
-    const logs = await db
-        .select({
-            id: adminActivityLog.id,
-            action: adminActivityLog.action,
-            targetType: adminActivityLog.targetType,
-            targetId: adminActivityLog.targetId,
-            details: adminActivityLog.details,
-            ipAddress: adminActivityLog.ipAddress,
-            createdAt: adminActivityLog.createdAt,
-            adminId: adminActivityLog.adminId,
-            adminFirstName: users.firstName,
-            adminLastName: users.lastName,
-            adminEmail: users.email,
-            adminImage: users.profileImageUrl,
-        })
-        .from(adminActivityLog)
-        .leftJoin(users, eq(adminActivityLog.adminId, users.id))
-        .orderBy(desc(adminActivityLog.createdAt))
-        .limit(pageSize)
-        .offset(offset);
+        const logs = await db
+            .select({
+                id: adminActivityLog.id,
+                action: adminActivityLog.action,
+                targetType: adminActivityLog.targetType,
+                targetId: adminActivityLog.targetId,
+                details: adminActivityLog.details,
+                ipAddress: adminActivityLog.ipAddress,
+                createdAt: adminActivityLog.createdAt,
+                adminId: adminActivityLog.adminId,
+                adminFirstName: users.firstName,
+                adminLastName: users.lastName,
+                adminEmail: users.email,
+                adminImage: users.profileImageUrl,
+            })
+            .from(adminActivityLog)
+            .leftJoin(users, eq(adminActivityLog.adminId, users.id))
+            .orderBy(desc(adminActivityLog.createdAt))
+            .limit(pageSize)
+            .offset(offset);
 
-    return logs;
+        return logs;
+    } catch (error) {
+        console.error("[Admin Activity] Error fetching logs:", error);
+        return [];
+    }
 }
 
 async function getActivityStats() {
-    const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    try {
+        const now = new Date();
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const [totalLogs, logsToday, logsThisWeek] = await Promise.all([
-        db.select({ count: sql<number>`count(*)` }).from(adminActivityLog),
-        db.select({ count: sql<number>`count(*)` }).from(adminActivityLog)
-            .where(gte(adminActivityLog.createdAt, twentyFourHoursAgo)),
-        db.select({ count: sql<number>`count(*)` }).from(adminActivityLog)
-            .where(gte(adminActivityLog.createdAt, sevenDaysAgo)),
-    ]);
+        const [totalLogs, logsToday, logsThisWeek] = await Promise.all([
+            db.select({ count: sql<number>`count(*)` }).from(adminActivityLog),
+            db.select({ count: sql<number>`count(*)` }).from(adminActivityLog)
+                .where(gte(adminActivityLog.createdAt, twentyFourHoursAgo)),
+            db.select({ count: sql<number>`count(*)` }).from(adminActivityLog)
+                .where(gte(adminActivityLog.createdAt, sevenDaysAgo)),
+        ]);
 
-    return {
-        total: totalLogs[0]?.count ?? 0,
-        today: logsToday[0]?.count ?? 0,
-        thisWeek: logsThisWeek[0]?.count ?? 0,
-    };
+        return {
+            total: totalLogs[0]?.count ?? 0,
+            today: logsToday[0]?.count ?? 0,
+            thisWeek: logsThisWeek[0]?.count ?? 0,
+        };
+    } catch (error) {
+        console.error("[Admin Activity] Error fetching stats:", error);
+        return { total: 0, today: 0, thisWeek: 0 };
+    }
 }
 
 export default async function ActivityLogPage({

@@ -1,48 +1,6 @@
 import { db } from "@/server/db";
-import { adminActivityLog, type InsertAdminActivityLog } from "@shared/schema";
+import { adminActivityLog } from "@shared/schema";
 import { headers } from "next/headers";
-
-/**
- * Log an admin action to the activity log.
- * This function should be called after any admin action that modifies data.
- * 
- * SECURITY: Activity logs are immutable - only insert operations are allowed.
- * The table is protected by service_role-only RLS policies.
- */
-export async function logAdminAction({
-    adminId,
-    action,
-    targetType,
-    targetId,
-    details,
-}: {
-    adminId: string;
-    action: string;
-    targetType: string;
-    targetId: string;
-    details?: Record<string, unknown>;
-}) {
-    try {
-        const headersList = await headers();
-        const ipAddress = headersList.get("x-forwarded-for")?.split(",")[0]?.trim()
-            || headersList.get("x-real-ip")
-            || "unknown";
-        const userAgent = headersList.get("user-agent") || undefined;
-
-        await db.insert(adminActivityLog).values({
-            adminId,
-            action,
-            targetType,
-            targetId,
-            details: details ?? null,
-            ipAddress,
-            userAgent,
-        });
-    } catch (error) {
-        // Log to console but don't throw - activity logging shouldn't break admin operations
-        console.error("[Admin Activity Log] Failed to log action:", error);
-    }
-}
 
 /**
  * Admin action types for consistent logging
@@ -89,6 +47,9 @@ export const AdminActions = {
     // Settings actions
     SETTING_UPDATE: "setting.update",
     FEATURE_FLAG_UPDATE: "feature_flag.update",
+
+    // Export actions
+    EXPORT_DATA: "export.data",
 } as const;
 
 export type AdminAction = typeof AdminActions[keyof typeof AdminActions];
@@ -114,3 +75,45 @@ export const TargetTypes = {
 } as const;
 
 export type TargetType = typeof TargetTypes[keyof typeof TargetTypes];
+
+/**
+ * Log an admin action to the activity log.
+ * This function should be called after any admin action that modifies data.
+ * 
+ * SECURITY: Activity logs are immutable - only insert operations are allowed.
+ * The table is protected by service_role-only RLS policies.
+ */
+export async function logAdminAction({
+    adminId,
+    action,
+    targetType,
+    targetId,
+    details,
+}: {
+    adminId: string;
+    action: AdminAction | string;
+    targetType: TargetType | string;
+    targetId: string;
+    details?: Record<string, unknown>;
+}) {
+    try {
+        const headersList = await headers();
+        const ipAddress = headersList.get("x-forwarded-for")?.split(",")[0]?.trim()
+            || headersList.get("x-real-ip")
+            || "unknown";
+        const userAgent = headersList.get("user-agent") || undefined;
+
+        await db.insert(adminActivityLog).values({
+            adminId,
+            action,
+            targetType,
+            targetId,
+            details: details ?? null,
+            ipAddress,
+            userAgent,
+        });
+    } catch (error) {
+        // Log to console but don't throw - activity logging shouldn't break admin operations
+        console.error("[Admin Activity Log] Failed to log action:", error);
+    }
+}

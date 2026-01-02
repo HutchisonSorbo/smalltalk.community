@@ -4,25 +4,40 @@ import { db } from "@/server/db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
+import { z } from "zod";
+
+// Zod schema for user update
+const updateUserSchema = z.object({
+    isAdmin: z.boolean().optional(),
+    isMinor: z.boolean().optional(),
+    messagePrivacy: z.enum(["anyone", "connections", "none"]).optional(),
+}).refine(data => Object.keys(data).length > 0, {
+    message: "At least one field must be provided",
+});
 
 // Helper to verify admin access
 async function verifyAdmin() {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error || !user) {
+        if (error || !user) {
+            return { authorized: false, adminId: null };
+        }
+
+        const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, user.id),
+        });
+
+        if (!dbUser || !dbUser.isAdmin) {
+            return { authorized: false, adminId: null };
+        }
+
+        return { authorized: true, adminId: user.id };
+    } catch (error) {
+        console.error("[Admin API] Auth verification error:", error);
         return { authorized: false, adminId: null };
     }
-
-    const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, user.id),
-    });
-
-    if (!dbUser || !dbUser.isAdmin) {
-        return { authorized: false, adminId: null };
-    }
-
-    return { authorized: true, adminId: user.id };
 }
 
 // GET /api/admin/users/[id] - Get user details
@@ -68,19 +83,16 @@ export async function PATCH(
     try {
         const body = await request.json();
 
-        // Only allow updating specific fields
-        const allowedFields = ["isAdmin", "isMinor", "messagePrivacy"];
-        const updateData: Record<string, unknown> = {};
-
-        for (const field of allowedFields) {
-            if (field in body) {
-                updateData[field] = body[field];
-            }
+        // Validate with Zod
+        const parseResult = updateUserSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.errors[0]?.message || "Invalid input" },
+                { status: 400 }
+            );
         }
 
-        if (Object.keys(updateData).length === 0) {
-            return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
-        }
+        const updateData = parseResult.data;
 
         // Perform update
         const [updatedUser] = await db

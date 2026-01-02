@@ -15,25 +15,30 @@ import {
     userNotificationPreferences,
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
-import { logAdminAction, TargetTypes } from "@/lib/admin-utils";
+import { logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
 
 async function verifyAdmin() {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error || !user) {
+        if (error || !user) {
+            return { authorized: false, adminId: null };
+        }
+
+        const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, user.id),
+        });
+
+        if (!dbUser || !dbUser.isAdmin) {
+            return { authorized: false, adminId: null };
+        }
+
+        return { authorized: true, adminId: user.id };
+    } catch (error) {
+        console.error("[Admin API] Auth verification error:", error);
         return { authorized: false, adminId: null };
     }
-
-    const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, user.id),
-    });
-
-    if (!dbUser || !dbUser.isAdmin) {
-        return { authorized: false, adminId: null };
-    }
-
-    return { authorized: true, adminId: user.id };
 }
 
 function objectToCSV(data: Record<string, unknown>[]): string {
@@ -98,7 +103,7 @@ export async function GET(
         // Log the export
         await logAdminAction({
             adminId,
-            action: "export.data",
+            action: AdminActions.EXPORT_DATA,
             targetType: TargetTypes.SETTING,
             targetId: type,
             details: { format, recordCount: data.length },

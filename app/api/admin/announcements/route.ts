@@ -4,24 +4,39 @@ import { db } from "@/server/db";
 import { announcements, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
+import { z } from "zod";
+
+// Zod schema for announcement creation
+const createAnnouncementSchema = z.object({
+    title: z.string().max(200).optional().nullable(),
+    message: z.string().min(1, "Message is required").max(2000),
+    visibility: z.enum(["all", "public", "private"]).default("all"),
+    priority: z.number().int().min(0).max(100).default(0),
+    isActive: z.boolean().default(true),
+});
 
 async function verifyAdmin() {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error || !user) {
+        if (error || !user) {
+            return { authorized: false, adminId: null };
+        }
+
+        const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, user.id),
+        });
+
+        if (!dbUser || !dbUser.isAdmin) {
+            return { authorized: false, adminId: null };
+        }
+
+        return { authorized: true, adminId: user.id };
+    } catch (error) {
+        console.error("[Admin API] Auth verification error:", error);
         return { authorized: false, adminId: null };
     }
-
-    const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, user.id),
-    });
-
-    if (!dbUser || !dbUser.isAdmin) {
-        return { authorized: false, adminId: null };
-    }
-
-    return { authorized: true, adminId: user.id };
 }
 
 // POST /api/admin/announcements - Create announcement
@@ -33,20 +48,26 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
-        const { title, message, visibility, priority, isActive } = body;
 
-        if (!message) {
-            return NextResponse.json({ error: "Message is required" }, { status: 400 });
+        // Validate with Zod
+        const parseResult = createAnnouncementSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.errors[0]?.message || "Invalid input" },
+                { status: 400 }
+            );
         }
+
+        const { title, message, visibility, priority, isActive } = parseResult.data;
 
         const [newAnnouncement] = await db
             .insert(announcements)
             .values({
                 title: title || null,
                 message,
-                visibility: visibility || "all",
-                priority: priority ?? 0,
-                isActive: isActive ?? true,
+                visibility,
+                priority,
+                isActive,
             })
             .returning();
 
