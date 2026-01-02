@@ -7,9 +7,17 @@ import {
     Flag,
     AppWindow,
     TrendingUp,
-    FileText,
     Download,
     Shield,
+    Activity,
+    UserCog,
+    FileText,
+    Megaphone,
+    Settings,
+    ToggleLeft,
+    Database,
+    Building2,
+    ChevronDown,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -24,40 +32,82 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubItem,
+    SidebarMenuSubButton,
     SidebarRail,
 } from "@/components/ui/sidebar"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
-const platformItems = [
+const overviewItems = [
     {
         title: "Dashboard",
         url: "/admin",
         icon: LayoutDashboard,
     },
     {
-        title: "Users",
+        title: "Activity Log",
+        url: "/admin/activity",
+        icon: Activity,
+    },
+]
+
+const userItems = [
+    {
+        title: "All Users",
         url: "/admin/users",
         icon: Users,
+    },
+    {
+        title: "Roles & Permissions",
+        url: "/admin/roles",
+        icon: UserCog,
+    },
+]
+
+const contentItems = [
+    {
+        title: "Content Overview",
+        url: "/admin/content",
+        icon: Database,
+    },
+    {
+        title: "Moderation Queue",
+        url: "/admin/reports",
+        icon: Flag,
+    },
+    {
+        title: "Announcements",
+        url: "/admin/announcements",
+        icon: Megaphone,
     },
     {
         title: "Onboarding Data",
         url: "/admin/onboarding",
         icon: ClipboardList,
     },
+]
+
+const appItems = [
     {
-        title: "Reports",
-        url: "/admin/reports",
-        icon: Flag,
-    },
-    {
-        title: "Apps",
+        title: "App Registry",
         url: "/admin/apps",
         icon: AppWindow,
+    },
+    {
+        title: "Organisations",
+        url: "/admin/organisations",
+        icon: Building2,
     },
 ]
 
 const analyticsItems = [
     {
-        title: "Metrics",
+        title: "Metrics & Analytics",
         url: "/admin/metrics",
         icon: TrendingUp,
     },
@@ -68,8 +118,44 @@ const analyticsItems = [
     },
 ]
 
+const settingsItems = [
+    {
+        title: "Site Settings",
+        url: "/admin/settings",
+        icon: Settings,
+    },
+    {
+        title: "Feature Flags",
+        url: "/admin/settings/features",
+        icon: ToggleLeft,
+    },
+]
+
+interface NavSection {
+    label: string
+    items: {
+        title: string
+        url: string
+        icon: React.ComponentType<{ className?: string }>
+    }[]
+}
+
+const navSections: NavSection[] = [
+    { label: "Overview", items: overviewItems },
+    { label: "Users & Access", items: userItems },
+    { label: "Content", items: contentItems },
+    { label: "Apps", items: appItems },
+    { label: "Analytics", items: analyticsItems },
+    { label: "Platform", items: settingsItems },
+]
+
 export function PlatformAdminSidebar() {
     const pathname = usePathname()
+
+    const isActive = (url: string) => {
+        if (url === "/admin") return pathname === "/admin"
+        return pathname.startsWith(url)
+    }
 
     return (
         <Sidebar collapsible="icon">
@@ -91,40 +177,25 @@ export function PlatformAdminSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Management</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {platformItems.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild isActive={pathname === item.url}>
-                                        <Link href={item.url}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Analytics</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {analyticsItems.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild isActive={pathname === item.url}>
-                                        <Link href={item.url}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                {navSections.map((section) => (
+                    <SidebarGroup key={section.label}>
+                        <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {section.items.map((item) => (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                                            <Link href={item.url}>
+                                                <item.icon className="size-4" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                ))}
             </SidebarContent>
             <SidebarRail />
         </Sidebar>
