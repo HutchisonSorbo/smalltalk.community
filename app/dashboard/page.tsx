@@ -1,38 +1,79 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Plus, Loader2, User, CheckCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
+interface UserProfile {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    profileImageUrl?: string;
+    onboardingCompleted?: boolean;
+    onboardingStep?: number;
+    profileCompletionPercentage?: number;
+    accountType?: string;
+    dateOfBirth?: string;
+}
+
+function calculateProfileCompletion(user: UserProfile | null): { percentage: number; missing: string[] } {
+    if (!user) return { percentage: 0, missing: ["Sign in to view your profile"] };
+
+    const checks = [
+        { field: "firstName", label: "First name", value: !!user.firstName },
+        { field: "lastName", label: "Last name", value: !!user.lastName },
+        { field: "email", label: "Email", value: !!user.email },
+        { field: "profileImageUrl", label: "Profile photo", value: !!user.profileImageUrl },
+        { field: "dateOfBirth", label: "Date of birth", value: !!user.dateOfBirth },
+        { field: "onboardingCompleted", label: "Onboarding", value: !!user.onboardingCompleted },
+    ];
+
+    const completed = checks.filter(c => c.value).length;
+    const missing = checks.filter(c => !c.value).map(c => c.label);
+    const percentage = Math.round((completed / checks.length) * 100);
+
+    return { percentage, missing };
+}
+
 export default function DashboardPage() {
     const [apps, setApps] = useState<AppData[]>([]);
+    const [user, setUser] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
     useEffect(() => {
-        async function fetchUserApps() {
+        async function fetchData() {
             try {
-                const res = await fetch("/api/user/apps");
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    setApps(data);
+                // Fetch user apps
+                const appsRes = await fetch("/api/user/apps");
+                const appsData = await appsRes.json();
+                if (Array.isArray(appsData)) {
+                    setApps(appsData);
+                }
+
+                // Fetch user profile
+                const userRes = await fetch("/api/user/profile");
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(userData.user || userData);
                 }
             } catch (error) {
                 console.error(error);
                 toast({
                     title: "Error",
-                    description: "Failed to load your apps.",
+                    description: "Failed to load dashboard data.",
                     variant: "destructive"
                 });
             } finally {
                 setIsLoading(false);
             }
         }
-        fetchUserApps();
+        fetchData();
     }, [toast]);
 
     const handleRemoveApp = async (appId: string) => {
@@ -58,12 +99,18 @@ export default function DashboardPage() {
         }
     };
 
+    const { percentage, missing } = calculateProfileCompletion(user);
+
     return (
         <div className="min-h-screen bg-background">
-
             <main className="container mx-auto px-4 py-8">
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold tracking-tight">Your Dashboard</h1>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            {user?.firstName ? `Welcome back, ${user.firstName}` : "Your Dashboard"}
+                        </h1>
+                        <p className="text-muted-foreground">Manage your apps and profile</p>
+                    </div>
                     <Link href="/apps">
                         <Button>
                             <Plus className="mr-2 h-4 w-4" /> Add Apps
@@ -75,24 +122,99 @@ export default function DashboardPage() {
                     <div className="flex justify-center py-20">
                         <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
                     </div>
-                ) : apps.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {apps.map(app => (
-                            <AppCard
-                                key={app.id}
-                                app={app}
-                                variant="dashboard"
-                                onRemove={() => handleRemoveApp(app.id)}
-                            />
-                        ))}
-                    </div>
                 ) : (
-                    <div className="text-center py-20 border-2 border-dashed rounded-xl">
-                        <h3 className="text-xl font-semibold mb-2">No apps installed</h3>
-                        <p className="text-muted-foreground mb-6">Start by adding apps to your dashboard.</p>
-                        <Link href="/apps">
-                            <Button variant="secondary">Browse App Catalogue</Button>
-                        </Link>
+                    <div className="grid gap-6 lg:grid-cols-3">
+                        {/* Main Content - Apps */}
+                        <div className="lg:col-span-2 space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Your Apps</CardTitle>
+                                    <CardDescription>Quick access to your installed applications</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {apps.length > 0 ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {apps.map(app => (
+                                                <AppCard
+                                                    key={app.id}
+                                                    app={app}
+                                                    variant="dashboard"
+                                                    onRemove={() => handleRemoveApp(app.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 border-2 border-dashed rounded-xl">
+                                            <h3 className="text-lg font-semibold mb-2">No apps installed</h3>
+                                            <p className="text-muted-foreground mb-4">Start by adding apps to your dashboard.</p>
+                                            <Link href="/apps">
+                                                <Button variant="secondary">Browse App Catalogue</Button>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Sidebar - Profile Completion */}
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <User className="h-5 w-5" />
+                                        Profile Completion
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span>Progress</span>
+                                            <span className="font-medium">{percentage}%</span>
+                                        </div>
+                                        <Progress value={percentage} className="h-2" />
+                                    </div>
+
+                                    {percentage < 100 ? (
+                                        <div className="space-y-2">
+                                            <p className="text-sm text-muted-foreground">Complete your profile:</p>
+                                            <ul className="space-y-1">
+                                                {missing.slice(0, 3).map((item, i) => (
+                                                    <li key={i} className="flex items-center gap-2 text-sm">
+                                                        <AlertCircle className="h-4 w-4 text-yellow-500" />
+                                                        {item}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            <Button variant="outline" className="w-full mt-4" asChild>
+                                                <Link href="/settings">Complete Profile</Link>
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-sm text-green-600">
+                                            <CheckCircle className="h-4 w-4" />
+                                            Profile complete!
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Quick Actions</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-2">
+                                    <Button variant="outline" className="w-full justify-start" asChild>
+                                        <Link href="/local-music-network">Local Music Network</Link>
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-start" asChild>
+                                        <Link href="/volunteer-passport">Volunteer Passport</Link>
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-start" asChild>
+                                        <Link href="/settings">Account Settings</Link>
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 )}
             </main>

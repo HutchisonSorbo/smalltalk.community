@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { PlatformHeader } from "@/components/platform/PlatformHeader";
 import { AppCard, AppData } from "@/components/platform/AppCard";
 import dynamic from "next/dynamic";
@@ -14,13 +14,13 @@ const VictoriaMap = dynamic(() => import("@/components/local-music-network/Victo
     loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-xl" />
 });
 
-// Hardcoded apps for showcase until seed is ready/consistent
-const SHOWCASE_APPS: AppData[] = [
+// Fallback apps in case DB fetch fails
+const FALLBACK_APPS: AppData[] = [
     {
         id: "lmn",
         name: "Local Music Network",
         description: "The ultimate directory for Victorian musicians, bands, and gigs. Connect and collaborate.",
-        iconUrl: "/icons/music-icon.png", // Placeholder
+        iconUrl: "/icons/music-icon.png",
         route: "/local-music-network",
         category: "Music"
     },
@@ -28,22 +28,49 @@ const SHOWCASE_APPS: AppData[] = [
         id: "vp",
         name: "Volunteer Passport",
         description: "Your digital passport for verifying credentials and finding volunteer opportunities across Victoria.",
-        iconUrl: "/icons/shield-icon.png", // Placeholder
+        iconUrl: "/icons/shield-icon.png",
         route: "/volunteer-passport",
         category: "Community"
     },
-    {
-        id: "mp",
-        name: "Marketplace",
-        description: "Buy, sell, and trade gear with verified locals. Safe, secure, and community-driven.",
-        iconUrl: "/icons/zap-icon.png", // Placeholder
-        route: "#",
-        category: "Commerce",
-        isBeta: true
-    }
 ];
 
 export function HubLanding() {
+    const [apps, setApps] = useState<AppData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchApps() {
+            try {
+                const res = await fetch("/api/apps");
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    // Map to AppData format and filter active apps
+                    const mappedApps: AppData[] = data
+                        .filter((app: Record<string, unknown>) => app.isActive)
+                        .slice(0, 6) // Show max 6 on landing
+                        .map((app: Record<string, unknown>) => ({
+                            id: app.id as string,
+                            name: app.name as string,
+                            description: app.description as string,
+                            iconUrl: app.iconUrl as string,
+                            route: app.route as string || "#",
+                            category: app.category as string,
+                            isBeta: app.isBeta as boolean,
+                        }));
+                    setApps(mappedApps.length > 0 ? mappedApps : FALLBACK_APPS);
+                } else {
+                    setApps(FALLBACK_APPS);
+                }
+            } catch (error) {
+                console.error("Failed to fetch apps:", error);
+                setApps(FALLBACK_APPS);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchApps();
+    }, []);
+
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-blue-500 selection:text-white">
             <PlatformHeader />
@@ -65,7 +92,7 @@ export function HubLanding() {
                             </h1>
 
                             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                                Your central launchpad for Victoria's creative tools, communities, and services. One account for everything.
+                                Your central launchpad for Victoria&apos;s creative tools, communities, and services. One account for everything.
                             </p>
 
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -94,15 +121,21 @@ export function HubLanding() {
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                            {SHOWCASE_APPS.map(app => (
-                                <AppCard
-                                    key={app.id}
-                                    app={app}
-                                    variant="showcase"
-                                />
-                            ))}
-                        </div>
+                        {isLoading ? (
+                            <div className="flex justify-center py-12">
+                                <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                                {apps.map(app => (
+                                    <AppCard
+                                        key={app.id}
+                                        app={app}
+                                        variant="showcase"
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -157,6 +190,3 @@ export function HubLanding() {
         </div>
     );
 }
-
-
-// CodeRabbit Audit Trigger
