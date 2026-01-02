@@ -23,8 +23,11 @@ export async function GET() {
         return NextResponse.json(allApps);
     } catch (error) {
         console.error("Error fetching apps:", error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
         return NextResponse.json({
-            message: "Failed to fetch apps"
+            message: "Failed to fetch apps",
+            error: errorMessage,
+            hasDbUrl: !!process.env.DATABASE_URL,
         }, { status: 500 });
     }
 }
