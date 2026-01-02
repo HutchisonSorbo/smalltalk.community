@@ -129,7 +129,6 @@ function LoginForm() {
 
         try {
             if (isSignUp) {
-                console.log("Sign up attempt for:", email);
                 const finalAccountType = accountType === "Other" ? otherAccountType : accountType;
 
                 const { data, error } = await authClient.auth.signUp({
@@ -147,7 +146,6 @@ function LoginForm() {
                         emailRedirectTo: `${globalThis.location.origin}/api/auth/callback`,
                     },
                 });
-                console.log("Sign up result:", { data, error });
                 if (error) throw error;
                 toast({
                     title: "Check your email",

@@ -14,8 +14,14 @@ export const registerSchema = createInsertSchema(users).pick({
     organisationName: true,
 }).extend({
     email: z.string().email("Invalid email address"),
-    password: z.string().min(12, "Password must be at least 12 characters"),
-    confirmPassword: z.string().min(12, "Password must be at least 12 characters"),
+    password: z.string()
+        .min(12, "Password must be at least 12 characters")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Password must contain at least one number")
+        .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character")
+        .regex(/^\S*$/, "Password must not contain spaces"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
     // Additional validations
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
         // Validate logical date if provided

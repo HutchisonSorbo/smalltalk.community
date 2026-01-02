@@ -72,7 +72,6 @@ export async function POST(req: Request) {
         }
 
         // 4. Create User in Supabase Auth
-        console.log("Attempting Supabase SignUp for new user");
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,

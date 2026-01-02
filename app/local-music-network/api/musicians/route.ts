@@ -77,8 +77,6 @@ export async function POST(request: Request) {
         const json = await request.json();
         const userId = user.id;
 
-        console.log("Creating musician profile for user:", userId);
-
         // Validate with Zod
         const parsed = insertMusicianProfileSchema.safeParse({ ...json, userId });
 

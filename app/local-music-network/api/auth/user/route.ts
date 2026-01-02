@@ -4,12 +4,10 @@ import { createClient } from "@/lib/supabase-server";
 import { getUserRoles } from "@/lib/rbac";
 
 async function handleUserMigration(existingUser: any, authUserId: string) {
-    console.log(`Auth User API: ID mismatch. DB: ${existingUser.id}, Auth: ${authUserId}. Migrating...`);
     try {
         await storage.migrateUserId(existingUser.id, authUserId);
         const dbUser = await storage.getUser(authUserId);
         if (dbUser) {
-            console.log("Auth User API: Migration successful");
             return dbUser;
         }
     } catch (error) {
@@ -20,7 +18,6 @@ async function handleUserMigration(existingUser: any, authUserId: string) {
 }
 
 async function createNewUser(user: any) {
-    console.log("Auth User API: User not in DB, creating...");
     return await storage.upsertUser({
         id: user.id,
         email: user.email!,
@@ -35,7 +32,6 @@ async function createNewUser(user: any) {
 async function syncUserMetadata(dbUser: any, user: any) {
     const metadataType = user.user_metadata.user_type || 'individual';
     if (dbUser.userType !== metadataType) {
-        console.log(`Auth User API: Syncing userType for ${user.email} from ${dbUser.userType} to ${metadataType}`);
         return await storage.upsertUser({
             ...dbUser,
             userType: metadataType,
@@ -59,8 +55,6 @@ export async function GET(request: Request) {
             console.error("Auth User API: No user found in session");
             return NextResponse.json({ message: "Unauthorized - No Session" }, { status: 401 });
         }
-
-        console.log("Auth User API: User found:", user.id, user.email);
 
         let dbUser = await storage.getUser(user.id);
 
@@ -94,7 +88,6 @@ export async function GET(request: Request) {
             return NextResponse.json({ message: "Failed to find or create user" }, { status: 500 });
         }
 
-        console.log("Auth User API: Returning existing DB user");
         const roles = await getUserRoles(dbUser!.id);
         return NextResponse.json({ ...dbUser, roles });
 

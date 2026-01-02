@@ -61,7 +61,6 @@ export async function POST(request: Request) {
         const parsed = insertGigSchema.safeParse(payload);
 
         if (!parsed.success) {
-            console.log("Validation errors:", parsed.error.errors);
             return NextResponse.json(
                 { message: "Invalid data", errors: parsed.error.errors },
                 { status: 400 }

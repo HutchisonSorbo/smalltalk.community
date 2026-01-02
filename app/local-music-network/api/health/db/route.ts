@@ -7,14 +7,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        console.log("Database Health Check: Starting...");
-
         // Attempt a simple query
         const start = Date.now();
         const result = await db.execute(sql`SELECT NOW() as time`);
         const duration = Date.now() - start;
-
-        console.log("Database Health Check: Success", result);
 
         return NextResponse.json({
             status: "ok",

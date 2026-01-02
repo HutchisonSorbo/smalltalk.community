@@ -59,10 +59,6 @@ export async function PUT(
         const json = await request.json();
         const parsed = insertMusicianProfileSchema.partial().safeParse(json);
 
-        if (parsed.success) {
-            console.log("Updating profile", params.id, "with data:", JSON.stringify(parsed.data, null, 2));
-        }
-
         if (!parsed.success) {
             return NextResponse.json(
                 { message: "Invalid data", errors: parsed.error.errors },
