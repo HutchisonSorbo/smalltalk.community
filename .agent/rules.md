@@ -17,7 +17,8 @@
 
 Before writing code, you **MUST** read:
 
-- **[DEVELOPMENT_STANDARDS.md](../DEVELOPMENT_STANDARDS.md)** - Complete standards document
+- **[DEVELOPMENT_STANDARDS.md](../DEVELOPMENT_STANDARDS.md)** - Complete technical and security standards
+- **[INCIDENT_RESPONSE.md](../INCIDENT_RESPONSE.md)** - Incident severity levels and response procedures
 
 ---
 
