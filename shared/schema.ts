@@ -472,13 +472,15 @@ export type Band = typeof bands.$inferSelect;
 // Rate Limiting table
 export const rateLimits = pgTable("rate_limits", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 50 }).notNull(), // e.g., 'upload', 'login_attempt'
+  identifier: varchar("identifier", { length: 255 }), // IP address or other identifier for anonymous limits
   hits: integer("hits").notNull().default(1),
   windowStart: timestamp("window_start").defaultNow().notNull(),
 }, (table) => [
   pgPolicy("rate_limits_service_all", { for: "all", to: "service_role", using: sql`true` }),
   index("rate_limits_user_id_idx").on(table.userId),
+  index("rate_limits_identifier_v2_idx").on(table.identifier),
 ]);
 
 export type RateLimit = typeof rateLimits.$inferSelect;

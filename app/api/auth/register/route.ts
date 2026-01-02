@@ -5,6 +5,8 @@ import { db } from "../../../../server/db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
+import { checkRateLimit } from "../../../../lib/rate-limiter";
+
 // Initialize Supabase Admin Client
 // We need admin rights to ensure we can create users and link them correctly, or simply use public key?
 // Using standard client to emulate sign-up is safer for "register" usually, but we need to ensure we can write to public.users?
@@ -14,6 +16,14 @@ import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
     try {
+        // 0. Rate Limiting Check
+        const ip = req.headers.get("x-forwarded-for") || "unknown";
+        const isAllowed = await checkRateLimit(ip, "register", 3, 3600); // 3 attempts per hour per IP
+
+        if (!isAllowed) {
+            return NextResponse.json({ error: "Too many registration attempts. Please try again later." }, { status: 429 });
+        }
+
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);

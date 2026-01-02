@@ -3,33 +3,29 @@ import { rateLimits } from "../shared/schema";
 import { eq, and, gt } from "drizzle-orm";
 
 /**
- * Check if a user has exceeded the rate limit for a specific action.
- * @param userId - The user ID
- * @param type - The action type (e.g., 'onboarding_step', 'api_call')
+ * Check if a user or identifier has exceeded the rate limit.
+ * @param key - The user ID or IP address
+ * @param type - The action type
  * @param limit - Maximum allowed hits
  * @param windowSeconds - Time window in seconds
- * @returns true if allowed, false if limit exceeded
  */
-export async function checkRateLimit(userId: string, type: string, limit: number = 10, windowSeconds: number = 60): Promise<boolean> {
+export async function checkRateLimit(key: string, type: string, limit: number = 10, windowSeconds: number = 60): Promise<boolean> {
     const windowStart = new Date(Date.now() - windowSeconds * 1000);
 
-    // Find active limit record
-    // We assume we reuse the record or create new?
-    // Let's find one that started AFTER the window start
-    // OR we find the latest one.
+    // Determine if key is UUID (userId) or other (identifier/IP)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
 
-    // Simplification: We look for a record for this user/type.
-    // If it's old, we reset it. If it's new, we increment.
+    const whereClause = isUuid
+        ? and(eq(rateLimits.userId, key), eq(rateLimits.type, type))
+        : and(eq(rateLimits.identifier, key), eq(rateLimits.type, type));
 
-    // Fetch latest
-    const records = await db.select().from(rateLimits)
-        .where(and(eq(rateLimits.userId, userId), eq(rateLimits.type, type)));
-
+    const records = await db.select().from(rateLimits).where(whereClause);
     let record = records[0];
 
     if (!record) {
         await db.insert(rateLimits).values({
-            userId,
+            userId: isUuid ? key : null,
+            identifier: isUuid ? null : key,
             type,
             hits: 1,
             windowStart: new Date()
@@ -38,7 +34,7 @@ export async function checkRateLimit(userId: string, type: string, limit: number
     }
 
     if (new Date(record.windowStart) < windowStart) {
-        // Window expired, reset
+        // Reset window
         await db.update(rateLimits).set({
             hits: 1,
             windowStart: new Date()
