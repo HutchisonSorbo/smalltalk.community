@@ -1,10 +1,12 @@
-# AGENTS.md - Jules AI Agent Documentation
+# AGENTS.md - AI Agent Documentation
 
 **Project:** smalltalk.community
 **Type:** Multi-Age Community Platform
-**Last Updated:** 1 January 2026
+**Last Updated:** 2 January 2026
 
-This file provides context for AI agents working on the smalltalk.community codebase, particularly Jules. It describes the project structure, critical rules, conventions, and guidelines.
+> **⚠️ MANDATORY**: Read [DEVELOPMENT_STANDARDS.md](./DEVELOPMENT_STANDARDS.md) before ANY code changes.
+
+This file provides context for AI agents working on the smalltalk.community codebase. For detailed rules and standards, see DEVELOPMENT_STANDARDS.md.
 
 ---
 
@@ -14,13 +16,12 @@ This file provides context for AI agents working on the smalltalk.community code
 
 smalltalk.community is a safe, inclusive online platform that connects people of all ages through community groups, AI-powered conversations, and local events. The platform serves:
 
-- **Children** (under 13) with parental consent
-- **Teenagers** (13-17)
+- **Teenagers** (13-17) - minimum age requirement
 - **Adults** (18-64)
 - **Seniors** (65+)
 - **Organisations** (councils, community groups, businesses)
 
-Because children use the platform, all features must comply with Victorian Child Safe Standards and Australian privacy laws.
+Because users aged 13-17 use the platform, all features must comply with Victorian Child Safe Standards and Australian privacy laws.
 
 ### Core Features
 
@@ -66,9 +67,10 @@ smalltalk.community/
 ├── tests/                      # Test files
 └── docs/                       # Documentation
 
-**Critical files to review before coding:**
-- SECURITY_SAFETY_STANDARDS.md
-- TECH_STACK_RULES.md
+**Critical files to read before coding:**
+- .agent/rules.md (or CLAUDE.md)
+- DEVELOPMENT_STANDARDS.md
+- INCIDENT_RESPONSE.md
 ```
 
 ---
@@ -81,7 +83,7 @@ smalltalk.community/
    - All user inputs MUST be validated and sanitised
    - All database queries MUST use parameterized queries
    - All content MUST pass moderation before visibility
-   - Child accounts REQUIRE parental consent
+   - Minimum age is 13 years (no parental consent system)
    - Personal information MUST be filtered from user content
 
 2. **SDK Requirements**
@@ -116,6 +118,7 @@ smalltalk.community/
 ### Security and Standards
 
 **SECURITY_SAFETY_STANDARDS.md**
+
 - Victorian Child Safe Standards compliance requirements
 - Age verification and parental consent implementation
 - Multi-layered content moderation system
@@ -129,6 +132,7 @@ smalltalk.community/
 - Monitoring and alerting requirements
 
 **Key takeaways:**
+
 - Children under 13 require verified parental consent
 - Content moderation has three layers: keywords, PII, AI safety
 - Different age groups have different content visibility rules
@@ -138,6 +142,7 @@ smalltalk.community/
 ### Technical Implementation
 
 **TECH_STACK_RULES.md**
+
 - Required SDK versions and imports
 - Vercel Serverless Functions structure
 - Supabase client configuration
@@ -151,6 +156,7 @@ smalltalk.community/
 - Deployment procedures
 
 **Key takeaways:**
+
 - Use `@google/genai` (current SDK as of December 2025)
 - Vercel Functions are stateless, no Express needed
 - Supabase RLS enforces authorization at database level
@@ -162,24 +168,29 @@ smalltalk.community/
 The platform uses PostgreSQL through Supabase with these core tables:
 
 **users**
+
 - Stores user accounts with age verification
 - Fields: id, email, username, account_type, date_of_birth, age_group
 - Special fields for children: parent_email, parent_consent_verified
 
 **content**
+
 - User-generated content with moderation status
 - Fields: id, user_id, title, body, content_type, moderation_status
 - Visibility controls: visibility, age_restriction, is_visible
 
 **community_groups**
+
 - Community groups with age restrictions
 - Fields: id, name, group_type, age_restriction, member_count
 
 **reports**
+
 - Content reports with priority-based handling
 - Fields: id, reporter_id, content_id, report_type, priority, status
 
 **audit_logs**
+
 - Complete audit trail for compliance
 - Fields: id, event_type, action, user_id, details, severity
 
@@ -233,9 +244,9 @@ export default async function handler(req, res) {
 }
 ```
 
-3. Add input validation in `lib/validation.js` if needed
-4. Write tests in `tests/api/`
-5. Update RLS policies if touching database
+1. Add input validation in `lib/validation.js` if needed
+2. Write tests in `tests/api/`
+3. Update RLS policies if touching database
 
 ### Adding a Database Table
 
@@ -370,6 +381,7 @@ jest.mock('../lib/supabase', () => ({
 ### Code Patterns
 
 **Good:**
+
 ```javascript
 // Clear, descriptive names
 async function fetchUserContentByAge(userId, ageGroup) {
@@ -389,6 +401,7 @@ async function fetchUserContentByAge(userId, ageGroup) {
 ```
 
 **Bad:**
+
 ```javascript
 // Generic names, no error handling
 function getData(id) {
@@ -448,6 +461,7 @@ Client-side code can only access `NEXT_PUBLIC_*` variables. Service keys MUST on
 ### Rollback Process
 
 If a deployment causes issues:
+
 1. Revert commit in GitHub
 2. Vercel automatically redeploys previous version
 3. Investigate issue in local environment
@@ -551,6 +565,7 @@ If a deployment causes issues:
 A multi-age community platform with strict safety requirements for protecting children while serving all age groups.
 
 **Most important rules:**
+
 1. Child safety compliance is mandatory (Victorian Child Safe Standards)
 2. All content must be moderated before visibility
 3. Use correct SDK versions (`@google/genai` for AI)
@@ -558,12 +573,14 @@ A multi-age community platform with strict safety requirements for protecting ch
 5. Comprehensive error handling and audit logging
 
 **Before any code changes:**
+
 - Read SECURITY_SAFETY_STANDARDS.md
 - Read TECH_STACK_RULES.md
 - Review relevant existing code
 - Verify file paths and dependencies
 
 **Common patterns:**
+
 - Vercel Serverless Functions for API endpoints
 - Supabase for database with RLS
 - Three-layer content moderation (keywords, PII, AI)
@@ -571,6 +588,7 @@ A multi-age community platform with strict safety requirements for protecting ch
 - Audit logging for all security events
 
 **If unsure:**
+
 - Ask for clarification
 - Check existing similar implementations
 - Review official documentation

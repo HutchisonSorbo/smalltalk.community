@@ -1,4 +1,13 @@
 ﻿
+> **⚠️ DEPRECATED - Do Not Use**
+>
+> This document has been superseded by **[DEVELOPMENT_STANDARDS.md](./DEVELOPMENT_STANDARDS.md)**.
+>
+> Please use DEVELOPMENT_STANDARDS.md for all current technical and security standards.
+> This file will be removed after 30 days (by February 1, 2026).
+
+---
+
 # Technical Stack Rules & Implementation Guide
 
 **Project Type:** Multi-Age Community Platform
@@ -22,11 +31,13 @@ Read this document before any code generation or technical implementation.
 - When searching documentation, prioritise docs.google.com/generative-ai-sdk pages dated 2024 or later
 
 **Installation command:**
+
 ```bash
 npm install @google/genai
 ```
 
 **Correct import syntax:**
+
 ```javascript
 import { GoogleGenerativeAI } from '@google/genai';
 ```
@@ -46,6 +57,7 @@ import { GoogleGenerativeAI } from '@google/genai';
 - NEVER add Express, Fastify, or any web framework to Serverless Functions
 
 **Vercel Serverless Functions structure:**
+
 ```javascript
 // api/generate-content.js
 import { GoogleGenerativeAI } from '@google/genai';
@@ -79,6 +91,7 @@ export default async function handler(req, res) {
 ```
 
 **Vercel configuration (vercel.json):**
+
 ```json
 {
   "functions": {
@@ -118,6 +131,7 @@ export default async function handler(req, res) {
 - NEVER use raw SQL queries without parameterization (prevents SQL injection)
 
 **Supabase client initialization:**
+
 ```javascript
 // lib/supabase.js
 import { createClient } from '@supabase/supabase-js';
@@ -146,6 +160,7 @@ export const supabaseAdmin = createClient(
 **Required environment variables:**
 
 Create `.env.local` for local development:
+
 ```bash
 # Google AI
 GOOGLE_API_KEY=your_google_api_key
@@ -161,6 +176,7 @@ NODE_ENV=development
 ```
 
 **Vercel Environment Variables Setup:**
+
 ```bash
 # Add to Vercel via dashboard or CLI
 vercel env add GOOGLE_API_KEY
@@ -170,6 +186,7 @@ vercel env add SUPABASE_SERVICE_KEY
 ```
 
 **Access in Vercel Functions:**
+
 ```javascript
 // Automatic access via process.env
 const apiKey = process.env.GOOGLE_API_KEY;
@@ -185,6 +202,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 ### Table Definitions
 
 **Users table:**
+
 ```sql
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -213,6 +231,7 @@ CREATE INDEX idx_users_age_group ON users(age_group);
 ```
 
 **Content table:**
+
 ```sql
 CREATE TABLE content (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -241,6 +260,7 @@ CREATE INDEX idx_content_tags ON content USING GIN(tags);
 ```
 
 **Community groups table:**
+
 ```sql
 CREATE TABLE community_groups (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -263,6 +283,7 @@ CREATE INDEX idx_groups_type ON community_groups(group_type);
 ```
 
 **Reports table:**
+
 ```sql
 CREATE TABLE reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -288,6 +309,7 @@ CREATE INDEX idx_reports_created_at ON reports(created_at DESC);
 ```
 
 **Audit logs table:**
+
 ```sql
 CREATE TABLE audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -314,6 +336,7 @@ CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 ### Row Level Security (RLS) Policies
 
 **Enable RLS on all tables:**
+
 ```sql
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE content ENABLE ROW LEVEL SECURITY;
@@ -323,6 +346,7 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ```
 
 **Users table policies:**
+
 ```sql
 -- Users can read all active user profiles
 CREATE POLICY "Users can view active profiles"
@@ -341,6 +365,7 @@ CREATE POLICY "Service role can manage users"
 ```
 
 **Content table policies:**
+
 ```sql
 -- Public content visible to all
 CREATE POLICY "Public content visible to all"
@@ -376,6 +401,7 @@ CREATE POLICY "Users can delete own content"
 ```
 
 **Reports table policies:**
+
 ```sql
 -- Users can create reports
 CREATE POLICY "Users can create reports"
@@ -405,6 +431,7 @@ CREATE POLICY "Service role manages reports"
 - Use destructuring for object and array operations
 
 **Wrong:**
+
 ```javascript
 fetchData().then(data => {
   processData(data).then(result => {
@@ -414,6 +441,7 @@ fetchData().then(data => {
 ```
 
 **Right:**
+
 ```javascript
 try {
   const data = await fetchData();
@@ -435,6 +463,7 @@ try {
 - Add JSDoc comments for all exported functions
 
 **Function naming patterns:**
+
 ```javascript
 // Data operations
 async function fetchUserById(userId) { }
@@ -468,6 +497,7 @@ async function sendNotification(userId, message) { }
 - NEVER expose database structure or field names in errors
 
 **Vercel Function error handling template:**
+
 ```javascript
 // api/generate-content.js
 import { GoogleGenerativeAI } from '@google/genai';
@@ -587,6 +617,7 @@ export default async function handler(req, res) {
 ## File Organisation & Structure
 
 ### Directory Structure (Vercel + Next.js)
+
 ```
 project-root/
 ├── api/                        # Vercel Serverless Functions
@@ -674,6 +705,7 @@ project-root/
 ## AI Model Configuration
 
 ### Model Configuration for Supabase Environment
+
 ```javascript
 // lib/ai-config.js
 import { GoogleGenerativeAI } from '@google/genai';
@@ -778,6 +810,7 @@ export function getAIModel(visibility = 'public') {
 - Minimum 80% code coverage for critical paths
 
 ### Testing with Supabase
+
 ```javascript
 // lib/validation.test.js
 import { validateEmail, validateUsername } from './validation';
@@ -815,6 +848,7 @@ describe('Input Validation', () => {
 ```
 
 ### Mocking AI and Supabase in Tests
+
 ```javascript
 // api/generate.test.js
 import { jest } from '@jest/globals';
@@ -869,6 +903,7 @@ describe('Generate Content API', () => {
 ### GitHub Integration
 
 **Branch strategy:**
+
 ```
 main        # Production (auto-deploys to Vercel)
 staging     # Staging environment (auto-deploys to Vercel preview)
@@ -876,6 +911,7 @@ feature/*   # Feature branches (create preview deployments)
 ```
 
 **Commit message format:**
+
 ```
 <type>: <description>
 
@@ -890,6 +926,7 @@ Types:
 ```
 
 **Example commits:**
+
 ```
 feat: Add content moderation API endpoint
 fix: Resolve rate limiting bypass vulnerability
@@ -902,11 +939,13 @@ test: Add integration tests for user authentication
 ### Vercel Deployment
 
 **Automatic deployments:**
+
 - Push to `main` → Production deployment
 - Push to `staging` → Staging deployment
 - Pull request → Preview deployment with unique URL
 
 **Manual deployment (if needed):**
+
 ```bash
 # Install Vercel CLI
 npm install -g vercel
@@ -919,6 +958,7 @@ vercel
 ```
 
 **Deployment checklist:**
+
 1. All tests passing
 2. Environment variables configured in Vercel dashboard
 3. Database migrations applied to Supabase
@@ -932,12 +972,14 @@ vercel
 ## Common Mistakes To Avoid
 
 ### SDK Mistakes
+
 - DON'T import from `generative-ai` (old SDK)
 - DON'T forget to check `response.text()` before using it
 - DON'T assume AI API calls succeed, always handle failures
 - DON'T use deprecated model names
 
 ### Supabase Mistakes
+
 - DON'T use service key in client-side code (use anon key with RLS)
 - DON'T write raw SQL without parameterization (SQL injection risk)
 - DON'T forget to enable RLS on new tables
@@ -945,6 +987,7 @@ vercel
 - DON'T fetch all rows when you need pagination
 
 ### Vercel Function Mistakes
+
 - DON'T add Express or other frameworks
 - DON'T forget to handle CORS preflight requests
 - DON'T make functions longer than 60 seconds (timeout limit)
@@ -952,6 +995,7 @@ vercel
 - DON'T exceed memory limits (default 1024MB)
 
 ### Performance Mistakes
+
 - DON'T fetch all data when you need a subset
 - DON'T make API calls in loops (use bulk operations)
 - DON'T forget to add database indexes
@@ -965,6 +1009,7 @@ vercel
 ## Agent-Specific Instructions
 
 ### Before Modifying Code
+
 1. Read the entire file and confirm current state
 2. Verify file paths are correct
 3. Check for dependencies that might break
@@ -972,6 +1017,7 @@ vercel
 5. Review SECURITY_SAFETY_STANDARDS.md for compliance requirements
 
 ### When Implementing Features
+
 1. If a solution requires more than 3 file changes, break it into subtasks
 2. Write tests alongside implementation
 3. Test locally before committing
@@ -979,12 +1025,14 @@ vercel
 5. Check that RLS policies cover new database operations
 
 ### When Stuck
+
 1. If the same error occurs twice, stop and ask for clarification
 2. Check official documentation (Vercel, Supabase, Google AI)
 3. Never assume file contents, always verify first
 4. Review both tech stack and security documents
 
 ### Context Management
+
 1. Start fresh sessions for new features
 2. After completing a feature and committing, close agent session
 3. Before resuming work, read current file state
@@ -995,5 +1043,3 @@ vercel
 ---
 
 **End of Technical Stack Rules**
-
-

@@ -46,12 +46,14 @@
 
 ## Critical Documents (READ BEFORE EVERY ACTION)
 
-You must read and follow these two documents for EVERY code change, feature implementation, or technical decision:
+You must read and follow these documents for EVERY code change:
 
-1. **TECH_STACK_RULES.md** - Technical implementation standards
-2. **SECURITY_SAFETY_STANDARDS.md** - Security, safety, and compliance requirements
+1. **.agent/rules.md** (or **CLAUDE.md**) - Quick reference entry point
+2. **DEVELOPMENT_STANDARDS.md** - Complete technical and security standards
 
 Both documents are located in the project root directory.
+
+Note: TECH_STACK_RULES.md and SECURITY_SAFETY_STANDARDS.md are deprecated - use DEVELOPMENT_STANDARDS.md instead.
 
 ## Before Any Code Generation or Modification
 
@@ -69,10 +71,10 @@ Both documents are located in the project root directory.
 - Are you following the file structure and naming conventions?
 - Have you added appropriate tests?
 
-**Step 3: Verify security and safety requirements (SECURITY_SAFETY_STANDARDS.md)**
+**Step 3: Verify security and safety requirements (DEVELOPMENT_STANDARDS.md)**
 - Does this feature handle user data? Check privacy requirements
 - Does this feature involve content? Check moderation requirements
-- Does this affect children under 18? Check Victorian Child Safe Standards compliance
+- Does this affect users under 18? Check Victorian Child Safe Standards compliance
 - Does this require rate limiting? Implement appropriate limits
 - Does this need audit logging? Add logging
 - Are all inputs validated and sanitised?
@@ -85,19 +87,19 @@ Both documents are located in the project root directory.
 ## Mandatory Checks for Specific Actions
 
 ### When creating API endpoints:
-- [ ] Error handling with try/catch (TECH_STACK_RULES.md)
-- [ ] CORS handling for OPTIONS requests (TECH_STACK_RULES.md)
-- [ ] Input validation and sanitisation (SECURITY_SAFETY_STANDARDS.md)
-- [ ] Rate limiting check (SECURITY_SAFETY_STANDARDS.md)
-- [ ] Authentication verification (SECURITY_SAFETY_STANDARDS.md)
-- [ ] Audit logging (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Error handling with try/catch (DEVELOPMENT_STANDARDS.md)
+- [ ] CORS handling for OPTIONS requests (DEVELOPMENT_STANDARDS.md)
+- [ ] Input validation and sanitisation (DEVELOPMENT_STANDARDS.md)
+- [ ] Rate limiting check (DEVELOPMENT_STANDARDS.md)
+- [ ] Authentication verification (DEVELOPMENT_STANDARDS.md)
+- [ ] Audit logging (DEVELOPMENT_STANDARDS.md)
 
 ### When working with AI/content generation:
-- [ ] Using correct SDK (@google/genai) (TECH_STACK_RULES.md)
-- [ ] Appropriate safety settings based on visibility (SECURITY_SAFETY_STANDARDS.md)
-- [ ] Content moderation pipeline (SECURITY_SAFETY_STANDARDS.md)
-- [ ] Token limits and timeouts (TECH_STACK_RULES.md)
-- [ ] Rate limiting for AI requests (SECURITY_SAFETY_STANDARDS.md)
+- [ ] Using correct SDK (@google/genai) (DEVELOPMENT_STANDARDS.md)
+- [ ] Appropriate safety settings based on visibility (DEVELOPMENT_STANDARDS.md)
+- [ ] Content moderation pipeline (DEVELOPMENT_STANDARDS.md)
+- [ ] Token limits and timeouts (DEVELOPMENT_STANDARDS.md)
+- [ ] Rate limiting for AI requests (DEVELOPMENT_STANDARDS.md)
 
 ### When working with database/Supabase:
 - [ ] Using parameterised queries, never raw SQL (TECH_STACK_RULES.md)

@@ -14,8 +14,8 @@ export const registerSchema = createInsertSchema(users).pick({
     organisationName: true,
 }).extend({
     email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
+    password: z.string().min(12, "Password must be at least 12 characters"),
+    confirmPassword: z.string().min(12, "Password must be at least 12 characters"),
     // Additional validations
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
         // Validate logical date if provided

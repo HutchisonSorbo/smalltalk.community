@@ -40,10 +40,17 @@ export async function POST(req: Request) {
             if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
                 age--;
             }
+
+            // Enforce 13+ minimum age requirement
+            if (age < 13) {
+                return NextResponse.json({
+                    error: "You must be at least 13 years old to create an account"
+                }, { status: 400 });
+            }
+
             if (age < 18) {
                 isMinor = true;
             }
-            // TODO: Strict block for < 13 if needed, as per spec "Pending Parental Consent"
         }
 
         // 3. Check if user already exists in public.users (Validation)

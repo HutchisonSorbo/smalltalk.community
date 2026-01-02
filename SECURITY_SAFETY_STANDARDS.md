@@ -1,4 +1,13 @@
-﻿# Security, Safety & Performance Standards
+﻿> **⚠️ DEPRECATED - Do Not Use**
+>
+> This document has been superseded by **[DEVELOPMENT_STANDARDS.md](./DEVELOPMENT_STANDARDS.md)**.
+>
+> Please use DEVELOPMENT_STANDARDS.md for all current technical and security standards.
+> This file will be removed after 30 days (by February 1, 2026).
+
+---
+
+# Security, Safety & Performance Standards
 
 **Project Type:** Multi-Age Community Platform
 **Infrastructure:** Vercel + Supabase + GitHub
@@ -12,6 +21,7 @@ This document defines security, safety, and performance requirements for a platf
 ## Platform Context
 
 This platform serves:
+
 - **Children** (under 13) and **Teenagers** (13-17)
 - **Adults** (18-64)
 - **Seniors** (65+)
@@ -27,6 +37,7 @@ Because children use the platform, we must implement Victorian Child Safe Standa
 ### Age Verification & Parental Consent
 
 **Requirements:**
+
 - Collect date of birth on ALL new account registrations
 - For users under 13, require verified parental consent before account activation
 - Store parental consent records with timestamp and method of verification
@@ -34,6 +45,7 @@ Because children use the platform, we must implement Victorian Child Safe Standa
 - Parents must be able to view, modify, and delete their child's account and data
 
 **Implementation in Supabase:**
+
 ```javascript
 // api/auth/register.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -126,6 +138,7 @@ function calculateAge(dateOfBirth) {
 ```
 
 **Parental consent process:**
+
 ```javascript
 // api/auth/request-consent.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -251,6 +264,7 @@ export default async function handler(req, res) {
 ### Content Moderation For All Ages
 
 **Multi-layered content filtering:**
+
 ```javascript
 // api/moderation/moderate-content.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -531,6 +545,7 @@ async function logModerationEvent(data) {
 ```
 
 **Blocked keywords configuration (stored in Supabase):**
+
 ```sql
 -- Create moderation configuration table
 CREATE TABLE moderation_config (
@@ -579,6 +594,7 @@ INSERT INTO moderation_config (blocked_keywords) VALUES (
 ### Age-Appropriate Content Filtering
 
 **Content visibility rules implemented in RLS:**
+
 ```sql
 -- Function to check if user can view content
 CREATE OR REPLACE FUNCTION can_view_content(content_age_restriction TEXT, user_age_group TEXT)
@@ -619,6 +635,7 @@ CREATE POLICY "Users can view appropriate content"
 ```
 
 **Content creation rules:**
+
 ```javascript
 // api/content/create.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -723,6 +740,7 @@ export default async function handler(req, res) {
 ### Reporting & Incident Response
 
 **Report handling with priority-based response:**
+
 ```javascript
 // api/reports/create.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -898,6 +916,7 @@ async function notifyModerators(data) {
 ```
 
 **Report review SLAs:**
+
 - **Critical:** 1 hour maximum (child safety, immediate danger)
 - **High:** 4 hours maximum (harassment, personal info)
 - **Medium:** 24 hours maximum (inappropriate content)
@@ -910,6 +929,7 @@ async function notifyModerators(data) {
 ### Parent/Guardian Controls
 
 **Parental access and control features:**
+
 ```javascript
 // api/parents/child-activity.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -1019,6 +1039,7 @@ function calculateAge(dateOfBirth) {
 ```
 
 **Delete child account function:**
+
 ```javascript
 // api/parents/delete-child-account.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -1118,6 +1139,7 @@ export default async function handler(req, res) {
 ### Authentication Security
 
 **Password requirements:**
+
 ```javascript
 // lib/validation.js
 
@@ -1173,6 +1195,7 @@ export function validatePassword(password) {
 ```
 
 **Session security:**
+
 ```javascript
 // Supabase Auth handles sessions automatically, but we can add additional checks
 
@@ -1235,6 +1258,7 @@ export default async function handler(req, res) {
 ### Rate Limiting
 
 **Implement rate limiting to prevent abuse:**
+
 ```javascript
 // lib/rate-limiter.js
 import { supabaseAdmin } from './supabase';
@@ -1352,6 +1376,7 @@ export async function cleanupRateLimitLogs() {
 ```
 
 **Rate limit table schema:**
+
 ```sql
 CREATE TABLE rate_limit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1366,6 +1391,7 @@ ON rate_limit_log(user_id, action, created_at DESC);
 ```
 
 **Usage in API endpoints:**
+
 ```javascript
 // api/ai/generate.js
 import { checkRateLimit } from '../../lib/rate-limiter';
@@ -1402,6 +1428,7 @@ export default async function handler(req, res) {
 ### Data Privacy & Protection
 
 **Personal data handling:**
+
 ```javascript
 // api/users/delete-account.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -1484,6 +1511,7 @@ export default async function handler(req, res) {
 ```
 
 **Data export (GDPR compliance):**
+
 ```javascript
 // api/users/export-data.js
 import { supabaseAdmin } from '../../lib/supabase';
@@ -1589,6 +1617,7 @@ export default async function handler(req, res) {
 ### Input Validation & Sanitisation
 
 **Comprehensive input validation:**
+
 ```javascript
 // lib/validation.js
 
@@ -1666,6 +1695,7 @@ export function validateUUID(uuid) {
 ```
 
 **Usage in API endpoints:**
+
 ```javascript
 // api/content/create.js
 import { validateUUID, sanitiseTextInput, validateVisibility } from '../../lib/validation';
@@ -1712,6 +1742,7 @@ export default async function handler(req, res) {
 ### Performance Optimization
 
 **Database query optimization:**
+
 ```javascript
 // WRONG - N+1 query problem
 async function getUsersWithContent() {
@@ -1749,6 +1780,7 @@ async function getUsersWithContent() {
 ```
 
 **Pagination for large datasets:**
+
 ```javascript
 // api/content/list.js
 export default async function handler(req, res) {
@@ -1812,6 +1844,7 @@ export default async function handler(req, res) {
 ```
 
 **Caching strategies:**
+
 ```javascript
 // For frequently accessed, rarely changing data
 const cache = new Map();
