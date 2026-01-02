@@ -21,9 +21,13 @@ if (!process.env.DATABASE_URL) {
 
 // Disable prepared statements for Supabase Transaction Pooler compatibility
 // Use global singleton for all environments to prevent connection exhaustion
+// Serverless-optimized: single connection with timeouts, let Supabase pooler handle scaling
 
 const dbOptions: postgres.Options<{}> = {
-  prepare: false,
+  prepare: false,          // Required for Supabase transaction mode pooler
+  max: 1,                  // Serverless: single connection, let Supabase pooler handle scaling
+  idle_timeout: 20,        // Close idle connections after 20 seconds
+  connect_timeout: 10,     // Connection timeout in seconds
 };
 
 
