@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Youth Service Navigator | smalltalk.community",
+    description: "Find mental health and wellbeing support services for young people aged 12-25 in Victoria",
+};
+
 export default function YouthServiceNavigatorLayout({
     children,
 }: {
