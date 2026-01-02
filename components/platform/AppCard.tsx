@@ -183,8 +183,21 @@ function AppCardComponent({
                             {detailsOpen ? "Less info" : "More info"}
                         </Button>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                        Features info placeholder...
+                    <CollapsibleContent className="mt-2 text-sm space-y-3 bg-muted/50 p-3 rounded">
+                        {app.category && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Category:</span>
+                                <Badge variant="outline">{app.category}</Badge>
+                                {app.isBeta && <Badge variant="secondary">Beta</Badge>}
+                            </div>
+                        )}
+                        <p className="text-muted-foreground">{app.description}</p>
+                        <Button asChild size="sm" variant="outline" className="w-full gap-2">
+                            <Link href={app.route}>
+                                <ExternalLink className="h-4 w-4" />
+                                Visit App
+                            </Link>
+                        </Button>
                     </CollapsibleContent>
                 </Collapsible>
             )}

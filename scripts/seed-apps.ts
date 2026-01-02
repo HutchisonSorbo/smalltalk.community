@@ -65,7 +65,16 @@ async function seedApps() {
             await db.insert(apps).values(app);
             console.log(`✅ Inserted ${app.name}`);
         } else {
-            console.log(`ℹ️  ${app.name} already exists, skipping.`);
+            // Update existing app to sync icon and other fields
+            await db.update(apps).set({
+                description: app.description,
+                iconUrl: app.iconUrl,
+                route: app.route,
+                category: app.category,
+                isBeta: app.isBeta,
+                isActive: app.isActive,
+            }).where(eq(apps.name, app.name));
+            console.log(`🔄 Updated ${app.name}`);
         }
     }
 
