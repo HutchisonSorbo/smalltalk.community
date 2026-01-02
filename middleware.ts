@@ -72,9 +72,11 @@ export async function middleware(request: NextRequest) {
 
     // Rewrite Logic
 
-    // 1. Explicit Routes: If path is explicitly /local-music-network, /hub, /volunteer-passport, /onboarding, /dashboard, /apps, or /settings, let it pass
+    // 1. Explicit Routes: Allow app paths to pass through without rewriting
     if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport") ||
-        path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings") || path.startsWith("/login") || path.startsWith("/forgot-password")) {
+        path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings") ||
+        path.startsWith("/login") || path.startsWith("/forgot-password") || path.startsWith("/reset-password") ||
+        path.startsWith("/youth-service-navigator") || path.startsWith("/apprenticeship-hub") || path.startsWith("/peer-support-finder")) {
         return response;
     }
 
