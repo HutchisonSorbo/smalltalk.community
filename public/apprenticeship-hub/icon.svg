@@ -1,0 +1,9 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circle background -->
+  <circle cx="32" cy="32" r="30" fill="#003870"/>
+  <!-- Wrench icon representing trades -->
+  <path d="M44 20C42 18 39 18 37 20L32 25L27 20C25 18 22 18 20 20C18 22 18 25 20 27L25 32L20 37C18 39 18 42 20 44C22 46 25 46 27 44L32 39L37 44C39 46 42 46 44 44C46 42 46 39 44 37L39 32L44 27C46 25 46 22 44 20Z" fill="white"/>
+  <!-- Small graduation cap representing learning -->
+  <path d="M32 42L26 39V44L32 47L38 44V39L32 42Z" fill="white"/>
+  <path d="M32 38L22 33L32 28L42 33L32 38Z" fill="white"/>
+</svg>

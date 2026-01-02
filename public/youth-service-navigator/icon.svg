@@ -1,0 +1,8 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Heart representing care/mental health -->
+  <circle cx="32" cy="32" r="30" fill="#003870"/>
+  <path d="M32 48C32 48 16 38 16 28C16 22 20 18 26 18C29 18 31 20 32 22C33 20 35 18 38 18C44 18 48 22 48 28C48 38 32 48 32 48Z" fill="white"/>
+  <!-- Person silhouette in heart -->
+  <circle cx="32" cy="30" r="4" fill="#003870"/>
+  <path d="M26 40C26 36 28.5 33 32 33C35.5 33 38 36 38 40" stroke="#003870" stroke-width="2" stroke-linecap="round"/>
+</svg>

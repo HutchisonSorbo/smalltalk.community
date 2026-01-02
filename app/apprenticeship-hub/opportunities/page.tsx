@@ -97,14 +97,27 @@ const DEMO_OPPORTUNITIES = [
     },
 ];
 
+// Map of industry filter IDs to their display names for exact matching
+const INDUSTRY_MAP: Record<string, string> = {
+    "construction": "Building & Construction",
+    "automotive": "Automotive",
+    "electrical": "Electrical",
+    "healthcare": "Healthcare",
+    "it": "IT & Digital",
+    "hospitality": "Hospitality",
+    "hairdressing": "Hairdressing & Beauty",
+    "agriculture": "Agriculture",
+    "mechanical": "Mechanical & Engineering",
+};
+
 function OpportunitiesContent() {
     const searchParams = useSearchParams();
     const industryFilter = searchParams.get("industry");
 
-    // Filter opportunities (in real implementation, this would be API-based)
+    // Filter opportunities using exact industry matching
     const opportunities = industryFilter
         ? DEMO_OPPORTUNITIES.filter(
-            (o) => o.industry.toLowerCase().includes(industryFilter.replace("-", " "))
+            (o) => o.industry === INDUSTRY_MAP[industryFilter]
         )
         : DEMO_OPPORTUNITIES;
 
@@ -122,8 +135,8 @@ function OpportunitiesContent() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground mb-1">
-                        {industryFilter
-                            ? `${industryFilter.replace("-", " & ").charAt(0).toUpperCase() + industryFilter.replace("-", " & ").slice(1)} Opportunities`
+                        {industryFilter && INDUSTRY_MAP[industryFilter]
+                            ? `${INDUSTRY_MAP[industryFilter]} Opportunities`
                             : "All Opportunities"}
                     </h1>
                     <p className="text-muted-foreground">
