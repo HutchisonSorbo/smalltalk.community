@@ -49,6 +49,11 @@ export async function GET(request: Request) {
             hasLocation: qData.hasLocation,
         };
 
+        if (filters.hasLocation) {
+            const items = await storage.getProfessionalLocations(filters);
+            return NextResponse.json(items);
+        }
+
         const items = await storage.getProfessionalProfiles(filters);
         return NextResponse.json(items);
     } catch (error) {

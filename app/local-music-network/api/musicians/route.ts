@@ -55,6 +55,13 @@ export async function GET(request: Request) {
         filters.limit = limit;
         filters.offset = (page - 1) * limit;
 
+        if (filters.hasLocation) {
+            // Increase limit for map
+            if (!query.limit) filters.limit = 2000;
+            const profiles = await storage.getMusicianLocations(Object.keys(filters).length > 0 ? filters : undefined);
+            return NextResponse.json(profiles);
+        }
+
         const profiles = await storage.getMusicianProfiles(Object.keys(filters).length > 0 ? filters : undefined);
         return NextResponse.json(profiles);
     } catch (error) {

@@ -113,6 +113,7 @@ export interface IStorage {
 
   // Musician profile operations
   getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]>;
+  getMusicianLocations(filters?: MusicianFilters): Promise<Pick<MusicianProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'instruments' | 'isLocationShared'>[]>;
   getMusicianProfile(id: string): Promise<MusicianProfile | undefined>;
   getMusicianProfilesByUser(userId: string): Promise<MusicianProfile[]>;
   createMusicianProfile(profile: InsertMusicianProfile): Promise<MusicianProfile>;
@@ -165,6 +166,7 @@ export interface IStorage {
 
   // Professionals operations
   getProfessionalProfiles(filters?: ProfessionalFilters): Promise<ProfessionalProfile[]>;
+  getProfessionalLocations(filters?: ProfessionalFilters): Promise<Pick<ProfessionalProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'role' | 'isLocationShared'>[]>;
   getProfessionalProfile(id: string): Promise<ProfessionalProfile | undefined>;
   getProfessionalProfileByUserId(userId: string): Promise<ProfessionalProfile | undefined>;
   createProfessionalProfile(profile: InsertProfessionalProfile): Promise<ProfessionalProfile>;
@@ -244,6 +246,22 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(musicianProfiles.createdAt))
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
+  }
+
+  async getMusicianLocations(filters?: MusicianFilters): Promise<Pick<MusicianProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'instruments' | 'isLocationShared'>[]> {
+    const conditions = this._buildMusicianFilters(filters);
+    return db
+      .select({
+        id: musicianProfiles.id,
+        latitude: musicianProfiles.latitude,
+        longitude: musicianProfiles.longitude,
+        location: musicianProfiles.location,
+        instruments: musicianProfiles.instruments,
+        isLocationShared: musicianProfiles.isLocationShared
+      })
+      .from(musicianProfiles)
+      .where(and(...conditions))
+      .limit(filters?.limit || 2000);
   }
 
   private _buildMusicianFilters(filters?: MusicianFilters) {
@@ -389,6 +407,22 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(professionalProfiles.createdAt))
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
+  }
+
+  async getProfessionalLocations(filters?: ProfessionalFilters): Promise<Pick<ProfessionalProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'role' | 'isLocationShared'>[]> {
+    const conditions = this._buildProfessionalFilters(filters);
+    return db
+      .select({
+        id: professionalProfiles.id,
+        latitude: professionalProfiles.latitude,
+        longitude: professionalProfiles.longitude,
+        location: professionalProfiles.location,
+        role: professionalProfiles.role,
+        isLocationShared: professionalProfiles.isLocationShared
+      })
+      .from(professionalProfiles)
+      .where(and(...conditions))
+      .limit(filters?.limit || 2000);
   }
 
   private _buildProfessionalFilters(filters?: ProfessionalFilters) {

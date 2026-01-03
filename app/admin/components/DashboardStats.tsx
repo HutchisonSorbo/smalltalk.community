@@ -1,0 +1,276 @@
+
+import { db } from "@/server/db";
+import {
+    users,
+    musicianProfiles,
+    bands,
+    volunteerProfiles,
+    organisations,
+    apps,
+    reports,
+    userOnboardingResponses,
+    gigs,
+    professionalProfiles,
+    marketplaceListings,
+    announcements,
+} from "@shared/schema";
+import { count, eq, gte } from "drizzle-orm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Briefcase, Building2, AppWindow, Flag, UserCheck, TrendingUp, Clock, Music, CalendarDays, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+async function getPlatformStats() {
+    try {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        const [
+            totalUsers,
+            usersLast30Days,
+            usersLast7Days,
+            usersLast24Hours,
+            onboardingCompleted,
+            musicianCount,
+            bandCount,
+            gigCount,
+            volunteerCount,
+            orgCount,
+            professionalCount,
+            listingCount,
+            appCount,
+            pendingReports,
+            onboardingResponses,
+            activeAnnouncements,
+        ] = await Promise.all([
+            db.select({ count: count() }).from(users),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, twentyFourHoursAgo)),
+            db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
+            db.select({ count: count() }).from(musicianProfiles),
+            db.select({ count: count() }).from(bands),
+            db.select({ count: count() }).from(gigs),
+            db.select({ count: count() }).from(volunteerProfiles),
+            db.select({ count: count() }).from(organisations),
+            db.select({ count: count() }).from(professionalProfiles),
+            db.select({ count: count() }).from(marketplaceListings),
+            db.select({ count: count() }).from(apps),
+            db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")),
+            db.select({ count: count() }).from(userOnboardingResponses),
+            db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),
+        ]);
+
+        const totalUsersCount = totalUsers[0]?.count ?? 0;
+        const onboardingCompletedCount = onboardingCompleted[0]?.count ?? 0;
+        const onboardingRate = totalUsersCount > 0
+            ? Math.round((onboardingCompletedCount / totalUsersCount) * 100)
+            : 0;
+
+        return {
+            totalUsers: totalUsersCount,
+            usersLast30Days: usersLast30Days[0]?.count ?? 0,
+            usersLast7Days: usersLast7Days[0]?.count ?? 0,
+            usersLast24Hours: usersLast24Hours[0]?.count ?? 0,
+            onboardingCompleted: onboardingCompletedCount,
+            onboardingRate,
+            musicians: musicianCount[0]?.count ?? 0,
+            bands: bandCount[0]?.count ?? 0,
+            gigs: gigCount[0]?.count ?? 0,
+            volunteers: volunteerCount[0]?.count ?? 0,
+            organisations: orgCount[0]?.count ?? 0,
+            professionals: professionalCount[0]?.count ?? 0,
+            listings: listingCount[0]?.count ?? 0,
+            apps: appCount[0]?.count ?? 0,
+            pendingReports: pendingReports[0]?.count ?? 0,
+            onboardingResponses: onboardingResponses[0]?.count ?? 0,
+            activeAnnouncements: activeAnnouncements[0]?.count ?? 0,
+        };
+    } catch (error) {
+        console.error("[Admin Dashboard] Error fetching stats:", error);
+        return {
+            totalUsers: 0,
+            usersLast30Days: 0,
+            usersLast7Days: 0,
+            usersLast24Hours: 0,
+            onboardingCompleted: 0,
+            onboardingRate: 0,
+            musicians: 0,
+            bands: 0,
+            gigs: 0,
+            volunteers: 0,
+            organisations: 0,
+            professionals: 0,
+            listings: 0,
+            apps: 0,
+            pendingReports: 0,
+            onboardingResponses: 0,
+            activeAnnouncements: 0,
+        };
+    }
+}
+
+export async function DashboardStats() {
+    const stats = await getPlatformStats();
+
+    return (
+        <div className="space-y-4">
+            {/* Alert Cards */}
+            {stats.pendingReports > 0 && (
+                <Card className="border-yellow-500/50 bg-yellow-500/10">
+                    <CardContent className="flex items-center justify-between py-4">
+                        <div className="flex items-center gap-3">
+                            <AlertCircle className="h-5 w-5 text-yellow-600" />
+                            <div>
+                                <p className="font-medium text-yellow-700">
+                                    {stats.pendingReports} pending {stats.pendingReports === 1 ? "report" : "reports"} require review
+                                </p>
+                            </div>
+                        </div>
+                        <Button asChild size="sm" variant="outline" className="border-yellow-600 text-yellow-700 hover:bg-yellow-500/20">
+                            <Link href="/admin/reports">Review Now</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Key Metrics Row */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground">
+                            +{stats.usersLast24Hours} today • +{stats.usersLast7Days} this week
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Onboarding Rate</CardTitle>
+                        <UserCheck className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.onboardingRate}%</div>
+                        <p className="text-xs text-muted-foreground">
+                            {stats.onboardingCompleted.toLocaleString()} completed
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Monthly Growth</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">+{stats.usersLast30Days}</div>
+                        <p className="text-xs text-muted-foreground">
+                            new users in 30 days
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
+                        <Flag className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.pendingReports}</div>
+                        <p className="text-xs text-muted-foreground">
+                            require review
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Content Stats Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Musicians</CardTitle>
+                        <Music className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.musicians}</div>
+                        <p className="text-xs text-muted-foreground">profiles</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Bands</CardTitle>
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.bands}</div>
+                        <p className="text-xs text-muted-foreground">registered</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Gigs</CardTitle>
+                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.gigs}</div>
+                        <p className="text-xs text-muted-foreground">events</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Volunteers</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.volunteers}</div>
+                        <p className="text-xs text-muted-foreground">profiles</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Platform Stats */}
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Building2 className="h-5 w-5" />
+                            Organisations
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold">{stats.organisations}</div>
+                        <p className="text-sm text-muted-foreground">registered organisations</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <AppWindow className="h-5 w-5" />
+                            Platform Apps
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold">{stats.apps}</div>
+                        <p className="text-sm text-muted-foreground">in the ecosystem</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Clock className="h-5 w-5" />
+                            Onboarding Data
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold">{stats.onboardingResponses}</div>
+                        <p className="text-sm text-muted-foreground">responses collected</p>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+}
