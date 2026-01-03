@@ -162,7 +162,14 @@ export default function AboutPage() {
                         local councils and community organisations.
                     </p>
                     <p className="text-sm text-muted-foreground">
-                        Have feedback or suggestions? We&apos;d love to hear from you.
+                        Have feedback or suggestions?{" "}
+                        <a
+                            href="mailto:hello@smalltalk.community"
+                            className="text-primary hover:underline font-medium"
+                            aria-label="Send feedback email to hello@smalltalk.community"
+                        >
+                            Email us at hello@smalltalk.community
+                        </a>
                     </p>
                 </CardContent>
             </Card>

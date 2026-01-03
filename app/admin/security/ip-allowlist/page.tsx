@@ -33,6 +33,15 @@ const DEMO_ALLOWLIST = [
     },
 ];
 
+/**
+ * IP Allowlist admin page component.
+ * 
+ * Renders the administrative interface for managing trusted IP addresses
+ * that are permitted to access the admin panel. Allows adding, viewing,
+ * and removing IP addresses or CIDR ranges from the allowlist.
+ * 
+ * @returns {JSX.Element} The IP allowlist management page
+ */
 export default function IPAllowlistPage() {
     const [newIP, setNewIP] = useState("");
     const [newDescription, setNewDescription] = useState("");

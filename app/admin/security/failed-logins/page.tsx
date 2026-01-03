@@ -35,6 +35,15 @@ const DEMO_FAILED_LOGINS = [
     },
 ];
 
+/**
+ * Failed Login Attempts admin page component.
+ * 
+ * Displays a dashboard for monitoring and managing suspicious login activity,
+ * including blocked IPs, warning thresholds, and recent failed login attempts.
+ * Provides actions to block/unblock IP addresses and configure rate limiting.
+ * 
+ * @returns {JSX.Element} The failed logins monitoring page
+ */
 export default function FailedLoginsPage() {
     return (
         <div className="space-y-6">
