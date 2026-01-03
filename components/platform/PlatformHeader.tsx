@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, LayoutGrid, Home, Grid2X2, MessageCircle, Bell } from "lucide-react";
+import { Menu, X, User, LayoutGrid, Home, Grid2X2, MessageCircle, Bell, Info } from "lucide-react";
 import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ export function PlatformHeader() {
 
     const navLinks = [
         { href: "/hub", label: "Home", icon: Home },
+        { href: "/about", label: "About", icon: Info },
         ...(isAuthenticated ? [
             { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
             { href: "/apps", label: "Apps", icon: Grid2X2 },

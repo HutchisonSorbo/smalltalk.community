@@ -81,7 +81,8 @@ export async function middleware(request: NextRequest) {
     if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport") ||
         path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings") ||
         path.startsWith("/login") || path.startsWith("/forgot-password") || path.startsWith("/reset-password") ||
-        path.startsWith("/youth-service-navigator") || path.startsWith("/apprenticeship-hub") || path.startsWith("/peer-support-finder")) {
+        path.startsWith("/youth-service-navigator") || path.startsWith("/apprenticeship-hub") || path.startsWith("/peer-support-finder") ||
+        path.startsWith("/admin") || path.startsWith("/about") || path.startsWith("/accessibility") || path.startsWith("/work-experience-hub")) {
         return response;
     }
 
