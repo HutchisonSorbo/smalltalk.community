@@ -1265,3 +1265,98 @@ export const insertUserAppSchema = createInsertSchema(userApps).omit({
 
 export type UserApp = typeof userApps.$inferSelect;
 export type InsertUserApp = z.infer<typeof insertUserAppSchema>;
+
+// ------------------------------------------------------------------
+// ADMIN INFRASTRUCTURE TABLES
+// ------------------------------------------------------------------
+
+// Admin Activity Log - Audit trail for all admin actions
+// SECURITY: Only service_role can read/write - prevents tampering
+export const adminActivityLog = pgTable("admin_activity_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminId: varchar("admin_id").notNull().references(() => users.id, { onDelete: "set null" }),
+  action: varchar("action", { length: 100 }).notNull(), // 'user.update', 'user.suspend', 'content.delete', etc.
+  targetType: varchar("target_type", { length: 50 }).notNull(), // 'user', 'app', 'report', 'announcement', etc.
+  targetId: varchar("target_id").notNull(),
+  details: jsonb("details"), // Additional context about the action
+  ipAddress: varchar("ip_address", { length: 45 }), // IPv6 compatible
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  // SECURITY: Only service_role can access - no direct client access
+  pgPolicy("admin_log_service_read", { for: "select", to: "service_role", using: sql`true` }),
+  pgPolicy("admin_log_service_write", { for: "insert", to: "service_role", withCheck: sql`true` }),
+  // No update/delete policies - logs are immutable
+  index("admin_log_admin_idx").on(table.adminId),
+  index("admin_log_target_idx").on(table.targetType, table.targetId),
+  index("admin_log_created_idx").on(table.createdAt),
+]);
+
+export const adminActivityLogRelations = relations(adminActivityLog, ({ one }) => ({
+  admin: one(users, {
+    fields: [adminActivityLog.adminId],
+    references: [users.id],
+  }),
+}));
+
+export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type AdminActivityLog = typeof adminActivityLog.$inferSelect;
+export type InsertAdminActivityLog = z.infer<typeof insertAdminActivityLogSchema>;
+
+// Site Settings - Key-value store for platform configuration
+export const siteSettings = pgTable("site_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: jsonb("value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedBy: varchar("updated_by").references(() => users.id),
+}, (table) => [
+  pgPolicy("site_settings_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("site_settings_service_write", { for: "all", to: "service_role", using: sql`true` }),
+  uniqueIndex("site_settings_key_idx").on(table.key),
+]);
+
+export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
+  updater: one(users, {
+    fields: [siteSettings.updatedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertSiteSettingSchema = createInsertSchema(siteSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type SiteSetting = typeof siteSettings.$inferSelect;
+export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
+
+// Feature Flags - Toggle features on/off platform-wide
+export const featureFlags = pgTable("feature_flags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isEnabled: boolean("is_enabled").default(false).notNull(),
+  enabledForRoles: text("enabled_for_roles").array().default(sql`'{}'::text[]`), // Empty = all, or specific role names
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("feature_flags_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("feature_flags_service_write", { for: "all", to: "service_role", using: sql`true` }),
+  uniqueIndex("feature_flags_key_idx").on(table.key),
+]);
+
+export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
