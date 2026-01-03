@@ -76,6 +76,9 @@ reviews:
           - Missing keyboard navigation support
           - Focus states not visible
           
+          Note: Consider supplementing this manual check with automated tools 
+          like axe-core or pa11y in CI pipelines for deterministic a11y testing.
+          
       - name: "Breaking Change Documentation"
         mode: "warning"
         instructions: |
@@ -91,7 +94,25 @@ reviews:
         mode: "error"
         instructions: |
           Pass/fail criteria: This platform serves users aged 13+.
+          
           FAIL if any hardcoded age references use values other than 13 as the minimum age.
-          Check for age-related strings like "15+", "16+", or similar that should be "13+".
-          Exclude obviously unrelated numbers (dates, counts, etc.).
- 
+          Look for age-related patterns like "15+", "16+", "age 15", "ages 15-25" that should use 13.
+          
+          EXCLUDE the following patterns (do NOT flag these as age violations):
+          - Four-digit years: 1999, 2015, 2026 (regex: \b(19|20)\d{2}\b)
+          - Semantic versions: v1.15.0, 1.2.3, 15.0.0 (regex: \bv?\d+(\.\d+)+\b)
+          - Pixel values: 16px, 24px, 15rem (regex: \b\d+(px|rem|em|vh|vw)\b)
+          - Percentages: 50%, 15%, 100% (regex: \b\d+%\b)
+          - UUIDs and IDs: 8-character+ hex strings (regex: \b[0-9a-fA-F-]{8,}\b)
+          - Phone numbers: +61, (03), area codes
+          - Monetary amounts: $15, $150, currency values
+          - Hex/color codes: #fff, #1a2b3c, rgb(15, 20, 30)
+          - Timestamps and dates: 15:30, 2026-01-15
+          - Quantities/counts: "15 items", "page 15", array indices
+          - Port numbers: :3000, :8080, :5432
+          
+          Only flag standalone age tokens matching patterns like:
+          - "\b\d+\+" (e.g., "15+", "16+")
+          - "age(s)?\s*\d+" (e.g., "age 15", "ages 15")
+          - "\d+-\d+\s*(years?|y\.?o\.?)" (e.g., "15-25 years")
+
