@@ -16,7 +16,7 @@ export async function GET(request: Request) {
             location: z.string().optional(),
             role: z.string().optional(),
             query: z.string().optional(),
-            limit: z.coerce.number().min(1).max(100).default(12),
+            limit: z.coerce.number().min(1).max(2000).default(12),
             offset: z.coerce.number().min(0).default(0),
             hasLocation: z.enum(['true', 'false']).optional().transform(v => v === 'true'),
             userId: z.string().optional()

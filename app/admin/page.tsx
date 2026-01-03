@@ -23,6 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Vercel Serverless function configuration - allow up to 60 seconds for complex queries
+export const maxDuration = 60;
+
+
 async function getPlatformStats() {
     try {
         const now = new Date();
