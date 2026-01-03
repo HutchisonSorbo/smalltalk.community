@@ -172,19 +172,59 @@ export function HubLanding() {
             </main>
 
             <footer className="border-t py-12 bg-muted/50">
-                <div className="container mx-auto px-4 text-center text-muted-foreground">
-                    <div className="flex items-center justify-center gap-2 font-bold text-xl mb-4 text-foreground">
-                        <span className="h-4 w-4 rounded-full bg-blue-500"></span>
-                        smalltalk.community
+                <div className="container mx-auto px-4">
+                    {/* First Nations Acknowledgement */}
+                    <div className="text-center mb-8 pb-8 border-b border-border/50">
+                        <p className="text-sm text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                            We acknowledge the Traditional Custodians of the lands where we live, work and connect.
+                            We pay respects to Elders past and present, and extend that respect to all Aboriginal
+                            and Torres Strait Islander peoples.
+                        </p>
                     </div>
-                    <p className="text-sm">
-                        &copy; {new Date().getFullYear()} Hutchison Sorbo. All rights reserved.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                        <a href={safeUrl("https://www.flaticon.com/free-icons/strong") || "#"} title="strong icons" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            Strong icons created by Freepik - Flaticon
-                        </a>
-                    </p>
+
+                    {/* Footer Navigation */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                        <div className="text-center md:text-left">
+                            <div className="flex items-center justify-center md:justify-start gap-2 font-bold text-xl mb-4 text-foreground">
+                                <span className="h-4 w-4 rounded-full bg-blue-500"></span>
+                                smalltalk.community
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Connecting Victorian communities through opportunities, skills, and meaningful connections.
+                            </p>
+                        </div>
+
+                        <div className="text-center">
+                            <h3 className="font-semibold mb-3 text-foreground">Quick Links</h3>
+                            <nav className="flex flex-col gap-2">
+                                <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</Link>
+                                <Link href="/accessibility" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Accessibility</Link>
+                                <Link href="/apps" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Our Apps</Link>
+                                <a href="mailto:hello@smalltalk.community" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact / Feedback</a>
+                            </nav>
+                        </div>
+
+                        <div className="text-center md:text-right">
+                            <h3 className="font-semibold mb-3 text-foreground">Crisis Support</h3>
+                            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                                <span>Emergency: <strong className="text-foreground">000</strong></span>
+                                <span>Lifeline: <strong className="text-foreground">13 11 14</strong></span>
+                                <span>Kids Helpline: <strong className="text-foreground">1800 551 800</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Copyright */}
+                    <div className="text-center pt-8 border-t border-border/50">
+                        <p className="text-sm text-muted-foreground">
+                            &copy; {new Date().getFullYear()} Hutchison Sorbo. All rights reserved.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            <a href={safeUrl("https://www.flaticon.com/free-icons/strong") || "#"} title="strong icons" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                Strong icons created by Freepik - Flaticon
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </footer>
         </div>
