@@ -18,9 +18,18 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install
-      - name: Run Tests
+        run: npm ci
+      - name: Run Tests with Coverage
         run: npm run test
+      - name: Verify coverage report exists
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            echo "✅ LCOV coverage report found"
+            head -20 coverage/lcov.info
+          else
+            echo "⚠️ No LCOV coverage report found"
+            ls -la coverage/ || echo "No coverage directory"
+          fi
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
         continue-on-error: true # Don't block the build for now, just report
