@@ -7,25 +7,26 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Key, Plus, Trash2, CheckCircle } from "lucide-react";
 
-// Demo data
+// Demo data - Uses RFC 5737 documentation IP ranges for examples
+// 192.0.2.0/24 (TEST-NET-1), 198.51.100.0/24 (TEST-NET-2), 203.0.113.0/24 (TEST-NET-3)
 const DEMO_ALLOWLIST = [
     {
         id: "1",
-        ipAddress: "203.45.67.89",
+        ipAddress: "203.0.113.89",
         description: "Office IP - Melbourne HQ",
         addedBy: "Admin",
         addedAt: new Date("2025-12-15"),
     },
     {
         id: "2",
-        ipAddress: "10.0.0.0/8",
+        ipAddress: "192.0.2.0/24",
         description: "Internal Network Range",
         addedBy: "Admin",
         addedAt: new Date("2025-11-20"),
     },
     {
         id: "3",
-        ipAddress: "192.168.1.50",
+        ipAddress: "198.51.100.50",
         description: "Developer Home",
         addedBy: "Admin",
         addedAt: new Date("2025-12-28"),

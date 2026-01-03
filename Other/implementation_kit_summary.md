@@ -341,10 +341,12 @@ This is often a sign you haven't engaged through proper protocols.
 ### "This is too complicated for seniors."
 
 **Don't Say:**
+
 - "It's not that complicated, other seniors manage fine"
 - "Seniors just need to use it more"
 
 **Do Say:**
+
 - "That's really valuable feedback. Can you show us specifically what's confusing?"
 - "Let's design a simpler version and test it with you"
 - "What would make this easier?"
@@ -352,28 +354,34 @@ This is often a sign you haven't engaged through proper protocols.
 ### "Where do I find music opportunities?"
 
 **Don't Say:**
+
 - "Use the search filter for 'music'"
 
 **Do Say:**
+
 - "Great question. We know that's not obvious. Click 'Opportunities' → 'Music & Performance' (OR type 'music' in the search box at top)"
 - "Still confusing? We're changing how search works in Phase 2 based on feedback like this"
 
 ### "I don't see anything for my cultural community."
 
 **Don't Say:**
+
 - "You're welcome to post opportunities yourself"
 - "We'll add more partners later"
 
 **Do Say:**
+
 - "That's important feedback. We need more organisations from your community involved. Can we talk about how to reach them?"
 - "We're working with a cultural advisory group on this. Would you like to be part of that conversation?"
 
 ### "Is my data safe?"
 
 **Don't Say:**
+
 - "We follow all privacy regulations"
 
 **Do Say:**
+
 - "Yes. Your data is encrypted, we never sell it, and you control who can see your profile. Here's our privacy policy [link]. Any specific concerns?"
 
 ---
@@ -479,4 +487,4 @@ Good luck, Ryan. Your community is lucky to have someone who cares this much.
 **Last Updated:** January 3, 2026  
 **Status:** Ready to implement
 
-**Questions?** hello@smalltalk.community
+**Questions?** `hello@smalltalk.community`

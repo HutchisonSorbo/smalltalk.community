@@ -4,11 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, AlertTriangle, MapPin, Clock, RefreshCw } from "lucide-react";
 
 // Demo data - In production, this would come from a rate limiting / auth log table
+// Uses RFC 5737 documentation IP ranges (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24)
 const DEMO_FAILED_LOGINS = [
     {
         id: "1",
         email: "unknown@example.com",
-        ipAddress: "192.168.1.100",
+        ipAddress: "192.0.2.100",
         location: "Melbourne, VIC",
         attempts: 5,
         lastAttempt: new Date("2026-01-03T18:30:00"),
@@ -17,7 +18,7 @@ const DEMO_FAILED_LOGINS = [
     {
         id: "2",
         email: "user@test.com",
-        ipAddress: "10.0.0.50",
+        ipAddress: "198.51.100.50",
         location: "Sydney, NSW",
         attempts: 3,
         lastAttempt: new Date("2026-01-03T17:45:00"),
@@ -26,7 +27,7 @@ const DEMO_FAILED_LOGINS = [
     {
         id: "3",
         email: "admin@example.org",
-        ipAddress: "172.16.0.25",
+        ipAddress: "203.0.113.25",
         location: "Brisbane, QLD",
         attempts: 2,
         lastAttempt: new Date("2026-01-03T16:20:00"),
@@ -94,10 +95,10 @@ export default function FailedLoginsPage() {
                             <div
                                 key={attempt.id}
                                 className={`p-4 rounded-lg border ${attempt.status === "blocked"
-                                        ? "border-destructive/50 bg-destructive/5"
-                                        : attempt.status === "warning"
-                                            ? "border-yellow-500/50 bg-yellow-500/5"
-                                            : "border-border"
+                                    ? "border-destructive/50 bg-destructive/5"
+                                    : attempt.status === "warning"
+                                        ? "border-yellow-500/50 bg-yellow-500/5"
+                                        : "border-border"
                                     }`}
                             >
                                 <div className="flex items-start justify-between">

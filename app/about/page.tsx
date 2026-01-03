@@ -1,14 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
 import {
     Heart,
     Users,
     MapPin,
     Building2,
-    ArrowRight,
-    CheckCircle,
     Globe
 } from "lucide-react";
 
@@ -165,19 +161,9 @@ export default function AboutPage() {
                         a software developer based in regional Victoria, in partnership with
                         local councils and community organisations.
                     </p>
-                    <div className="flex gap-3">
-                        <Button asChild variant="outline" size="sm">
-                            <Link href="/feedback">
-                                Share Feedback
-                                <ArrowRight className="w-4 h-4 ml-2" />
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                            <Link href="/timeline">
-                                View Development Timeline
-                            </Link>
-                        </Button>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                        Have feedback or suggestions? We&apos;d love to hear from you.
+                    </p>
                 </CardContent>
             </Card>
         </div>
