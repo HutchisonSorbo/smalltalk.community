@@ -1,14 +1,18 @@
 import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Navigation & Accessibility', () => {
 
-    test('About link is visible in header navigation', async ({ page }) => {
+    // DRY: Set up route interceptor for all tests in this describe block
+    test.beforeEach(async ({ page }) => {
         await page.route('**/*', route => {
             const headers = { ...route.request().headers() };
             headers['host'] = 'smalltalk.community';
             route.continue({ headers });
         });
+    });
 
+    test('About link is visible in header navigation', async ({ page }) => {
         await page.goto('/hub');
 
         // Expect About link in navigation
@@ -17,12 +21,6 @@ test.describe('Navigation & Accessibility', () => {
     });
 
     test('About page loads correctly', async ({ page }) => {
-        await page.route('**/*', route => {
-            const headers = { ...route.request().headers() };
-            headers['host'] = 'smalltalk.community';
-            route.continue({ headers });
-        });
-
         await page.goto('/about');
 
         // Expect About page content
@@ -32,12 +30,6 @@ test.describe('Navigation & Accessibility', () => {
     });
 
     test('Accessibility Statement page loads', async ({ page }) => {
-        await page.route('**/*', route => {
-            const headers = { ...route.request().headers() };
-            headers['host'] = 'smalltalk.community';
-            route.continue({ headers });
-        });
-
         await page.goto('/accessibility');
 
         // Expect Accessibility page content
@@ -46,12 +38,6 @@ test.describe('Navigation & Accessibility', () => {
     });
 
     test('Footer contains First Nations acknowledgement', async ({ page }) => {
-        await page.route('**/*', route => {
-            const headers = { ...route.request().headers() };
-            headers['host'] = 'smalltalk.community';
-            route.continue({ headers });
-        });
-
         await page.goto('/hub');
 
         // Expect First Nations acknowledgement in footer
@@ -59,12 +45,6 @@ test.describe('Navigation & Accessibility', () => {
     });
 
     test('Footer contains emergency services information', async ({ page }) => {
-        await page.route('**/*', route => {
-            const headers = { ...route.request().headers() };
-            headers['host'] = 'smalltalk.community';
-            route.continue({ headers });
-        });
-
         await page.goto('/hub');
 
         // Expect crisis support information
@@ -74,12 +54,6 @@ test.describe('Navigation & Accessibility', () => {
     });
 
     test('Footer Quick Links are accessible', async ({ page }) => {
-        await page.route('**/*', route => {
-            const headers = { ...route.request().headers() };
-            headers['host'] = 'smalltalk.community';
-            route.continue({ headers });
-        });
-
         await page.goto('/hub');
 
         // Expect footer quick links
@@ -90,23 +64,66 @@ test.describe('Navigation & Accessibility', () => {
         await expect(accessibilityLink).toBeVisible();
     });
 
-    test('Skip to content link is present', async ({ page }) => {
+    test('Skip to content link is present and functional', async ({ page }) => {
+        await page.goto('/hub');
+
+        // Focus on body first, then tab to find skip link
+        await page.keyboard.press('Tab');
+
+        // Find skip link - it should become visible when focused
+        const skipLink = page.locator('[href="#main-content"], [href="#content"], a:has-text("Skip")').first();
+
+        // Assert skip link exists and is focusable
+        const skipLinkExists = await skipLink.count() > 0;
+        expect(skipLinkExists).toBe(true);
+
+        if (skipLinkExists) {
+            // Check that the skip link is in the viewport (visible when focused)
+            const boundingBox = await skipLink.boundingBox();
+            expect(boundingBox).not.toBeNull();
+        }
+    });
+
+});
+
+test.describe('Automated Accessibility Scans', () => {
+
+    test.beforeEach(async ({ page }) => {
         await page.route('**/*', route => {
             const headers = { ...route.request().headers() };
             headers['host'] = 'smalltalk.community';
             route.continue({ headers });
         });
+    });
 
+    test('Hub page should have no accessibility violations', async ({ page }) => {
         await page.goto('/hub');
 
-        // Skip to content is usually hidden but accessible via keyboard
-        // Focus on body first, then tab to find skip link
-        await page.keyboard.press('Tab');
+        const accessibilityScanResults = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+            .analyze();
 
-        // Look for skip to content or similar
-        const skipLink = page.locator('text=Skip');
-        const skipLinkCount = await skipLink.count();
-        expect(skipLinkCount).toBeGreaterThanOrEqual(0); // May be 0 if styled as sr-only until focused
+        expect(accessibilityScanResults.violations).toEqual([]);
+    });
+
+    test('Accessibility page should have no accessibility violations', async ({ page }) => {
+        await page.goto('/accessibility');
+
+        const accessibilityScanResults = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+            .analyze();
+
+        expect(accessibilityScanResults.violations).toEqual([]);
+    });
+
+    test('About page should have no accessibility violations', async ({ page }) => {
+        await page.goto('/about');
+
+        const accessibilityScanResults = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+            .analyze();
+
+        expect(accessibilityScanResults.violations).toEqual([]);
     });
 
 });

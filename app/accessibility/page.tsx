@@ -10,6 +10,9 @@ import {
     CheckCircle2,
 } from "lucide-react";
 
+// Update this date when accessibility content changes
+const LAST_UPDATED = "January 4, 2026";
+
 export const metadata = {
     title: "Accessibility Statement",
     description: "Our commitment to digital accessibility for all community members.",
@@ -184,7 +187,7 @@ export default function AccessibilityPage() {
 
             {/* Last Updated */}
             <p className="text-center text-sm text-muted-foreground mt-8">
-                This statement was last updated on January 4, 2026.
+                This statement was last updated on {LAST_UPDATED}.
             </p>
         </div>
     );
