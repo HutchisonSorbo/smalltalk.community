@@ -55,6 +55,15 @@ async function seedApps() {
             isBeta: true,
             isActive: true,
         },
+        {
+            name: "Work Experience Hub",
+            description: "Find work experience placements, internships, and career opportunities for young Victorians.",
+            iconUrl: "/work-experience-hub/icon.svg",
+            route: "/work-experience-hub",
+            category: "Education & Careers",
+            isBeta: true,
+            isActive: true,
+        },
     ];
 
     for (const app of appsToSeed) {

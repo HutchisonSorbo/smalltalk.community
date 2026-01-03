@@ -19,6 +19,22 @@ export function HubHeader() {
                         </Link>
                     </div>
 
+                    {/* Navigation Links */}
+                    <nav className="hidden md:flex items-center gap-6">
+                        <Link
+                            href="/hub"
+                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            App Catalogue
+                        </Link>
+                        <Link
+                            href="/about"
+                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            About Us
+                        </Link>
+                    </nav>
+
                     {/* Right Actions */}
                     <div className="flex items-center gap-2 sm:gap-4">
                         <div className="hidden sm:flex items-center gap-2 mr-2">
