@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     const hostname = request.headers.get("host") || "";
 
     // Check if we are in dev mode (localhost) or production
-    const isSmalltalk = hostname.includes("smalltalk.community") || hostname.includes("smalltalk-community");
+    const isSmalltalk = hostname.includes("smalltalk.community") || hostname.includes("smalltalk-community") || hostname.includes("localhost");
 
     const url = request.nextUrl;
     const path = url.pathname;
