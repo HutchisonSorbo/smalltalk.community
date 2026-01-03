@@ -34,4 +34,64 @@ reviews:
     - Ensure all external links use the `safeUrl` utility from `@/lib/utils`.
     - Flag any use of `dangerouslySetInnerHTML` as a high-risk security issue.
     - Suggest using Zod schemas for input validation if missing.
-    - Mention jules in the review body for pull requests from google-labs-jules. 
+    - Mention jules in the review body for pull requests from google-labs-jules.
+  
+  # Pre-merge checks - Quality gates before merging
+  pre_merge_checks:
+    # Built-in checks
+    docstrings:
+      mode: "warning"
+      threshold: 70
+    title:
+      mode: "warning"
+      requirements: "Start with a type prefix (feat:, fix:, docs:, etc.); keep under 72 characters; use imperative mood."
+    description:
+      mode: "warning"
+    issue_assessment:
+      mode: "warning"
+    
+    # Custom checks specific to this project
+    custom_checks:
+      - name: "Security Review"
+        mode: "error"
+        instructions: |
+          Pass/fail criteria: All changes must be reviewed for security concerns.
+          FAIL if any of the following are present without explicit justification:
+          - Use of dangerouslySetInnerHTML without sanitization
+          - Hardcoded secrets, API keys, or credentials
+          - SQL queries without parameterization
+          - Disabled CSRF protection
+          - Missing input validation on API routes
+          - Exposed internal error messages to users
+          
+      - name: "Accessibility Compliance"
+        mode: "warning"
+        instructions: |
+          Pass/fail criteria: UI changes must maintain accessibility standards.
+          FAIL if any of the following are present:
+          - Images without alt text
+          - Interactive elements without proper ARIA labels
+          - Form inputs without associated labels
+          - Color contrast issues for text elements
+          - Missing keyboard navigation support
+          - Focus states not visible
+          
+      - name: "Breaking Change Documentation"
+        mode: "warning"
+        instructions: |
+          Pass/fail criteria: All breaking changes must be documented.
+          FAIL if the PR contains any of the following without documentation in the PR description:
+          - Changes to database schemas
+          - Changes to API endpoints or response formats
+          - Removal of existing features or components
+          - Changes to configuration keys or environment variables
+          - Changes to public TypeScript interfaces or types
+          
+      - name: "Age Requirement Compliance"
+        mode: "error"
+        instructions: |
+          Pass/fail criteria: This platform serves users aged 13+.
+          FAIL if any hardcoded age references use values other than 13 as the minimum age.
+          Check for age-related strings like "15+", "16+", or similar that should be "13+".
+          Exclude obviously unrelated numbers (dates, counts, etc.).
+ 
