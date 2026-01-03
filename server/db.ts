@@ -2,13 +2,6 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@shared/schema";
 
-
-
-
-// Removed global default result order to avoid side effects
-
-
-
 declare global {
   var queryClient: postgres.Sql | undefined;
 }
@@ -19,63 +12,36 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Disable prepared statements for Supabase Transaction Pooler compatibility
-// Use global singleton for all environments to prevent connection exhaustion
-// Serverless-optimized: single connection with timeouts, let Supabase pooler handle scaling
-
+/**
+ * Optimized connection settings for Vercel Serverless + Supabase Transaction Mode Pooler
+ * 
+ * Key optimizations per Supabase/Vercel best practices:
+ * - prepare: false - Required for transaction mode pooler (does not support prepared statements)
+ * - max: 3 - Allow a few concurrent connections for parallel queries (pooler handles actual pooling)
+ * - idle_timeout: 0 - Let Supabase pooler manage connection lifecycle, don't close prematurely
+ * - connect_timeout: 30 - Generous timeout for cold starts
+ * - max_lifetime: 60 - Force connection refresh every 60s to prevent stale connections
+ * 
+ * @see https://supabase.com/docs/guides/database/connecting-to-postgres#serverless-apis
+ */
 const dbOptions: postgres.Options<{}> = {
-  prepare: false,          // Required for Supabase transaction mode pooler
-  max: 1,                  // Serverless: single connection, let Supabase pooler handle scaling
-  idle_timeout: 20,        // Close idle connections after 20 seconds
-  connect_timeout: 10,     // Connection timeout in seconds
+  prepare: false,           // Required for Supabase transaction mode pooler
+  max: 3,                   // Allow parallel queries, pooler handles actual connection reuse
+  idle_timeout: 0,          // Let Supabase pooler manage idle connections
+  connect_timeout: 30,      // 30s timeout for cold starts
+  max_lifetime: 60,         // Force reconnect every 60s to prevent stale connections
 };
 
-
+// Use global singleton to prevent connection exhaustion during hot reloads
 export const queryClient = global.queryClient || postgres(process.env.DATABASE_URL, dbOptions);
-global.queryClient = queryClient;
 
-// Cleanup connection on process exit (Production only)
-
-// Connection cleanup handling
-let isClosing = false;
-const handleExit = async (signal: string) => {
-  if (isClosing) return;
-  isClosing = true;
-  console.log(`Received ${signal}, closing database connection...`);
-  try {
-    await queryClient.end();
-    global.queryClient = undefined;
-    console.log('Database connection closed');
-    if (signal !== 'beforeExit' && signal !== 'module.hot.dispose') {
-      process.exit(0);
-    }
-  } catch (err) {
-    console.error('Error closing database connection:', err);
-    process.exit(1);
-  }
-};
-
-if (process.env.NODE_ENV === "production") {
-  process.once('SIGTERM', () => handleExit('SIGTERM'));
-} else {
-  // Development-safe cleanup
-  process.once('SIGINT', () => handleExit('SIGINT'));
-  process.once('SIGUSR2', () => handleExit('SIGUSR2')); // Nodemon restart
-  process.once('beforeExit', () => handleExit('beforeExit'));
-
-  // @ts-ignore - Hot Module Replacement
-  if (typeof module !== 'undefined' && module.hot) {
-    // @ts-ignore
-    module.hot.dispose(async () => {
-      await handleExit('module.hot.dispose');
-    });
-  }
+if (process.env.NODE_ENV !== "production") {
+  global.queryClient = queryClient;
 }
 
 /**
  * Single shared Drizzle DB instance for running queries/migrations.
- * Usage: Import `db` to execute queries, e.g., `await db.select().from(table)`.
+ * Usage: Import `db` to execute queries, e.g., `await db.select().from(table)`
  * @constant {ReturnType<typeof drizzle>}
  */
 export const db = drizzle(queryClient, { schema });
-
