@@ -18,6 +18,16 @@ import {
     Database,
     Building2,
     ChevronDown,
+    Mail,
+    MessageSquare,
+    Lock,
+    AlertTriangle,
+    Key,
+    FileCheck,
+    Wrench,
+    UserX,
+    History,
+    Send,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -63,6 +73,11 @@ const userItems = [
         icon: Users,
     },
     {
+        title: "Bulk Actions",
+        url: "/admin/users/bulk",
+        icon: UserX,
+    },
+    {
         title: "Roles & Permissions",
         url: "/admin/roles",
         icon: UserCog,
@@ -77,8 +92,13 @@ const contentItems = [
     },
     {
         title: "Moderation Queue",
-        url: "/admin/reports",
+        url: "/admin/moderation",
         icon: Flag,
+    },
+    {
+        title: "Reports",
+        url: "/admin/reports",
+        icon: AlertTriangle,
     },
     {
         title: "Announcements",
@@ -89,6 +109,47 @@ const contentItems = [
         title: "Onboarding Data",
         url: "/admin/onboarding",
         icon: ClipboardList,
+    },
+]
+
+const securityItems = [
+    {
+        title: "Security Dashboard",
+        url: "/admin/security",
+        icon: Shield,
+    },
+    {
+        title: "Failed Logins",
+        url: "/admin/security/failed-logins",
+        icon: Lock,
+    },
+    {
+        title: "IP Allowlist",
+        url: "/admin/security/ip-allowlist",
+        icon: Key,
+    },
+    {
+        title: "Audit Log",
+        url: "/admin/security/audit",
+        icon: FileCheck,
+    },
+]
+
+const communicationsItems = [
+    {
+        title: "Mass Messaging",
+        url: "/admin/communications",
+        icon: Send,
+    },
+    {
+        title: "Email Templates",
+        url: "/admin/communications/templates",
+        icon: Mail,
+    },
+    {
+        title: "Message History",
+        url: "/admin/communications/history",
+        icon: History,
     },
 ]
 
@@ -129,6 +190,11 @@ const settingsItems = [
         url: "/admin/settings/features",
         icon: ToggleLeft,
     },
+    {
+        title: "Maintenance Mode",
+        url: "/admin/system/maintenance",
+        icon: Wrench,
+    },
 ]
 
 interface NavSection {
@@ -144,9 +210,11 @@ const navSections: NavSection[] = [
     { label: "Overview", items: overviewItems },
     { label: "Users & Access", items: userItems },
     { label: "Content", items: contentItems },
+    { label: "Security", items: securityItems },
+    { label: "Communications", items: communicationsItems },
     { label: "Apps", items: appItems },
     { label: "Analytics", items: analyticsItems },
-    { label: "Platform", items: settingsItems },
+    { label: "System", items: settingsItems },
 ]
 
 export function PlatformAdminSidebar() {

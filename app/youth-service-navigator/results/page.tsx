@@ -50,7 +50,7 @@ const DEMO_SERVICES = [
         waitTime: "1-2 weeks",
         cost: "Free",
         bulkBilled: true,
-        ageRange: "15-25 years",
+        ageRange: "13-25 years",
         services: ["Case management", "Housing support", "Education support"],
         matchScore: 82,
         matchReason: "Comprehensive youth support including wellbeing services",

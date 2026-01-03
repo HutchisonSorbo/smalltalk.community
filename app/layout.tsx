@@ -7,6 +7,7 @@ import { Providers } from "@/app/providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
+import { WorkInProgressBanner } from "@/components/shared/WorkInProgressBanner";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -37,6 +38,7 @@ export default function RootLayout({
             <body className={inter.className} suppressHydrationWarning>
                 <Providers>
                     <AccessibilityProvider>
+                        <WorkInProgressBanner />
                         <SkipToContent />
                         {children}
                         <SpeedInsights />
@@ -47,3 +49,4 @@ export default function RootLayout({
         </html>
     );
 }
+

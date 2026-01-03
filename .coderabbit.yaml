@@ -34,4 +34,85 @@ reviews:
     - Ensure all external links use the `safeUrl` utility from `@/lib/utils`.
     - Flag any use of `dangerouslySetInnerHTML` as a high-risk security issue.
     - Suggest using Zod schemas for input validation if missing.
-    - Mention jules in the review body for pull requests from google-labs-jules. 
+    - Mention jules in the review body for pull requests from google-labs-jules.
+  
+  # Pre-merge checks - Quality gates before merging
+  pre_merge_checks:
+    # Built-in checks
+    docstrings:
+      mode: "warning"
+      threshold: 70
+    title:
+      mode: "warning"
+      requirements: "Start with a type prefix (feat:, fix:, docs:, etc.); keep under 72 characters; use imperative mood."
+    description:
+      mode: "warning"
+    issue_assessment:
+      mode: "warning"
+    
+    # Custom checks specific to this project
+    custom_checks:
+      - name: "Security Review"
+        mode: "error"
+        instructions: |
+          Pass/fail criteria: All changes must be reviewed for security concerns.
+          FAIL if any of the following are present without explicit justification:
+          - Use of dangerouslySetInnerHTML without sanitization
+          - Hardcoded secrets, API keys, or credentials
+          - SQL queries without parameterization
+          - Disabled CSRF protection
+          - Missing input validation on API routes
+          - Exposed internal error messages to users
+          
+      - name: "Accessibility Compliance"
+        mode: "warning"
+        instructions: |
+          Pass/fail criteria: UI changes must maintain accessibility standards.
+          FAIL if any of the following are present:
+          - Images without alt text
+          - Interactive elements without proper ARIA labels
+          - Form inputs without associated labels
+          - Color contrast issues for text elements
+          - Missing keyboard navigation support
+          - Focus states not visible
+          
+          Note: Consider supplementing this manual check with automated tools 
+          like axe-core or pa11y in CI pipelines for deterministic a11y testing.
+          
+      - name: "Breaking Change Documentation"
+        mode: "warning"
+        instructions: |
+          Pass/fail criteria: All breaking changes must be documented.
+          FAIL if the PR contains any of the following without documentation in the PR description:
+          - Changes to database schemas
+          - Changes to API endpoints or response formats
+          - Removal of existing features or components
+          - Changes to configuration keys or environment variables
+          - Changes to public TypeScript interfaces or types
+          
+      - name: "Age Requirement Compliance"
+        mode: "error"
+        instructions: |
+          Pass/fail criteria: This platform serves users aged 13+.
+          
+          FAIL if any hardcoded age references use values other than 13 as the minimum age.
+          Look for age-related patterns like "15+", "16+", "age 15", "ages 15-25" that should use 13.
+          
+          EXCLUDE the following patterns (do NOT flag these as age violations):
+          - Four-digit years: 1999, 2015, 2026 (regex: \b(19|20)\d{2}\b)
+          - Semantic versions: v1.15.0, 1.2.3, 15.0.0 (regex: \bv?\d+(\.\d+)+\b)
+          - Pixel values: 16px, 24px, 15rem (regex: \b\d+(px|rem|em|vh|vw)\b)
+          - Percentages: 50%, 15%, 100% (regex: \b\d+%\b)
+          - UUIDs and IDs: 8-character+ hex strings (regex: \b[0-9a-fA-F-]{8,}\b)
+          - Phone numbers: +61, (03), area codes
+          - Monetary amounts: $15, $150, currency values
+          - Hex/color codes: #fff, #1a2b3c, rgb(15, 20, 30)
+          - Timestamps and dates: 15:30, 2026-01-15
+          - Quantities/counts: "15 items", "page 15", array indices
+          - Port numbers: :3000, :8080, :5432
+          
+          Only flag standalone age tokens matching patterns like:
+          - "\b\d+\+" (e.g., "15+", "16+")
+          - "age(s)?\s*\d+" (e.g., "age 15", "ages 15")
+          - "\d+-\d+\s*(years?|y\.?o\.?)" (e.g., "15-25 years")
+

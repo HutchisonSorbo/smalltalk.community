@@ -57,7 +57,7 @@ export default function ApprenticeshipHubPage() {
                         <div className="text-sm text-muted-foreground">TAFE courses</div>
                     </div>
                     <div className="bg-accent rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-primary">15-24</div>
+                        <div className="text-3xl font-bold text-primary">13-24</div>
                         <div className="text-sm text-muted-foreground">Years old</div>
                     </div>
                 </div>

@@ -24,7 +24,7 @@ export default function ClassifiedsPage() {
         queryKey: ["/api/classifieds", search, instrument, type],
         queryFn: async () => {
             const params = new URLSearchParams();
-            if (search) params.append("location", search); // Using search as location filter for MVP
+            if (search) params.append("location", search); // Using search as location filter
             if (instrument && instrument !== "all") params.append("instrument", instrument);
             if (type && type !== "all") params.append("type", type);
 
