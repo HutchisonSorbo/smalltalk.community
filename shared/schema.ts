@@ -535,7 +535,7 @@ export const gigs = pgTable("gigs", {
   description: text("description"),
   location: varchar("location", { length: 255 }).notNull(),
   date: timestamp("date").notNull(),
-  price: integer("price"), // In cents? Or just text description? Let's assume text for MVP flexibility or integer for cents
+  price: integer("price"), // In cents, or use text description for flexibility
   ticketUrl: varchar("ticket_url", { length: 500 }),
   imageUrl: varchar("image_url"),
   coverImageUrl: varchar("cover_image_url"),

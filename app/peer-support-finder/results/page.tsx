@@ -58,7 +58,7 @@ const DEMO_GROUPS = [
         organiser: "Grief Line",
         type: "facilitated",
         topics: ["grief"],
-        ageRange: "15-25",
+        ageRange: "13-25",
         format: "online",
         location: "Online (Zoom)",
         distance: null,
