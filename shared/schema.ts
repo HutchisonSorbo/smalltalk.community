@@ -55,6 +55,7 @@ export const users = pgTable("users", {
 }, (table) => [
   pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}` }),
   pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}`, withCheck: sql`auth.uid()::text::text = ${table.id}` }),
+  index("users_created_at_idx").on(table.createdAt),
 ]);
 
 export type UpsertUser = typeof users.$inferInsert;
@@ -618,6 +619,7 @@ export const reports = pgTable("reports", {
   pgPolicy("reports_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.reporterId}` }),
   pgPolicy("reports_admin_read", { for: "select", to: "service_role", using: sql`true` }),
   index("reports_reporter_id_idx").on(table.reporterId),
+  index("reports_status_idx").on(table.status),
 ]);
 
 export const reportsRelations = relations(reports, ({ one }) => ({
@@ -768,6 +770,7 @@ export const announcements = pgTable("announcements", {
       and r.name in ('super_admin', 'admin')
     )`
   }),
+  index("announcements_is_active_idx").on(table.isActive),
 ]);
 
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({

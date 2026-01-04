@@ -1,5 +1,6 @@
 
 import { db } from "@/server/db";
+import { unstable_cache } from "next/cache";
 import { adminActivityLog, users } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,31 +9,35 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-async function getRecentActivity() {
-    try {
-        const logs = await db
-            .select({
-                id: adminActivityLog.id,
-                action: adminActivityLog.action,
-                targetType: adminActivityLog.targetType,
-                targetId: adminActivityLog.targetId,
-                createdAt: adminActivityLog.createdAt,
-                adminFirstName: users.firstName,
-                adminLastName: users.lastName,
-                adminEmail: users.email,
-                adminImage: users.profileImageUrl,
-            })
-            .from(adminActivityLog)
-            .leftJoin(users, eq(adminActivityLog.adminId, users.id))
-            .orderBy(desc(adminActivityLog.createdAt))
-            .limit(5);
+const getRecentActivity = unstable_cache(
+    async () => {
+        try {
+            const logs = await db
+                .select({
+                    id: adminActivityLog.id,
+                    action: adminActivityLog.action,
+                    targetType: adminActivityLog.targetType,
+                    targetId: adminActivityLog.targetId,
+                    createdAt: adminActivityLog.createdAt,
+                    adminFirstName: users.firstName,
+                    adminLastName: users.lastName,
+                    adminEmail: users.email,
+                    adminImage: users.profileImageUrl,
+                })
+                .from(adminActivityLog)
+                .leftJoin(users, eq(adminActivityLog.adminId, users.id))
+                .orderBy(desc(adminActivityLog.createdAt))
+                .limit(5);
 
-        return logs;
-    } catch (error) {
-        console.error("[Admin Dashboard] Error fetching activity:", error);
-        return [];
-    }
-}
+            return logs;
+        } catch (error) {
+            console.error("[Admin Dashboard] Error fetching activity:", error);
+            return [];
+        }
+    },
+    ["admin-recent-activity"],
+    { revalidate: 60 }
+);
 
 function formatAction(action: string): string {
     const parts = action.split(".");
