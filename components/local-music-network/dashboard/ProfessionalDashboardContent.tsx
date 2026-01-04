@@ -12,7 +12,7 @@ export function ProfessionalDashboardContent({ user }: { user: any }) {
         queryKey: ["professional-profile", user?.id],
         queryFn: async () => {
             if (!user?.id) return null;
-            const res = await fetch(`/api/professionals?userId=${user.id}`);
+            const res = await fetch(`/local-music-network/api/professionals?userId=${user.id}`);
             if (res.status === 404) return null;
             if (!res.ok) throw new Error("Failed to fetch");
             return res.json();
@@ -46,7 +46,7 @@ export function ProfessionalDashboardContent({ user }: { user: any }) {
                     profile={myProfile}
                     onSuccess={() => {
                         queryClient.invalidateQueries({ queryKey: ["professional-profile"] });
-                        queryClient.invalidateQueries({ queryKey: ["/api/professionals"] });
+                        queryClient.invalidateQueries({ queryKey: ["/local-music-network/api/professionals"] });
                     }}
                 />
             </CardContent>

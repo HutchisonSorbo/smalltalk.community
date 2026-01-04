@@ -25,7 +25,7 @@ export default function ProfessionalEditorPage() {
         queryKey: ["professional-profile", user?.id],
         queryFn: async () => {
             if (!user?.id) return null;
-            const res = await fetch(`/api/professionals?userId=${user.id}`);
+            const res = await fetch(`/local-music-network/api/professionals?userId=${user.id}`);
             if (res.status === 404) return null;
             if (!res.ok) throw new Error("Failed to fetch");
             return res.json();

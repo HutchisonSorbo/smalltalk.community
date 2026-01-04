@@ -117,7 +117,7 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
 
     async function onSubmit(data: FormValues) {
         try {
-            const url = profile ? `/api/professionals/${profile.id}` : "/api/professionals";
+            const url = profile ? `/local-music-network/api/professionals/${profile.id}` : "/local-music-network/api/professionals";
             const method = profile ? "PATCH" : "POST";
 
             const response = await fetch(url, {
@@ -137,7 +137,7 @@ export function ProfessionalProfileForm({ profile, onSuccess, showCancel, onCanc
 
             // Invalidate queries
             queryClient.invalidateQueries({ queryKey: ["professional-profile"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/professionals"] });
+            queryClient.invalidateQueries({ queryKey: ["/local-music-network/api/professionals"] });
             queryClient.invalidateQueries({ queryKey: ["/api/my/profiles"] });
 
             if (onSuccess) {

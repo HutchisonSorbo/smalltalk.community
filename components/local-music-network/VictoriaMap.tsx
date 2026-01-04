@@ -40,11 +40,21 @@ export default function VictoriaMap() {
     const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
     const { data: musicians } = useQuery<MusicianProfile[]>({
-        queryKey: ["/api/musicians?hasLocation=true&limit=2000"],
+        queryKey: ["/local-music-network/api/musicians?hasLocation=true&limit=2000"],
+        queryFn: async () => {
+            const res = await fetch("/local-music-network/api/musicians?hasLocation=true&limit=2000");
+            if (!res.ok) throw new Error("Failed to fetch musicians");
+            return res.json();
+        },
     });
 
     const { data: professionals } = useQuery<ProfessionalProfile[]>({
-        queryKey: ["/api/professionals?hasLocation=true&limit=2000"],
+        queryKey: ["/local-music-network/api/professionals?hasLocation=true&limit=2000"],
+        queryFn: async () => {
+            const res = await fetch("/local-music-network/api/professionals?hasLocation=true&limit=2000");
+            if (!res.ok) throw new Error("Failed to fetch professionals");
+            return res.json();
+        },
     });
 
     const musicianLocations = musicians?.filter(p => p.isLocationShared && p.latitude && p.longitude) || [];

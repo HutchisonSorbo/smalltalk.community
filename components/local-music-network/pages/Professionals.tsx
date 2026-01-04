@@ -25,7 +25,7 @@ export default function Professionals() {
         isFetchingNextPage,
         isLoading
     } = useInfiniteQuery<ProfessionalProfile[]>({
-        queryKey: ["/api/professionals", searchQuery, selectedFilters],
+        queryKey: ["/local-music-network/api/professionals", searchQuery, selectedFilters],
         initialPageParam: 0,
         queryFn: async ({ pageParam = 0 }: { pageParam: any }) => {
             const limit = 12;
@@ -39,7 +39,7 @@ export default function Professionals() {
             if (selectedFilters.location?.length) params.append("location", selectedFilters.location[0]);
             if (selectedFilters.role?.length && selectedFilters.role[0] !== "all") params.append("role", selectedFilters.role[0]);
 
-            const res = await fetch(`/api/professionals?${params.toString()}`);
+            const res = await fetch(`/local-music-network/api/professionals?${params.toString()}`);
             if (!res.ok) throw new Error("Failed to fetch professionals");
             return res.json();
         },

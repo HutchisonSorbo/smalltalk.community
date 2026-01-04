@@ -22,9 +22,9 @@ export default function ProfessionalDetailPage() {
     const id = params.id as string;
 
     const { data: pro, isLoading, error } = useQuery<ProfessionalProfile & { user?: any }>({
-        queryKey: [`/api/professionals/${id}`],
+        queryKey: [`/local-music-network/api/professionals/${id}`],
         queryFn: async () => {
-            const res = await fetch(`/api/professionals/${id}`);
+            const res = await fetch(`/local-music-network/api/professionals/${id}`);
             if (!res.ok) throw new Error("Not found");
             return res.json();
         }
