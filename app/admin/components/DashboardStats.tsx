@@ -27,37 +27,53 @@ async function getPlatformStats() {
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
+        // Batch 1: User metrics (Critical for top row)
         const [
             totalUsers,
             usersLast30Days,
             usersLast7Days,
             usersLast24Hours,
             onboardingCompleted,
-            musicianCount,
-            bandCount,
-            gigCount,
-            volunteerCount,
-            orgCount,
-            professionalCount,
-            listingCount,
-            appCount,
-            pendingReports,
-            onboardingResponses,
-            activeAnnouncements,
         ] = await Promise.all([
             db.select({ count: count() }).from(users),
             db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
             db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)),
             db.select({ count: count() }).from(users).where(gte(users.createdAt, twentyFourHoursAgo)),
             db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
+        ]);
+
+        // Batch 2: Profile types
+        const [
+            musicianCount,
+            bandCount,
+            gigCount,
+            volunteerCount,
+        ] = await Promise.all([
             db.select({ count: count() }).from(musicianProfiles),
             db.select({ count: count() }).from(bands),
             db.select({ count: count() }).from(gigs),
             db.select({ count: count() }).from(volunteerProfiles),
+        ]);
+
+        // Batch 3: Platform entities
+        const [
+            orgCount,
+            professionalCount,
+            listingCount,
+            appCount,
+        ] = await Promise.all([
             db.select({ count: count() }).from(organisations),
             db.select({ count: count() }).from(professionalProfiles),
             db.select({ count: count() }).from(marketplaceListings),
             db.select({ count: count() }).from(apps),
+        ]);
+
+        // Batch 4: Monitoring/Activity
+        const [
+            pendingReports,
+            onboardingResponses,
+            activeAnnouncements,
+        ] = await Promise.all([
             db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")),
             db.select({ count: count() }).from(userOnboardingResponses),
             db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),

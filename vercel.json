@@ -7,6 +7,10 @@
         "app/admin/**/*": {
             "maxDuration": 60,
             "memory": 1024
+        },
+        "app/local-music-network/api/**/*": {
+            "maxDuration": 60,
+            "memory": 1024
         }
     }
 }
