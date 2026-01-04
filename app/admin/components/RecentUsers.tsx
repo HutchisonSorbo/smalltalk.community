@@ -1,6 +1,7 @@
 
 import { db } from "@/server/db";
 import { unstable_cache } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { users } from "@shared/schema";
 import { desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -24,7 +25,7 @@ const getRecentUsers = unstable_cache(
             return [];
         }
     },
-    ["admin-recent-users"],
+    [CACHE_TAGS.ADMIN_RECENT_USERS],
     { revalidate: 60 }
 );
 

@@ -1,6 +1,7 @@
 
 import { db } from "@/server/db";
 import { unstable_cache } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { adminActivityLog, users } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,7 +36,7 @@ const getRecentActivity = unstable_cache(
             return [];
         }
     },
-    ["admin-recent-activity"],
+    [CACHE_TAGS.ADMIN_RECENT_ACTIVITY],
     { revalidate: 60 }
 );
 

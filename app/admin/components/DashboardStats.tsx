@@ -1,6 +1,7 @@
 
 import { db } from "@/server/db";
 import { unstable_cache } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import {
     users,
     musicianProfiles,
@@ -116,7 +117,7 @@ const getPlatformStats = unstable_cache(
             };
         }
     },
-    ["admin-dashboard-stats"],
+    [CACHE_TAGS.ADMIN_DASHBOARD_STATS],
     { revalidate: 300 } // Cache for 5 minutes
 );
 

@@ -29,6 +29,13 @@
       "when": 1767521852646,
       "tag": "0003_rainy_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767523842304,
+      "tag": "0004_bright_black_bolt",
+      "breakpoints": true
     }
   ]
 }

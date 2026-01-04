@@ -1,5 +1,5 @@
 {
-  "id": "4e49d977-78d8-4d6c-9368-f8b78da3ca71",
+  "id": "cb043df8-1ff9-41a1-8687-69f723503701",
   "prevId": "0a796702-ad34-4e6b-a92f-27474bec24e9",
   "version": "7",
   "dialect": "postgresql",
@@ -129,7 +129,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
+          "onDelete": "restrict",
           "onUpdate": "no action"
         }
       },
@@ -153,6 +153,15 @@
             "service_role"
           ],
           "withCheck": "true"
+        },
+        "admin_log_authenticated_read": {
+          "name": "admin_log_authenticated_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "auth.jwt() ->> 'sub' IN (SELECT id FROM users WHERE is_admin = true)"
         }
       },
       "checkConstraints": {},
@@ -4529,6 +4538,21 @@
           "columns": [
             {
               "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "users_onboarding_completed_idx": {
+          "name": "users_onboarding_completed_idx",
+          "columns": [
+            {
+              "expression": "onboarding_completed",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

@@ -56,6 +56,7 @@ export const users = pgTable("users", {
   pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}` }),
   pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}`, withCheck: sql`auth.uid()::text::text = ${table.id}` }),
   index("users_created_at_idx").on(table.createdAt),
+  index("users_onboarding_completed_idx").on(table.onboardingCompleted),
 ]);
 
 export type UpsertUser = typeof users.$inferInsert;
@@ -1274,10 +1275,10 @@ export type InsertUserApp = z.infer<typeof insertUserAppSchema>;
 // ------------------------------------------------------------------
 
 // Admin Activity Log - Audit trail for all admin actions
-// SECURITY: Only service_role can read/write - prevents tampering
+// SECURITY: Immutable logs - FK prevents deletion of users with audit history
 export const adminActivityLog = pgTable("admin_activity_log", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  adminId: varchar("admin_id").notNull().references(() => users.id, { onDelete: "set null" }),
+  adminId: varchar("admin_id").notNull().references(() => users.id, { onDelete: "restrict" }),
   action: varchar("action", { length: 100 }).notNull(), // 'user.update', 'user.suspend', 'content.delete', etc.
   targetType: varchar("target_type", { length: 50 }).notNull(), // 'user', 'app', 'report', 'announcement', etc.
   targetId: varchar("target_id").notNull(),
@@ -1286,9 +1287,15 @@ export const adminActivityLog = pgTable("admin_activity_log", {
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
-  // SECURITY: Only service_role can access - no direct client access
+  // SECURITY: Service role has full access for server-side operations
   pgPolicy("admin_log_service_read", { for: "select", to: "service_role", using: sql`true` }),
   pgPolicy("admin_log_service_write", { for: "insert", to: "service_role", withCheck: sql`true` }),
+  // SECURITY: Authenticated admin users can read the audit log
+  pgPolicy("admin_log_authenticated_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`auth.jwt() ->> 'sub' IN (SELECT id FROM users WHERE is_admin = true)`
+  }),
   // No update/delete policies - logs are immutable
   index("admin_log_admin_idx").on(table.adminId),
   index("admin_log_target_idx").on(table.targetType, table.targetId),
