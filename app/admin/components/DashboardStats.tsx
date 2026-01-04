@@ -93,7 +93,7 @@ const getPlatformStats = unstable_cache(
             };
         } catch (error) {
             console.error("[Admin Dashboard] Error fetching stats:", error);
-            // Return safe defaults
+            // Return safe defaults with error property so UI can surface the issue
             return {
                 totalUsers: 0,
                 usersLast30Days: 0,
@@ -112,6 +112,7 @@ const getPlatformStats = unstable_cache(
                 pendingReports: 0,
                 onboardingResponses: 0,
                 activeAnnouncements: 0,
+                error: error instanceof Error ? error.message : String(error),
             };
         }
     },
@@ -124,6 +125,23 @@ export async function DashboardStats() {
 
     return (
         <div className="space-y-4">
+            {/* Error Alert - Surface stats fetch failures to admins */}
+            {"error" in stats && stats.error && (
+                <Card className="border-red-500/50 bg-red-500/10">
+                    <CardContent className="flex items-center gap-3 py-4">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        <div>
+                            <p className="font-medium text-red-700">
+                                Failed to load dashboard statistics
+                            </p>
+                            <p className="text-sm text-red-600">
+                                {stats.error}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Alert Cards */}
             {stats.pendingReports > 0 && (
                 <Card className="border-yellow-500/50 bg-yellow-500/10">

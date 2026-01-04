@@ -1,6 +1,7 @@
 import { db } from "@/server/db";
 import { adminActivityLog } from "@shared/schema";
 import { headers } from "next/headers";
+import { revalidateTag } from "next/cache";
 
 /**
  * Admin action types for consistent logging
@@ -112,6 +113,9 @@ export async function logAdminAction({
             ipAddress,
             userAgent,
         });
+
+        // Revalidate the admin recent activity cache so the dashboard updates immediately
+        revalidateTag("admin-recent-activity");
     } catch (error) {
         // Log to console but don't throw - activity logging shouldn't break admin operations
         console.error("[Admin Activity Log] Failed to log action:", error);
