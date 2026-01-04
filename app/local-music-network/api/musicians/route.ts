@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase-server";
 import { insertMusicianProfileSchema } from "@shared/schema";
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const musicianFiltersSchema = z.object({
     location: z.string().optional(),
