@@ -54,7 +54,7 @@ export async function middleware(request: NextRequest) {
     // Explicitly rewrite specific API routes that are part of the local-music-network app
     // This must happen BEFORE the global API skip below
     if (path.startsWith("/api/musicians") || path.startsWith("/api/professionals")) {
-        const newUrl = new URL(`/local-music-network${path}`, request.url);
+        const newUrl = new URL(`/local-music-network${path}${url.search}`, request.url);
         const rewriteResponse = NextResponse.rewrite(newUrl);
         response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
         response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
