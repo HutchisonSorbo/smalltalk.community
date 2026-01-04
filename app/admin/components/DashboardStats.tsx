@@ -1,5 +1,7 @@
 
 import { db } from "@/server/db";
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import {
     users,
     musicianProfiles,
@@ -20,119 +22,127 @@ import { Users, Briefcase, Building2, AppWindow, Flag, UserCheck, TrendingUp, Cl
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-async function getPlatformStats() {
-    try {
-        const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+const getPlatformStats = unstable_cache(
+    async () => {
+        try {
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-        // Batch 1: User metrics (Critical for top row)
-        const [
-            totalUsers,
-            usersLast30Days,
-            usersLast7Days,
-            usersLast24Hours,
-            onboardingCompleted,
-        ] = await Promise.all([
-            db.select({ count: count() }).from(users),
-            db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
-            db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)),
-            db.select({ count: count() }).from(users).where(gte(users.createdAt, twentyFourHoursAgo)),
-            db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
-        ]);
+            // Using Promise.all for concurrent execution
+            const [
+                totalUsers,
+                usersLast30Days,
+                usersLast7Days,
+                usersLast24Hours,
+                onboardingCompleted,
+                musicianCount,
+                bandCount,
+                gigCount,
+                volunteerCount,
+                orgCount,
+                professionalCount,
+                listingCount,
+                appCount,
+                pendingReports,
+                onboardingResponses,
+                activeAnnouncements,
+            ] = await Promise.all([
+                db.select({ count: count() }).from(users),
+                db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
+                db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)),
+                db.select({ count: count() }).from(users).where(gte(users.createdAt, twentyFourHoursAgo)),
+                db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
+                db.select({ count: count() }).from(musicianProfiles),
+                db.select({ count: count() }).from(bands),
+                db.select({ count: count() }).from(gigs),
+                db.select({ count: count() }).from(volunteerProfiles),
+                db.select({ count: count() }).from(organisations),
+                db.select({ count: count() }).from(professionalProfiles),
+                db.select({ count: count() }).from(marketplaceListings),
+                db.select({ count: count() }).from(apps),
+                db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")),
+                db.select({ count: count() }).from(userOnboardingResponses),
+                db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),
+            ]);
 
-        // Batch 2: Profile types
-        const [
-            musicianCount,
-            bandCount,
-            gigCount,
-            volunteerCount,
-        ] = await Promise.all([
-            db.select({ count: count() }).from(musicianProfiles),
-            db.select({ count: count() }).from(bands),
-            db.select({ count: count() }).from(gigs),
-            db.select({ count: count() }).from(volunteerProfiles),
-        ]);
+            const totalUsersCount = totalUsers[0]?.count ?? 0;
+            const onboardingCompletedCount = onboardingCompleted[0]?.count ?? 0;
+            const onboardingRate = totalUsersCount > 0
+                ? Math.round((onboardingCompletedCount / totalUsersCount) * 100)
+                : 0;
 
-        // Batch 3: Platform entities
-        const [
-            orgCount,
-            professionalCount,
-            listingCount,
-            appCount,
-        ] = await Promise.all([
-            db.select({ count: count() }).from(organisations),
-            db.select({ count: count() }).from(professionalProfiles),
-            db.select({ count: count() }).from(marketplaceListings),
-            db.select({ count: count() }).from(apps),
-        ]);
-
-        // Batch 4: Monitoring/Activity
-        const [
-            pendingReports,
-            onboardingResponses,
-            activeAnnouncements,
-        ] = await Promise.all([
-            db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")),
-            db.select({ count: count() }).from(userOnboardingResponses),
-            db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),
-        ]);
-
-        const totalUsersCount = totalUsers[0]?.count ?? 0;
-        const onboardingCompletedCount = onboardingCompleted[0]?.count ?? 0;
-        const onboardingRate = totalUsersCount > 0
-            ? Math.round((onboardingCompletedCount / totalUsersCount) * 100)
-            : 0;
-
-        return {
-            totalUsers: totalUsersCount,
-            usersLast30Days: usersLast30Days[0]?.count ?? 0,
-            usersLast7Days: usersLast7Days[0]?.count ?? 0,
-            usersLast24Hours: usersLast24Hours[0]?.count ?? 0,
-            onboardingCompleted: onboardingCompletedCount,
-            onboardingRate,
-            musicians: musicianCount[0]?.count ?? 0,
-            bands: bandCount[0]?.count ?? 0,
-            gigs: gigCount[0]?.count ?? 0,
-            volunteers: volunteerCount[0]?.count ?? 0,
-            organisations: orgCount[0]?.count ?? 0,
-            professionals: professionalCount[0]?.count ?? 0,
-            listings: listingCount[0]?.count ?? 0,
-            apps: appCount[0]?.count ?? 0,
-            pendingReports: pendingReports[0]?.count ?? 0,
-            onboardingResponses: onboardingResponses[0]?.count ?? 0,
-            activeAnnouncements: activeAnnouncements[0]?.count ?? 0,
-        };
-    } catch (error) {
-        console.error("[Admin Dashboard] Error fetching stats:", error);
-        return {
-            totalUsers: 0,
-            usersLast30Days: 0,
-            usersLast7Days: 0,
-            usersLast24Hours: 0,
-            onboardingCompleted: 0,
-            onboardingRate: 0,
-            musicians: 0,
-            bands: 0,
-            gigs: 0,
-            volunteers: 0,
-            organisations: 0,
-            professionals: 0,
-            listings: 0,
-            apps: 0,
-            pendingReports: 0,
-            onboardingResponses: 0,
-            activeAnnouncements: 0,
-        };
-    }
-}
+            return {
+                totalUsers: totalUsersCount,
+                usersLast30Days: usersLast30Days[0]?.count ?? 0,
+                usersLast7Days: usersLast7Days[0]?.count ?? 0,
+                usersLast24Hours: usersLast24Hours[0]?.count ?? 0,
+                onboardingCompleted: onboardingCompletedCount,
+                onboardingRate,
+                musicians: musicianCount[0]?.count ?? 0,
+                bands: bandCount[0]?.count ?? 0,
+                gigs: gigCount[0]?.count ?? 0,
+                volunteers: volunteerCount[0]?.count ?? 0,
+                organisations: orgCount[0]?.count ?? 0,
+                professionals: professionalCount[0]?.count ?? 0,
+                listings: listingCount[0]?.count ?? 0,
+                apps: appCount[0]?.count ?? 0,
+                pendingReports: pendingReports[0]?.count ?? 0,
+                onboardingResponses: onboardingResponses[0]?.count ?? 0,
+                activeAnnouncements: activeAnnouncements[0]?.count ?? 0,
+            };
+        } catch (error) {
+            console.error("[Admin Dashboard] Error fetching stats:", error);
+            // Return safe defaults with error property so UI can surface the issue
+            return {
+                totalUsers: 0,
+                usersLast30Days: 0,
+                usersLast7Days: 0,
+                usersLast24Hours: 0,
+                onboardingCompleted: 0,
+                onboardingRate: 0,
+                musicians: 0,
+                bands: 0,
+                gigs: 0,
+                volunteers: 0,
+                organisations: 0,
+                professionals: 0,
+                listings: 0,
+                apps: 0,
+                pendingReports: 0,
+                onboardingResponses: 0,
+                activeAnnouncements: 0,
+                error: error instanceof Error ? error.message : String(error),
+            };
+        }
+    },
+    [CACHE_TAGS.ADMIN_DASHBOARD_STATS],
+    { revalidate: 300 } // Cache for 5 minutes
+);
 
 export async function DashboardStats() {
     const stats = await getPlatformStats();
 
     return (
         <div className="space-y-4">
+            {/* Error Alert - Surface stats fetch failures to admins */}
+            {"error" in stats && stats.error && (
+                <Card className="border-red-500/50 bg-red-500/10">
+                    <CardContent className="flex items-center gap-3 py-4">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        <div>
+                            <p className="font-medium text-red-700">
+                                Failed to load dashboard statistics
+                            </p>
+                            <p className="text-sm text-red-600">
+                                {stats.error}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Alert Cards */}
             {stats.pendingReports > 0 && (
                 <Card className="border-yellow-500/50 bg-yellow-500/10">

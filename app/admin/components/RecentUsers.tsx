@@ -1,5 +1,7 @@
 
 import { db } from "@/server/db";
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { users } from "@shared/schema";
 import { desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,19 +11,23 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
-async function getRecentUsers() {
-    try {
-        const recentUsers = await db
-            .select()
-            .from(users)
-            .orderBy(desc(users.createdAt))
-            .limit(5);
-        return recentUsers;
-    } catch (error) {
-        console.error("[Admin Dashboard] Error fetching recent users:", error);
-        return [];
-    }
-}
+const getRecentUsers = unstable_cache(
+    async () => {
+        try {
+            const recentUsers = await db
+                .select()
+                .from(users)
+                .orderBy(desc(users.createdAt))
+                .limit(5);
+            return recentUsers;
+        } catch (error) {
+            console.error("[Admin Dashboard] Error fetching recent users:", error);
+            return [];
+        }
+    },
+    [CACHE_TAGS.ADMIN_RECENT_USERS],
+    { revalidate: 60 }
+);
 
 export async function RecentUsers() {
     const recentUsers = await getRecentUsers();
