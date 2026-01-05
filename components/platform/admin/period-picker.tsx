@@ -44,7 +44,10 @@ export function PeriodPicker({ value, onChange, className }: PeriodPickerProps) 
     );
 }
 
-// Server-side utility to calculate date range from period
+/**
+ * Calculate date range from period value.
+ * This utility is safe for both server and client environments.
+ */
 export function getDateRangeFromPeriod(period: PeriodValue): { start: Date; end: Date } {
     const end = new Date();
     const start = new Date();

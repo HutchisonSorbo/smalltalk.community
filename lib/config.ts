@@ -8,11 +8,33 @@
 
 /**
  * Platform launch date - used for "all time" date range calculations.
- * Override via PLATFORM_LAUNCH_DATE env var (ISO date format: YYYY-MM-DD)
+ * Override via PLATFORM_LAUNCH_DATE env var (ISO date format: YYYY-MM-DDTHH:mm:ssZ or YYYY-MM-DD)
+ * 
+ * Both env var and fallback use UTC to ensure consistent behavior across timezones.
  */
-export const PLATFORM_LAUNCH_DATE = process.env.PLATFORM_LAUNCH_DATE
-    ? new Date(process.env.PLATFORM_LAUNCH_DATE)
-    : new Date(2020, 0, 1); // January 1, 2020
+function parsePlatformLaunchDate(): Date {
+    const envValue = process.env.PLATFORM_LAUNCH_DATE;
+
+    if (envValue) {
+        // Parse as UTC - append Z if not present for timezone consistency
+        const isoValue = envValue.includes("T") ? envValue : `${envValue}T00:00:00Z`;
+        const parsed = new Date(isoValue);
+
+        // Validate the parsed date
+        if (!isNaN(parsed.getTime())) {
+            return parsed;
+        }
+
+        console.warn(
+            `[Config] Invalid PLATFORM_LAUNCH_DATE: "${envValue}". Using fallback.`
+        );
+    }
+
+    // Fallback: January 1, 2020 UTC
+    return new Date(Date.UTC(2020, 0, 1, 0, 0, 0));
+}
+
+export const PLATFORM_LAUNCH_DATE = parsePlatformLaunchDate();
 
 /**
  * Default locale for date formatting throughout the application.

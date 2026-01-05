@@ -2,15 +2,19 @@
  * Centralized admin database queries with optimized column selection.
  * 
  * These functions implement best practices:
- * - Use Drizzle query builder (no raw SQL)
+ * - Prefer Drizzle query builder; uses parameterized sql template literals where needed
  * - Select only needed columns (no SELECT *)
  * - Proper error handling with safe defaults
  * - Cache-friendly data shapes
+ * 
+ * Note: sql`` template literals are used in a Drizzle-safe, parameterized manner
+ * for PostgreSQL-specific functions like DATE_TRUNC and COALESCE that don't have
+ * direct Drizzle equivalents.
  */
 
 import { db } from "@/server/db";
 import { users } from "@shared/schema";
-import { sql, desc, gte, lte, count } from "drizzle-orm";
+import { sql, desc, gte, lte, count, and } from "drizzle-orm";
 import { DEFAULT_LOCALE } from "@/lib/config";
 
 export interface UserGrowthDataPoint {
@@ -21,7 +25,7 @@ export interface UserGrowthDataPoint {
 
 /**
  * Get user growth data grouped by day/week/month for chart visualization.
- * Uses Drizzle query builder with SQL fragments only for date truncation.
+ * Uses Drizzle query builder with sql template literals only for date truncation.
  * 
  * @param startDate Start of the date range
  * @param endDate End of the date range  
@@ -46,7 +50,10 @@ export async function getUserGrowthData(
             })
             .from(users)
             .where(
-                sql`${users.createdAt} >= ${startDate} AND ${users.createdAt} <= ${endDate}`
+                and(
+                    gte(users.createdAt, startDate),
+                    lte(users.createdAt, endDate)
+                )
             )
             .groupBy(dateTruncOrderExpr)
             .orderBy(dateTruncOrderExpr);
@@ -87,7 +94,7 @@ function formatDateLabel(
 
 /**
  * Get user counts grouped by account type (for future pie chart).
- * Uses Drizzle query builder with SQL fragment for COALESCE.
+ * Uses Drizzle query builder with sql template literal for COALESCE.
  */
 export async function getUsersByAccountType(): Promise<{ type: string; count: number }[]> {
     try {
