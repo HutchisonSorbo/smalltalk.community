@@ -26,7 +26,7 @@ const getRecentUsers = unstable_cache(
         }
     },
     [CACHE_TAGS.ADMIN_RECENT_USERS],
-    { revalidate: 60 }
+    { revalidate: 600 } // Cache for 10 minutes
 );
 
 export async function RecentUsers() {

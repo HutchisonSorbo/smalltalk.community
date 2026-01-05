@@ -118,7 +118,7 @@ const getPlatformStats = unstable_cache(
         }
     },
     [CACHE_TAGS.ADMIN_DASHBOARD_STATS],
-    { revalidate: 300 } // Cache for 5 minutes
+    { revalidate: 3600 } // Cache for 1 hour (admin stats don't need real-time updates)
 );
 
 export async function DashboardStats() {
