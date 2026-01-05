@@ -37,7 +37,7 @@ const getRecentActivity = unstable_cache(
         }
     },
     [CACHE_TAGS.ADMIN_RECENT_ACTIVITY],
-    { revalidate: 60 }
+    { revalidate: 600 } // Cache for 10 minutes
 );
 
 function formatAction(action: string): string {
