@@ -64,6 +64,15 @@ const nextConfig = {
             }
         ]
     },
+    async redirects() {
+        return [
+            {
+                source: '/signup',
+                destination: '/login?signup=true',
+                permanent: false,
+            },
+        ]
+    },
 };
 
 export default withSentryConfig(withPayload(nextConfig), {
