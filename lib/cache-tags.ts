@@ -16,6 +16,10 @@ export const CACHE_TAGS = {
 
     /** Recent users list on admin dashboard */
     ADMIN_RECENT_USERS: "admin-recent-users",
+
+    /** User growth trend data for charts */
+    ADMIN_USER_GROWTH: "admin-user-growth",
 } as const;
 
 export type CacheTag = typeof CACHE_TAGS[keyof typeof CACHE_TAGS];
+

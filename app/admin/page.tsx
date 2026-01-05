@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { DashboardStats } from "./components/DashboardStats";
 import { RecentActivity } from "./components/RecentActivity";
 import { RecentUsers } from "./components/RecentUsers";
+import { UserGrowthSection } from "./components/UserGrowthSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -84,6 +85,26 @@ function ListSkeleton() {
     );
 }
 
+function ChartSkeleton() {
+    return (
+        <Card className="col-span-4">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <Skeleton className="h-4 w-56" />
+                </div>
+                <div className="text-right">
+                    <Skeleton className="h-8 w-16 mb-1" />
+                    <Skeleton className="h-3 w-24" />
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-[200px] w-full" />
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function AdminDashboardPage() {
     return (
         <div className="flex-1 space-y-4 pt-2">
@@ -95,6 +116,18 @@ export default function AdminDashboardPage() {
                 <DashboardStats />
             </Suspense>
 
+            {/* User Growth Chart */}
+            <div className="grid gap-4 md:grid-cols-7">
+                <Suspense fallback={<ChartSkeleton />}>
+                    <UserGrowthSection />
+                </Suspense>
+                <div className="col-span-3">
+                    <Suspense fallback={<ListSkeleton />}>
+                        <RecentUsers />
+                    </Suspense>
+                </div>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <div className="col-span-4">
                     <Suspense fallback={<ListSkeleton />}>
@@ -102,11 +135,10 @@ export default function AdminDashboardPage() {
                     </Suspense>
                 </div>
                 <div className="col-span-3">
-                    <Suspense fallback={<ListSkeleton />}>
-                        <RecentUsers />
-                    </Suspense>
+                    {/* Placeholder for future widget */}
                 </div>
             </div>
         </div>
     );
 }
+
