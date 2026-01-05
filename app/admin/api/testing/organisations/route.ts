@@ -78,12 +78,10 @@ export async function POST(request: Request) {
                 await db.insert(users).values({
                     id: userId,
                     email,
-                    displayName: `${name} Admin`,
                     firstName: "Test",
                     lastName: "Admin",
                     userType: 'individual', // The user is an individual managing an org
                     accountType: 'Individual', // Their personal account is individual
-                    location,
                     onboardingCompleted: true,
                     createdAt: new Date(),
                     updatedAt: new Date()

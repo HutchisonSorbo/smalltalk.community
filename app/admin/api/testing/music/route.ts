@@ -53,7 +53,11 @@ export async function POST(request: Request) {
         const testEmailPattern = '%@smalltalk.test';
 
         // Get test users
-        const testUsers = await db.select({ id: users.id, displayName: users.displayName })
+        const testUsers = await db.select({
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName
+        })
             .from(users)
             .where(sql`email LIKE ${testEmailPattern}`)
             .limit(100);
@@ -93,7 +97,7 @@ export async function POST(request: Request) {
                     await db.insert(musicianProfiles).values({
                         id: uuidv4(),
                         userId: user.id,
-                        name: user.displayName || "Test Musician",
+                        name: (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : "Test Musician",
                         bio: "This is a test musician profile generated for end-to-end testing.",
                         instruments: randomSubset(INSTRUMENTS, 3),
                         genres: randomSubset(GENRES, 3),
@@ -105,7 +109,7 @@ export async function POST(request: Request) {
                         createdAt: new Date(),
                         updatedAt: new Date()
                     });
-                    createdNames.push(user.displayName || "Unknown");
+                    createdNames.push((user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : "Unknown");
                 } catch (e) {
                     console.error(`Failed to create musician profile for ${user.id}`, e);
                 }

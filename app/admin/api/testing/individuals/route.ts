@@ -101,13 +101,11 @@ export async function POST(request: Request) {
                 await db.insert(users).values({
                     id: uuidv4(),
                     email,
-                    displayName: `${firstName} ${lastName}`,
                     firstName,
                     lastName,
                     dateOfBirth: dob,
                     userType: 'individual',
                     accountType: 'Individual',
-                    location,
                     onboardingCompleted: true,
                     createdAt: new Date(),
                     updatedAt: new Date()

@@ -125,7 +125,11 @@ export async function POST(request: Request) {
             }
         } else if (type === "gig") {
             // Get test users
-            const testUsers = await db.select({ id: users.id, displayName: users.displayName })
+            const testUsers = await db.select({
+                id: users.id,
+                firstName: users.firstName,
+                lastName: users.lastName
+            })
                 .from(users)
                 .where(sql`email LIKE ${testEmailPattern}`)
                 .limit(50);
@@ -148,7 +152,7 @@ export async function POST(request: Request) {
                         id: uuidv4(),
                         creatorId: user.id,
                         title: `${title} at ${location.split(',')[0]}`,
-                        description: `A test gig created by ${user.displayName}. Performers include local talent. Come along for a great time!`,
+                        description: `A test gig created by ${user.firstName} ${user.lastName}. Performers include local talent. Come along for a great time!`,
                         location: location,
                         date: date,
                         price: Math.floor(Math.random() * 5000), // 0 to $50.00
