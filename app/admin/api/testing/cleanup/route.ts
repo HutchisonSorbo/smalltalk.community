@@ -43,9 +43,7 @@ export async function DELETE() {
             const volunteerOppsResult = await db.execute(sql`
                 DELETE FROM volunteer_opportunities 
                 WHERE organisation_id IN (
-                    SELECT om.organisation_id FROM organisation_members om 
-                    JOIN users u ON om.user_id = u.id 
-                    WHERE u.email LIKE ${testEmailPattern}
+                    SELECT id FROM organisations WHERE name LIKE ${testOrgPattern}
                 )
                 RETURNING id
             `);
@@ -95,10 +93,10 @@ export async function DELETE() {
             console.log("[Cleanup] Error deleting volunteer_roles:", e?.message || e);
         }
 
-        // Delete organisations created by test users (via membership admin role)
+        // Delete organisations matching the test organisation name pattern
         let organisationsDeleted = 0;
         try {
-            // Get org IDs that were created by test users before we deleted the membership links
+            // Delete organisations where name matches testOrgPattern (e.g., 'Test Org - ...')
             const orgsResult = await db.execute(sql`
                 DELETE FROM organisations 
                 WHERE name LIKE ${testOrgPattern}
