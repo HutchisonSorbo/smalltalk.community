@@ -1,6 +1,5 @@
 import { db } from "@/server/db";
 import { siteSettings, featureFlags } from "@shared/schema";
-import { desc, eq, count } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,23 +11,35 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Settings, ToggleLeft, Database, Lock, Globe } from "lucide-react";
+import { Settings, ToggleLeft, Database, Lock, Globe, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 async function getSiteSettings() {
-    const settings = await db.select().from(siteSettings);
-    return settings;
+    try {
+        const settings = await db.select().from(siteSettings);
+        return { data: settings, error: null };
+    } catch (error) {
+        console.error("[Admin Settings] Error fetching site settings:", error);
+        return { data: [], error: error instanceof Error ? error.message : String(error) };
+    }
 }
 
 async function getFeatureFlags() {
-    const flags = await db.select().from(featureFlags);
-    return flags;
+    try {
+        const flags = await db.select().from(featureFlags);
+        return { data: flags, error: null };
+    } catch (error) {
+        console.error("[Admin Settings] Error fetching feature flags:", error);
+        return { data: [], error: error instanceof Error ? error.message : String(error) };
+    }
 }
 
 export default async function SettingsPage() {
-    const settings = await getSiteSettings();
-    const flags = await getFeatureFlags();
+    const settingsResult = await getSiteSettings();
+    const flagsResult = await getFeatureFlags();
 
+    const settings = settingsResult.data;
+    const flags = flagsResult.data;
     const enabledFlags = flags.filter(f => f.isEnabled).length;
 
     return (
@@ -37,6 +48,21 @@ export default async function SettingsPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Site Settings</h1>
                 <p className="text-muted-foreground">Platform configuration and preferences</p>
             </div>
+
+            {/* Error Alerts */}
+            {(settingsResult.error || flagsResult.error) && (
+                <Card className="border-red-500/50 bg-red-500/10">
+                    <CardContent className="flex items-center gap-3 py-4">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        <div>
+                            <p className="font-medium text-red-700">Database Error</p>
+                            <p className="text-sm text-red-600">
+                                {settingsResult.error || flagsResult.error}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Stats */}
             <div className="grid gap-4 md:grid-cols-3">
