@@ -20,13 +20,14 @@ export async function DELETE() {
         let totalDeleted = 0;
 
         // Delete in order to respect foreign key constraints:
-        // 1. First delete gigs (references bands and musicians)
+        // 1. Delete gigs (references bands and musicians)
         // 2. Delete volunteer_opportunities (references organisations)
-        // 3. Then delete bands (references users)
+        // 3. Delete bands (references users)
         // 4. Delete organisation_members (references users and organisations)
-        // 5. Delete organisations 
-        // 6. Then delete musicians/professionals (references users)
-        // 7. Finally delete users
+        // 5. Delete volunteer_roles (references organisations, must be before organisations)
+        // 6. Delete organisations (matched by testOrgPattern)
+        // 7. Delete musicians/professionals (references users)
+        // 8. Finally delete users
 
         // Delete gigs created by test users
         const gigsResult = await db.execute(sql`
