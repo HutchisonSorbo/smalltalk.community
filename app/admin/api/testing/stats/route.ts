@@ -16,52 +16,70 @@ export async function GET() {
         // Count test data across all relevant tables
         // Note: Since isTestData column may not exist yet, we count by test email pattern
         const testEmailPattern = '%@smalltalk.test';
+        const testOrgPattern = 'Test Org -%';
 
-        const [
-            individualsResult,
-            musiciansResult,
-            professionalsResult,
-            gigsResult,
-            bandsResult
-        ] = await Promise.all([
-            db.execute(sql`
-                SELECT COUNT(*) as count FROM users 
-                WHERE email LIKE ${testEmailPattern}
-            `),
-            db.execute(sql`
-                SELECT COUNT(*) as count FROM musician_profiles 
-                WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `),
-            db.execute(sql`
-                SELECT COUNT(*) as count FROM professional_profiles 
-                WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `),
-            db.execute(sql`
-                SELECT COUNT(*) as count FROM gigs 
-                WHERE creator_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `),
-            db.execute(sql`
-                SELECT COUNT(*) as count FROM bands 
-                WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `)
-        ]);
-
-        // Extract counts from results
-        const getCount = (result: any) => {
-            if (Array.isArray(result) && result.length > 0) {
-                return parseInt(result[0].count) || 0;
+        // Helper to safely count from a table
+        const safeCount = async (queryFn: () => Promise<any>) => {
+            try {
+                const result = await queryFn();
+                if (Array.isArray(result) && result.length > 0) {
+                    return parseInt(result[0].count) || 0;
+                }
+                return 0;
+            } catch {
+                return 0;
             }
-            return 0;
         };
 
+        const [
+            individuals,
+            musicians,
+            professionals,
+            gigs,
+            bands,
+            organisations,
+            opportunities
+        ] = await Promise.all([
+            safeCount(() => db.execute(sql`
+                SELECT COUNT(*) as count FROM users 
+                WHERE email LIKE ${testEmailPattern}
+            `)),
+            safeCount(() => db.execute(sql`
+                SELECT COUNT(*) as count FROM musician_profiles 
+                WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
+            `)),
+            safeCount(() => db.execute(sql`
+                SELECT COUNT(*) as count FROM professional_profiles 
+                WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
+            `)),
+            safeCount(() => db.execute(sql`
+                SELECT COUNT(*) as count FROM gigs 
+                WHERE creator_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
+            `)),
+            safeCount(() => db.execute(sql`
+                SELECT COUNT(*) as count FROM bands 
+                WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
+            `)),
+            safeCount(() => db.execute(sql`
+                SELECT COUNT(*) as count FROM organisations 
+                WHERE name LIKE ${testOrgPattern}
+            `)),
+            safeCount(() => db.execute(sql`
+                SELECT COUNT(*) as count FROM volunteer_opportunities 
+                WHERE organisation_id IN (
+                    SELECT id FROM organisations WHERE name LIKE ${testOrgPattern}
+                )
+            `))
+        ]);
+
         return NextResponse.json({
-            individuals: getCount(individualsResult),
-            organisations: 0, // Will add when organisations table exists
-            opportunities: 0, // Will aggregate from multiple tables
-            musicians: getCount(musiciansResult),
-            professionals: getCount(professionalsResult),
-            gigs: getCount(gigsResult),
-            bands: getCount(bandsResult)
+            individuals,
+            organisations,
+            opportunities,
+            musicians,
+            professionals,
+            gigs,
+            bands
         });
 
     } catch (error) {
