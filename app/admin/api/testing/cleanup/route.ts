@@ -49,9 +49,10 @@ export async function DELETE() {
             `);
             volunteerOppsDeleted = Array.isArray(volunteerOppsResult) ? volunteerOppsResult.length : 0;
             totalDeleted += volunteerOppsDeleted;
-        } catch (e) {
+        } catch (e: unknown) {
             // Table may not exist yet
-            console.log("[Cleanup] volunteer_opportunities table not found, skipping");
+            const message = e instanceof Error ? e.message : String(e);
+            console.log("[Cleanup] volunteer_opportunities table not found, skipping:", message);
         }
 
         // Delete bands owned by test users
@@ -73,8 +74,9 @@ export async function DELETE() {
             `);
             orgMembersDeleted = Array.isArray(orgMembersResult) ? orgMembersResult.length : 0;
             totalDeleted += orgMembersDeleted;
-        } catch (e: any) {
-            console.log("[Cleanup] Error deleting organisation_members:", e?.message || e);
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            console.log("[Cleanup] Error deleting organisation_members:", message);
         }
 
         // Delete volunteer_roles for test organisations (must be before organisations)
@@ -89,8 +91,9 @@ export async function DELETE() {
             `);
             volunteerRolesDeleted = Array.isArray(volunteerRolesResult) ? volunteerRolesResult.length : 0;
             totalDeleted += volunteerRolesDeleted;
-        } catch (e: any) {
-            console.log("[Cleanup] Error deleting volunteer_roles:", e?.message || e);
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            console.log("[Cleanup] Error deleting volunteer_roles:", message);
         }
 
         // Delete organisations matching the test organisation name pattern
@@ -104,8 +107,9 @@ export async function DELETE() {
             `);
             organisationsDeleted = Array.isArray(orgsResult) ? orgsResult.length : 0;
             totalDeleted += organisationsDeleted;
-        } catch (e: any) {
-            console.log("[Cleanup] Error deleting organisations:", e?.message || e);
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            console.log("[Cleanup] Error deleting organisations:", message);
         }
 
         // Delete musician profiles owned by test users

@@ -39,7 +39,7 @@ const dbOptions: postgres.Options<{}> = {
   connect_timeout: 30,      // 30s timeout for cold starts
   max_lifetime: 60,         // Force reconnect every 60s to prevent stale connections
   connection: {
-    statement_timeout: "30000", // 30 second statement timeout to prevent runaway queries
+    statement_timeout: 30000, // 30 second statement timeout to prevent runaway queries
   },
 };
 
