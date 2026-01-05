@@ -50,6 +50,14 @@ function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
+    const isDevelopment = process.env.NODE_ENV === 'development';
+
+    // Auto-set captcha token in development mode to allow testing
+    useEffect(() => {
+        if (isDevelopment && !captchaToken) {
+            setCaptchaToken('development-bypass-token');
+        }
+    }, [isDevelopment, captchaToken]);
 
 
     const checkAge = (dateString: string) => {
@@ -353,21 +361,29 @@ function LoginForm() {
                                 </Label>
                             </div>
                         )}
-                        <div className="flex justify-center">
-                            <Turnstile
-                                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
-                                onSuccess={(token) => setCaptchaToken(token)}
-                                onError={() => {
-                                    setCaptchaToken(null);
-                                    toast({
-                                        title: "Security Check Failed",
-                                        description: "Please disable adblockers or try a different network.",
-                                        variant: "destructive"
-                                    });
-                                }}
-                                onExpire={() => setCaptchaToken(null)}
-                            />
-                        </div>
+                        {/* Turnstile captcha - hidden in development mode for testing */}
+                        {!isDevelopment && (
+                            <div className="flex justify-center">
+                                <Turnstile
+                                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                                    onSuccess={(token) => setCaptchaToken(token)}
+                                    onError={() => {
+                                        setCaptchaToken(null);
+                                        toast({
+                                            title: "Security Check Failed",
+                                            description: "Please disable adblockers or try a different network.",
+                                            variant: "destructive"
+                                        });
+                                    }}
+                                    onExpire={() => setCaptchaToken(null)}
+                                />
+                            </div>
+                        )}
+                        {isDevelopment && (
+                            <p className="text-xs text-center text-green-600 dark:text-green-400">
+                                🔓 Development mode: Captcha bypassed
+                            </p>
+                        )}
                         <p className="text-xs text-center text-muted-foreground mt-2">
                             Not seeing the security check? <br />
                             You may need to disable your adblocker.
