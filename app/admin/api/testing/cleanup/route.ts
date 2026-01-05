@@ -16,6 +16,7 @@ export async function DELETE() {
         const admin = await requireAdmin();
 
         const testEmailPattern = '%@smalltalk.test';
+        const testOrgPattern = 'Test Org -%';
         let totalDeleted = 0;
 
         // Delete in order to respect foreign key constraints:
@@ -84,7 +85,7 @@ export async function DELETE() {
             const volunteerRolesResult = await db.execute(sql`
                 DELETE FROM volunteer_roles 
                 WHERE organisation_id IN (
-                    SELECT id FROM organisations WHERE name LIKE 'Test Org -%'
+                    SELECT id FROM organisations WHERE name LIKE ${testOrgPattern}
                 )
                 RETURNING id
             `);
@@ -100,7 +101,7 @@ export async function DELETE() {
             // Get org IDs that were created by test users before we deleted the membership links
             const orgsResult = await db.execute(sql`
                 DELETE FROM organisations 
-                WHERE name LIKE 'Test Org -%'
+                WHERE name LIKE ${testOrgPattern}
                 RETURNING id
             `);
             organisationsDeleted = Array.isArray(orgsResult) ? orgsResult.length : 0;

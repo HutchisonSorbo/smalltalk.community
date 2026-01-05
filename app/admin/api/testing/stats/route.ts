@@ -19,14 +19,15 @@ export async function GET() {
         const testOrgPattern = 'Test Org -%';
 
         // Helper to safely count from a table
-        const safeCount = async (queryFn: () => Promise<any>) => {
+        const safeCount = async (queryFn: () => Promise<any>, tableName?: string) => {
             try {
                 const result = await queryFn();
                 if (Array.isArray(result) && result.length > 0) {
-                    return parseInt(result[0].count) || 0;
+                    return parseInt(result[0].count, 10) || 0;
                 }
                 return 0;
-            } catch {
+            } catch (error) {
+                console.error(`[Stats] Error counting ${tableName || 'unknown table'}:`, error);
                 return 0;
             }
         };
@@ -35,41 +36,41 @@ export async function GET() {
             individuals,
             musicians,
             professionals,
-            gigs,
-            bands,
+            gigsCount,
+            bandsCount,
             organisations,
             opportunities
         ] = await Promise.all([
             safeCount(() => db.execute(sql`
                 SELECT COUNT(*) as count FROM users 
                 WHERE email LIKE ${testEmailPattern}
-            `)),
+            `), 'users'),
             safeCount(() => db.execute(sql`
                 SELECT COUNT(*) as count FROM musician_profiles 
                 WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `)),
+            `), 'musician_profiles'),
             safeCount(() => db.execute(sql`
                 SELECT COUNT(*) as count FROM professional_profiles 
                 WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `)),
+            `), 'professional_profiles'),
             safeCount(() => db.execute(sql`
                 SELECT COUNT(*) as count FROM gigs 
                 WHERE creator_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `)),
+            `), 'gigs'),
             safeCount(() => db.execute(sql`
                 SELECT COUNT(*) as count FROM bands 
                 WHERE user_id IN (SELECT id FROM users WHERE email LIKE ${testEmailPattern})
-            `)),
+            `), 'bands'),
             safeCount(() => db.execute(sql`
                 SELECT COUNT(*) as count FROM organisations 
                 WHERE name LIKE ${testOrgPattern}
-            `)),
+            `), 'organisations'),
             safeCount(() => db.execute(sql`
                 SELECT COUNT(*) as count FROM volunteer_opportunities 
                 WHERE organisation_id IN (
                     SELECT id FROM organisations WHERE name LIKE ${testOrgPattern}
                 )
-            `))
+            `), 'volunteer_opportunities')
         ]);
 
         return NextResponse.json({
@@ -78,8 +79,8 @@ export async function GET() {
             opportunities,
             musicians,
             professionals,
-            gigs,
-            bands
+            gigs: gigsCount,
+            bands: bandsCount
         });
 
     } catch (error) {
