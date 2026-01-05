@@ -2,6 +2,7 @@
  * Centralized admin database queries with optimized column selection.
  * 
  * These functions implement best practices:
+ * - Use Drizzle query builder (no raw SQL)
  * - Select only needed columns (no SELECT *)
  * - Proper error handling with safe defaults
  * - Cache-friendly data shapes
@@ -9,7 +10,8 @@
 
 import { db } from "@/server/db";
 import { users } from "@shared/schema";
-import { sql, desc } from "drizzle-orm";
+import { sql, desc, gte, lte, count } from "drizzle-orm";
+import { DEFAULT_LOCALE } from "@/lib/config";
 
 export interface UserGrowthDataPoint {
     date: string;
@@ -17,48 +19,44 @@ export interface UserGrowthDataPoint {
     label: string;
 }
 
-interface GrowthQueryRow {
-    period: string;
-    count: string;
-}
-
 /**
  * Get user growth data grouped by day/week/month for chart visualization.
+ * Uses Drizzle query builder with SQL fragments only for date truncation.
+ * 
  * @param startDate Start of the date range
  * @param endDate End of the date range  
  * @param groupBy How to group the data ('day' | 'week' | 'month')
+ * @param locale Locale for date formatting (defaults to DEFAULT_LOCALE)
  */
 export async function getUserGrowthData(
     startDate: Date,
     endDate: Date,
-    groupBy: "day" | "week" | "month" = "day"
+    groupBy: "day" | "week" | "month" = "day",
+    locale: string = DEFAULT_LOCALE
 ): Promise<UserGrowthDataPoint[]> {
     try {
-        // Determine date_trunc interval based on groupBy
-        const truncInterval = groupBy === "day" ? "day" : groupBy === "week" ? "week" : "month";
+        // Build date truncation expression based on groupBy
+        const dateTruncExpr = sql<string>`TO_CHAR(DATE_TRUNC(${groupBy}, ${users.createdAt}), 'YYYY-MM-DD')`;
+        const dateTruncOrderExpr = sql`DATE_TRUNC(${groupBy}, ${users.createdAt})`;
 
-        const result = await db.execute(
-            sql`
-                SELECT 
-                    TO_CHAR(DATE_TRUNC(${truncInterval}, ${users.createdAt}), 'YYYY-MM-DD') as period,
-                    COUNT(*)::text as count
-                FROM ${users}
-                WHERE ${users.createdAt} >= ${startDate}
-                  AND ${users.createdAt} <= ${endDate}
-                GROUP BY DATE_TRUNC(${truncInterval}, ${users.createdAt})
-                ORDER BY DATE_TRUNC(${truncInterval}, ${users.createdAt}) ASC
-            `
-        );
+        const result = await db
+            .select({
+                period: dateTruncExpr,
+                count: count(),
+            })
+            .from(users)
+            .where(
+                sql`${users.createdAt} >= ${startDate} AND ${users.createdAt} <= ${endDate}`
+            )
+            .groupBy(dateTruncOrderExpr)
+            .orderBy(dateTruncOrderExpr);
 
-        // Drizzle returns the result directly as an array-like
-        const rows = result as unknown as GrowthQueryRow[];
-
-        return rows.map((row) => {
+        return result.map((row) => {
             const date = new Date(row.period);
             return {
                 date: date.toISOString(),
-                users: parseInt(row.count, 10),
-                label: formatDateLabel(date, groupBy),
+                users: row.count,
+                label: formatDateLabel(date, groupBy, locale),
             };
         });
     } catch (error) {
@@ -69,42 +67,43 @@ export async function getUserGrowthData(
 
 /**
  * Format date for chart axis labels based on grouping.
+ * @param date The date to format
+ * @param groupBy The grouping interval
+ * @param locale The locale to use for formatting (defaults to DEFAULT_LOCALE)
  */
-function formatDateLabel(date: Date, groupBy: "day" | "week" | "month"): string {
+function formatDateLabel(
+    date: Date,
+    groupBy: "day" | "week" | "month",
+    locale: string = DEFAULT_LOCALE
+): string {
     if (groupBy === "month") {
-        return date.toLocaleDateString("en-AU", { month: "short", year: "2-digit" });
+        return date.toLocaleDateString(locale, { month: "short", year: "2-digit" });
     }
     if (groupBy === "week") {
-        return date.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+        return date.toLocaleDateString(locale, { day: "numeric", month: "short" });
     }
-    return date.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
-}
-
-interface AccountTypeRow {
-    account_type: string;
-    count: string;
+    return date.toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
 /**
  * Get user counts grouped by account type (for future pie chart).
+ * Uses Drizzle query builder with SQL fragment for COALESCE.
  */
 export async function getUsersByAccountType(): Promise<{ type: string; count: number }[]> {
     try {
-        const result = await db.execute(
-            sql`
-                SELECT 
-                    COALESCE(${users.accountType}, 'individual') as account_type,
-                    COUNT(*)::text as count
-                FROM ${users}
-                GROUP BY COALESCE(${users.accountType}, 'individual')
-            `
-        );
+        const accountTypeExpr = sql<string>`COALESCE(${users.accountType}, 'individual')`;
 
-        const rows = result as unknown as AccountTypeRow[];
+        const result = await db
+            .select({
+                accountType: accountTypeExpr,
+                count: count(),
+            })
+            .from(users)
+            .groupBy(accountTypeExpr);
 
-        return rows.map((row) => ({
-            type: row.account_type,
-            count: parseInt(row.count, 10),
+        return result.map((row) => ({
+            type: row.accountType,
+            count: row.count,
         }));
     } catch (error) {
         console.error("[Admin Queries] Error fetching users by type:", error);

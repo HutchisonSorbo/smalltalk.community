@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
     Select,
     SelectContent,
@@ -10,6 +8,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
+import { PLATFORM_LAUNCH_DATE } from "@/lib/config";
 
 export type PeriodValue = "7d" | "30d" | "90d" | "12m" | "all";
 
@@ -64,7 +63,8 @@ export function getDateRangeFromPeriod(period: PeriodValue): { start: Date; end:
             start.setFullYear(end.getFullYear() - 1);
             break;
         case "all":
-            start.setFullYear(2020, 0, 1); // Platform launch assumed
+            // Use centralized platform launch date
+            start.setTime(PLATFORM_LAUNCH_DATE.getTime());
             break;
     }
 

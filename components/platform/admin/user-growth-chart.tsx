@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import {
     ChartContainer,
     ChartTooltip,
@@ -28,8 +27,6 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function UserGrowthChart({ data, className }: UserGrowthChartProps) {
-    const chartData = useMemo(() => data, [data]);
-
     if (!data.length) {
         return (
             <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
@@ -41,7 +38,7 @@ export function UserGrowthChart({ data, className }: UserGrowthChartProps) {
     return (
         <ChartContainer config={chartConfig} className={className ?? "h-[200px]"}>
             <AreaChart
-                data={chartData}
+                data={data}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
                 <defs>
