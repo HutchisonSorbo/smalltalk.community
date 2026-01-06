@@ -6,9 +6,30 @@ import { eq } from "drizzle-orm";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 
 /**
- * CORS configuration - prefer explicit origin in production, fallback to * in dev
+ * CORS configuration
+ * - Production: MUST have NEXT_PUBLIC_APP_URL set (fail fast if missing)
+ * - Development: Allow "*" as fallback for local testing
  */
-const CORS_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "*";
+function getCorsOrigin(): string {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const isProduction = process.env.NODE_ENV === "production";
+
+    if (appUrl) {
+        return appUrl;
+    }
+
+    if (isProduction) {
+        throw new Error(
+            "[CORS] NEXT_PUBLIC_APP_URL must be set in production. " +
+            "Refusing to use wildcard '*' origin in production environment."
+        );
+    }
+
+    // Development only: allow wildcard for local testing
+    return "*";
+}
+
+const CORS_ORIGIN = getCorsOrigin();
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": CORS_ORIGIN,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
