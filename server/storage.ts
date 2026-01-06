@@ -207,6 +207,11 @@ export class DatabaseStorage implements IStorage {
   private _ratingCache = new Map<string, { data: { average: number; count: number }; timestamp: number }>();
   private _CACHE_TTL = 60 * 1000; // 1 minute
 
+  private _invalidateRatingCache(targetType: string, targetId: string) {
+    const key = `${targetType}:${targetId}`;
+    this._ratingCache.delete(key);
+  }
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -715,6 +720,7 @@ export class DatabaseStorage implements IStorage {
 
   async createReview(review: InsertReview): Promise<Review> {
     const [newReview] = await db.insert(reviews).values(review).returning();
+    this._invalidateRatingCache(newReview.targetType, newReview.targetId);
     return newReview;
   }
 
@@ -884,11 +890,18 @@ export class DatabaseStorage implements IStorage {
       .set({ ...review, updatedAt: new Date() })
       .where(eq(reviews.id, id))
       .returning();
+    
+    if (updated) {
+      this._invalidateRatingCache(updated.targetType, updated.targetId);
+    }
     return updated;
   }
 
   async deleteReview(id: string): Promise<boolean> {
     const result = await db.delete(reviews).where(eq(reviews.id, id)).returning();
+    if (result.length > 0) {
+      this._invalidateRatingCache(result[0].targetType, result[0].targetId);
+    }
     return result.length > 0;
   }
 
@@ -914,6 +927,10 @@ export class DatabaseStorage implements IStorage {
       count: result[0]?.count || 0,
     };
 
+    // Simple eviction policy to prevent memory leaks
+    if (this._ratingCache.size > 1000) {
+      this._ratingCache.clear();
+    }
     this._ratingCache.set(cacheKey, { data, timestamp: now });
     return data;
   }

@@ -13,6 +13,9 @@ vi.mock('../../server/db', () => ({
     limit: vi.fn().mockReturnThis(),
     offset: vi.fn().mockReturnThis(),
     execute: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
   }
 }));
 
@@ -46,6 +49,30 @@ describe('Performance Critical Paths', () => {
       
       expect(db.select).toHaveBeenCalledTimes(1);
       console.log(`getAverageRating latency (2 calls, 1 cached): ${end - start}ms`);
+    });
+
+    it('should invalidate cache when a review is created', async () => {
+      // 1. Prime the cache
+      (db.select as any).mockImplementation(() => ({
+        from: () => ({
+          where: () => Promise.resolve([{ average: 4.5, count: 10 }])
+        })
+      }));
+      await storage.getAverageRating('user', '123');
+
+      // 2. Create a review (should invalidate)
+      (db.insert as any).mockReturnValue({
+        values: () => ({
+          returning: () => Promise.resolve([{ targetType: 'user', targetId: '123' }])
+        })
+      });
+      await storage.createReview({ targetType: 'user', targetId: '123' } as any);
+
+      // 3. Get rating again - should trigger DB select again
+      await storage.getAverageRating('user', '123');
+      
+      // Expect 2 selects (initial + post-invalidation)
+      expect(db.select).toHaveBeenCalledTimes(2);
     });
   });
 
