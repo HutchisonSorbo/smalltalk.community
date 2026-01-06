@@ -16,7 +16,14 @@ import Link from "next/link";
 
 async function getSiteSettings() {
     try {
-        const settings = await db.select().from(siteSettings);
+        // Select only columns we need, avoiding updated_by which may not exist in older databases
+        const settings = await db.select({
+            id: siteSettings.id,
+            key: siteSettings.key,
+            value: siteSettings.value,
+            description: siteSettings.description,
+            updatedAt: siteSettings.updatedAt,
+        }).from(siteSettings);
         return { data: settings, error: null };
     } catch (error) {
         console.error("[Admin Settings] Error fetching site settings:", error);
