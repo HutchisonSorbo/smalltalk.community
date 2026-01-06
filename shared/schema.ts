@@ -483,6 +483,10 @@ export const rateLimits = pgTable("rate_limits", {
   pgPolicy("rate_limits_service_all", { for: "all", to: "service_role", using: sql`true` }),
   index("rate_limits_user_id_idx").on(table.userId),
   index("rate_limits_identifier_v2_idx").on(table.identifier),
+  // Partial unique indexes for atomic upsert in rate limiter
+  // These enable ON CONFLICT to work correctly for both userId and identifier cases
+  uniqueIndex("rate_limits_user_type_uniq").on(table.userId, table.type).where(sql`user_id IS NOT NULL`),
+  uniqueIndex("rate_limits_identifier_type_uniq").on(table.identifier, table.type).where(sql`identifier IS NOT NULL`),
 ]);
 
 export type RateLimit = typeof rateLimits.$inferSelect;
@@ -1219,6 +1223,9 @@ export const apps = pgTable("apps", {
 }, (table) => [
   pgPolicy("apps_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("apps_admin_write", { for: "all", to: "service_role", using: sql`true` }),
+  // Indexes for common query patterns
+  index("apps_category_idx").on(table.category),
+  index("apps_is_active_idx").on(table.isActive),
 ]);
 
 // User <-> Apps Join Table
