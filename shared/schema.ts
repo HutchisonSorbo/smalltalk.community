@@ -1219,6 +1219,9 @@ export const apps = pgTable("apps", {
 }, (table) => [
   pgPolicy("apps_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("apps_admin_write", { for: "all", to: "service_role", using: sql`true` }),
+  // Indexes for common query patterns
+  index("apps_category_idx").on(table.category),
+  index("apps_is_active_idx").on(table.isActive),
 ]);
 
 // User <-> Apps Join Table
