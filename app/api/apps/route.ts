@@ -5,9 +5,6 @@ import { apps } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 
-// Cache apps catalog for 5 minutes - apps change infrequently
-export const revalidate = 300;
-
 /**
  * Cached query for active apps.
  * Per Slack/Zapier patterns, app catalogs are heavily cached since they change infrequently.

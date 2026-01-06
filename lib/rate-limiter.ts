@@ -8,6 +8,7 @@ import { eq, and, sql } from "drizzle-orm";
  * Optimized implementation per Zapier patterns:
  * - Uses atomic upsert to reduce from 3 DB calls to 1
  * - Handles window expiry in the same query
+ * - Properly handles both userId (UUID) and identifier (IP) cases
  * 
  * @param key - The user ID or IP address
  * @param type - The action type
@@ -25,34 +26,47 @@ export async function checkRateLimit(
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
 
     try {
-        // Use a single atomic query with INSERT ... ON CONFLICT for efficiency
-        // This replaces the previous 3-query pattern (select, then insert or update)
-        const result = await db.execute<{ hits: number; is_new_window: boolean }>(sql`
-            INSERT INTO rate_limits (user_id, identifier, type, hits, window_start)
-            VALUES (
-                ${isUuid ? key : null}, 
-                ${isUuid ? null : key}, 
-                ${type}, 
-                1, 
-                NOW()
-            )
-            ON CONFLICT (identifier, type) WHERE identifier IS NOT NULL
-            DO UPDATE SET 
-                hits = CASE 
-                    WHEN rate_limits.window_start < NOW() - INTERVAL '1 second' * ${windowSeconds}
-                    THEN 1 
-                    ELSE rate_limits.hits + 1 
-                END,
-                window_start = CASE
-                    WHEN rate_limits.window_start < NOW() - INTERVAL '1 second' * ${windowSeconds}
-                    THEN NOW()
-                    ELSE rate_limits.window_start
-                END
-            RETURNING hits, (rate_limits.window_start >= NOW() - INTERVAL '1 second' * ${windowSeconds}) as is_new_window
-        `);
+        // Use separate upsert queries depending on whether we're tracking by userId or identifier
+        // This ensures the ON CONFLICT targets the correct unique constraint
+        const result = isUuid
+            ? await db.execute<{ hits: number }>(sql`
+                INSERT INTO rate_limits (user_id, identifier, type, hits, window_start)
+                VALUES (${key}, NULL, ${type}, 1, NOW())
+                ON CONFLICT (user_id, type) WHERE user_id IS NOT NULL
+                DO UPDATE SET 
+                    hits = CASE 
+                        WHEN rate_limits.window_start < NOW() - INTERVAL '1 second' * ${windowSeconds}
+                        THEN 1 
+                        ELSE rate_limits.hits + 1 
+                    END,
+                    window_start = CASE
+                        WHEN rate_limits.window_start < NOW() - INTERVAL '1 second' * ${windowSeconds}
+                        THEN NOW()
+                        ELSE rate_limits.window_start
+                    END
+                RETURNING hits
+            `)
+            : await db.execute<{ hits: number }>(sql`
+                INSERT INTO rate_limits (user_id, identifier, type, hits, window_start)
+                VALUES (NULL, ${key}, ${type}, 1, NOW())
+                ON CONFLICT (identifier, type) WHERE identifier IS NOT NULL
+                DO UPDATE SET 
+                    hits = CASE 
+                        WHEN rate_limits.window_start < NOW() - INTERVAL '1 second' * ${windowSeconds}
+                        THEN 1 
+                        ELSE rate_limits.hits + 1 
+                    END,
+                    window_start = CASE
+                        WHEN rate_limits.window_start < NOW() - INTERVAL '1 second' * ${windowSeconds}
+                        THEN NOW()
+                        ELSE rate_limits.window_start
+                    END
+                RETURNING hits
+            `);
 
         // db.execute returns a RowList (array-like), check length directly
         if (!result || result.length === 0) {
+            // Upsert didn't return (constraint may not exist), use fallback
             return await checkRateLimitFallback(key, type, limit, windowSeconds, isUuid);
         }
 
@@ -67,7 +81,7 @@ export async function checkRateLimit(
 
 /**
  * Fallback rate limit check using traditional select/insert/update pattern.
- * Used when atomic upsert is not available.
+ * Used when atomic upsert is not available (e.g., missing unique constraints).
  */
 async function checkRateLimitFallback(
     key: string,
@@ -120,6 +134,8 @@ async function checkRateLimitFallback(
 /**
  * Get remaining rate limit quota for a key.
  * Useful for rate limit headers.
+ * 
+ * @throws Rethrows database errors after logging
  */
 export async function getRateLimitRemaining(
     key: string,
@@ -127,22 +143,32 @@ export async function getRateLimitRemaining(
     limit: number = 10,
     windowSeconds: number = 60
 ): Promise<{ remaining: number; resetAt: Date }> {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
-    const windowStart = new Date(Date.now() - windowSeconds * 1000);
+    try {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
+        const windowStart = new Date(Date.now() - windowSeconds * 1000);
 
-    const whereClause = isUuid
-        ? and(eq(rateLimits.userId, key), eq(rateLimits.type, type))
-        : and(eq(rateLimits.identifier, key), eq(rateLimits.type, type));
+        const whereClause = isUuid
+            ? and(eq(rateLimits.userId, key), eq(rateLimits.type, type))
+            : and(eq(rateLimits.identifier, key), eq(rateLimits.type, type));
 
-    const records = await db.select().from(rateLimits).where(whereClause);
-    const record = records[0];
+        const records = await db.select().from(rateLimits).where(whereClause);
+        const record = records[0];
 
-    if (!record || new Date(record.windowStart) < windowStart) {
-        return { remaining: limit, resetAt: new Date(Date.now() + windowSeconds * 1000) };
+        if (!record || new Date(record.windowStart) < windowStart) {
+            return { remaining: limit, resetAt: new Date(Date.now() + windowSeconds * 1000) };
+        }
+
+        const remaining = Math.max(0, limit - record.hits);
+        const resetAt = new Date(new Date(record.windowStart).getTime() + windowSeconds * 1000);
+
+        return { remaining, resetAt };
+    } catch (error) {
+        // Log error with context but rethrow so caller can handle
+        console.error("[RateLimiter] getRateLimitRemaining failed:", {
+            key: key.substring(0, 8) + "...", // Truncate for privacy
+            type,
+            error: error instanceof Error ? error.message : String(error)
+        });
+        throw error;
     }
-
-    const remaining = Math.max(0, limit - record.hits);
-    const resetAt = new Date(new Date(record.windowStart).getTime() + windowSeconds * 1000);
-
-    return { remaining, resetAt };
 }
