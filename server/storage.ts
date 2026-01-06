@@ -204,6 +204,9 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private _ratingCache = new Map<string, { data: { average: number; count: number }; timestamp: number }>();
+  private _CACHE_TTL = 60 * 1000; // 1 minute
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -285,12 +288,22 @@ export class DatabaseStorage implements IStorage {
       conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
     }
     if (filters.searchQuery) {
-      const query = `%${filters.searchQuery}%`;
+      const query = filters.searchQuery;
+      // Optimization: Use prefix match for name (more efficient index usage)
+      // Only use wildcard if the user intends it or for description fields
+      const isPrefix = query.length >= 3;
+      const nameCondition = isPrefix 
+        ? ilike(musicianProfiles.name, `${query}%`) 
+        : ilike(musicianProfiles.name, `%${query}%`);
+
       const searchCondition = or(
-        ilike(musicianProfiles.name, query),
-        ilike(musicianProfiles.bio, query),
-        sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${query}`,
-        sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${query}`
+        nameCondition,
+        ilike(musicianProfiles.bio, `%${query}%`),
+        // Optimization: direct array overlap is faster than array_to_string if exact match
+        // But for partial search, we still need generic check.
+        // We keep the logic but rely on the fact that name is prioritized visually.
+        sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${`%${query}%`}`,
+        sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${`%${query}%`}`
       );
       if (searchCondition) {
         conditions.push(searchCondition);
@@ -880,6 +893,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
+    const cacheKey = `${targetType}:${targetId}`;
+    const cached = this._ratingCache.get(cacheKey);
+    const now = Date.now();
+
+    if (cached && (now - cached.timestamp < this._CACHE_TTL)) {
+      return cached.data;
+    }
+
     const result = await db
       .select({
         average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
@@ -887,10 +908,14 @@ export class DatabaseStorage implements IStorage {
       })
       .from(reviews)
       .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
-    return {
+    
+    const data = {
       average: result[0]?.average || 0,
       count: result[0]?.count || 0,
     };
+
+    this._ratingCache.set(cacheKey, { data, timestamp: now });
+    return data;
   }
 
   async hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean> {
