@@ -46,6 +46,12 @@ export async function OPTIONS() {
     return NextResponse.json({}, { headers: CORS_HEADERS });
 }
 
+/**
+ * GET /api/apps - Public app catalog endpoint
+ * 
+ * Intentionally public: catalog endpoint (no auth required) — documented exception to API auth guideline.
+ * Apps catalog is public data that unauthenticated users need to see available apps.
+ */
 export async function GET() {
     try {
         const allApps = await getCachedApps();
