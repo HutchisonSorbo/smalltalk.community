@@ -57,9 +57,19 @@ export function CreateUserModal() {
         setOnboardingCompleted(true);
     };
 
+    const isValidEmail = (email: string): boolean => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
     const handleCreate = async () => {
         if (!email || !firstName || !lastName) {
             toast.error("Please fill in all required fields");
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            toast.error("Please enter a valid email address");
             return;
         }
 

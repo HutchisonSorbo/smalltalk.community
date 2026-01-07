@@ -7,7 +7,7 @@ import { logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
-// Zod schema for creating a user
+// Zod schema for creating a user with date validation
 const createUserSchema = z.object({
     email: z.string().email("Valid email required"),
     firstName: z.string().min(1, "First name required").max(100),
@@ -17,7 +17,10 @@ const createUserSchema = z.object({
     isMinor: z.boolean().default(false),
     onboardingCompleted: z.boolean().default(true),
     onboardingStep: z.number().min(0).max(10).default(0),
-    dateOfBirth: z.string().optional(),
+    dateOfBirth: z.string().optional().refine(
+        (val) => !val || !isNaN(Date.parse(val)),
+        { message: "Invalid date format" }
+    ),
 });
 
 // Helper to verify admin access
@@ -100,7 +103,7 @@ export async function POST(request: NextRequest) {
         // Log the action
         await logAdminAction({
             adminId,
-            action: "user.create",
+            action: AdminActions.USER_CREATE,
             targetType: TargetTypes.USER,
             targetId: newUserId,
             details: {
@@ -192,4 +195,15 @@ export async function DELETE(request: NextRequest) {
         console.error("[Admin API] Error deleting user:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
+}
+
+// OPTIONS handler for CORS preflight requests
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 200,
+        headers: {
+            "Access-Control-Allow-Methods": "POST, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+    });
 }

@@ -262,36 +262,45 @@ export default function CreateTestIndividualsPage() {
                                 Optionally create associated profiles for each test user
                             </p>
                             <div className="grid grid-cols-3 gap-3">
-                                <div
+                                <button
+                                    type="button"
                                     className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-colors ${createMusicianProfile
-                                            ? "border-purple-500 bg-purple-500/10"
-                                            : "border-muted hover:border-muted-foreground/50"
+                                        ? "border-purple-500 bg-purple-500/10"
+                                        : "border-muted hover:border-muted-foreground/50"
                                         }`}
                                     onClick={() => setCreateMusicianProfile(!createMusicianProfile)}
+                                    aria-pressed={createMusicianProfile}
+                                    aria-label="Toggle Musician profile creation"
                                 >
                                     <Music className={`h-6 w-6 ${createMusicianProfile ? "text-purple-500" : "text-muted-foreground"}`} />
                                     <span className="text-xs font-medium">Musician</span>
-                                </div>
-                                <div
+                                </button>
+                                <button
+                                    type="button"
                                     className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-colors ${createVolunteerProfile
-                                            ? "border-red-500 bg-red-500/10"
-                                            : "border-muted hover:border-muted-foreground/50"
+                                        ? "border-red-500 bg-red-500/10"
+                                        : "border-muted hover:border-muted-foreground/50"
                                         }`}
                                     onClick={() => setCreateVolunteerProfile(!createVolunteerProfile)}
+                                    aria-pressed={createVolunteerProfile}
+                                    aria-label="Toggle Volunteer profile creation"
                                 >
                                     <Heart className={`h-6 w-6 ${createVolunteerProfile ? "text-red-500" : "text-muted-foreground"}`} />
                                     <span className="text-xs font-medium">Volunteer</span>
-                                </div>
-                                <div
+                                </button>
+                                <button
+                                    type="button"
                                     className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-colors ${createProfessionalProfile
-                                            ? "border-blue-500 bg-blue-500/10"
-                                            : "border-muted hover:border-muted-foreground/50"
+                                        ? "border-blue-500 bg-blue-500/10"
+                                        : "border-muted hover:border-muted-foreground/50"
                                         }`}
                                     onClick={() => setCreateProfessionalProfile(!createProfessionalProfile)}
+                                    aria-pressed={createProfessionalProfile}
+                                    aria-label="Toggle Professional profile creation"
                                 >
                                     <Briefcase className={`h-6 w-6 ${createProfessionalProfile ? "text-blue-500" : "text-muted-foreground"}`} />
                                     <span className="text-xs font-medium">Professional</span>
-                                </div>
+                                </button>
                             </div>
                         </div>
                     </CardContent>

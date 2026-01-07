@@ -84,8 +84,13 @@ function randomChoice<T>(arr: T[]): T {
 }
 
 function randomChoices<T>(arr: T[], n: number): T[] {
-    const shuffled = [...arr].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, n);
+    // Fisher-Yates shuffle on a shallow copy
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, n);
 }
 
 function getOnboardingSettings(state: string): { completed: boolean; step: number } {

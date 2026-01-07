@@ -10,6 +10,7 @@ import { CACHE_TAGS } from "@/lib/cache-tags";
 export const AdminActions = {
     // User actions
     USER_VIEW: "user.view",
+    USER_CREATE: "user.create",
     USER_UPDATE: "user.update",
     USER_SUSPEND: "user.suspend",
     USER_UNSUSPEND: "user.unsuspend",

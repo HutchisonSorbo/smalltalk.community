@@ -44,10 +44,8 @@ export function UserActionsInline({ userId, userName, userEmail, isAdmin }: User
 
         setIsDeleting(true);
         try {
-            const response = await fetch("/api/admin/users/bulk", {
+            const response = await fetch(`/api/admin/users?id=${encodeURIComponent(userId)}`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userIds: [userId] }),
             });
 
             if (!response.ok) {
@@ -82,7 +80,7 @@ export function UserActionsInline({ userId, userName, userEmail, isAdmin }: User
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href={`/admin/users/${userId}`} className="cursor-pointer">
+                        <Link href={`/admin/users/${userId}?mode=edit`} className="cursor-pointer">
                             <UserCog className="h-4 w-4 mr-2" />
                             Edit User
                         </Link>
