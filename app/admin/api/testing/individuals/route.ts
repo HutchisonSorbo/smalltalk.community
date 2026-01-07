@@ -1,16 +1,31 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/server/db";
-import { users } from "@shared/schema";
+import { users, musicianProfiles, volunteerProfiles, professionalProfiles } from "@shared/schema";
+import { logAdminAction, TargetTypes } from "@/lib/admin-utils";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
+import {
+    ONBOARDING_STEP_COMPLETED,
+    ONBOARDING_STEP_NOT_STARTED,
+    ONBOARDING_STEP_IN_PROGRESS
+} from "@/lib/constants/onboarding";
 
 export const dynamic = "force-dynamic";
 
-// Input validation schema
+// Extended input validation schema
 const createIndividualsSchema = z.object({
     count: z.number().min(1).max(10),
-    ageGroup: z.enum(["teen", "adult", "senior"])
+    ageGroup: z.enum(["teen", "adult", "senior"]),
+    accountType: z.enum(["Individual", "Business", "Government Organisation", "Charity", "Other"]).default("Individual"),
+    onboardingState: z.enum(["not_started", "in_progress", "completed"]).default("completed"),
+    isAdmin: z.boolean().default(false),
+    isMinor: z.boolean().default(false),
+    profiles: z.object({
+        musician: z.boolean().default(false),
+        volunteer: z.boolean().default(false),
+        professional: z.boolean().default(false)
+    }).optional()
 });
 
 // Australian first names for realistic test data
@@ -41,6 +56,11 @@ const LOCATIONS = [
     "Healesville, VIC 3777"
 ];
 
+// Instruments for musician profiles
+const INSTRUMENTS = ["Guitar", "Bass", "Drums", "Keyboard/Piano", "Vocals", "Saxophone"];
+const GENRES = ["Rock", "Pop", "Jazz", "Blues", "Folk", "Indie"];
+const PROFESSIONAL_ROLES = ["Producer", "Audio Engineer", "Photographer", "Teacher", "Manager"];
+
 // Generate random date of birth based on age group
 function generateDob(ageGroup: string): Date {
     const now = new Date();
@@ -69,6 +89,28 @@ function randomChoice<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function randomChoices<T>(arr: T[], n: number): T[] {
+    // Fisher-Yates shuffle on a shallow copy
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, n);
+}
+
+function getOnboardingSettings(state: string): { completed: boolean; step: number } {
+    switch (state) {
+        case "not_started":
+            return { completed: false, step: ONBOARDING_STEP_NOT_STARTED };
+        case "in_progress":
+            return { completed: false, step: ONBOARDING_STEP_IN_PROGRESS };
+        case "completed":
+        default:
+            return { completed: true, step: ONBOARDING_STEP_COMPLETED };
+    }
+}
+
 /**
  * POST /admin/api/testing/individuals - Create test individual accounts
  */
@@ -86,8 +128,10 @@ export async function POST(request: Request) {
             );
         }
 
-        const { count, ageGroup } = parsed.data;
+        const { count, ageGroup, accountType, onboardingState, isAdmin, isMinor, profiles } = parsed.data;
+        const onboarding = getOnboardingSettings(onboardingState);
         const createdEmails: string[] = [];
+        let profilesCreated = 0;
 
         for (let i = 0; i < count; i++) {
             const uuid = uuidv4().slice(0, 8);
@@ -96,34 +140,112 @@ export async function POST(request: Request) {
             const lastName = randomChoice(LAST_NAMES);
             const location = randomChoice(LOCATIONS);
             const dob = generateDob(ageGroup);
+            const userId = uuidv4();
 
             try {
+                // Create the user
                 await db.insert(users).values({
-                    id: uuidv4(),
+                    id: userId,
                     email,
                     firstName,
                     lastName,
                     dateOfBirth: dob,
                     userType: 'individual',
-                    accountType: 'Individual',
-                    onboardingCompleted: true,
+                    accountType,
+                    onboardingCompleted: onboarding.completed,
+                    onboardingStep: onboarding.step,
+                    isAdmin,
+                    isMinor: ageGroup === "teen" ? true : isMinor,
                     createdAt: new Date(),
                     updatedAt: new Date()
                 });
 
                 createdEmails.push(email);
+
+                // Create profiles if requested
+                if (profiles?.musician) {
+                    try {
+                        await db.insert(musicianProfiles).values({
+                            id: uuidv4(),
+                            userId,
+                            name: `${firstName} ${lastName}`,
+                            bio: `Test musician profile for ${firstName}`,
+                            instruments: randomChoices(INSTRUMENTS, 2),
+                            genres: randomChoices(GENRES, 2),
+                            experienceLevel: randomChoice(["Beginner", "Intermediate", "Advanced"]),
+                            location,
+                            isActive: true,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                        profilesCreated++;
+                    } catch (err) {
+                        console.error(`Failed to create musician profile for ${email}:`, err);
+                    }
+                }
+
+                if (profiles?.volunteer) {
+                    try {
+                        // Extract suburb and postcode from location (format: "Suburb, VIC POSTCODE")
+                        const locationParts = location.split(", ");
+                        const suburb = locationParts[0] || location;
+                        const postcode = location.match(/\d{4}/)?.[0] || "";
+
+                        await db.insert(volunteerProfiles).values({
+                            userId,
+                            headline: `Volunteer - ${firstName} ${lastName}`,
+                            bio: `Test volunteer profile for ${firstName}`,
+                            locationSuburb: suburb,
+                            locationPostcode: postcode,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                        profilesCreated++;
+                    } catch (err) {
+                        console.error(`Failed to create volunteer profile for ${email}:`, err);
+                    }
+                }
+
+                if (profiles?.professional) {
+                    try {
+                        await db.insert(professionalProfiles).values({
+                            id: uuidv4(),
+                            userId,
+                            role: randomChoice(PROFESSIONAL_ROLES),
+                            bio: `Test professional profile for ${firstName}`,
+                            location,
+                            isActive: true,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                        profilesCreated++;
+                    } catch (err) {
+                        console.error(`Failed to create professional profile for ${email}:`, err);
+                    }
+                }
             } catch (err) {
                 console.error(`Failed to create test user ${email}:`, err);
             }
         }
 
-        // Log the action
-        console.log(`[Admin Test Create] Admin ${admin.email} created ${createdEmails.length} test individuals:`, createdEmails);
+        // Log the action using structured audit logger
+        await logAdminAction({
+            adminId: admin.id,
+            action: "test_individuals.create",
+            targetType: TargetTypes.USER,
+            targetId: "batch",
+            details: {
+                createdEmails,
+                profilesCreated,
+                count: createdEmails.length
+            }
+        });
 
         return NextResponse.json({
             success: true,
             created: createdEmails,
-            count: createdEmails.length
+            count: createdEmails.length,
+            profilesCreated
         }, { status: 201 });
 
     } catch (error) {
