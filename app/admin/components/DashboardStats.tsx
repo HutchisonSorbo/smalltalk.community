@@ -16,12 +16,21 @@ import {
     marketplaceListings,
     announcements,
 } from "@shared/schema";
-import { count, eq, gte } from "drizzle-orm";
+import { count, eq, gte, sql } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, Building2, AppWindow, Flag, UserCheck, TrendingUp, Clock, Music, CalendarDays, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Optimized platform stats fetcher.
+ * Uses batched queries to reduce connection pool pressure and avoid timeouts.
+ * 
+ * Strategy:
+ * - Batch 1: All user-related counts (single table, different filters)
+ * - Batch 2: All simple table counts (no joins)
+ * - Batch 3: Filtered counts (with WHERE clauses)
+ */
 const getPlatformStats = unstable_cache(
     async () => {
         try {
@@ -30,30 +39,17 @@ const getPlatformStats = unstable_cache(
             const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-            // Using Promise.all for concurrent execution
-            const [
-                totalUsers,
-                usersLast30Days,
-                usersLast7Days,
-                usersLast24Hours,
-                onboardingCompleted,
-                musicianCount,
-                bandCount,
-                gigCount,
-                volunteerCount,
-                orgCount,
-                professionalCount,
-                listingCount,
-                appCount,
-                pendingReports,
-                onboardingResponses,
-                activeAnnouncements,
-            ] = await Promise.all([
-                db.select({ count: count() }).from(users),
-                db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
-                db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)),
-                db.select({ count: count() }).from(users).where(gte(users.createdAt, twentyFourHoursAgo)),
-                db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
+            // Batch 1: All user stats in one query using conditional counts
+            const userStatsQuery = db.select({
+                totalUsers: count(),
+                usersLast30Days: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${thirtyDaysAgo})`,
+                usersLast7Days: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${sevenDaysAgo})`,
+                usersLast24Hours: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${twentyFourHoursAgo})`,
+                onboardingCompleted: sql<number>`COUNT(*) FILTER (WHERE ${users.onboardingCompleted} = true)`,
+            }).from(users);
+
+            // Batch 2: Simple table counts (parallel, no filters)
+            const simpleCountsQuery = Promise.all([
                 db.select({ count: count() }).from(musicianProfiles),
                 db.select({ count: count() }).from(bands),
                 db.select({ count: count() }).from(gigs),
@@ -62,35 +58,47 @@ const getPlatformStats = unstable_cache(
                 db.select({ count: count() }).from(professionalProfiles),
                 db.select({ count: count() }).from(marketplaceListings),
                 db.select({ count: count() }).from(apps),
+            ]);
+
+            // Batch 3: Filtered counts (parallel)
+            const filteredCountsQuery = Promise.all([
                 db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")),
                 db.select({ count: count() }).from(userOnboardingResponses),
                 db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),
             ]);
 
-            const totalUsersCount = totalUsers[0]?.count ?? 0;
-            const onboardingCompletedCount = onboardingCompleted[0]?.count ?? 0;
+            // Execute all batches in parallel
+            const [userStats, simpleCounts, filteredCounts] = await Promise.all([
+                userStatsQuery,
+                simpleCountsQuery,
+                filteredCountsQuery,
+            ]);
+
+            const userRow = userStats[0];
+            const totalUsersCount = userRow?.totalUsers ?? 0;
+            const onboardingCompletedCount = Number(userRow?.onboardingCompleted) || 0;
             const onboardingRate = totalUsersCount > 0
                 ? Math.round((onboardingCompletedCount / totalUsersCount) * 100)
                 : 0;
 
             return {
                 totalUsers: totalUsersCount,
-                usersLast30Days: usersLast30Days[0]?.count ?? 0,
-                usersLast7Days: usersLast7Days[0]?.count ?? 0,
-                usersLast24Hours: usersLast24Hours[0]?.count ?? 0,
+                usersLast30Days: Number(userRow?.usersLast30Days) || 0,
+                usersLast7Days: Number(userRow?.usersLast7Days) || 0,
+                usersLast24Hours: Number(userRow?.usersLast24Hours) || 0,
                 onboardingCompleted: onboardingCompletedCount,
                 onboardingRate,
-                musicians: musicianCount[0]?.count ?? 0,
-                bands: bandCount[0]?.count ?? 0,
-                gigs: gigCount[0]?.count ?? 0,
-                volunteers: volunteerCount[0]?.count ?? 0,
-                organisations: orgCount[0]?.count ?? 0,
-                professionals: professionalCount[0]?.count ?? 0,
-                listings: listingCount[0]?.count ?? 0,
-                apps: appCount[0]?.count ?? 0,
-                pendingReports: pendingReports[0]?.count ?? 0,
-                onboardingResponses: onboardingResponses[0]?.count ?? 0,
-                activeAnnouncements: activeAnnouncements[0]?.count ?? 0,
+                musicians: simpleCounts[0][0]?.count ?? 0,
+                bands: simpleCounts[1][0]?.count ?? 0,
+                gigs: simpleCounts[2][0]?.count ?? 0,
+                volunteers: simpleCounts[3][0]?.count ?? 0,
+                organisations: simpleCounts[4][0]?.count ?? 0,
+                professionals: simpleCounts[5][0]?.count ?? 0,
+                listings: simpleCounts[6][0]?.count ?? 0,
+                apps: simpleCounts[7][0]?.count ?? 0,
+                pendingReports: filteredCounts[0][0]?.count ?? 0,
+                onboardingResponses: filteredCounts[1][0]?.count ?? 0,
+                activeAnnouncements: filteredCounts[2][0]?.count ?? 0,
             };
         } catch (error) {
             console.error("[Admin Dashboard] Error fetching stats:", error);
