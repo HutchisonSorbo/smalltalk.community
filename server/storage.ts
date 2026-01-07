@@ -209,7 +209,7 @@ export class DatabaseStorage implements IStorage {
   private _CACHE_MAX_SIZE = 1000;
 
   private _invalidateRatingCache(targetType: string, targetId: string) {
-    const key = `${targetType}:${targetId}`;
+    const key = `${targetType}|${targetId}`;
     this._ratingCache.delete(key);
   }
 
@@ -907,11 +907,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
-    const cacheKey = `${targetType}:${targetId}`;
+    const cacheKey = `${targetType}|${targetId}`;
     const cached = this._ratingCache.get(cacheKey);
     const now = Date.now();
 
     if (cached && (now - cached.timestamp < this._CACHE_TTL)) {
+      // Refresh LRU position by re-inserting
+      this._ratingCache.delete(cacheKey);
+      this._ratingCache.set(cacheKey, cached);
       return cached.data;
     }
 
