@@ -20,10 +20,8 @@ export default defineConfig({
                 'server/**/*.{ts,tsx}',
                 'shared/**/*.{ts,tsx}',
                 'hooks/**/*.{ts,tsx}',
-                'collections/**/*.{ts,tsx}',
                 'scripts/**/*.{ts,tsx}',
                 'middleware.ts',
-                'payload.config.ts',
                 'instrumentation.ts',
                 'instrumentation-client.ts'
             ],
