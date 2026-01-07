@@ -33,94 +33,122 @@ interface SearchParams {
 }
 
 async function getUsers(searchParams: SearchParams) {
-    const page = parseInt(searchParams.page || "1", 10);
-    const pageSize = 25;
-    const offset = (page - 1) * pageSize;
-    const search = searchParams.search?.trim();
-    const accountType = searchParams.accountType;
-    const onboarding = searchParams.onboarding;
+    try {
+        const page = parseInt(searchParams.page || "1", 10);
+        const pageSize = 25;
+        const offset = (page - 1) * pageSize;
+        const search = searchParams.search?.trim();
+        const accountType = searchParams.accountType;
+        const onboarding = searchParams.onboarding;
 
-    // Build conditions
-    const conditions = [];
+        // Build conditions
+        const conditions = [];
 
-    if (search) {
-        conditions.push(
-            or(
-                like(users.email, `%${search}%`),
-                like(users.firstName, `%${search}%`),
-                like(users.lastName, `%${search}%`)
-            )
-        );
+        if (search) {
+            conditions.push(
+                or(
+                    like(users.email, `%${search}%`),
+                    like(users.firstName, `%${search}%`),
+                    like(users.lastName, `%${search}%`)
+                )
+            );
+        }
+
+        if (accountType && accountType !== "all") {
+            conditions.push(eq(users.accountType, accountType));
+        }
+
+        if (onboarding === "completed") {
+            conditions.push(eq(users.onboardingCompleted, true));
+        } else if (onboarding === "incomplete") {
+            conditions.push(eq(users.onboardingCompleted, false));
+        }
+
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+        const [allUsers, totalCount] = await Promise.all([
+            db
+                .select()
+                .from(users)
+                .where(whereClause)
+                .orderBy(desc(users.createdAt))
+                .limit(pageSize)
+                .offset(offset),
+            db
+                .select({ count: count() })
+                .from(users)
+                .where(whereClause),
+        ]);
+
+        return {
+            users: allUsers,
+            total: totalCount[0]?.count ?? 0,
+            page,
+            pageSize,
+            totalPages: Math.ceil((totalCount[0]?.count ?? 0) / pageSize),
+            error: null,
+        };
+    } catch (error) {
+        console.error("[Admin Users] Error fetching users:", error);
+        return {
+            users: [],
+            total: 0,
+            page: 1,
+            pageSize: 25,
+            totalPages: 0,
+            error: error instanceof Error ? error.message : "Failed to load users",
+        };
     }
-
-    if (accountType && accountType !== "all") {
-        conditions.push(eq(users.accountType, accountType));
-    }
-
-    if (onboarding === "completed") {
-        conditions.push(eq(users.onboardingCompleted, true));
-    } else if (onboarding === "incomplete") {
-        conditions.push(eq(users.onboardingCompleted, false));
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    const [allUsers, totalCount] = await Promise.all([
-        db
-            .select()
-            .from(users)
-            .where(whereClause)
-            .orderBy(desc(users.createdAt))
-            .limit(pageSize)
-            .offset(offset),
-        db
-            .select({ count: count() })
-            .from(users)
-            .where(whereClause),
-    ]);
-
-    return {
-        users: allUsers,
-        total: totalCount[0]?.count ?? 0,
-        page,
-        pageSize,
-        totalPages: Math.ceil((totalCount[0]?.count ?? 0) / pageSize),
-    };
 }
 
 async function getUserStats() {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    try {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [totalUsers, adminCount, newUsers, completedOnboarding] = await Promise.all([
-        db.select({ count: count() }).from(users),
-        db.select({ count: count() }).from(users).where(eq(users.isAdmin, true)),
-        db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
-        db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
-    ]);
+        const [totalUsers, adminCount, newUsers, completedOnboarding] = await Promise.all([
+            db.select({ count: count() }).from(users),
+            db.select({ count: count() }).from(users).where(eq(users.isAdmin, true)),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
+            db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
+        ]);
 
-    return {
-        total: totalUsers[0]?.count ?? 0,
-        admins: adminCount[0]?.count ?? 0,
-        newThisMonth: newUsers[0]?.count ?? 0,
-        completedOnboarding: completedOnboarding[0]?.count ?? 0,
-    };
+        return {
+            total: totalUsers[0]?.count ?? 0,
+            admins: adminCount[0]?.count ?? 0,
+            newThisMonth: newUsers[0]?.count ?? 0,
+            completedOnboarding: completedOnboarding[0]?.count ?? 0,
+        };
+    } catch (error) {
+        console.error("[Admin Users] Error fetching user stats:", error);
+        return {
+            total: 0,
+            admins: 0,
+            newThisMonth: 0,
+            completedOnboarding: 0,
+        };
+    }
 }
 
 async function getUserProfiles(userIds: string[]) {
     if (userIds.length === 0) return { musicians: [], volunteers: [], professionals: [] };
 
-    const [musicians, volunteers, professionals] = await Promise.all([
-        db.select({ userId: musicianProfiles.userId }).from(musicianProfiles).where(sql`${musicianProfiles.userId} = ANY(${userIds})`),
-        db.select({ userId: volunteerProfiles.userId }).from(volunteerProfiles).where(sql`${volunteerProfiles.userId} = ANY(${userIds})`),
-        db.select({ userId: professionalProfiles.userId }).from(professionalProfiles).where(sql`${professionalProfiles.userId} = ANY(${userIds})`),
-    ]);
+    try {
+        const [musicians, volunteers, professionals] = await Promise.all([
+            db.select({ userId: musicianProfiles.userId }).from(musicianProfiles).where(sql`${musicianProfiles.userId} = ANY(${userIds})`),
+            db.select({ userId: volunteerProfiles.userId }).from(volunteerProfiles).where(sql`${volunteerProfiles.userId} = ANY(${userIds})`),
+            db.select({ userId: professionalProfiles.userId }).from(professionalProfiles).where(sql`${professionalProfiles.userId} = ANY(${userIds})`),
+        ]);
 
-    return {
-        musicians: musicians.map(m => m.userId),
-        volunteers: volunteers.map(v => v.userId),
-        professionals: professionals.map(p => p.userId),
-    };
+        return {
+            musicians: musicians.map(m => m.userId),
+            volunteers: volunteers.map(v => v.userId),
+            professionals: professionals.map(p => p.userId),
+        };
+    } catch (error) {
+        console.error("[Admin Users] Error fetching user profiles:", error);
+        return { musicians: [], volunteers: [], professionals: [] };
+    }
 }
 
 export default async function UsersAdminPage({
@@ -129,7 +157,7 @@ export default async function UsersAdminPage({
     searchParams: Promise<SearchParams>;
 }) {
     const params = await searchParams;
-    const { users: allUsers, total, page, pageSize, totalPages } = await getUsers(params);
+    const { users: allUsers, total, page, pageSize, totalPages, error } = await getUsers(params);
     const stats = await getUserStats();
     const userIds = allUsers.map(u => u.id);
     const profiles = await getUserProfiles(userIds);
@@ -138,12 +166,26 @@ export default async function UsersAdminPage({
 
     return (
         <div className="space-y-6">
+            {/* Error Alert */}
+            {error && (
+                <Card className="border-red-500/50 bg-red-500/10">
+                    <CardContent className="flex items-center gap-3 py-4">
+                        <Users className="h-5 w-5 text-red-600" />
+                        <div>
+                            <p className="font-medium text-red-700">Failed to load users</p>
+                            <p className="text-sm text-red-600">{error}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
                     <p className="text-muted-foreground">View and manage platform users</p>
                 </div>
             </div>
+
 
             {/* Stats */}
             <div className="grid gap-4 md:grid-cols-4">
