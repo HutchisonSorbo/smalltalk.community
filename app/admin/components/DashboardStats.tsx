@@ -35,16 +35,17 @@ const getPlatformStats = unstable_cache(
     async () => {
         try {
             const now = new Date();
-            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            // Convert to ISO strings for PostgreSQL timestamp comparison
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
             // Batch 1: All user stats in one query using conditional counts
             const userStatsQuery = db.select({
                 totalUsers: count(),
-                usersLast30Days: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${thirtyDaysAgo})`,
-                usersLast7Days: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${sevenDaysAgo})`,
-                usersLast24Hours: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${twentyFourHoursAgo})`,
+                usersLast30Days: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${thirtyDaysAgo}::timestamp)`,
+                usersLast7Days: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${sevenDaysAgo}::timestamp)`,
+                usersLast24Hours: sql<number>`COUNT(*) FILTER (WHERE ${users.createdAt} >= ${twentyFourHoursAgo}::timestamp)`,
                 onboardingCompleted: sql<number>`COUNT(*) FILTER (WHERE ${users.onboardingCompleted} = true)`,
             }).from(users);
 
