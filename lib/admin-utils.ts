@@ -14,6 +14,7 @@ export const AdminActions = {
     USER_SUSPEND: "user.suspend",
     USER_UNSUSPEND: "user.unsuspend",
     USER_DELETE: "user.delete",
+    USER_BULK_DELETE: "user.bulk_delete",
     USER_MAKE_ADMIN: "user.make_admin",
     USER_REMOVE_ADMIN: "user.remove_admin",
 
