@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { db } from "@/server/db";
 import { users, musicianProfiles, volunteerProfiles, professionalProfiles } from "@shared/schema";
+import { logAdminAction, TargetTypes } from "@/lib/admin-utils";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
+import {
+    ONBOARDING_STEP_COMPLETED,
+    ONBOARDING_STEP_NOT_STARTED,
+    ONBOARDING_STEP_IN_PROGRESS
+} from "@/lib/constants/onboarding";
 
 export const dynamic = "force-dynamic";
 
@@ -96,12 +102,12 @@ function randomChoices<T>(arr: T[], n: number): T[] {
 function getOnboardingSettings(state: string): { completed: boolean; step: number } {
     switch (state) {
         case "not_started":
-            return { completed: false, step: 0 };
+            return { completed: false, step: ONBOARDING_STEP_NOT_STARTED };
         case "in_progress":
-            return { completed: false, step: 3 };
+            return { completed: false, step: ONBOARDING_STEP_IN_PROGRESS };
         case "completed":
         default:
-            return { completed: true, step: 7 };
+            return { completed: true, step: ONBOARDING_STEP_COMPLETED };
     }
 }
 
@@ -222,8 +228,18 @@ export async function POST(request: Request) {
             }
         }
 
-        // Log the action
-        console.log(`[Admin Test Create] Admin ${admin.email} created ${createdEmails.length} test individuals with ${profilesCreated} profiles:`, createdEmails);
+        // Log the action using structured audit logger
+        await logAdminAction({
+            adminId: admin.id,
+            action: "test_individuals.create",
+            targetType: TargetTypes.USER,
+            targetId: "batch",
+            details: {
+                createdEmails,
+                profilesCreated,
+                count: createdEmails.length
+            }
+        });
 
         return NextResponse.json({
             success: true,

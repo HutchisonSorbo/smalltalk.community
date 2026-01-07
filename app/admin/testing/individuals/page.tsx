@@ -96,13 +96,14 @@ export default function CreateTestIndividualsPage() {
 
             if (res.ok) {
                 const data = await res.json();
-                setCreated(prev => [...prev, ...data.created.map((email: string) => ({
+                setCreated(prev => [...prev, ...data.created.map((email: string, index: number) => ({
                     email,
-                    profiles: [
+                    // Use server-confirmed profile count - if profiles were created, show the types that were requested
+                    profiles: data.profilesCreated > 0 ? [
                         createMusicianProfile ? "Musician" : null,
                         createVolunteerProfile ? "Volunteer" : null,
                         createProfessionalProfile ? "Professional" : null
-                    ].filter(Boolean) as string[]
+                    ].filter(Boolean) as string[] : []
                 }))]);
                 toast({
                     title: "Success",

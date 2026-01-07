@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
+import { isAdmin } from "@/lib/admin-auth";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
@@ -23,9 +24,10 @@ const createUserSchema = z.object({
     ),
 });
 
-// Helper to verify admin access
+// Helper to verify admin access - uses isAdmin from lib/admin-auth.ts
 async function verifyAdmin() {
     try {
+        // Get the authenticated user first
         const supabase = await createClient();
         const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -33,11 +35,10 @@ async function verifyAdmin() {
             return { authorized: false, adminId: null };
         }
 
-        const dbUser = await db.query.users.findFirst({
-            where: eq(users.id, user.id),
-        });
+        // Use centralized isAdmin check from admin-auth.ts
+        const isAdminResult = await isAdmin();
 
-        if (!dbUser || !dbUser.isAdmin) {
+        if (!isAdminResult) {
             return { authorized: false, adminId: null };
         }
 
@@ -47,6 +48,7 @@ async function verifyAdmin() {
         return { authorized: false, adminId: null };
     }
 }
+
 
 // POST /api/admin/users - Create a new user
 export async function POST(request: NextRequest) {

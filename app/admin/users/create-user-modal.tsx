@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+    ONBOARDING_STEP_COMPLETED,
+    ONBOARDING_STEP_NOT_STARTED
+} from "@/lib/constants/onboarding";
+import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -86,7 +90,7 @@ export function CreateUserModal() {
                     isAdmin,
                     isMinor,
                     onboardingCompleted,
-                    onboardingStep: onboardingCompleted ? 7 : 0,
+                    onboardingStep: onboardingCompleted ? ONBOARDING_STEP_COMPLETED : ONBOARDING_STEP_NOT_STARTED,
                 }),
             });
 
