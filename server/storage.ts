@@ -206,6 +206,7 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   private _ratingCache = new Map<string, { data: { average: number; count: number }; timestamp: number }>();
   private _CACHE_TTL = 60 * 1000; // 1 minute
+  private _CACHE_MAX_SIZE = 1000;
 
   private _invalidateRatingCache(targetType: string, targetId: string) {
     const key = `${targetType}:${targetId}`;
@@ -927,9 +928,12 @@ export class DatabaseStorage implements IStorage {
       count: result[0]?.count || 0,
     };
 
-    // Simple eviction policy to prevent memory leaks
-    if (this._ratingCache.size > 1000) {
-      this._ratingCache.clear();
+    // Eviction policy: Remove oldest entry if limit reached
+    if (this._ratingCache.size >= this._CACHE_MAX_SIZE) {
+      const oldestKey = this._ratingCache.keys().next().value;
+      if (oldestKey) {
+        this._ratingCache.delete(oldestKey);
+      }
     }
     this._ratingCache.set(cacheKey, { data, timestamp: now });
     return data;
