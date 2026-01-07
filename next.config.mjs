@@ -1,5 +1,4 @@
 import { withSentryConfig } from '@sentry/nextjs';
-import { withPayload } from '@payloadcms/next/withPayload'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -81,7 +80,7 @@ const nextConfig = {
     },
 };
 
-export default withSentryConfig(withPayload(nextConfig), {
+export default withSentryConfig(nextConfig, {
     // For all available options, see:
     // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 

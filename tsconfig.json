@@ -28,9 +28,6 @@
       ],
       "@shared/*": [
         "./shared/*"
-      ],
-      "@payload-config": [
-        "./payload.config.ts"
       ]
     }
   },

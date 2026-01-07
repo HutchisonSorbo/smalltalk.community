@@ -60,8 +60,9 @@ smalltalk.community/
 │   ├── ai-config.js           # AI model configuration
 │   ├── validation.js          # Input validation
 │   └── rate-limiter.js        # Rate limiting
-├── components/                 # React components
-├── collections/                # Payload CMS collections
+├── components/                # React components
+│   ├── ui/                    # Shadcn UI components
+│   └── platform/              # Platform-wide components
 ├── hooks/                      # Custom React hooks
 ├── migrations/                 # Database migrations
 ├── tests/                      # Test files

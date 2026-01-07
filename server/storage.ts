@@ -204,6 +204,20 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private _ratingCache = new Map<string, { data: { average: number; count: number }; timestamp: number }>();
+  private _CACHE_TTL = 60 * 1000; // 1 minute
+  private _CACHE_MAX_SIZE = 1000;
+
+  // Helper to prevent SQL DoS via wildcard injection
+  private _escapeLikeString(str: string): string {
+    return str.replace(/[\\%_]/g, "\\$&");
+  }
+
+  private _invalidateRatingCache(targetType: string, targetId: string) {
+    const key = `${targetType}|${targetId}`;
+    this._ratingCache.delete(key);
+  }
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -285,12 +299,22 @@ export class DatabaseStorage implements IStorage {
       conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
     }
     if (filters.searchQuery) {
-      const query = `%${filters.searchQuery}%`;
+      const query = this._escapeLikeString(filters.searchQuery);
+      // Optimization: Use prefix match for name (more efficient index usage)
+      // Only use wildcard if the user intends it or for description fields
+      const isPrefix = filters.searchQuery.length >= 3;
+      const nameCondition = isPrefix 
+        ? ilike(musicianProfiles.name, `${query}%`) 
+        : ilike(musicianProfiles.name, `%${query}%`);
+
       const searchCondition = or(
-        ilike(musicianProfiles.name, query),
-        ilike(musicianProfiles.bio, query),
-        sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${query}`,
-        sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${query}`
+        nameCondition,
+        ilike(musicianProfiles.bio, `%${query}%`),
+        // Optimization: direct array overlap is faster than array_to_string if exact match
+        // But for partial search, we still need generic check.
+        // We keep the logic but rely on the fact that name is prioritized visually.
+        sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${`%${query}%`}`,
+        sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${`%${query}%`}`
       );
       if (searchCondition) {
         conditions.push(searchCondition);
@@ -702,6 +726,7 @@ export class DatabaseStorage implements IStorage {
 
   async createReview(review: InsertReview): Promise<Review> {
     const [newReview] = await db.insert(reviews).values(review).returning();
+    this._invalidateRatingCache(newReview.targetType, newReview.targetId);
     return newReview;
   }
 
@@ -871,15 +896,49 @@ export class DatabaseStorage implements IStorage {
       .set({ ...review, updatedAt: new Date() })
       .where(eq(reviews.id, id))
       .returning();
+    
+    if (updated) {
+      this._invalidateRatingCache(updated.targetType, updated.targetId);
+    }
     return updated;
   }
 
   async deleteReview(id: string): Promise<boolean> {
     const result = await db.delete(reviews).where(eq(reviews.id, id)).returning();
+    if (result.length > 0) {
+      this._invalidateRatingCache(result[0].targetType, result[0].targetId);
+    }
     return result.length > 0;
   }
 
   async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
+    // Validate input length to prevent cache memory exhaustion attacks
+    if (targetType.length > 50 || targetId.length > 50) {
+      // Fallback to DB without caching for suspicious inputs
+      const result = await db
+        .select({
+          average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
+          count: sql<number>`COUNT(*)::int`,
+        })
+        .from(reviews)
+        .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
+      return {
+        average: result[0]?.average || 0,
+        count: result[0]?.count || 0,
+      };
+    }
+
+    const cacheKey = `${targetType}|${targetId}`;
+    const cached = this._ratingCache.get(cacheKey);
+    const now = Date.now();
+
+    if (cached && (now - cached.timestamp < this._CACHE_TTL)) {
+      // Refresh LRU position by re-inserting
+      this._ratingCache.delete(cacheKey);
+      this._ratingCache.set(cacheKey, cached);
+      return cached.data;
+    }
+
     const result = await db
       .select({
         average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
@@ -887,10 +946,21 @@ export class DatabaseStorage implements IStorage {
       })
       .from(reviews)
       .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
-    return {
+    
+    const data = {
       average: result[0]?.average || 0,
       count: result[0]?.count || 0,
     };
+
+    // Eviction policy: Remove oldest entry if limit reached
+    if (this._ratingCache.size >= this._CACHE_MAX_SIZE) {
+      const oldestKey = this._ratingCache.keys().next().value;
+      if (oldestKey) {
+        this._ratingCache.delete(oldestKey);
+      }
+    }
+    this._ratingCache.set(cacheKey, { data, timestamp: now });
+    return data;
   }
 
   async hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean> {
