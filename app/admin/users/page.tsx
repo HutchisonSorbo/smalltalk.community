@@ -22,7 +22,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Users, Search, Filter, ChevronLeft, ChevronRight, Eye, Music, Heart, Briefcase } from "lucide-react";
+import { Users, Search, Filter, ChevronLeft, ChevronRight, Music, Heart, Briefcase } from "lucide-react";
+import { UserActionsInline } from "./user-actions-inline";
+import { CreateUserModal } from "./create-user-modal";
 
 interface SearchParams {
     page?: string;
@@ -184,6 +186,7 @@ export default async function UsersAdminPage({
                     <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
                     <p className="text-muted-foreground">View and manage platform users</p>
                 </div>
+                <CreateUserModal />
             </div>
 
 
@@ -362,12 +365,12 @@ export default async function UsersAdminPage({
                                         {user.createdAt?.toLocaleDateString()}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button asChild variant="ghost" size="sm">
-                                            <Link href={`/admin/users/${user.id}`}>
-                                                <Eye className="h-4 w-4 mr-1" />
-                                                View
-                                            </Link>
-                                        </Button>
+                                        <UserActionsInline
+                                            userId={user.id}
+                                            userName={`${user.firstName || ''} ${user.lastName || ''}`.trim()}
+                                            userEmail={user.email || ''}
+                                            isAdmin={user.isAdmin || false}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))}
