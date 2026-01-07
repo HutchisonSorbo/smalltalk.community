@@ -39,9 +39,9 @@ export async function getUserGrowthData(
     locale: string = DEFAULT_LOCALE
 ): Promise<UserGrowthDataPoint[]> {
     try {
-        // Build date truncation expression based on groupBy
-        const dateTruncExpr = sql<string>`TO_CHAR(DATE_TRUNC(${groupBy}, ${users.createdAt}), 'YYYY-MM-DD')`;
-        const dateTruncOrderExpr = sql`DATE_TRUNC(${groupBy}, ${users.createdAt})`;
+        // Use the same DATE_TRUNC expression for SELECT, GROUP BY, and ORDER BY
+        // PostgreSQL requires exact expression matching when using aggregate functions
+        const dateTruncExpr = sql<Date>`DATE_TRUNC(${sql.raw(`'${groupBy}'`)}, ${users.createdAt})`;
 
         const result = await db
             .select({
@@ -55,8 +55,8 @@ export async function getUserGrowthData(
                     lte(users.createdAt, endDate)
                 )
             )
-            .groupBy(dateTruncOrderExpr)
-            .orderBy(dateTruncOrderExpr);
+            .groupBy(dateTruncExpr)
+            .orderBy(dateTruncExpr);
 
         return result.map((row) => {
             const date = new Date(row.period);
