@@ -731,6 +731,7 @@ export const professionalProfiles = pgTable("professional_profiles", {
   pgPolicy("pro_profiles_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("pro_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
   pgPolicy("pro_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("pro_profiles_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("pro_role_idx").on(table.role),
   index("pro_location_idx").on(table.location),
 ]);
@@ -961,6 +962,7 @@ export const volunteerProfiles = pgTable("volunteer_profiles", {
   pgPolicy("volunteer_profiles_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("volunteer_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
   pgPolicy("volunteer_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("volunteer_profiles_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
   index("volunteer_profiles_user_id_idx").on(table.userId),
 ]);
 

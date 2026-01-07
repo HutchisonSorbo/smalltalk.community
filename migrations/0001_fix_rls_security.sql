@@ -108,10 +108,12 @@ CREATE POLICY notifications_self_delete ON public.notifications FOR DELETE TO au
 -- Drop and recreate professional_profiles policies
 DROP POLICY IF EXISTS pro_profiles_owner_insert ON public.professional_profiles;
 DROP POLICY IF EXISTS pro_profiles_owner_update ON public.professional_profiles;
+DROP POLICY IF EXISTS pro_profiles_owner_delete ON public.professional_profiles;
 CREATE POLICY pro_profiles_owner_insert ON public.professional_profiles FOR
 INSERT TO authenticated WITH CHECK (auth.uid()::text = user_id);
 CREATE POLICY pro_profiles_owner_update ON public.professional_profiles FOR
 UPDATE TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
+CREATE POLICY pro_profiles_owner_delete ON public.professional_profiles FOR DELETE TO authenticated USING (auth.uid()::text = user_id);
 -- Drop and recreate reports policies
 DROP POLICY IF EXISTS reports_insert ON public.reports;
 CREATE POLICY reports_insert ON public.reports FOR
@@ -128,10 +130,12 @@ CREATE POLICY reviews_owner_delete ON public.reviews FOR DELETE TO authenticated
 -- Drop and recreate volunteer_profiles policies
 DROP POLICY IF EXISTS volunteer_profiles_owner_insert ON public.volunteer_profiles;
 DROP POLICY IF EXISTS volunteer_profiles_owner_update ON public.volunteer_profiles;
+DROP POLICY IF EXISTS volunteer_profiles_owner_delete ON public.volunteer_profiles;
 CREATE POLICY volunteer_profiles_owner_insert ON public.volunteer_profiles FOR
 INSERT TO authenticated WITH CHECK (auth.uid()::text = user_id);
 CREATE POLICY volunteer_profiles_owner_update ON public.volunteer_profiles FOR
 UPDATE TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
+CREATE POLICY volunteer_profiles_owner_delete ON public.volunteer_profiles FOR DELETE TO authenticated USING (auth.uid()::text = user_id);
 -- Drop and recreate announcements policies (admin only for write)
 DROP POLICY IF EXISTS announcements_admin_all ON public.announcements;
 -- Announcements should only be writable by admins via service_role
