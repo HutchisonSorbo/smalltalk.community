@@ -76,6 +76,11 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
+  // Security Note: This component uses dangerouslySetInnerHTML to inject CSS variables.
+  // CRITICAL: The 'config' prop is assumed to be trusted content defined by developers.
+  // Type safety alone does not prevent runtime injection. If this configuration is ever
+  // sourced from user input, it MUST be sanitized server-side or validated before passing
+  // to this component to prevent CSS injection attacks (e.g., escaping ';', '}', etc).
   return (
     <style
       dangerouslySetInnerHTML={{
