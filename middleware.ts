@@ -63,7 +63,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Skip Next.js internals, static files, and Sentry monitoring
-    if (path.startsWith("/_next") || path.startsWith("/api") || path.startsWith("/cms") || path === "/monitoring" || path.includes(".")) {
+    if (path.startsWith("/_next") || path.startsWith("/api") || path === "/monitoring" || path.includes(".")) {
         return response;
     }
 
