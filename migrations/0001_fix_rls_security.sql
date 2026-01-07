@@ -152,9 +152,8 @@ CREATE POLICY IF NOT EXISTS user_apps_self_insert ON public.user_apps FOR
 INSERT TO authenticated WITH CHECK (auth.uid()::text = user_id);
 CREATE POLICY IF NOT EXISTS user_apps_self_delete ON public.user_apps FOR DELETE TO authenticated USING (auth.uid()::text = user_id);
 -- user_notification_preferences - users can only access their own
-CREATE POLICY IF NOT EXISTS notification_prefs_self_read ON public.user_notification_preferences FOR
-SELECT TO authenticated USING (auth.uid()::text = user_id);
-CREATE POLICY IF NOT EXISTS notification_prefs_self_modify ON public.user_notification_preferences FOR ALL TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
+-- Using FOR ALL covers SELECT, INSERT, UPDATE, DELETE
+CREATE POLICY IF NOT EXISTS notification_prefs_self_all ON public.user_notification_preferences FOR ALL TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 -- user_onboarding_responses - users can only access their own
 CREATE POLICY IF NOT EXISTS onboarding_responses_self_read ON public.user_onboarding_responses FOR
 SELECT TO authenticated USING (auth.uid()::text = user_id);
@@ -163,13 +162,11 @@ INSERT TO authenticated WITH CHECK (auth.uid()::text = user_id);
 CREATE POLICY IF NOT EXISTS onboarding_responses_self_update ON public.user_onboarding_responses FOR
 UPDATE TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 -- user_privacy_settings - users can only access their own
-CREATE POLICY IF NOT EXISTS privacy_settings_self_read ON public.user_privacy_settings FOR
-SELECT TO authenticated USING (auth.uid()::text = user_id);
-CREATE POLICY IF NOT EXISTS privacy_settings_self_modify ON public.user_privacy_settings FOR ALL TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
+-- Using FOR ALL covers SELECT, INSERT, UPDATE, DELETE
+CREATE POLICY IF NOT EXISTS privacy_settings_self_all ON public.user_privacy_settings FOR ALL TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 -- user_recommended_apps - users can only access their own
-CREATE POLICY IF NOT EXISTS recommended_apps_self_read ON public.user_recommended_apps FOR
-SELECT TO authenticated USING (auth.uid()::text = user_id);
-CREATE POLICY IF NOT EXISTS recommended_apps_self_modify ON public.user_recommended_apps FOR ALL TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
+-- Using FOR ALL covers SELECT, INSERT, UPDATE, DELETE
+CREATE POLICY IF NOT EXISTS recommended_apps_self_all ON public.user_recommended_apps FOR ALL TO authenticated USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 -- onboarding_metrics - service_role only (admin metrics)
 CREATE POLICY IF NOT EXISTS metrics_service_all ON public.onboarding_metrics FOR ALL TO service_role USING (true);
 -- Payload CMS tables (cms_users, pages, media, etc.) - service_role only
