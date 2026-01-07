@@ -208,6 +208,11 @@ export class DatabaseStorage implements IStorage {
   private _CACHE_TTL = 60 * 1000; // 1 minute
   private _CACHE_MAX_SIZE = 1000;
 
+  // Helper to prevent SQL DoS via wildcard injection
+  private _escapeLikeString(str: string): string {
+    return str.replace(/[\\%_]/g, "\\$&");
+  }
+
   private _invalidateRatingCache(targetType: string, targetId: string) {
     const key = `${targetType}|${targetId}`;
     this._ratingCache.delete(key);
@@ -294,10 +299,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
     }
     if (filters.searchQuery) {
-      const query = filters.searchQuery;
+      const query = this._escapeLikeString(filters.searchQuery);
       // Optimization: Use prefix match for name (more efficient index usage)
       // Only use wildcard if the user intends it or for description fields
-      const isPrefix = query.length >= 3;
+      const isPrefix = filters.searchQuery.length >= 3;
       const nameCondition = isPrefix 
         ? ilike(musicianProfiles.name, `${query}%`) 
         : ilike(musicianProfiles.name, `%${query}%`);
@@ -907,6 +912,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
+    // Validate input length to prevent cache memory exhaustion attacks
+    if (targetType.length > 50 || targetId.length > 50) {
+      // Fallback to DB without caching for suspicious inputs
+      const result = await db
+        .select({
+          average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
+          count: sql<number>`COUNT(*)::int`,
+        })
+        .from(reviews)
+        .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
+      return {
+        average: result[0]?.average || 0,
+        count: result[0]?.count || 0,
+      };
+    }
+
     const cacheKey = `${targetType}|${targetId}`;
     const cached = this._ratingCache.get(cacheKey);
     const now = Date.now();
