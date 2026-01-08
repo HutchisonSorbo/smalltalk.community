@@ -102,11 +102,11 @@ const testItems: TestItem[] = [
 
 export default function TestAppsPage() {
     const [loading, setLoading] = useState<Record<string, boolean>>({});
-    const [results, setResults] = useState<Record<string, TestResult>>({});
+    const [results, setResults] = useState<Record<string, TestResult | undefined>>({});
 
     const handleTest = async (item: TestItem) => {
         setLoading((prev) => ({ ...prev, [item.id]: true }));
-        setResults((prev) => ({ ...prev, [item.id]: undefined as unknown as TestResult }));
+        setResults((prev) => ({ ...prev, [item.id]: undefined }));
 
         try {
             const result = await item.action();
@@ -181,20 +181,20 @@ export default function TestAppsPage() {
                                     <div
                                         key={item.id}
                                         className={`p-4 rounded-lg border bg-card transition-all ${result?.success
-                                                ? "border-green-500/50"
-                                                : result && !result.success
-                                                    ? "border-red-500/50"
-                                                    : ""
+                                            ? "border-green-500/50"
+                                            : result && !result.success
+                                                ? "border-red-500/50"
+                                                : ""
                                             }`}
                                     >
                                         <div className="flex items-start gap-3 mb-3">
                                             <div className={`p-2 rounded-lg ${item.color === "purple"
-                                                    ? "bg-purple-500/10"
-                                                    : "bg-red-500/10"
+                                                ? "bg-purple-500/10"
+                                                : "bg-red-500/10"
                                                 }`}>
                                                 <Icon className={`h-5 w-5 ${item.color === "purple"
-                                                        ? "text-purple-500"
-                                                        : "text-red-500"
+                                                    ? "text-purple-500"
+                                                    : "text-red-500"
                                                     }`} />
                                             </div>
                                             <div className="flex-1">
@@ -207,8 +207,8 @@ export default function TestAppsPage() {
 
                                         {result && (
                                             <div className={`mb-3 p-2 rounded text-sm ${result.success
-                                                    ? "bg-green-500/10 text-green-700"
-                                                    : "bg-red-500/10 text-red-700"
+                                                ? "bg-green-500/10 text-green-700"
+                                                : "bg-red-500/10 text-red-700"
                                                 }`}>
                                                 <div className="flex items-center gap-2">
                                                     {result.success ? (
