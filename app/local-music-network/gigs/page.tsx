@@ -29,7 +29,8 @@ export default function GigsPage() {
     } = useInfiniteQuery<Gig[]>({
         queryKey: ["gigs", searchTerm],
         initialPageParam: 1,
-        queryFn: async ({ pageParam = 1 }: { pageParam: any }) => {
+        queryFn: async (context) => {
+            const pageParam = (context.pageParam ?? 1) as number;
             const limit = 12;
             const params = new URLSearchParams({
                 page: pageParam.toString(),

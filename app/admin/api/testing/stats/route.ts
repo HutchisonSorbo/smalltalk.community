@@ -19,7 +19,7 @@ export async function GET() {
         const testOrgPattern = 'Test Org -%';
 
         // Helper to safely count from a table
-        const safeCount = async (queryFn: () => Promise<any>, tableName?: string) => {
+        const safeCount = async (queryFn: () => Promise<{ count: string }[] | unknown>, tableName?: string) => {
             try {
                 const result = await queryFn();
                 if (Array.isArray(result) && result.length > 0) {

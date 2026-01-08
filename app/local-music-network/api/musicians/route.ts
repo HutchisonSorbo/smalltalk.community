@@ -30,7 +30,7 @@ export async function GET(request: Request) {
             );
         }
 
-        const filters: any = {};
+        const filters: Record<string, string | number | boolean | string[] | undefined> = {};
         const qData = parsed.data;
 
         if (qData.location) filters.location = qData.location;

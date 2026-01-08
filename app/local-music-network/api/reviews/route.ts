@@ -61,9 +61,10 @@ export async function POST(request: Request) {
 
         const review = await storage.createReview(validatedData);
         return NextResponse.json(review, { status: 201 });
-    } catch (error: any) {
-        if (error.name === "ZodError") {
-            const firstError = error.errors?.[0]?.message || "Invalid review data";
+    } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'name' in error && error.name === "ZodError") {
+            const zodError = error as { errors?: Array<{ message?: string }> };
+            const firstError = zodError.errors?.[0]?.message || "Invalid review data";
             return NextResponse.json({ message: firstError }, { status: 400 });
         }
         console.error("Error creating review:", error);

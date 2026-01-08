@@ -62,7 +62,18 @@ function CreateGigContent() {
         mutationFn: async () => {
             if (!selectedHostId) throw new Error("Please select a host");
 
-            const payload: any = {
+            const payload: {
+                title: string;
+                date: string;
+                location: string;
+                description: string;
+                genre: string;
+                price: number;
+                ticketUrl: string;
+                imageUrl: null;
+                bandId?: string;
+                musicianId?: string;
+            } = {
                 title,
                 date: new Date(date).toISOString(),
                 location,

@@ -47,7 +47,7 @@ export async function checkGigPermission(gigId: string, userId: string) {
     return false;
 }
 
-export async function updateGig(gigId: string, data: any) {
+export async function updateGig(gigId: string, data: Partial<typeof gigs.$inferInsert>) {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -57,7 +57,7 @@ export async function updateGig(gigId: string, data: any) {
     // Whitelist fields to update
     const updateData = {
         title: data.title,
-        date: new Date(data.date),
+        date: data.date ? new Date(data.date) : undefined,
         location: data.location,
         description: data.description,
         genre: data.genre,

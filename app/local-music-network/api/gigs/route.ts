@@ -24,7 +24,7 @@ export async function GET(request: Request) {
             );
         }
 
-        const filters: any = parsed.data;
+        const filters: Record<string, string | number | undefined> = { ...parsed.data };
 
         // Pagination
         const page = parseInt(query.page as string) || 1;
