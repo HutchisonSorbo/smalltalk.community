@@ -54,6 +54,10 @@ export function BulkActionsClient({ users, total }: BulkActionsClientProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [isSuspending, setIsSuspending] = useState(false);
+    const [isReactivating, setIsReactivating] = useState(false);
+    const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
     // Client-side search filter
     const filteredUsers = users.filter((user) => {
@@ -119,6 +123,91 @@ export function BulkActionsClient({ users, total }: BulkActionsClientProps) {
         }
     };
 
+    const handleBulkExport = async () => {
+        if (selectedUsers.length === 0) return;
+
+        setIsExporting(true);
+        try {
+            const response = await fetch("/api/admin/users/bulk/export", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userIds: selectedUsers, format: "csv" }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Export failed");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `users_export_${new Date().toISOString().split("T")[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            toast.success(`Exported ${selectedUsers.length} users`);
+        } catch {
+            toast.error("Failed to export users");
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleBulkSuspend = async () => {
+        if (selectedUsers.length === 0) return;
+
+        setIsSuspending(true);
+        try {
+            const response = await fetch("/api/admin/users/bulk/suspend", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userIds: selectedUsers }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to suspend users");
+            }
+
+            toast.success(`Suspended ${selectedUsers.length} users`);
+            setSelectedUsers([]);
+            router.refresh();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to suspend users");
+        } finally {
+            setIsSuspending(false);
+        }
+    };
+
+    const handleBulkReactivate = async () => {
+        if (selectedUsers.length === 0) return;
+
+        setIsReactivating(true);
+        try {
+            const response = await fetch("/api/admin/users/bulk/reactivate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userIds: selectedUsers }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to reactivate users");
+            }
+
+            toast.success(`Reactivated ${selectedUsers.length} users`);
+            setSelectedUsers([]);
+            router.refresh();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to reactivate users");
+        } finally {
+            setIsReactivating(false);
+        }
+    };
+
     const nonAdminFilteredCount = filteredUsers.filter(u => !u.isAdmin).length;
 
     return (
@@ -162,10 +251,10 @@ export function BulkActionsClient({ users, total }: BulkActionsClientProps) {
                             <div
                                 key={user.id}
                                 className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${user.isAdmin
-                                        ? "opacity-50 cursor-not-allowed bg-muted/30"
-                                        : selectedUsers.includes(user.id)
-                                            ? "border-primary bg-primary/5"
-                                            : "hover:bg-muted/50"
+                                    ? "opacity-50 cursor-not-allowed bg-muted/30"
+                                    : selectedUsers.includes(user.id)
+                                        ? "border-primary bg-primary/5"
+                                        : "hover:bg-muted/50"
                                     }`}
                                 onClick={() => !user.isAdmin && toggleUser(user.id)}
                             >
@@ -224,6 +313,7 @@ export function BulkActionsClient({ users, total }: BulkActionsClientProps) {
                             variant="outline"
                             className="h-auto flex-col py-4"
                             disabled={selectedUsers.length === 0}
+                            onClick={() => setEmailDialogOpen(true)}
                         >
                             <Mail className="h-6 w-6 mb-2" />
                             <span>Send Email</span>
@@ -231,25 +321,40 @@ export function BulkActionsClient({ users, total }: BulkActionsClientProps) {
                         <Button
                             variant="outline"
                             className="h-auto flex-col py-4"
-                            disabled={selectedUsers.length === 0}
+                            disabled={selectedUsers.length === 0 || isSuspending}
+                            onClick={handleBulkSuspend}
                         >
-                            <UserX className="h-6 w-6 mb-2" />
+                            {isSuspending ? (
+                                <Loader2 className="h-6 w-6 mb-2 animate-spin" />
+                            ) : (
+                                <UserX className="h-6 w-6 mb-2" />
+                            )}
                             <span>Suspend Users</span>
                         </Button>
                         <Button
                             variant="outline"
                             className="h-auto flex-col py-4"
-                            disabled={selectedUsers.length === 0}
+                            disabled={selectedUsers.length === 0 || isReactivating}
+                            onClick={handleBulkReactivate}
                         >
-                            <CheckCircle className="h-6 w-6 mb-2" />
+                            {isReactivating ? (
+                                <Loader2 className="h-6 w-6 mb-2 animate-spin" />
+                            ) : (
+                                <CheckCircle className="h-6 w-6 mb-2" />
+                            )}
                             <span>Reactivate</span>
                         </Button>
                         <Button
                             variant="outline"
                             className="h-auto flex-col py-4"
-                            disabled={selectedUsers.length === 0}
+                            disabled={selectedUsers.length === 0 || isExporting}
+                            onClick={handleBulkExport}
                         >
-                            <Download className="h-6 w-6 mb-2" />
+                            {isExporting ? (
+                                <Loader2 className="h-6 w-6 mb-2 animate-spin" />
+                            ) : (
+                                <Download className="h-6 w-6 mb-2" />
+                            )}
                             <span>Export Data</span>
                         </Button>
                     </div>
@@ -296,6 +401,25 @@ export function BulkActionsClient({ users, total }: BulkActionsClientProps) {
                                 "Delete Users"
                             )}
                         </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Email Coming Soon Dialog */}
+            <AlertDialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            <Mail className="h-5 w-5" />
+                            Send Email - Coming Soon
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Mass email functionality requires email service integration.
+                            This feature will be available in a future update.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Close</AlertDialogCancel>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
