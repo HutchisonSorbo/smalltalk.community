@@ -1,6 +1,6 @@
 import { db } from "@/server/db";
 import { users, musicianProfiles, volunteerProfiles, professionalProfiles, sysUserRoles, sysRoles } from "@shared/schema";
-import { desc, like, or, eq, and, gte, lte, sql, count } from "drizzle-orm";
+import { desc, like, or, eq, and, gte, lte, sql, count, inArray } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,18 +108,20 @@ async function getUserStats() {
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-        const [totalUsers, adminCount, newUsers, completedOnboarding] = await Promise.all([
-            db.select({ count: count() }).from(users),
-            db.select({ count: count() }).from(users).where(eq(users.isAdmin, true)),
-            db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
-            db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
-        ]);
+        const [stats] = await db
+            .select({
+                total: count(),
+                admins: count(sql`CASE WHEN ${users.isAdmin} = true THEN 1 END`),
+                newThisMonth: count(sql`CASE WHEN ${users.createdAt} >= ${thirtyDaysAgo} THEN 1 END`),
+                completedOnboarding: count(sql`CASE WHEN ${users.onboardingCompleted} = true THEN 1 END`),
+            })
+            .from(users);
 
         return {
-            total: totalUsers[0]?.count ?? 0,
-            admins: adminCount[0]?.count ?? 0,
-            newThisMonth: newUsers[0]?.count ?? 0,
-            completedOnboarding: completedOnboarding[0]?.count ?? 0,
+            total: stats.total,
+            admins: stats.admins,
+            newThisMonth: stats.newThisMonth,
+            completedOnboarding: stats.completedOnboarding,
         };
     } catch (error) {
         console.error("[Admin Users] Error fetching user stats:", error);
@@ -133,23 +135,33 @@ async function getUserStats() {
 }
 
 async function getUserProfiles(userIds: string[]) {
-    if (userIds.length === 0) return { musicians: [], volunteers: [], professionals: [] };
+    if (userIds.length === 0) {
+        return {
+            musicians: new Set<string>(),
+            volunteers: new Set<string>(),
+            professionals: new Set<string>(),
+        };
+    }
 
     try {
         const [musicians, volunteers, professionals] = await Promise.all([
-            db.select({ userId: musicianProfiles.userId }).from(musicianProfiles).where(sql`${musicianProfiles.userId} = ANY(${userIds})`),
-            db.select({ userId: volunteerProfiles.userId }).from(volunteerProfiles).where(sql`${volunteerProfiles.userId} = ANY(${userIds})`),
-            db.select({ userId: professionalProfiles.userId }).from(professionalProfiles).where(sql`${professionalProfiles.userId} = ANY(${userIds})`),
+            db.select({ userId: musicianProfiles.userId }).from(musicianProfiles).where(inArray(musicianProfiles.userId, userIds)),
+            db.select({ userId: volunteerProfiles.userId }).from(volunteerProfiles).where(inArray(volunteerProfiles.userId, userIds)),
+            db.select({ userId: professionalProfiles.userId }).from(professionalProfiles).where(inArray(professionalProfiles.userId, userIds)),
         ]);
 
         return {
-            musicians: musicians.map(m => m.userId),
-            volunteers: volunteers.map(v => v.userId),
-            professionals: professionals.map(p => p.userId),
+            musicians: new Set(musicians.map(m => m.userId)),
+            volunteers: new Set(volunteers.map(v => v.userId)),
+            professionals: new Set(professionals.map(p => p.userId)),
         };
     } catch (error) {
         console.error("[Admin Users] Error fetching user profiles:", error);
-        return { musicians: [], volunteers: [], professionals: [] };
+        return {
+            musicians: new Set<string>(),
+            volunteers: new Set<string>(),
+            professionals: new Set<string>(),
+        };
     }
 }
 
@@ -332,19 +344,19 @@ export default async function UsersAdminPage({
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex gap-1">
-                                            {profiles.musicians.includes(user.id) && (
+                                            {profiles.musicians.has(user.id) && (
                                                 <Badge variant="outline" className="gap-1">
                                                     <Music className="h-3 w-3" />
                                                     <span className="sr-only sm:not-sr-only">Musician</span>
                                                 </Badge>
                                             )}
-                                            {profiles.volunteers.includes(user.id) && (
+                                            {profiles.volunteers.has(user.id) && (
                                                 <Badge variant="outline" className="gap-1">
                                                     <Heart className="h-3 w-3" />
                                                     <span className="sr-only sm:not-sr-only">Volunteer</span>
                                                 </Badge>
                                             )}
-                                            {profiles.professionals.includes(user.id) && (
+                                            {profiles.professionals.has(user.id) && (
                                                 <Badge variant="outline" className="gap-1">
                                                     <Briefcase className="h-3 w-3" />
                                                     <span className="sr-only sm:not-sr-only">Pro</span>
