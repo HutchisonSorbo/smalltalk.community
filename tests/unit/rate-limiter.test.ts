@@ -8,7 +8,7 @@ import {
     calculateRemaining,
     isAllowed,
     calculateResetTime
-} from '../../lib/rate-limiter-utils';
+} from '../../lib/rate-limiter';
 
 /**
  * Rate Limiter Utility Tests
