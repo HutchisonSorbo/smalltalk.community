@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { storage } from "@/server/storage";
 import { createClient } from "@/lib/supabase-server";
 import { insertReviewSchema } from "@shared/schema";
+import { ZodError } from "zod";
 
 export async function POST(request: Request) {
     try {
@@ -61,8 +62,8 @@ export async function POST(request: Request) {
 
         const review = await storage.createReview(validatedData);
         return NextResponse.json(review, { status: 201 });
-    } catch (error: any) {
-        if (error.name === "ZodError") {
+    } catch (error: unknown) {
+        if (error instanceof ZodError) {
             const firstError = error.errors?.[0]?.message || "Invalid review data";
             return NextResponse.json({ message: firstError }, { status: 400 });
         }

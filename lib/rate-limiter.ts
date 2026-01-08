@@ -2,6 +2,29 @@ import { db } from "../server/db";
 import { rateLimits } from "../shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 
+// Re-export utilities for backward compatibility
+export {
+    DEFAULT_LIMIT,
+    DEFAULT_WINDOW_SECONDS,
+    UUID_PATTERN,
+    isValidUuid,
+    isWindowExpired,
+    calculateRemaining,
+    isAllowed,
+    calculateResetTime
+} from "./rate-limiter-utils";
+
+// Import locally for use in this file
+import {
+    DEFAULT_LIMIT,
+    DEFAULT_WINDOW_SECONDS,
+    isValidUuid,
+    isWindowExpired,
+    calculateRemaining,
+    calculateResetTime
+} from "./rate-limiter-utils";
+
+
 /**
  * Check if a user or identifier has exceeded the rate limit.
  * 
@@ -19,11 +42,11 @@ import { eq, and, sql } from "drizzle-orm";
 export async function checkRateLimit(
     key: string,
     type: string,
-    limit: number = 10,
-    windowSeconds: number = 60
+    limit: number = DEFAULT_LIMIT,
+    windowSeconds: number = DEFAULT_WINDOW_SECONDS
 ): Promise<boolean> {
     // Determine if key is UUID (userId) or other (identifier/IP)
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
+    const isUuid = isValidUuid(key);
 
     try {
         // Use separate upsert queries depending on whether we're tracking by userId or identifier
@@ -140,11 +163,11 @@ async function checkRateLimitFallback(
 export async function getRateLimitRemaining(
     key: string,
     type: string,
-    limit: number = 10,
-    windowSeconds: number = 60
+    limit: number = DEFAULT_LIMIT,
+    windowSeconds: number = DEFAULT_WINDOW_SECONDS
 ): Promise<{ remaining: number; resetAt: Date }> {
     try {
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
+        const isUuid = isValidUuid(key);
         const windowStart = new Date(Date.now() - windowSeconds * 1000);
 
         const whereClause = isUuid
@@ -154,12 +177,12 @@ export async function getRateLimitRemaining(
         const records = await db.select().from(rateLimits).where(whereClause);
         const record = records[0];
 
-        if (!record || new Date(record.windowStart) < windowStart) {
-            return { remaining: limit, resetAt: new Date(Date.now() + windowSeconds * 1000) };
+        if (!record || isWindowExpired(new Date(record.windowStart), windowSeconds)) {
+            return { remaining: limit, resetAt: calculateResetTime(new Date(), windowSeconds) };
         }
 
-        const remaining = Math.max(0, limit - record.hits);
-        const resetAt = new Date(new Date(record.windowStart).getTime() + windowSeconds * 1000);
+        const remaining = calculateRemaining(record.hits, limit);
+        const resetAt = calculateResetTime(new Date(record.windowStart), windowSeconds);
 
         return { remaining, resetAt };
     } catch (error) {

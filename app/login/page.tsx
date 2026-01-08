@@ -172,10 +172,11 @@ function LoginForm() {
                 router.refresh(); // Refresh server components
                 router.push("/dashboard");
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
             toast({
                 title: "Error",
-                description: error.message,
+                description: errorMessage,
                 variant: "destructive",
             });
         } finally {

@@ -87,8 +87,9 @@ export default function EditGigPage() {
             } else {
                 toast({ variant: "destructive", title: "Upload failed", description: res.error || "Unknown error" });
             }
-        } catch (error: any) {
-            toast({ variant: "destructive", title: "Upload failed", description: error.message });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            toast({ variant: "destructive", title: "Upload failed", description: errorMessage });
         } finally {
             setUploadingField(null);
             // Reset input value to allow re-uploading the same file
@@ -105,11 +106,11 @@ export default function EditGigPage() {
         mutationFn: async () => {
             await updateGig(gigId, {
                 title,
-                date,
+                date: new Date(date),
                 location,
                 description,
                 genre,
-                price: price ? (isNaN(Number(price)) ? price : Number(price)) : null,
+                price: price ? (isNaN(Number(price)) ? null : Number(price)) : null,
                 ticketUrl,
                 imageUrl,
                 coverImageUrl
@@ -118,7 +119,7 @@ export default function EditGigPage() {
         onSuccess: () => {
             toast({ title: "Gig updated", description: "Changes saved successfully." });
             queryClient.invalidateQueries({ queryKey: ["gig", gigId] });
-            router.push(`/ gigs / ${gigId} `);
+            router.push(`/gigs/${gigId}`);
         },
         onError: (err: Error) => {
             toast({ variant: "destructive", title: "Update Failed", description: err.message });
@@ -311,7 +312,7 @@ export default function EditGigPage() {
                                             </div>
 
                                             {/* Managers */}
-                                            {gig.managers?.map((m: any) => (
+                                            {gig.managers?.map((m) => (
                                                 <div key={m.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm group">
                                                     <span className="truncate max-w-[150px]">
                                                         {m.user?.firstName || m.user?.email || "User"}

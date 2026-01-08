@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Globe, Mail, Instagram, ArrowLeft, ExternalLink, Briefcase, Check, Phone, Facebook, Linkedin, Twitter } from "lucide-react";
-import { ProfessionalProfile } from "@shared/schema";
+import { ProfessionalProfile, User } from "@shared/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,7 +21,7 @@ export default function ProfessionalDetailPage() {
     const { user, isAuthenticated } = useAuth();
     const id = params.id as string;
 
-    const { data: pro, isLoading, error } = useQuery<ProfessionalProfile & { user?: any }>({
+    const { data: pro, isLoading, error } = useQuery<ProfessionalProfile & { user?: User }>({
         queryKey: [`/local-music-network/api/professionals/${id}`],
         queryFn: async () => {
             const res = await fetch(`/local-music-network/api/professionals/${id}`);
@@ -213,7 +213,7 @@ export default function ProfessionalDetailPage() {
     );
 }
 
-function ProfessionalContactSection({ profile, user, isAuthenticated }: { profile: ProfessionalProfile, user: any, isAuthenticated: boolean }) {
+function ProfessionalContactSection({ profile, user, isAuthenticated }: { profile: ProfessionalProfile, user: User | null, isAuthenticated: boolean }) {
     const { toast } = useToast();
 
     // Query for request status
@@ -249,7 +249,7 @@ function ProfessionalContactSection({ profile, user, isAuthenticated }: { profil
             toast({ title: "Request sent", description: "The professional has been notified." });
             refetch();
         },
-        onError: (err: any) => {
+        onError: (err: Error) => {
             toast({ title: "Error", description: err.message, variant: "destructive" });
         }
     });
