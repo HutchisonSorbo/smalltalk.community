@@ -7,12 +7,15 @@ You are an expert code auditor performing a complete security, performance, comp
 ## Critical Requirements
 
 ### 1. Mandatory File Creation
+
 You MUST create a detailed audit report with:
+
 - **Filename:** `DDMMYY_audit.md` (today's date: 080126_audit.md)
 - **Location:** `audit/` folder in project root
 - **Format:** Markdown following the structure defined in AUDIT_RULES.md
 
 ### 2. Scope Requirements
+
 - Review EVERY file in the codebase without exception
 - Analyse EVERY line of code, configuration, and documentation
 - Check ALL dependencies for CVEs using latest vulnerability databases
@@ -20,7 +23,9 @@ You MUST create a detailed audit report with:
 - Verify ALL compliance requirements against Australian and international law
 
 ### 3. Documentation Requirements
+
 Before beginning the audit:
+
 1. Read and understand the CLAUDE.md file in the project root
 2. Follow all coding standards, preferences, and requirements specified
 3. Adhere to the comprehensive checklist in AUDIT_RULES.md
@@ -29,6 +34,7 @@ Before beginning the audit:
 ## Audit Execution Process
 
 ### Phase 1: Reconnaissance and Setup
+
 1. Search online for the latest Next.js security best practices and common vulnerabilities
 2. Search for recent Supabase security advisories and RLS policy patterns
 3. Search for Vercel deployment security guidelines
@@ -41,7 +47,9 @@ Before beginning the audit:
 10. Search for performance benchmarks for similar applications
 
 ### Phase 2: Automated Tool Analysis
+
 Run and document findings from:
+
 1. `npm audit --production` for production dependencies
 2. `npm audit` for all dependencies including dev
 3. ESLint with all security plugins enabled
@@ -54,7 +62,9 @@ Run and document findings from:
 ### Phase 3: Manual Code Review
 
 #### 3.1 File System Review
+
 Systematically review every file type:
+
 - [ ] All `.tsx` and `.ts` files (components, pages, API routes)
 - [ ] All `.jsx` and `.js` files (if any legacy code exists)
 - [ ] `next.config.js` or `next.config.mjs`
@@ -80,6 +90,7 @@ Systematically review every file type:
 #### 3.2 Security Deep Dive
 
 **Authentication & Authorisation:**
+
 - [ ] Review all Supabase auth implementations
 - [ ] Check every API route for authentication requirements
 - [ ] Verify JWT token handling and validation
@@ -92,6 +103,7 @@ Systematically review every file type:
 - [ ] Check for insecure direct object references (IDOR)
 
 **Database Security (Supabase):**
+
 - [ ] List ALL database tables and verify RLS is enabled on each
 - [ ] Review EVERY RLS policy for correctness and completeness
 - [ ] Check RLS policies cover SELECT, INSERT, UPDATE, DELETE
@@ -106,6 +118,7 @@ Systematically review every file type:
 - [ ] Verify cascade deletes won't cause data loss issues
 
 **Input Validation:**
+
 - [ ] Check ALL form inputs for validation (client and server)
 - [ ] Verify file upload validation (type, size, content)
 - [ ] Check for XSS vulnerabilities in user input rendering
@@ -118,6 +131,7 @@ Systematically review every file type:
 - [ ] Verify CSV injection prevention
 
 **Secrets and Environment Variables:**
+
 - [ ] Verify NO secrets in source code
 - [ ] Check for accidentally committed .env files in git history
 - [ ] Verify NEXT_PUBLIC_ prefix only on truly public values
@@ -128,6 +142,7 @@ Systematically review every file type:
 - [ ] Check for secrets in error messages or logs
 
 **Cross-Site Scripting (XSS):**
+
 - [ ] Find ALL uses of dangerouslySetInnerHTML
 - [ ] Verify proper sanitisation when used
 - [ ] Check for DOM-based XSS vulnerabilities
@@ -136,12 +151,14 @@ Systematically review every file type:
 - [ ] Verify third-party content is sandboxed
 
 **Cross-Site Request Forgery (CSRF):**
+
 - [ ] Check for CSRF tokens on state-changing operations
 - [ ] Verify SameSite cookie attributes
 - [ ] Check POST is used for state changes (not GET)
 - [ ] Verify proper CORS configuration
 
 **Security Headers:**
+
 - [ ] Check Content-Security-Policy header
 - [ ] Verify X-Frame-Options header
 - [ ] Check X-Content-Type-Options header
@@ -150,6 +167,7 @@ Systematically review every file type:
 - [ ] Verify Permissions-Policy header
 
 **Dependencies:**
+
 - [ ] List ALL dependencies with versions
 - [ ] Check EACH dependency for known CVEs
 - [ ] Verify no deprecated packages
@@ -161,6 +179,7 @@ Systematically review every file type:
 #### 3.3 Performance Analysis
 
 **Frontend Performance:**
+
 - [ ] Measure total bundle size (target under 200KB gzipped)
 - [ ] Check for code splitting opportunities
 - [ ] Verify lazy loading of non-critical components
@@ -180,6 +199,7 @@ Systematically review every file type:
 - [ ] Check Time to First Byte (TTFB)
 
 **React Component Performance:**
+
 - [ ] Find components over 300 lines (should split)
 - [ ] Check for prop drilling (over 3 levels)
 - [ ] Verify proper component composition
@@ -190,6 +210,7 @@ Systematically review every file type:
 - [ ] Check for memory leaks (missing cleanup)
 
 **Next.js Optimisations:**
+
 - [ ] Check appropriate use of SSG, SSR, ISR
 - [ ] Verify proper 'use client' directive usage
 - [ ] Check for waterfall data fetching
@@ -200,16 +221,18 @@ Systematically review every file type:
 - [ ] Verify proper route prefetching
 
 **Database Performance:**
+
 - [ ] Check for N+1 query problems
 - [ ] Verify indexes on frequently queried columns
 - [ ] Check for full table scans on large tables
-- [ ] Verify query optimisation (EXPLAIN ANALYZE)
+- [ ] Verify query optimisation (EXPLAIN ANALYSE)
 - [ ] Check for unnecessary columns in SELECT
 - [ ] Verify connection pooling configuration
 - [ ] Check for missing pagination on large datasets
 - [ ] Verify proper use of database transactions
 
 **API Performance:**
+
 - [ ] Check for synchronous operations blocking requests
 - [ ] Verify response caching where appropriate
 - [ ] Check for request batching opportunities
@@ -218,6 +241,7 @@ Systematically review every file type:
 - [ ] Verify appropriate HTTP caching headers
 
 **Network Performance:**
+
 - [ ] Count total HTTP requests per page
 - [ ] Check for request batching opportunities
 - [ ] Verify proper use of CDN
@@ -228,6 +252,7 @@ Systematically review every file type:
 #### 3.4 Compliance Review
 
 **Australian Privacy Principles (APPs):**
+
 - [ ] Verify privacy policy exists and is accessible
 - [ ] Check data collection has clear purpose
 - [ ] Verify users are informed about data collection
@@ -245,6 +270,7 @@ Systematically review every file type:
 - [ ] Verify compliance with notifiable data breach scheme
 
 **Victoria Child Safety Standards:**
+
 - [ ] Verify age verification on registration
 - [ ] Check parental consent for users under 18
 - [ ] Verify content moderation systems
@@ -257,6 +283,7 @@ Systematically review every file type:
 - [ ] Check content filtering for age-appropriate material
 
 **GDPR (for international users):**
+
 - [ ] Verify lawful basis for data processing
 - [ ] Check consent is freely given
 - [ ] Verify data subject rights implementation
@@ -268,6 +295,7 @@ Systematically review every file type:
 - [ ] Verify DPO appointment if required
 
 **Accessibility (WCAG 2.1 Level AA):**
+
 - [ ] Check all images have alt text
 - [ ] Verify keyboard navigation works
 - [ ] Check colour contrast meets 4.5:1 ratio
@@ -284,6 +312,7 @@ Systematically review every file type:
 #### 3.5 Code Quality Review
 
 **React Best Practices:**
+
 - [ ] Check for proper component structure
 - [ ] Verify hooks follow Rules of Hooks
 - [ ] Check useEffect dependencies are correct
@@ -295,6 +324,7 @@ Systematically review every file type:
 - [ ] Check for direct DOM manipulation
 
 **TypeScript Usage:**
+
 - [ ] Count uses of 'any' type (should be minimal)
 - [ ] Check for proper type annotations
 - [ ] Verify return types on functions
@@ -303,6 +333,7 @@ Systematically review every file type:
 - [ ] Check for missing type exports
 
 **Code Smells:**
+
 - [ ] Find functions over 50 lines
 - [ ] Check cyclomatic complexity over 10
 - [ ] Find deeply nested conditionals (over 3 levels)
@@ -315,6 +346,7 @@ Systematically review every file type:
 - [ ] Check for duplicate code blocks
 
 **Error Handling:**
+
 - [ ] Check for proper try-catch usage
 - [ ] Verify errors are not silently swallowed
 - [ ] Check for error boundaries in React
@@ -323,6 +355,7 @@ Systematically review every file type:
 - [ ] Verify input validation before operations
 
 **Testing:**
+
 - [ ] Check unit test coverage (target 80%+)
 - [ ] Verify integration tests exist
 - [ ] Check e2e tests for critical paths
@@ -333,6 +366,7 @@ Systematically review every file type:
 ### Phase 4: Online Research and Validation
 
 For EACH category of findings, search online for:
+
 1. Latest security advisories and CVEs
 2. Best practices from official documentation
 3. Community discussions on security forums
@@ -342,6 +376,7 @@ For EACH category of findings, search online for:
 7. Framework-specific recommendations
 
 Search queries to execute:
+
 - "Next.js 14 security best practices 2025"
 - "Supabase RLS common vulnerabilities"
 - "React performance optimisation patterns"
@@ -412,15 +447,18 @@ Create the file `audit/080126_audit.md` with the following structure:
 ```
 
 **Remediation:**
+
 ```typescript
 // Show the fixed code
 ```
 
 **Steps to Fix:**
+
 1. [Specific action]
 2. [Specific action]
 
 **References:**
+
 - CVE-XXXX-XXXXX
 - https://[documentation-link]
 
@@ -450,11 +488,13 @@ Create the file `audit/080126_audit.md` with the following structure:
 ### Security Analysis
 
 #### OWASP Top 10 Compliance
+
 - A01: Broken Access Control - [Status and findings]
 - A02: Cryptographic Failures - [Status and findings]
 - [Continue for all 10]
 
 #### Dependency Vulnerabilities
+
 [Table of all dependencies with CVEs]
 
 | Package | Version | CVE | Severity | Fix Available |
@@ -464,35 +504,43 @@ Create the file `audit/080126_audit.md` with the following structure:
 ### Performance Analysis
 
 #### Core Web Vitals
+
 - **LCP:** [value]ms (Target: <2500ms) - [Pass/Fail]
 - **FID:** [value]ms (Target: <100ms) - [Pass/Fail]
 - **CLS:** [value] (Target: <0.1) - [Pass/Fail]
 
 #### Bundle Analysis
+
 - Total Bundle Size: [size]KB (gzipped)
 - Main Bundle: [size]KB
 - Largest Dependencies: [list]
 
 #### Performance Recommendations
+
 [Prioritised list of performance improvements]
 
 ### Compliance Analysis
 
 #### Australian Privacy Principles
+
 [Checklist of all 13 APPs with compliance status]
 
 #### Child Safety (Victoria Standards)
+
 [Checklist of all requirements with compliance status]
 
 #### GDPR
+
 [Checklist of GDPR requirements with compliance status]
 
 #### Accessibility (WCAG 2.1 Level AA)
+
 [Checklist of WCAG criteria with compliance status]
 
 ### Code Quality Report
 
 #### Metrics
+
 - Total Functions: [number]
 - Functions >50 lines: [number]
 - Cyclomatic Complexity >10: [number]
@@ -500,6 +548,7 @@ Create the file `audit/080126_audit.md` with the following structure:
 - Test Coverage: [percentage]%
 
 #### Code Smells Summary
+
 [Breakdown of code quality issues found]
 
 ---
@@ -507,17 +556,21 @@ Create the file `audit/080126_audit.md` with the following structure:
 ## Remediation Roadmap
 
 ### Week 1 (Critical)
+
 1. [Issue with highest risk score]
 2. [Next issue]
 [Continue...]
 
 ### Week 2-4 (High Priority)
+
 [Prioritised high priority issues]
 
 ### Month 2 (Medium Priority)
+
 [Prioritised medium priority issues]
 
 ### Backlog (Low Priority)
+
 [All low priority issues]
 
 ---
@@ -525,12 +578,15 @@ Create the file `audit/080126_audit.md` with the following structure:
 ## Dependencies Report
 
 ### Production Dependencies
+
 [Full list with versions and security status]
 
 ### Development Dependencies
+
 [Full list with versions and security status]
 
 ### Recommended Updates
+
 [List of safe updates to make]
 
 ---
@@ -538,12 +594,15 @@ Create the file `audit/080126_audit.md` with the following structure:
 ## Testing Recommendations
 
 ### Missing Test Coverage
+
 [Areas that need tests]
 
 ### Test Quality Issues
+
 [Flaky tests, slow tests, etc.]
 
 ### Recommended Test Additions
+
 [Specific tests that should be written]
 
 ---
@@ -551,12 +610,15 @@ Create the file `audit/080126_audit.md` with the following structure:
 ## Infrastructure and DevOps
 
 ### Vercel Configuration
+
 [Issues and recommendations]
 
 ### CI/CD Pipeline
+
 [Issues and recommendations]
 
 ### Monitoring and Logging
+
 [Issues and recommendations]
 
 ---
@@ -564,15 +626,19 @@ Create the file `audit/080126_audit.md` with the following structure:
 ## Appendices
 
 ### A. Automated Tool Results
+
 [Full output from npm audit, Lighthouse, etc.]
 
 ### B. Files Reviewed
+
 [Complete list of all files analysed]
 
 ### C. Search Queries Executed
+
 [List of all online searches performed]
 
 ### D. References
+
 [All documentation, CVEs, and resources consulted]
 
 ---
@@ -592,6 +658,7 @@ Create the file `audit/080126_audit.md` with the following structure:
 
 **Audit Completed:** 8 January 2026  
 **Next Audit Recommended:** [Date]
+
 ```
 
 ## Quality Assurance
