@@ -61,17 +61,30 @@ export async function middleware(request: NextRequest) {
             .eq('id', user.id)
             .single();
 
-        // Fail-safe: block if error occurs or profile is suspended
-        if (error || !profile || profile.is_suspended) {
-            if (error) {
+        // Handle different error scenarios:
+        // - PGRST116: "The result contains 0 rows" - user profile doesn't exist yet (new signup, hasn't completed onboarding)
+        // - Other errors: actual database issues
+        if (error) {
+            // If profile doesn't exist (PGRST116), allow through - user needs to complete onboarding
+            if (error.code === 'PGRST116') {
+                console.log(`[Middleware] User ${user.id} has no profile yet - allowing through for onboarding`);
+                // Continue without blocking - user will be directed to onboarding
+            } else {
+                // Actual database error - log but don't necessarily block
                 console.error("[Middleware] Database error checking suspension:", error);
+                // For security, redirect to login on unexpected errors
+                await supabase.auth.signOut();
+                return NextResponse.redirect(new URL(`/login?error=auth_error&error_description=Database+error`, request.url));
             }
-            // Log out and redirect
+        } else if (profile?.is_suspended) {
+            // User profile exists and is suspended - block access
+            console.log(`[Middleware] User ${user.id} is suspended - redirecting to login`);
             await supabase.auth.signOut();
-            const errorParam = profile?.is_suspended ? "account_suspended" : "auth_error";
-            return NextResponse.redirect(new URL(`/login?error=${errorParam}`, request.url));
+            return NextResponse.redirect(new URL(`/login?error=account_suspended`, request.url));
         }
+        // profile exists and is not suspended - allow through
     }
+
 
     // --- Domain Routing & Rewrites ---
     const hostname = request.headers.get("host") || "";
