@@ -12,44 +12,62 @@ async function getSecurityStats() {
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const [
-        pendingReports,
-        recentAdminActions,
-        totalUsers,
-        recentSignups,
-    ] = await Promise.all([
-        db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")),
-        db.select({ count: count() }).from(adminActivityLog).where(gte(adminActivityLog.createdAt, twentyFourHoursAgo)),
-        db.select({ count: count() }).from(users),
-        db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)),
-    ]);
-
-    return {
-        pendingReports: pendingReports[0]?.count ?? 0,
-        recentAdminActions: recentAdminActions[0]?.count ?? 0,
-        totalUsers: totalUsers[0]?.count ?? 0,
-        recentSignups: recentSignups[0]?.count ?? 0,
+    const defaultStats = {
+        pendingReports: 0,
+        recentAdminActions: 0,
+        totalUsers: 0,
+        recentSignups: 0,
     };
+
+    try {
+        const [
+            pendingReports,
+            recentAdminActions,
+            totalUsers,
+            recentSignups,
+        ] = await Promise.all([
+            db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(adminActivityLog).where(gte(adminActivityLog.createdAt, twentyFourHoursAgo)).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(users).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)).catch(() => [{ count: 0 }]),
+        ]);
+
+        return {
+            pendingReports: pendingReports[0]?.count ?? 0,
+            recentAdminActions: recentAdminActions[0]?.count ?? 0,
+            totalUsers: totalUsers[0]?.count ?? 0,
+            recentSignups: recentSignups[0]?.count ?? 0,
+        };
+    } catch (error) {
+        console.error("[Admin Security] Error fetching security stats:", error);
+        return defaultStats;
+    }
 }
 
 async function getRecentSecurityEvents() {
-    const events = await db
-        .select({
-            id: adminActivityLog.id,
-            action: adminActivityLog.action,
-            targetType: adminActivityLog.targetType,
-            targetId: adminActivityLog.targetId,
-            createdAt: adminActivityLog.createdAt,
-            adminFirstName: users.firstName,
-            adminEmail: users.email,
-        })
-        .from(adminActivityLog)
-        .leftJoin(users, eq(adminActivityLog.adminId, users.id))
-        .orderBy(desc(adminActivityLog.createdAt))
-        .limit(10);
+    try {
+        const events = await db
+            .select({
+                id: adminActivityLog.id,
+                action: adminActivityLog.action,
+                targetType: adminActivityLog.targetType,
+                targetId: adminActivityLog.targetId,
+                createdAt: adminActivityLog.createdAt,
+                adminFirstName: users.firstName,
+                adminEmail: users.email,
+            })
+            .from(adminActivityLog)
+            .leftJoin(users, eq(adminActivityLog.adminId, users.id))
+            .orderBy(desc(adminActivityLog.createdAt))
+            .limit(10);
 
-    return events;
+        return events;
+    } catch (error) {
+        console.error("[Admin Security] Error fetching recent security events:", error);
+        return [];
+    }
 }
+
 
 export default async function SecurityDashboardPage() {
     const stats = await getSecurityStats();

@@ -31,46 +31,66 @@ import {
 } from "lucide-react";
 
 async function getContentStats() {
-    const [
-        musiciansCount,
-        bandsCount,
-        gigsCount,
-        classifiedsCount,
-        professionalsCount,
-        listingsCount,
-        volunteersCount,
-        orgsCount,
-        volunteerRolesCount,
-        announcementsCount,
-        activeAnnouncementsCount,
-    ] = await Promise.all([
-        db.select({ count: count() }).from(musicianProfiles),
-        db.select({ count: count() }).from(bands),
-        db.select({ count: count() }).from(gigs),
-        db.select({ count: count() }).from(classifieds),
-        db.select({ count: count() }).from(professionalProfiles),
-        db.select({ count: count() }).from(marketplaceListings),
-        db.select({ count: count() }).from(volunteerProfiles),
-        db.select({ count: count() }).from(organisations),
-        db.select({ count: count() }).from(volunteerRoles),
-        db.select({ count: count() }).from(announcements),
-        db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),
-    ]);
-
-    return {
-        musicians: musiciansCount[0]?.count ?? 0,
-        bands: bandsCount[0]?.count ?? 0,
-        gigs: gigsCount[0]?.count ?? 0,
-        classifieds: classifiedsCount[0]?.count ?? 0,
-        professionals: professionalsCount[0]?.count ?? 0,
-        listings: listingsCount[0]?.count ?? 0,
-        volunteers: volunteersCount[0]?.count ?? 0,
-        organisations: orgsCount[0]?.count ?? 0,
-        volunteerRoles: volunteerRolesCount[0]?.count ?? 0,
-        announcements: announcementsCount[0]?.count ?? 0,
-        activeAnnouncements: activeAnnouncementsCount[0]?.count ?? 0,
+    const defaultStats = {
+        musicians: 0,
+        bands: 0,
+        gigs: 0,
+        classifieds: 0,
+        professionals: 0,
+        listings: 0,
+        volunteers: 0,
+        organisations: 0,
+        volunteerRoles: 0,
+        announcements: 0,
+        activeAnnouncements: 0,
     };
+
+    try {
+        const [
+            musiciansCount,
+            bandsCount,
+            gigsCount,
+            classifiedsCount,
+            professionalsCount,
+            listingsCount,
+            volunteersCount,
+            orgsCount,
+            volunteerRolesCount,
+            announcementsCount,
+            activeAnnouncementsCount,
+        ] = await Promise.all([
+            db.select({ count: count() }).from(musicianProfiles).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(bands).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(gigs).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(classifieds).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(professionalProfiles).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(marketplaceListings).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(volunteerProfiles).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(organisations).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(volunteerRoles).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(announcements).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)).catch(() => [{ count: 0 }]),
+        ]);
+
+        return {
+            musicians: musiciansCount[0]?.count ?? 0,
+            bands: bandsCount[0]?.count ?? 0,
+            gigs: gigsCount[0]?.count ?? 0,
+            classifieds: classifiedsCount[0]?.count ?? 0,
+            professionals: professionalsCount[0]?.count ?? 0,
+            listings: listingsCount[0]?.count ?? 0,
+            volunteers: volunteersCount[0]?.count ?? 0,
+            organisations: orgsCount[0]?.count ?? 0,
+            volunteerRoles: volunteerRolesCount[0]?.count ?? 0,
+            announcements: announcementsCount[0]?.count ?? 0,
+            activeAnnouncements: activeAnnouncementsCount[0]?.count ?? 0,
+        };
+    } catch (error) {
+        console.error("[Admin Content] Error fetching content stats:", error);
+        return defaultStats;
+    }
 }
+
 
 interface ContentCard {
     title: string;
