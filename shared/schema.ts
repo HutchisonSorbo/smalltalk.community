@@ -45,6 +45,7 @@ export const users = pgTable("users", {
   organisationName: varchar("organisation_name", { length: 255 }),
   isAdmin: boolean("is_admin").default(false),
   isMinor: boolean("is_minor").default(false),
+  isSuspended: boolean("is_suspended").default(false),
   messagePrivacy: varchar("message_privacy", { length: 20 }).default("everyone"), // 'everyone' | 'verified_only' | 'nobody'
   lastActiveAt: timestamp("last_active_at"),
   onboardingStep: integer("onboarding_step").default(0),
@@ -53,8 +54,8 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}` }),
-  pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}`, withCheck: sql`auth.uid()::text::text = ${table.id}` }),
+  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.id}` }),
+  pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.id} AND ${table.isSuspended} IS NOT TRUE`, withCheck: sql`auth.uid()::text = ${table.id} AND ${table.isSuspended} IS NOT TRUE` }),
   index("users_created_at_idx").on(table.createdAt),
   index("users_onboarding_completed_idx").on(table.onboardingCompleted),
 ]);

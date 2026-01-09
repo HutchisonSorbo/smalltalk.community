@@ -15,9 +15,20 @@ export async function middleware(request: NextRequest) {
         },
     });
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || supabaseUrl.includes('placeholder') || !supabaseAnonKey || supabaseAnonKey.includes('placeholder')) {
+        console.error("[Middleware] Missing or invalid Supabase configuration");
+        return new NextResponse(
+            JSON.stringify({ error: "Internal Server Error: Missing configuration" }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {
@@ -41,6 +52,26 @@ export async function middleware(request: NextRequest) {
     );
 
     const { data: { user } } = await supabase.auth.getUser();
+
+    // Check for suspended accounts
+    if (user) {
+        const { data: profile, error } = await supabase
+            .from('users')
+            .select('is_suspended')
+            .eq('id', user.id)
+            .single();
+
+        // Fail-safe: block if error occurs or profile is suspended
+        if (error || !profile || profile.is_suspended) {
+            if (error) {
+                console.error("[Middleware] Database error checking suspension:", error);
+            }
+            // Log out and redirect
+            await supabase.auth.signOut();
+            const errorParam = profile?.is_suspended ? "account_suspended" : "auth_error";
+            return NextResponse.redirect(new URL(`/login?error=${errorParam}`, request.url));
+        }
+    }
 
     // --- Domain Routing & Rewrites ---
     const hostname = request.headers.get("host") || "";
