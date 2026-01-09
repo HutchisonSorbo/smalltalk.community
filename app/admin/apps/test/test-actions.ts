@@ -38,6 +38,14 @@ async function authorizeTestAction(): Promise<string | null> {
 
 /**
  * Reusable helper to get an existing test user or create a new one.
+ * 
+ * Side-effects: Inserts a new user record if the email is not found.
+ * Formatting: Automatically prefixes lastName with TEST_PREFIX (e.g. "TEST Artist").
+ * 
+ * @param email - The unique email address for the test user.
+ * @param firstName - The first name of the test user.
+ * @param lastName - The base last name (before prefixing).
+ * @returns A Promise resolving to the existing or newly created User record.
  */
 async function getOrCreateTestUser(email: string, firstName: string, lastName: string) {
     const [existing] = await db

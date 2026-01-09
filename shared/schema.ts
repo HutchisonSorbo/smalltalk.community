@@ -54,7 +54,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.id} AND ${table.isSuspended} IS NOT TRUE` }),
+  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.id}` }),
   pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.id} AND ${table.isSuspended} IS NOT TRUE`, withCheck: sql`auth.uid()::text = ${table.id} AND ${table.isSuspended} IS NOT TRUE` }),
   index("users_created_at_idx").on(table.createdAt),
   index("users_onboarding_completed_idx").on(table.onboardingCompleted),

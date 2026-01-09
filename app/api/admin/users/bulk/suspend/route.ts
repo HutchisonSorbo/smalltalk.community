@@ -3,10 +3,17 @@ import { db } from "@/server/db";
 import { users } from "@shared/schema";
 import { inArray } from "drizzle-orm";
 import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes, BulkUserIdsSchema } from "@/lib/admin-utils";
+import { checkRateLimit } from "@/lib/rate-limiter";
+
+// Fail-fast: Validate NEXT_PUBLIC_APP_URL at module load
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+if (!APP_URL) {
+    throw new Error("CRITICAL: NEXT_PUBLIC_APP_URL is not configured for bulk API routes");
+}
 
 // CORS Headers
 const CORS_HEADERS = {
-    "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "",
+    "Access-Control-Allow-Origin": APP_URL,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
@@ -19,17 +26,22 @@ export async function OPTIONS() {
 
 // POST /api/admin/users/bulk/suspend - Suspend selected users
 export async function POST(request: NextRequest) {
-    // CSRF Protection: Validate Origin/Referer
+    // CSRF Protection: Strict Origin Match
     const origin = request.headers.get("origin");
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-    if (appUrl && origin && !origin.startsWith(appUrl)) {
+    if (!origin || origin !== APP_URL) {
+        console.warn(`[Admin API] CSRF Block: Origin mismatch. Received: ${origin}, Expected: ${APP_URL}`);
         return NextResponse.json({ error: "Invalid origin" }, { status: 403, headers: CORS_HEADERS });
     }
 
     const { authorized, adminId } = await verifyAdminRequest();
     if (!authorized || !adminId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
+    }
+
+    // Rate Limiting: 10 requests per minute for bulk actions
+    const isAllowed = await checkRateLimit(adminId, "bulk-suspend", 10, 60);
+    if (!isAllowed) {
+        return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429, headers: CORS_HEADERS });
     }
 
     try {
