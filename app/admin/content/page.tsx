@@ -45,7 +45,8 @@ async function safeQueryCount(
     try {
         return await query;
     } catch (err) {
-        console.error(`[Admin Content] safeQueryCount failed for: ${context}`, err);
+        const timestamp = new Date().toISOString();
+        console.error(`[${timestamp}] [Admin Content] safeQueryCount failed for: ${context}`, err);
         Sentry.captureException(err);
         return [{ count: 0 }];
     }
@@ -101,17 +102,17 @@ async function getContentStats() {
     ]);
 
     return {
-        musicians: musiciansCount[0].count,
-        bands: bandsCount[0].count,
-        gigs: gigsCount[0].count,
-        classifieds: classifiedsCount[0].count,
-        professionals: professionalsCount[0].count,
-        listings: listingsCount[0].count,
-        volunteers: volunteersCount[0].count,
-        organisations: orgsCount[0].count,
-        volunteerRoles: volunteerRolesCount[0].count,
-        announcements: announcementsCount[0].count,
-        activeAnnouncements: activeAnnouncementsCount[0].count,
+        musicians: musiciansCount[0]?.count ?? 0,
+        bands: bandsCount[0]?.count ?? 0,
+        gigs: gigsCount[0]?.count ?? 0,
+        classifieds: classifiedsCount[0]?.count ?? 0,
+        professionals: professionalsCount[0]?.count ?? 0,
+        listings: listingsCount[0]?.count ?? 0,
+        volunteers: volunteersCount[0]?.count ?? 0,
+        organisations: orgsCount[0]?.count ?? 0,
+        volunteerRoles: volunteerRolesCount[0]?.count ?? 0,
+        announcements: announcementsCount[0]?.count ?? 0,
+        activeAnnouncements: activeAnnouncementsCount[0]?.count ?? 0,
     };
 }
 
