@@ -1,4 +1,6 @@
 import { db } from "@/server/db";
+import * as Sentry from "@sentry/nextjs";
+
 import {
     users,
     musicianProfiles,
@@ -87,8 +89,10 @@ async function getContentStats() {
         };
     } catch (error) {
         console.error("[Admin Content] Error fetching content stats:", error);
+        Sentry.captureException(error);
         return defaultStats;
     }
+
 }
 
 
