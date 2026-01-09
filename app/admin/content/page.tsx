@@ -37,12 +37,21 @@ import {
  * @param query A promise representing the database count query
  * @returns A promise resolving to the query result or a default [{count: 0}]
  */
+/**
+ * Helper to safely execute a count query and return a default value on failure.
+ * @param query A promise representing the database count query
+ * @param context A string describing what is being counted for better error logging
+ * @returns A promise resolving to the query result or a default [{count: 0}]
+ */
 async function safeQueryCount<T extends { count: number }>(
-    query: Promise<T[]>
+    query: Promise<T[]>,
+    context: string
 ): Promise<T[]> {
     try {
         return await query;
-    } catch {
+    } catch (err) {
+        console.error(`[Admin Content] safeQueryCount failed for: ${context}`, err);
+        Sentry.captureException(err);
         return [{ count: 0 } as T];
     }
 }
@@ -70,66 +79,47 @@ async function safeQueryCount<T extends { count: number }>(
  * @throws {never} This function catches all internal database errors and tracks them via Sentry.
  */
 async function getContentStats() {
-    const defaultStats = {
-        musicians: 0,
-        bands: 0,
-        gigs: 0,
-        classifieds: 0,
-        professionals: 0,
-        listings: 0,
-        volunteers: 0,
-        organisations: 0,
-        volunteerRoles: 0,
-        announcements: 0,
-        activeAnnouncements: 0,
+    const [
+        musiciansCount,
+        bandsCount,
+        gigsCount,
+        classifiedsCount,
+        professionalsCount,
+        listingsCount,
+        volunteersCount,
+        orgsCount,
+        volunteerRolesCount,
+        announcementsCount,
+        activeAnnouncementsCount,
+    ] = await Promise.all([
+        safeQueryCount(db.select({ count: count() }).from(musicianProfiles), "musicians"),
+        safeQueryCount(db.select({ count: count() }).from(bands), "bands"),
+        safeQueryCount(db.select({ count: count() }).from(gigs), "gigs"),
+        safeQueryCount(db.select({ count: count() }).from(classifieds), "classifieds"),
+        safeQueryCount(db.select({ count: count() }).from(professionalProfiles), "professionals"),
+        safeQueryCount(db.select({ count: count() }).from(marketplaceListings), "listings"),
+        safeQueryCount(db.select({ count: count() }).from(volunteerProfiles), "volunteers"),
+        safeQueryCount(db.select({ count: count() }).from(organisations), "organisations"),
+        safeQueryCount(db.select({ count: count() }).from(volunteerRoles), "volunteerRoles"),
+        safeQueryCount(db.select({ count: count() }).from(announcements), "announcements"),
+        safeQueryCount(db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)), "activeAnnouncements"),
+    ]);
+
+    return {
+        musicians: musiciansCount[0].count,
+        bands: bandsCount[0].count,
+        gigs: gigsCount[0].count,
+        classifieds: classifiedsCount[0].count,
+        professionals: professionalsCount[0].count,
+        listings: listingsCount[0].count,
+        volunteers: volunteersCount[0].count,
+        organisations: orgsCount[0].count,
+        volunteerRoles: volunteerRolesCount[0].count,
+        announcements: announcementsCount[0].count,
+        activeAnnouncements: activeAnnouncementsCount[0].count,
     };
-
-    try {
-        const [
-            musiciansCount,
-            bandsCount,
-            gigsCount,
-            classifiedsCount,
-            professionalsCount,
-            listingsCount,
-            volunteersCount,
-            orgsCount,
-            volunteerRolesCount,
-            announcementsCount,
-            activeAnnouncementsCount,
-        ] = await Promise.all([
-            safeQueryCount(db.select({ count: count() }).from(musicianProfiles)),
-            safeQueryCount(db.select({ count: count() }).from(bands)),
-            safeQueryCount(db.select({ count: count() }).from(gigs)),
-            safeQueryCount(db.select({ count: count() }).from(classifieds)),
-            safeQueryCount(db.select({ count: count() }).from(professionalProfiles)),
-            safeQueryCount(db.select({ count: count() }).from(marketplaceListings)),
-            safeQueryCount(db.select({ count: count() }).from(volunteerProfiles)),
-            safeQueryCount(db.select({ count: count() }).from(organisations)),
-            safeQueryCount(db.select({ count: count() }).from(volunteerRoles)),
-            safeQueryCount(db.select({ count: count() }).from(announcements)),
-            safeQueryCount(db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true))),
-        ]);
-
-        return {
-            musicians: musiciansCount[0]?.count ?? 0,
-            bands: bandsCount[0]?.count ?? 0,
-            gigs: gigsCount[0]?.count ?? 0,
-            classifieds: classifiedsCount[0]?.count ?? 0,
-            professionals: professionalsCount[0]?.count ?? 0,
-            listings: listingsCount[0]?.count ?? 0,
-            volunteers: volunteersCount[0]?.count ?? 0,
-            organisations: orgsCount[0]?.count ?? 0,
-            volunteerRoles: volunteerRolesCount[0]?.count ?? 0,
-            announcements: announcementsCount[0]?.count ?? 0,
-            activeAnnouncements: activeAnnouncementsCount[0]?.count ?? 0,
-        };
-    } catch (error) {
-        console.error("[Admin Content] Error fetching content stats:", error);
-        Sentry.captureException(error);
-        return defaultStats;
-    }
 }
+
 
 
 
