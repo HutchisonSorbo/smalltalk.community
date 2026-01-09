@@ -13,26 +13,32 @@ import {
 } from "@/components/ui/table";
 
 async function getReports() {
-    const allReports = await db
-        .select({
-            id: reports.id,
-            reporterId: reports.reporterId,
-            targetType: reports.targetType,
-            targetId: reports.targetId,
-            reason: reports.reason,
-            description: reports.description,
-            status: reports.status,
-            createdAt: reports.createdAt,
-            reporterEmail: users.email,
-            reporterName: users.firstName,
-        })
-        .from(reports)
-        .leftJoin(users, eq(reports.reporterId, users.id))
-        .orderBy(desc(reports.createdAt))
-        .limit(100);
+    try {
+        const allReports = await db
+            .select({
+                id: reports.id,
+                reporterId: reports.reporterId,
+                targetType: reports.targetType,
+                targetId: reports.targetId,
+                reason: reports.reason,
+                description: reports.description,
+                status: reports.status,
+                createdAt: reports.createdAt,
+                reporterEmail: users.email,
+                reporterName: users.firstName,
+            })
+            .from(reports)
+            .leftJoin(users, eq(reports.reporterId, users.id))
+            .orderBy(desc(reports.createdAt))
+            .limit(100);
 
-    return allReports;
+        return allReports;
+    } catch (error) {
+        console.error("[Admin Reports] Error fetching reports:", error);
+        return [];
+    }
 }
+
 
 function getStatusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
     switch (status) {
