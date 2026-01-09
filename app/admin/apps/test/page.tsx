@@ -118,6 +118,7 @@ export default function TestAppsPage() {
                 toast.error(result.message);
             }
         } catch (error) {
+            console.error(`[Test Apps] Error creating ${item.name}:`, error);
             const result = { success: false, message: "An unexpected error occurred" };
             setResults((prev) => ({ ...prev, [item.id]: result }));
             toast.error(result.message);

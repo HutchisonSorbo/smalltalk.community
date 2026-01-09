@@ -4,7 +4,7 @@ import { users } from "@shared/schema";
 import { inArray } from "drizzle-orm";
 import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes, BulkUserIdsSchema } from "@/lib/admin-utils";
 
-// POST /api/admin/users/bulk/reactivate - Reactivate selected users
+// POST /api/admin/users/bulk/reactivate - Reactivate suspended users
 export async function POST(request: NextRequest) {
     const { authorized, adminId } = await verifyAdminRequest();
     if (!authorized || !adminId) {
@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
 
         const { userIds } = validation.data;
 
-        // Update users - mark as active (reset any suspended state)
+        // Reactivate users by clearing the isSuspended flag
         await db
             .update(users)
             .set({
+                isSuspended: false,
                 updatedAt: new Date()
             })
             .where(inArray(users.id, userIds));

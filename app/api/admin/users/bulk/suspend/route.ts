@@ -31,35 +31,36 @@ export async function POST(request: NextRequest) {
             .from(users)
             .where(inArray(users.id, userIds));
 
-        const nonAdminUserIds = usersToCheck
+        const eligibleUserIds = usersToCheck
             .filter(u => !u.isAdmin && u.id !== adminId)  // Cannot suspend admins or self
             .map(u => u.id);
 
-        if (nonAdminUserIds.length === 0) {
+        if (eligibleUserIds.length === 0) {
             return NextResponse.json({ error: "No eligible users to suspend (cannot suspend admin users)" }, { status: 400 });
         }
 
-        // Update users to suspended status
+        // Suspend users by setting isSuspended flag and revoking admin status
         await db
             .update(users)
             .set({
+                isSuspended: true,
                 isAdmin: false,  // Revoke admin status if any
                 updatedAt: new Date()
             })
-            .where(inArray(users.id, nonAdminUserIds));
+            .where(inArray(users.id, eligibleUserIds));
 
         // Log the action
         await logAdminAction({
             adminId,
             action: AdminActions.USER_SUSPEND,
             targetType: TargetTypes.USER,
-            targetId: `bulk-suspend-${nonAdminUserIds.length}`,
-            details: { action: "suspend", userCount: nonAdminUserIds.length, userIds: nonAdminUserIds },
+            targetId: `bulk-suspend-${eligibleUserIds.length}`,
+            details: { action: "suspend", userCount: eligibleUserIds.length, userIds: eligibleUserIds },
         });
 
         return NextResponse.json({
             success: true,
-            suspendedCount: nonAdminUserIds.length
+            suspendedCount: eligibleUserIds.length
         });
     } catch (error) {
         console.error("[Admin API] Bulk suspend error:", error);

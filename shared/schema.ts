@@ -45,6 +45,7 @@ export const users = pgTable("users", {
   organisationName: varchar("organisation_name", { length: 255 }),
   isAdmin: boolean("is_admin").default(false),
   isMinor: boolean("is_minor").default(false),
+  isSuspended: boolean("is_suspended").default(false),
   messagePrivacy: varchar("message_privacy", { length: 20 }).default("everyone"), // 'everyone' | 'verified_only' | 'nobody'
   lastActiveAt: timestamp("last_active_at"),
   onboardingStep: integer("onboarding_step").default(0),
