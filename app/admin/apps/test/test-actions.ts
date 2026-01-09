@@ -10,8 +10,7 @@ import {
     volunteerRoles,
     users,
 } from "@shared/schema";
-import { createClient } from "@/lib/supabase-server";
-import { eq } from "drizzle-orm";
+import { inArray, eq } from "drizzle-orm";
 import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
 
 // Test data prefixes to identify test content
@@ -69,6 +68,9 @@ async function getOrCreateTestUser(email: string, firstName: string, lastName: s
 
 /**
  * Reusable helper to get an existing test organisation or create a new one.
+ * 
+ * @param {string} name - The name of the organisation to find or create.
+ * @returns {Promise<any>} A Promise resolving to the existing or newly created Organisation record.
  */
 async function getOrCreateTestOrganisation(name: string) {
     const [existing] = await db
@@ -291,7 +293,7 @@ export async function createTestVolunteerOpportunity(): Promise<{ success: boole
         await logAdminAction({
             adminId,
             action: AdminActions.TEST_DATA_CREATE,
-            targetType: TargetTypes.VOLUNTEER, // Correct target type for roles
+            targetType: TargetTypes.LISTING, // Correct target type for roles/listings
             targetId: newRole.id,
             details: { type: "test_volunteer_role", title: newRole.title },
         });

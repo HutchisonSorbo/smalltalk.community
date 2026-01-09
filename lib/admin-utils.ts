@@ -61,6 +61,9 @@ export const AdminActions = {
 
     // Test actions
     TEST_DATA_CREATE: "test.data_create",
+
+    // Auth actions
+    ADMIN_AUTH_FAIL: "admin.auth_fail",
 } as const;
 
 export type AdminAction = typeof AdminActions[keyof typeof AdminActions];
@@ -189,6 +192,27 @@ export async function verifyAdminRequest(): Promise<VerifyAdminResult> {
         return { authorized: true, adminId: user.id };
     } catch (error) {
         console.error("[Admin API] Auth verification error:", error);
+
+        // SECURITY: Log authentication failures to the activity log for monitoring
+        try {
+            const supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            await logAdminAction({
+                adminId: user?.id || "unauthenticated",
+                action: AdminActions.ADMIN_AUTH_FAIL,
+                targetType: TargetTypes.USER,
+                targetId: user?.id || "unknown",
+                details: {
+                    error: error instanceof Error ? error.message : "Internal auth verification failure",
+                    stack: error instanceof Error ? error.stack : undefined,
+                    timestamp: new Date().toISOString()
+                }
+            });
+        } catch (logError) {
+            console.error("[Admin API] Failed to log auth verification error:", logError);
+        }
+
         return { authorized: false, adminId: null };
     }
 }
