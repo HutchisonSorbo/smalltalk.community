@@ -41,7 +41,7 @@ async function safeQueryCount<T extends { count: number }>(
     query: Promise<T[]>
 ): Promise<T[]> {
     try {
-        return await query.catch(() => [{ count: 0 } as T]);
+        return await query;
     } catch {
         return [{ count: 0 } as T];
     }
