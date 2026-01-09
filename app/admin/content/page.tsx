@@ -32,6 +32,43 @@ import {
     Database,
 } from "lucide-react";
 
+/**
+ * Helper to safely execute a count query and return a default value on failure.
+ * @param query A promise representing the database count query
+ * @returns A promise resolving to the query result or a default [{count: 0}]
+ */
+async function safeQueryCount<T extends { count: number }>(
+    query: Promise<T[]>
+): Promise<T[]> {
+    try {
+        return await query.catch(() => [{ count: 0 } as T]);
+    } catch {
+        return [{ count: 0 } as T];
+    }
+}
+
+/**
+ * Fetches platform-wide content statistics for the admin dashboard.
+ * 
+ * This function retrieves counts for various content types (musicians, bands, gigs, etc.)
+ * using optimized queries. It handles database failures gracefully by returning
+ * zeroed-out stats instead of throwing.
+ * 
+ * @returns {Promise<{
+ *   musicians: number;
+ *   bands: number;
+ *   gigs: number;
+ *   classifieds: number;
+ *   professionals: number;
+ *   listings: number;
+ *   volunteers: number;
+ *   organisations: number;
+ *   volunteerRoles: number;
+ *   announcements: number;
+ *   activeAnnouncements: number;
+ * }>} An object containing counts for all major platform content types.
+ * @throws {never} This function catches all internal database errors and tracks them via Sentry.
+ */
 async function getContentStats() {
     const defaultStats = {
         musicians: 0,
@@ -61,17 +98,17 @@ async function getContentStats() {
             announcementsCount,
             activeAnnouncementsCount,
         ] = await Promise.all([
-            db.select({ count: count() }).from(musicianProfiles).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(bands).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(gigs).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(classifieds).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(professionalProfiles).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(marketplaceListings).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(volunteerProfiles).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(organisations).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(volunteerRoles).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(announcements).catch(() => [{ count: 0 }]),
-            db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)).catch(() => [{ count: 0 }]),
+            safeQueryCount(db.select({ count: count() }).from(musicianProfiles)),
+            safeQueryCount(db.select({ count: count() }).from(bands)),
+            safeQueryCount(db.select({ count: count() }).from(gigs)),
+            safeQueryCount(db.select({ count: count() }).from(classifieds)),
+            safeQueryCount(db.select({ count: count() }).from(professionalProfiles)),
+            safeQueryCount(db.select({ count: count() }).from(marketplaceListings)),
+            safeQueryCount(db.select({ count: count() }).from(volunteerProfiles)),
+            safeQueryCount(db.select({ count: count() }).from(organisations)),
+            safeQueryCount(db.select({ count: count() }).from(volunteerRoles)),
+            safeQueryCount(db.select({ count: count() }).from(announcements)),
+            safeQueryCount(db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true))),
         ]);
 
         return {
@@ -92,8 +129,8 @@ async function getContentStats() {
         Sentry.captureException(error);
         return defaultStats;
     }
-
 }
+
 
 
 interface ContentCard {
