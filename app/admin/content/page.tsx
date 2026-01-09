@@ -35,24 +35,19 @@ import {
 /**
  * Helper to safely execute a count query and return a default value on failure.
  * @param query A promise representing the database count query
- * @returns A promise resolving to the query result or a default [{count: 0}]
- */
-/**
- * Helper to safely execute a count query and return a default value on failure.
- * @param query A promise representing the database count query
  * @param context A string describing what is being counted for better error logging
  * @returns A promise resolving to the query result or a default [{count: 0}]
  */
-async function safeQueryCount<T extends { count: number }>(
-    query: Promise<T[]>,
+async function safeQueryCount(
+    query: Promise<{ count: number }[]>,
     context: string
-): Promise<T[]> {
+): Promise<{ count: number }[]> {
     try {
         return await query;
     } catch (err) {
         console.error(`[Admin Content] safeQueryCount failed for: ${context}`, err);
         Sentry.captureException(err);
-        return [{ count: 0 } as T];
+        return [{ count: 0 }];
     }
 }
 
