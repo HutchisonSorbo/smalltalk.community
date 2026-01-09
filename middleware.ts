@@ -53,37 +53,34 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Check for suspended accounts
+    // Check for suspended accounts (non-blocking on errors)
+    // The suspension check is a secondary security measure - failure shouldn't prevent login
     if (user) {
-        const { data: profile, error } = await supabase
-            .from('users')
-            .select('is_suspended')
-            .eq('id', user.id)
-            .single();
+        try {
+            const { data: profile, error } = await supabase
+                .from('users')
+                .select('is_suspended')
+                .eq('id', user.id)
+                .single();
 
-        // Handle different error scenarios:
-        // - PGRST116: "The result contains 0 rows" - user profile doesn't exist yet (new signup, hasn't completed onboarding)
-        // - Other errors: actual database issues
-        if (error) {
-            // If profile doesn't exist (PGRST116), allow through - user needs to complete onboarding
-            if (error.code === 'PGRST116') {
-                console.log(`[Middleware] User ${user.id} has no profile yet - allowing through for onboarding`);
-                // Continue without blocking - user will be directed to onboarding
-            } else {
-                // Actual database error - log but don't necessarily block
-                console.error("[Middleware] Database error checking suspension:", error);
-                // For security, redirect to login on unexpected errors
+            if (error) {
+                // Log the error but allow through - suspension check shouldn't block login
+                // PGRST116 = profile doesn't exist (new user), other errors = DB issues
+                console.warn(`[Middleware] Could not check suspension for user ${user.id}: ${error.code} - ${error.message}`);
+                // Allow through - user might need to complete onboarding, or there's a DB issue
+            } else if (profile?.is_suspended === true) {
+                // Only block if explicitly suspended
+                console.log(`[Middleware] User ${user.id} is suspended - blocking access`);
                 await supabase.auth.signOut();
-                return NextResponse.redirect(new URL(`/login?error=auth_error&error_description=Database+error`, request.url));
+                return NextResponse.redirect(new URL(`/login?error=account_suspended`, request.url));
             }
-        } else if (profile?.is_suspended) {
-            // User profile exists and is suspended - block access
-            console.log(`[Middleware] User ${user.id} is suspended - redirecting to login`);
-            await supabase.auth.signOut();
-            return NextResponse.redirect(new URL(`/login?error=account_suspended`, request.url));
+            // Profile exists and is not suspended, or check failed - allow through
+        } catch (e) {
+            // Unexpected error - log and allow through
+            console.error("[Middleware] Unexpected error in suspension check:", e);
         }
-        // profile exists and is not suspended - allow through
     }
+
 
 
     // --- Domain Routing & Rewrites ---
