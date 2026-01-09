@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
         const reactivatedCount = updatedUsers.length;
 
         // Log the action with accurate count and details
+        // SECURITY: Obfuscate user IDs in logs for privacy
         await logAdminAction({
             adminId,
             action: AdminActions.USER_BULK_UNSUSPEND,
@@ -105,8 +106,9 @@ export async function POST(request: NextRequest) {
             details: {
                 action: "reactivate",
                 userCount: reactivatedCount,
-                userIds: updatedUsers.map(u => u.id),
-                ignoredIds: userIds.filter(id => !eligibleUserIds.includes(id)),
+                // Partial IDs for tracking without full data exposure
+                obfuscatedUserIds: updatedUsers.map(u => `${u.id.substring(0, 8)}...`),
+                ignoredCount: userIds.length - eligibleUserIds.length,
                 exclusions: {
                     admin: excludedByAdmin,
                     notSuspended: excludedNotSuspended,

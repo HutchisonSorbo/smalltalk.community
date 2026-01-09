@@ -16,6 +16,7 @@ import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes } from "@
 
 // Test data prefixes to identify test content
 const TEST_PREFIX = "[TEST]";
+const TEST_PREFIX_PLAIN = "TEST";
 const TEST_ORG_PATTERN = "Test Organisation";
 
 /**
@@ -59,7 +60,7 @@ async function getOrCreateTestUser(email: string, firstName: string, lastName: s
     const [created] = await db.insert(users).values({
         email,
         firstName,
-        lastName: `${TEST_PREFIX.replace(/[\[\]]/g, "")} ${lastName}`,
+        lastName: `${TEST_PREFIX_PLAIN} ${lastName}`,
         accountType: "Individual",
     }).returning();
 
@@ -87,13 +88,19 @@ async function getOrCreateTestOrganisation(name: string) {
     return created;
 }
 
-// Helper to generate slug from name
+/**
+ * Helper to generate slug from name.
+ * NOTE: This is a simplified implementation for test data. 
+ * Collapses consecutive hyphens and appends a timestamp.
+ * In production, consider using a dedicated slug library (e.g., slugify).
+ */
 function generateSlug(name: string): string {
     return name
         .toLowerCase()
         .replace(/\[test\]\s*/gi, "test-")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "")
+        .replace(/[^a-z0-9]+/g, "-") // Convert non-alphanumeric to hyphens
+        .replace(/-+/g, "-")         // Collapse consecutive hyphens
+        .replace(/(^-|-$)/g, "")     // Trim leading/trailing hyphens
         + "-" + Date.now();
 }
 
@@ -110,6 +117,8 @@ const TEST_GENRES = ["Rock", "Jazz", "Blues", "Pop", "Folk"];
 
 /**
  * Creates a test gig event associated with a test musician.
+ * 
+ * @returns A Promise resolving to an object indicating success, a message, and the new record id.
  */
 export async function createTestGig(): Promise<{ success: boolean; message: string; id?: string }> {
     const adminId = await authorizeTestAction();
@@ -151,7 +160,7 @@ export async function createTestGig(): Promise<{ success: boolean; message: stri
 
         await logAdminAction({
             adminId,
-            action: AdminActions.APP_CREATE,
+            action: AdminActions.TEST_DATA_CREATE,
             targetType: TargetTypes.GIG,
             targetId: newGig.id,
             details: { type: "test_gig", venue },
@@ -166,6 +175,8 @@ export async function createTestGig(): Promise<{ success: boolean; message: stri
 
 /**
  * Creates a new test musician profile and associated user.
+ * 
+ * @returns A Promise resolving to an object indicating success, a message, and the new record id.
  */
 export async function createTestMusician(): Promise<{ success: boolean; message: string; id?: string }> {
     const adminId = await authorizeTestAction();
@@ -191,7 +202,7 @@ export async function createTestMusician(): Promise<{ success: boolean; message:
 
         await logAdminAction({
             adminId,
-            action: AdminActions.USER_CREATE,
+            action: AdminActions.TEST_DATA_CREATE,
             targetType: TargetTypes.MUSICIAN,
             targetId: newMusician.id,
             details: { type: "test_musician", name: newMusician.name },
@@ -206,6 +217,8 @@ export async function createTestMusician(): Promise<{ success: boolean; message:
 
 /**
  * Creates a test band and associated owner user.
+ * 
+ * @returns A Promise resolving to an object indicating success, a message, and the new record id.
  */
 export async function createTestBand(): Promise<{ success: boolean; message: string; id?: string }> {
     const adminId = await authorizeTestAction();
@@ -229,7 +242,7 @@ export async function createTestBand(): Promise<{ success: boolean; message: str
 
         await logAdminAction({
             adminId,
-            action: AdminActions.APP_CREATE,
+            action: AdminActions.TEST_DATA_CREATE,
             targetType: TargetTypes.BAND,
             targetId: newBand.id,
             details: { type: "test_band", name: newBand.name },
@@ -245,6 +258,8 @@ export async function createTestBand(): Promise<{ success: boolean; message: str
 /**
  * Creates a test volunteer opportunity (role) and associated organisation.
  * Sets the role status to "draft" by default.
+ * 
+ * @returns A Promise resolving to an object indicating success, a message, and the new record id.
  */
 export async function createTestVolunteerOpportunity(): Promise<{ success: boolean; message: string; id?: string }> {
     const adminId = await authorizeTestAction();
@@ -275,7 +290,7 @@ export async function createTestVolunteerOpportunity(): Promise<{ success: boole
 
         await logAdminAction({
             adminId,
-            action: AdminActions.APP_CREATE,
+            action: AdminActions.TEST_DATA_CREATE,
             targetType: TargetTypes.VOLUNTEER, // Correct target type for roles
             targetId: newRole.id,
             details: { type: "test_volunteer_role", title: newRole.title },
@@ -290,6 +305,8 @@ export async function createTestVolunteerOpportunity(): Promise<{ success: boole
 
 /**
  * Creates a new test organisation.
+ * 
+ * @returns A Promise resolving to an object indicating success, a message, and the new record id.
  */
 export async function createTestOrganisation(): Promise<{ success: boolean; message: string; id?: string }> {
     const adminId = await authorizeTestAction();
@@ -304,7 +321,7 @@ export async function createTestOrganisation(): Promise<{ success: boolean; mess
 
         await logAdminAction({
             adminId,
-            action: AdminActions.APP_CREATE,
+            action: AdminActions.TEST_DATA_CREATE,
             targetType: TargetTypes.ORGANISATION,
             targetId: newOrg.id,
             details: { type: "test_organisation", name: newOrg.name },
@@ -319,6 +336,8 @@ export async function createTestOrganisation(): Promise<{ success: boolean; mess
 
 /**
  * Creates a new test volunteer profile and associated user.
+ * 
+ * @returns A Promise resolving to an object indicating success, a message, and the new record id.
  */
 export async function createTestVolunteer(): Promise<{ success: boolean; message: string; id?: string }> {
     const adminId = await authorizeTestAction();
@@ -344,10 +363,10 @@ export async function createTestVolunteer(): Promise<{ success: boolean; message
 
         await logAdminAction({
             adminId,
-            action: AdminActions.USER_CREATE,
+            action: AdminActions.TEST_DATA_CREATE,
             targetType: TargetTypes.VOLUNTEER,
             targetId: newVolunteer.id,
-            details: { type: "test_volunteer", name: `${firstName} ${TEST_PREFIX} Volunteer` },
+            details: { type: "test_volunteer", name: `${firstName} ${TEST_PREFIX_PLAIN} Volunteer` },
         });
 
         return { success: true, message: `Created test volunteer: ${firstName}`, id: newVolunteer.id };

@@ -58,6 +58,9 @@ export const AdminActions = {
 
     // Export actions
     EXPORT_DATA: "export.data",
+
+    // Test actions
+    TEST_DATA_CREATE: "test.data_create",
 } as const;
 
 export type AdminAction = typeof AdminActions[keyof typeof AdminActions];
