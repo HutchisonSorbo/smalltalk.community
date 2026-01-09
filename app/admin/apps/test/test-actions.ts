@@ -115,7 +115,7 @@ export async function createTestGig(): Promise<{ success: boolean; message: stri
         return { success: true, message: `Created test gig: ${newGig.title}`, id: newGig.id };
     } catch (error) {
         console.error("[Test Apps] Error creating test gig:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to create test gig" };
+        return { success: false, message: "Failed to create test gig" };
     }
 }
 
@@ -157,7 +157,7 @@ export async function createTestMusician(): Promise<{ success: boolean; message:
         return { success: true, message: `Created test musician: ${newMusician.name}`, id: newMusician.id };
     } catch (error) {
         console.error("[Test Apps] Error creating test musician:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to create test musician" };
+        return { success: false, message: "Failed to create test musician" };
     }
 }
 
@@ -206,7 +206,7 @@ export async function createTestBand(): Promise<{ success: boolean; message: str
         return { success: true, message: `Created test band: ${newBand.name}`, id: newBand.id };
     } catch (error) {
         console.error("[Test Apps] Error creating test band:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to create test band" };
+        return { success: false, message: "Failed to create test band" };
     }
 }
 
@@ -261,7 +261,7 @@ export async function createTestVolunteerOpportunity(): Promise<{ success: boole
         return { success: true, message: `Created volunteer opportunity: ${newRole.title}`, id: newRole.id };
     } catch (error) {
         console.error("[Test Apps] Error creating test volunteer opportunity:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to create volunteer opportunity" };
+        return { success: false, message: "Failed to create volunteer opportunity" };
     }
 }
 
@@ -291,7 +291,7 @@ export async function createTestOrganisation(): Promise<{ success: boolean; mess
         return { success: true, message: `Created test organisation: ${newOrg.name}`, id: newOrg.id };
     } catch (error) {
         console.error("[Test Apps] Error creating test organisation:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to create test organisation" };
+        return { success: false, message: "Failed to create test organisation" };
     }
 }
 
@@ -333,6 +333,6 @@ export async function createTestVolunteer(): Promise<{ success: boolean; message
         return { success: true, message: `Created test volunteer: ${firstName}`, id: newVolunteer.id };
     } catch (error) {
         console.error("[Test Apps] Error creating test volunteer:", error);
-        return { success: false, message: error instanceof Error ? error.message : "Failed to create test volunteer" };
+        return { success: false, message: "Failed to create test volunteer" };
     }
 }

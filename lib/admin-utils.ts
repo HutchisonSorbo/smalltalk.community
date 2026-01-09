@@ -178,7 +178,7 @@ export async function verifyAdminRequest(): Promise<VerifyAdminResult> {
             where: eq(users.id, user.id),
         });
 
-        if (!dbUser || !dbUser.isAdmin) {
+        if (!dbUser || !dbUser.isAdmin || dbUser.isSuspended) {
             return { authorized: false, adminId: null };
         }
 

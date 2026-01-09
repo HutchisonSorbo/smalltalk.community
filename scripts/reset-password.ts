@@ -52,32 +52,48 @@ function readLineSecure(prompt: string, mask = false): Promise<string> {
             process.stdin.resume();
             process.stdin.setEncoding("utf8");
 
-            const onData = (char: string) => {
-                // Handle Ctrl+C
-                if (char === "\u0003") {
-                    process.stdout.write("\n");
-                    process.exit(1);
-                }
-                // Handle Enter
-                if (char === "\r" || char === "\n") {
-                    process.stdin.setRawMode(false);
-                    process.stdin.removeListener("data", onData);
-                    process.stdout.write("\n");
-                    rl.close();
-                    resolve(password);
-                    return;
-                }
-                // Handle Backspace
-                if (char === "\u007f" || char === "\b") {
-                    if (password.length > 0) {
-                        password = password.slice(0, -1);
-                        process.stdout.write("\b \b");
+            const onData = (data: string) => {
+                // Iterate through characters to handle pasted strings
+                for (let i = 0; i < data.length; i++) {
+                    const char = data[i];
+
+                    // Handle Ctrl+C
+                    if (char === "\u0003") {
+                        cleanup();
+                        process.stdout.write("\n");
+                        process.exit(1);
                     }
-                    return;
+                    // Handle Enter (\r or \n depending on platform/mode)
+                    if (char === "\r" || char === "\n") {
+                        cleanup();
+                        process.stdout.write("\n");
+                        resolve(password);
+                        return;
+                    }
+                    // Handle Backspace
+                    if (char === "\u007f" || char === "\b") {
+                        if (password.length > 0) {
+                            password = password.slice(0, -1);
+                            process.stdout.write("\b \b");
+                        }
+                        continue;
+                    }
+                    // Regular character
+                    // Note: Filter out other non-printable or control characters if needed
+                    if (char.length === 1 && char.charCodeAt(0) >= 32) {
+                        password += char;
+                        process.stdout.write("*");
+                    }
                 }
-                // Regular character
-                password += char;
-                process.stdout.write("*");
+            };
+
+            const cleanup = () => {
+                process.stdin.removeListener("data", onData);
+                if (process.stdin.isTTY) {
+                    process.stdin.setRawMode(false);
+                }
+                process.stdin.pause();
+                rl.close();
             };
 
             process.stdin.on("data", onData);

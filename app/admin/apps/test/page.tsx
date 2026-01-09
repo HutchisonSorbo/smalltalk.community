@@ -134,7 +134,7 @@ export default function TestAppsPage() {
     }, {} as Record<string, TestItem[]>);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-full">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                     <FlaskConical className="h-8 w-8" />

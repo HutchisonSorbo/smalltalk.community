@@ -42,6 +42,21 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Check for suspended accounts
+    if (user) {
+        const { data: profile } = await supabase
+            .from('users')
+            .select('is_suspended')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.is_suspended) {
+            // Log out and redirect
+            await supabase.auth.signOut();
+            return NextResponse.redirect(new URL("/login?error=account_suspended", request.url));
+        }
+    }
+
     // --- Domain Routing & Rewrites ---
     const hostname = request.headers.get("host") || "";
 
