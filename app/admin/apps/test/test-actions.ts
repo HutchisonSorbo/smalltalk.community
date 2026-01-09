@@ -12,20 +12,71 @@ import {
 } from "@shared/schema";
 import { createClient } from "@/lib/supabase-server";
 import { eq } from "drizzle-orm";
-import { logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
+import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes } from "@/lib/admin-utils";
 
 // Test data prefixes to identify test content
 const TEST_PREFIX = "[TEST]";
 const TEST_ORG_PATTERN = "Test Organisation";
 
-async function getAdminId(): Promise<string | null> {
-    try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        return user?.id || null;
-    } catch {
+/**
+ * Validates that the request is from an authorized admin AND test mode is enabled.
+ * SECURITY: Defense-in-depth authorization check for test actions.
+ */
+async function authorizeTestAction(): Promise<string | null> {
+    // 1. Check environment flag to avoid production pollution
+    if (process.env.ADMIN_TEST_APPS_ENABLED !== "true") {
+        console.warn("[Test Apps] Attempted to run test action but ADMIN_TEST_APPS_ENABLED is not 'true'");
         return null;
     }
+
+    // 2. Comprehensive admin authorization check (authed, isAdmin, notSuspended)
+    const { authorized, adminId } = await verifyAdminRequest();
+    if (!authorized) return null;
+
+    return adminId;
+}
+
+/**
+ * Reusable helper to get an existing test user or create a new one.
+ */
+async function getOrCreateTestUser(email: string, firstName: string, lastName: string) {
+    const [existing] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+    if (existing) return existing;
+
+    const [created] = await db.insert(users).values({
+        email,
+        firstName,
+        lastName: `${TEST_PREFIX.replace(/[\[\]]/g, "")} ${lastName}`,
+        accountType: "Individual",
+    }).returning();
+
+    return created;
+}
+
+/**
+ * Reusable helper to get an existing test organisation or create a new one.
+ */
+async function getOrCreateTestOrganisation(name: string) {
+    const [existing] = await db
+        .select()
+        .from(organisations)
+        .where(eq(organisations.name, name))
+        .limit(1);
+
+    if (existing) return existing;
+
+    const [created] = await db.insert(organisations).values({
+        name,
+        slug: generateSlug(name),
+        description: "A test organisation for admin testing purposes.",
+    }).returning();
+
+    return created;
 }
 
 // Helper to generate slug from name
@@ -49,12 +100,15 @@ const TEST_VENUES = [
 
 const TEST_GENRES = ["Rock", "Jazz", "Blues", "Pop", "Folk"];
 
+/**
+ * Creates a test gig event associated with a test musician.
+ */
 export async function createTestGig(): Promise<{ success: boolean; message: string; id?: string }> {
-    const adminId = await getAdminId();
-    if (!adminId) return { success: false, message: "Not authenticated" };
+    const adminId = await authorizeTestAction();
+    if (!adminId) return { success: false, message: "Not authorized or test mode disabled" };
 
     try {
-        // Get or create a test musician to be the organizer
+        // Get or create a test musician to be the organizer (and their user)
         let [testMusician] = await db
             .select()
             .from(musicianProfiles)
@@ -62,26 +116,9 @@ export async function createTestGig(): Promise<{ success: boolean; message: stri
             .limit(1);
 
         if (!testMusician) {
-            // Need a user first
-            const [testUser] = await db
-                .select()
-                .from(users)
-                .where(eq(users.email, "test-musician@smalltalk.test"))
-                .limit(1);
-
-            let userId = testUser?.id;
-            if (!userId) {
-                const [newUser] = await db.insert(users).values({
-                    email: "test-musician@smalltalk.test",
-                    firstName: "Test",
-                    lastName: "Musician",
-                    accountType: "Individual",
-                }).returning();
-                userId = newUser.id;
-            }
-
+            const user = await getOrCreateTestUser("test-musician@smalltalk.test", "Test", "Musician");
             const [newMusician] = await db.insert(musicianProfiles).values({
-                userId,
+                userId: user.id,
                 name: `${TEST_PREFIX} Test Artist`,
                 genres: [TEST_GENRES[Math.floor(Math.random() * TEST_GENRES.length)]],
                 instruments: ["Guitar"],
@@ -119,9 +156,12 @@ export async function createTestGig(): Promise<{ success: boolean; message: stri
     }
 }
 
+/**
+ * Creates a new test musician profile and associated user.
+ */
 export async function createTestMusician(): Promise<{ success: boolean; message: string; id?: string }> {
-    const adminId = await getAdminId();
-    if (!adminId) return { success: false, message: "Not authenticated" };
+    const adminId = await authorizeTestAction();
+    if (!adminId) return { success: false, message: "Not authorized or test mode disabled" };
 
     try {
         const uniqueId = Date.now();
@@ -130,12 +170,7 @@ export async function createTestMusician(): Promise<{ success: boolean; message:
         const firstName = names[Math.floor(Math.random() * names.length)];
 
         // Create user
-        const [newUser] = await db.insert(users).values({
-            email,
-            firstName,
-            lastName: `${TEST_PREFIX.replace(/[\[\]]/g, "")} Artist`,
-            accountType: "Individual",
-        }).returning();
+        const newUser = await getOrCreateTestUser(email, firstName, "Artist");
 
         // Create musician profile
         const [newMusician] = await db.insert(musicianProfiles).values({
@@ -161,9 +196,12 @@ export async function createTestMusician(): Promise<{ success: boolean; message:
     }
 }
 
+/**
+ * Creates a test band and associated owner user.
+ */
 export async function createTestBand(): Promise<{ success: boolean; message: string; id?: string }> {
-    const adminId = await getAdminId();
-    if (!adminId) return { success: false, message: "Not authenticated" };
+    const adminId = await authorizeTestAction();
+    if (!adminId) return { success: false, message: "Not authorized or test mode disabled" };
 
     try {
         const bandNames = ["The Test Subjects", "Demo Band", "Sample Sound", "Trial Tones", "Mock Melody"];
@@ -171,21 +209,7 @@ export async function createTestBand(): Promise<{ success: boolean; message: str
         const bandName = `${TEST_PREFIX} ${bandNames[Math.floor(Math.random() * bandNames.length)]} ${uniqueId % 1000}`;
 
         // Need a user for the band
-        let [testUser] = await db
-            .select()
-            .from(users)
-            .where(eq(users.email, "test-band-owner@smalltalk.test"))
-            .limit(1);
-
-        if (!testUser) {
-            const [newUser] = await db.insert(users).values({
-                email: "test-band-owner@smalltalk.test",
-                firstName: "Test",
-                lastName: "BandOwner",
-                accountType: "Individual",
-            }).returning();
-            testUser = newUser;
-        }
+        const testUser = await getOrCreateTestUser("test-band-owner@smalltalk.test", "Test", "BandOwner");
 
         const [newBand] = await db.insert(bands).values({
             userId: testUser.id,
@@ -210,26 +234,17 @@ export async function createTestBand(): Promise<{ success: boolean; message: str
     }
 }
 
+/**
+ * Creates a test volunteer opportunity (role) and associated organisation.
+ * Sets the role status to "draft" by default.
+ */
 export async function createTestVolunteerOpportunity(): Promise<{ success: boolean; message: string; id?: string }> {
-    const adminId = await getAdminId();
-    if (!adminId) return { success: false, message: "Not authenticated" };
+    const adminId = await authorizeTestAction();
+    if (!adminId) return { success: false, message: "Not authorized or test mode disabled" };
 
     try {
         // First get or create a test organisation
-        let [testOrg] = await db
-            .select()
-            .from(organisations)
-            .where(eq(organisations.name, `${TEST_PREFIX} ${TEST_ORG_PATTERN}`))
-            .limit(1);
-
-        if (!testOrg) {
-            const [orgResult] = await db.insert(organisations).values({
-                name: `${TEST_PREFIX} ${TEST_ORG_PATTERN}`,
-                slug: generateSlug(`${TEST_PREFIX} ${TEST_ORG_PATTERN}`),
-                description: "A test organisation for admin testing purposes.",
-            }).returning();
-            testOrg = orgResult;
-        }
+        const testOrg = await getOrCreateTestOrganisation(`${TEST_PREFIX} ${TEST_ORG_PATTERN}`);
 
         const roleTypes = [
             "Event Helper",
@@ -247,13 +262,13 @@ export async function createTestVolunteerOpportunity(): Promise<{ success: boole
             roleType: "ongoing",
             locationType: "on_site",
             address: "123 Test Street, Melbourne VIC 3000",
-            status: "published",
+            status: "draft", // Hide test content from public view
         }).returning();
 
         await logAdminAction({
             adminId,
             action: AdminActions.APP_CREATE,
-            targetType: TargetTypes.ORGANISATION,
+            targetType: TargetTypes.VOLUNTEER, // Correct target type for roles
             targetId: newRole.id,
             details: { type: "test_volunteer_role", title: newRole.title },
         });
@@ -265,20 +280,19 @@ export async function createTestVolunteerOpportunity(): Promise<{ success: boole
     }
 }
 
+/**
+ * Creates a new test organisation.
+ */
 export async function createTestOrganisation(): Promise<{ success: boolean; message: string; id?: string }> {
-    const adminId = await getAdminId();
-    if (!adminId) return { success: false, message: "Not authenticated" };
+    const adminId = await authorizeTestAction();
+    if (!adminId) return { success: false, message: "Not authorized or test mode disabled" };
 
     try {
         const orgTypes = ["Community Centre", "Youth Services", "Environmental Group", "Arts Collective", "Sports Club"];
         const uniqueId = Date.now();
         const orgName = `${TEST_PREFIX} ${orgTypes[Math.floor(Math.random() * orgTypes.length)]} #${uniqueId % 1000}`;
 
-        const [newOrg] = await db.insert(organisations).values({
-            name: orgName,
-            slug: generateSlug(orgName),
-            description: "This is a test organisation created for admin testing purposes. It can be safely deleted.",
-        }).returning();
+        const newOrg = await getOrCreateTestOrganisation(orgName);
 
         await logAdminAction({
             adminId,
@@ -295,9 +309,12 @@ export async function createTestOrganisation(): Promise<{ success: boolean; mess
     }
 }
 
+/**
+ * Creates a new test volunteer profile and associated user.
+ */
 export async function createTestVolunteer(): Promise<{ success: boolean; message: string; id?: string }> {
-    const adminId = await getAdminId();
-    if (!adminId) return { success: false, message: "Not authenticated" };
+    const adminId = await authorizeTestAction();
+    if (!adminId) return { success: false, message: "Not authorized or test mode disabled" };
 
     try {
         const uniqueId = Date.now();
@@ -306,12 +323,7 @@ export async function createTestVolunteer(): Promise<{ success: boolean; message
         const firstName = names[Math.floor(Math.random() * names.length)];
 
         // Create user
-        const [newUser] = await db.insert(users).values({
-            email,
-            firstName,
-            lastName: `${TEST_PREFIX.replace(/[\[\]]/g, "")} Volunteer`,
-            accountType: "Individual",
-        }).returning();
+        const newUser = await getOrCreateTestUser(email, firstName, "Volunteer");
 
         // Create volunteer profile - using correct schema fields
         const [newVolunteer] = await db.insert(volunteerProfiles).values({

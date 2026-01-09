@@ -137,7 +137,7 @@ export default function TestAppsPage() {
         <div className="space-y-6 max-w-full">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    <FlaskConical className="h-8 w-8" />
+                    <FlaskConical className="h-8 w-8" aria-hidden="true" />
                     Test Apps
                 </h1>
                 <p className="text-muted-foreground">Generate test data to verify app functionality</p>
@@ -146,7 +146,7 @@ export default function TestAppsPage() {
             {/* Info Card */}
             <Card className="border-blue-500/50 bg-blue-500/5">
                 <CardContent className="flex items-start gap-4 py-4">
-                    <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <Info className="h-5 w-5 text-blue-600 mt-0.5" aria-hidden="true" />
                     <div>
                         <p className="font-medium text-blue-700">Test Data Information</p>
                         <p className="text-sm text-blue-600">
@@ -163,9 +163,9 @@ export default function TestAppsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             {app === "Local Music Network" ? (
-                                <Music className="h-5 w-5 text-purple-500" />
+                                <Music className="h-5 w-5 text-purple-500" aria-hidden="true" />
                             ) : (
-                                <Heart className="h-5 w-5 text-red-500" />
+                                <Heart className="h-5 w-5 text-red-500" aria-hidden="true" />
                             )}
                             {app}
                         </CardTitle>
@@ -196,7 +196,7 @@ export default function TestAppsPage() {
                                                 <Icon className={`h-5 w-5 ${item.color === "purple"
                                                     ? "text-purple-500"
                                                     : "text-red-500"
-                                                    }`} />
+                                                    }`} aria-hidden="true" />
                                             </div>
                                             <div className="flex-1">
                                                 <p className="font-medium">{item.name}</p>
@@ -213,9 +213,9 @@ export default function TestAppsPage() {
                                                 }`}>
                                                 <div className="flex items-center gap-2">
                                                     {result.success ? (
-                                                        <CheckCircle className="h-4 w-4" />
+                                                        <CheckCircle className="h-4 w-4" aria-hidden="true" />
                                                     ) : (
-                                                        <XCircle className="h-4 w-4" />
+                                                        <XCircle className="h-4 w-4" aria-hidden="true" />
                                                     )}
                                                     <span className="truncate">{result.message}</span>
                                                 </div>
@@ -231,7 +231,7 @@ export default function TestAppsPage() {
                                         >
                                             {isLoading ? (
                                                 <>
-                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
                                                     Creating...
                                                 </>
                                             ) : (

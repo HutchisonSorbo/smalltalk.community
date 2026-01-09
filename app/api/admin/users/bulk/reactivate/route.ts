@@ -6,7 +6,7 @@ import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes, BulkUser
 
 // CORS Headers
 const CORS_HEADERS = {
-    "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "*",
+    "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         // Log the action
         await logAdminAction({
             adminId,
-            action: AdminActions.USER_UNSUSPEND,
+            action: AdminActions.USER_BULK_UNSUSPEND,
             targetType: TargetTypes.USER,
             targetId: `bulk-reactivate-${reactivatedCount}`,
             details: { action: "reactivate", userCount: reactivatedCount, userIds: updatedUsers.map(u => u.id) },

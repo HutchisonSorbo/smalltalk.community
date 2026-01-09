@@ -6,7 +6,7 @@ import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes, BulkUser
 
 // CORS Headers
 const CORS_HEADERS = {
-    "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "*",
+    "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
@@ -21,7 +21,6 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
     // CSRF Protection: Validate Origin/Referer
     const origin = request.headers.get("origin");
-    const referer = request.headers.get("referer");
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (appUrl && origin && !origin.startsWith(appUrl)) {
