@@ -382,7 +382,7 @@ export class DatabaseStorage implements IStorage {
     const conditions = [eq(classifieds.isActive, true)];
 
     if (filters) {
-      if (filters.location) conditions.push(ilike(classifieds.location, `%${filters.location}%`));
+      if (filters.location) conditions.push(ilike(classifieds.location, `%${this._escapeLikeString(filters.location)}%`));
       if (filters.instrument) conditions.push(eq(classifieds.instrument, filters.instrument));
       if (filters.type) conditions.push(eq(classifieds.type, filters.type));
       if (filters.genre) conditions.push(eq(classifieds.genre, filters.genre));
@@ -453,10 +453,10 @@ export class DatabaseStorage implements IStorage {
     const conditions = [eq(professionalProfiles.isActive, true)];
     if (!filters) return conditions;
 
-    if (filters.location) conditions.push(ilike(professionalProfiles.location, `%${filters.location}%`));
+    if (filters.location) conditions.push(ilike(professionalProfiles.location, `%${this._escapeLikeString(filters.location)}%`));
     if (filters.role) conditions.push(eq(professionalProfiles.role, filters.role));
     if (filters.searchQuery) {
-      const query = `%${filters.searchQuery}%`;
+      const query = `%${this._escapeLikeString(filters.searchQuery)}%`;
       conditions.push(or(
         ilike(professionalProfiles.businessName, query),
         ilike(professionalProfiles.bio, query),
@@ -752,10 +752,10 @@ export class DatabaseStorage implements IStorage {
     if (!filters) return conditions;
 
     if (filters.location) {
-      conditions.push(ilike(bands.location, `%${filters.location}%`));
+      conditions.push(ilike(bands.location, `%${this._escapeLikeString(filters.location)}%`));
     }
     if (filters.searchQuery) {
-      const query = `%${filters.searchQuery}%`;
+      const query = `%${this._escapeLikeString(filters.searchQuery)}%`;
       const searchCondition = or(
         ilike(bands.name, query),
         ilike(bands.bio, query),
@@ -851,7 +851,7 @@ export class DatabaseStorage implements IStorage {
     if (!filters) return conditions;
 
     if (filters.location) {
-      conditions.push(ilike(gigs.location, `%${filters.location}%`));
+      conditions.push(ilike(gigs.location, `%${this._escapeLikeString(filters.location)}%`));
     }
     if (filters.genre) {
       conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
@@ -865,7 +865,7 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lt(gigs.date, new Date()));
     }
     if (filters.searchQuery) {
-      const query = `%${filters.searchQuery}%`;
+      const query = `%${this._escapeLikeString(filters.searchQuery)}%`;
       conditions.push(
         or(
           ilike(gigs.title, query),
