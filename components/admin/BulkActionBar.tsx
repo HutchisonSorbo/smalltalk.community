@@ -37,7 +37,11 @@ export function BulkActionBar({
 
     return (
         <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-center pointer-events-none">
-            <div className="bg-background border shadow-lg rounded-lg px-4 py-3 flex items-center gap-4 max-w-full overflow-x-auto pointer-events-auto">
+            <div
+                className="bg-background border shadow-lg rounded-lg px-4 py-3 flex items-center gap-4 max-w-full overflow-x-auto pointer-events-auto"
+                role="toolbar"
+                aria-label="Bulk actions"
+            >
                 <span className="text-sm font-medium whitespace-nowrap">
                     {selectedCount} item{selectedCount !== 1 ? 's' : ''} selected
                 </span>

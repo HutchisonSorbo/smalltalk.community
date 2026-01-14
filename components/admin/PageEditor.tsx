@@ -231,6 +231,7 @@ export function PageEditor({ initialData, isNew = false }: PageEditorProps) {
                             <div className="space-y-2">
                                 <Label htmlFor="content">Content</Label>
                                 <RichTextEditor
+                                    id="content"
                                     value={typeof formData.content === 'string' ? formData.content : ''}
                                     onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
                                     placeholder="Start writing your page content..."

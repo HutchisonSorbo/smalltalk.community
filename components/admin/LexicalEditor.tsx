@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { Bold, Italic, Heading2, List, Link as LinkIcon, Code } from 'lucide-react'
 
 interface RichTextEditorProps {
+    id?: string
+    ariaLabelledby?: string
     value?: string
     onChange?: (value: string) => void
     placeholder?: string
@@ -14,6 +16,8 @@ interface RichTextEditorProps {
 }
 
 export function LexicalEditorComponent({
+    id,
+    ariaLabelledby,
     value = '',
     onChange,
     placeholder = 'Start writing...',
@@ -53,7 +57,7 @@ export function LexicalEditorComponent({
     return (
         <div className={cn('border rounded-lg overflow-hidden', className)}>
             {/* Toolbar */}
-            <div className="flex items-center gap-1 border-b p-2 bg-muted/30">
+            <div className="flex items-center gap-1 border-b p-2 bg-muted/30" role="toolbar" aria-label="Text formatting">
                 <Button
                     type="button"
                     variant="ghost"
@@ -121,10 +125,13 @@ export function LexicalEditorComponent({
 
             {/* Editor */}
             <Textarea
+                id={id}
                 ref={textareaRef}
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}
                 placeholder={placeholder}
+                aria-label={ariaLabelledby ? undefined : (placeholder || "Editor")}
+                aria-labelledby={ariaLabelledby}
                 className="min-h-[300px] border-0 rounded-none focus-visible:ring-0 resize-none font-mono text-sm"
             />
         </div>

@@ -12,6 +12,11 @@ if (!payloadSecret) {
     throw new Error('PAYLOAD_SECRET is required but was not found in environment variables.')
 }
 
+const databaseUrl = process.env.DATABASE_URL
+if (!databaseUrl) {
+    throw new Error('DATABASE_URL is required but was not found in environment variables.')
+}
+
 export default buildConfig({
     // Admin panel is disabled - we use custom UI
     admin: {
@@ -180,10 +185,9 @@ export default buildConfig({
         },
     ],
 
-    // Database
     db: postgresAdapter({
         pool: {
-            connectionString: process.env.DATABASE_URL,
+            connectionString: databaseUrl,
         },
     }),
 
