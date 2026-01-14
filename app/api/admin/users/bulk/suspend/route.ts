@@ -5,27 +5,33 @@ import { inArray } from "drizzle-orm";
 import { verifyAdminRequest, logAdminAction, AdminActions, TargetTypes, BulkUserIdsSchema } from "@/lib/admin-utils";
 import { checkRateLimit } from "@/lib/rate-limiter";
 
-// Fail-fast: Validate NEXT_PUBLIC_APP_URL at module load
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
-if (!APP_URL) {
-    throw new Error("CRITICAL: NEXT_PUBLIC_APP_URL is not configured for bulk API routes");
+// Helper to get APP_URL and CORS headers at runtime (deferred to avoid build-time errors)
+function getAppUrlAndHeaders() {
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+    if (!APP_URL) {
+        throw new Error("CRITICAL: NEXT_PUBLIC_APP_URL is not configured for bulk API routes");
+    }
+    return {
+        APP_URL,
+        CORS_HEADERS: {
+            "Access-Control-Allow-Origin": APP_URL,
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Credentials": "true",
+        },
+    };
 }
-
-// CORS Headers
-const CORS_HEADERS = {
-    "Access-Control-Allow-Origin": APP_URL,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Credentials": "true",
-};
 
 // OPTIONS handler for CORS preflight
 export async function OPTIONS() {
+    const { CORS_HEADERS } = getAppUrlAndHeaders();
     return NextResponse.json({}, { headers: CORS_HEADERS });
 }
 
 // POST /api/admin/users/bulk/suspend - Suspend selected users
 export async function POST(request: NextRequest) {
+    const { APP_URL, CORS_HEADERS } = getAppUrlAndHeaders();
+
     // CSRF Protection: Strict Origin Match
     const origin = request.headers.get("origin");
     if (!origin || origin !== APP_URL) {

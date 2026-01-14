@@ -47,7 +47,17 @@ async function safeQueryCount(
     } catch (err) {
         const timestamp = new Date().toISOString();
         console.error(`[${timestamp}] [Admin Content] safeQueryCount failed for: ${context}`, err);
-        Sentry.captureException(err);
+
+        // Enhance observability with Sentry tags and scope
+        Sentry.withScope((scope) => {
+            scope.setTag("admin_section", "content_overview");
+            scope.setTag("query_context", context);
+            scope.setExtra("timestamp", timestamp);
+            Sentry.captureException(err);
+        });
+
+        // NOTE: Read-only fetch errors in Server Components are tracked via Sentry/console.
+        // We avoid logging to `admin_activity_log` for pure reads to prevent DB noise.
         return [{ count: 0 }];
     }
 }
@@ -88,17 +98,17 @@ async function getContentStats() {
         announcementsCount,
         activeAnnouncementsCount,
     ] = await Promise.all([
-        safeQueryCount(db.select({ count: count() }).from(musicianProfiles), "musicians"),
-        safeQueryCount(db.select({ count: count() }).from(bands), "bands"),
-        safeQueryCount(db.select({ count: count() }).from(gigs), "gigs"),
-        safeQueryCount(db.select({ count: count() }).from(classifieds), "classifieds"),
-        safeQueryCount(db.select({ count: count() }).from(professionalProfiles), "professionals"),
-        safeQueryCount(db.select({ count: count() }).from(marketplaceListings), "listings"),
-        safeQueryCount(db.select({ count: count() }).from(volunteerProfiles), "volunteers"),
-        safeQueryCount(db.select({ count: count() }).from(organisations), "organisations"),
-        safeQueryCount(db.select({ count: count() }).from(volunteerRoles), "volunteerRoles"),
-        safeQueryCount(db.select({ count: count() }).from(announcements), "announcements"),
-        safeQueryCount(db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)), "activeAnnouncements"),
+        safeQueryCount(db.select({ count: count() }).from(musicianProfiles), "musician profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(bands), "band profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(gigs), "gig listings count"),
+        safeQueryCount(db.select({ count: count() }).from(classifieds), "classified ads count"),
+        safeQueryCount(db.select({ count: count() }).from(professionalProfiles), "professional profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(marketplaceListings), "marketplace listings count"),
+        safeQueryCount(db.select({ count: count() }).from(volunteerProfiles), "volunteer profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(organisations), "organisation profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(volunteerRoles), "volunteer opportunities count"),
+        safeQueryCount(db.select({ count: count() }).from(announcements), "total announcements count"),
+        safeQueryCount(db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)), "active announcements count"),
     ]);
 
     return {
