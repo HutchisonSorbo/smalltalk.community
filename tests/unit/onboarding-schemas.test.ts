@@ -230,5 +230,50 @@ describe('onboarding-schemas', () => {
                 expect(result.success).toBe(true);
             });
         });
+
+        describe('organisation validation', () => {
+            it('should require organisationName when userType is organisation', () => {
+                const invalidOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(invalidOrg);
+                expect(result.success).toBe(false);
+                if (!result.success) {
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('Organisation name is required'))).toBe(true);
+                }
+            });
+
+            it('should accept organisation when organisationName is provided', () => {
+                const validOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    organisationName: 'Smalltalk Community',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(validOrg);
+                expect(result.success).toBe(true);
+            });
+
+            it('should not require organisationName when userType is individual', () => {
+                const validIndividual = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(validIndividual);
+                expect(result.success).toBe(true);
+            });
+        });
     });
 });

@@ -76,7 +76,13 @@ export function BulkActionBar({
                     </Button>
                 </div>
                 <div className="h-4 w-px bg-border shrink-0" />
-                <Button variant="ghost" size="sm" onClick={onClearSelection} className="whitespace-nowrap shrink-0">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onClearSelection}
+                    className="whitespace-nowrap shrink-0"
+                    disabled={isProcessing}
+                >
                     Clear
                 </Button>
             </div>

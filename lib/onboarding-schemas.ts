@@ -28,6 +28,14 @@ export const registerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
+}).refine((data) => {
+    if (data.userType === "organisation" && !data.organisationName) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Organisation name is required for organisation accounts",
+    path: ["organisationName"],
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
