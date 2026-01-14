@@ -47,7 +47,7 @@ export default async function SettingsPage() {
 
     const settings = settingsResult.data;
     const flags = flagsResult.data;
-    const enabledFlags = flags.filter(f => f.isEnabled).length;
+    const enabledFlags = flags.filter((f: any) => f.isEnabled).length;
 
     return (
         <div className="space-y-6">
@@ -123,7 +123,7 @@ export default async function SettingsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {settings.map((setting) => (
+                                {settings.map((setting: any) => (
                                     <TableRow key={setting.id}>
                                         <TableCell>
                                             <code className="text-sm bg-muted px-2 py-1 rounded">

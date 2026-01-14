@@ -51,8 +51,8 @@ export async function checkRateLimit(
     try {
         // Use separate upsert queries depending on whether we're tracking by userId or identifier
         // This ensures the ON CONFLICT targets the correct unique constraint
-        const result = isUuid
-            ? await db.execute<{ hits: number }>(sql`
+        const result: any = isUuid
+            ? await db.execute(sql`
                 INSERT INTO rate_limits (user_id, identifier, type, hits, window_start)
                 VALUES (${key}, NULL, ${type}, 1, NOW())
                 ON CONFLICT (user_id, type) WHERE user_id IS NOT NULL
@@ -69,7 +69,7 @@ export async function checkRateLimit(
                     END
                 RETURNING hits
             `)
-            : await db.execute<{ hits: number }>(sql`
+            : await db.execute(sql`
                 INSERT INTO rate_limits (user_id, identifier, type, hits, window_start)
                 VALUES (NULL, ${key}, ${type}, 1, NOW())
                 ON CONFLICT (identifier, type) WHERE identifier IS NOT NULL

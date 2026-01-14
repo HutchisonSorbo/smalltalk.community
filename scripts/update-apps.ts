@@ -80,7 +80,7 @@ async function updateApps() {
     // 3. Verify
     const activeApps = await db.select().from(apps).where(eq(apps.isActive, true));
     console.log(`\n✨ Done! Active apps: ${activeApps.length}`);
-    activeApps.forEach(a => console.log(`   - ${a.name} → ${a.route}`));
+    activeApps.forEach((a: any) => console.log(`   - ${a.name} → ${a.route}`));
 
     process.exit(0);
 }

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         let age = 0;
 
         if (accountType === 'Individual' && dateOfBirth) {
-            const dob = new Date(dateOfBirth);
+            const dob = new Date(dateOfBirth as any);
             const today = new Date();
             age = today.getFullYear() - dob.getFullYear();
             const m = today.getMonth() - dob.getMonth();
@@ -65,7 +65,9 @@ export async function POST(req: Request) {
 
         // 3. Check if user already exists in public.users (Validation)
         // Supabase Auth handles unique email, but checking here saves an API call to Supabase if local DB is sync'd
-        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1).then(res => res[0]);
+        const existingUser = await db.query.users.findFirst({
+            where: (u: any, { eq }: any) => eq(u.email, email),
+        });
 
         if (existingUser) {
             return NextResponse.json({ error: "User already exists" }, { status: 409 });
@@ -73,8 +75,8 @@ export async function POST(req: Request) {
 
         // 4. Create User in Supabase Auth
         const { data: authData, error: authError } = await supabase.auth.signUp({
-            email,
-            password,
+            email: email as string,
+            password: password as string,
             options: {
                 data: {
                     first_name: firstName,
@@ -103,7 +105,7 @@ export async function POST(req: Request) {
             email: email,
             firstName: firstName,
             lastName: lastName,
-            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth as any) : null,
             userType: userType || 'individual', // Default
             accountType: accountType,
             accountTypeSpecification: accountTypeSpecification,
@@ -117,7 +119,7 @@ export async function POST(req: Request) {
             set: {
                 firstName: firstName,
                 lastName: lastName,
-                dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+                dateOfBirth: dateOfBirth ? new Date(dateOfBirth as any) : null,
                 userType: userType || 'individual',
                 accountType: accountType,
                 accountTypeSpecification: accountTypeSpecification,

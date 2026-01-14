@@ -236,7 +236,7 @@ export default async function UserDetailPage({
                                 <div className="flex-1">
                                     <p className="font-medium">Band Memberships</p>
                                     <div className="flex flex-wrap gap-2 mt-1">
-                                        {userBands.map((band) => (
+                                        {userBands.map((band: any) => (
                                             <Badge key={band.bandId} variant="outline">
                                                 {band.bandName} ({band.role})
                                             </Badge>
@@ -263,7 +263,7 @@ export default async function UserDetailPage({
                         <CardContent>
                             {userRoles.length > 0 ? (
                                 <div className="space-y-2">
-                                    {userRoles.map((role) => (
+                                    {userRoles.map((role: any) => (
                                         <div key={role.roleId} className="flex items-center justify-between p-2 bg-muted/50 rounded">
                                             <div>
                                                 <p className="font-medium capitalize">{role.roleName?.replace(/_/g, " ")}</p>
@@ -290,7 +290,7 @@ export default async function UserDetailPage({
                         <CardContent>
                             {userAppsList.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
-                                    {userAppsList.map((app) => (
+                                    {userAppsList.map((app: any) => (
                                         <Badge key={app.appId} variant="outline" className="gap-2 py-1.5">
                                             {app.appIcon && (
                                                 <img src={app.appIcon} alt="" className="h-4 w-4 rounded" />

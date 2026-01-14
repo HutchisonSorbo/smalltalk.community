@@ -32,8 +32,8 @@ async function getApps() {
 export default async function AppsAdminPage() {
     const { apps: allApps, error } = await getApps();
 
-    const activeCount = allApps.filter(a => a.isActive).length;
-    const betaCount = allApps.filter(a => a.isBeta).length;
+    const activeCount = allApps.filter((a: any) => a.isActive).length;
+    const betaCount = allApps.filter((a: any) => a.isBeta).length;
 
     return (
         <div className="space-y-6">
@@ -103,7 +103,7 @@ export default async function AppsAdminPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {allApps.length > 0 ? allApps.map((app) => (
+                            {allApps.length > 0 ? allApps.map((app: any) => (
                                 <TableRow key={app.id}>
                                     <TableCell>
                                         <div className="flex items-center gap-3">

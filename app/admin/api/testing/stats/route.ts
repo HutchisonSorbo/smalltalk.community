@@ -21,7 +21,7 @@ export async function GET() {
         // Helper to safely count from a table
         const safeCount = async (queryFn: () => Promise<{ count: string }[] | unknown>, tableName?: string) => {
             try {
-                const result = await queryFn();
+                const result = await queryFn() as any[];
                 if (Array.isArray(result) && result.length > 0) {
                     return parseInt(result[0].count, 10) || 0;
                 }

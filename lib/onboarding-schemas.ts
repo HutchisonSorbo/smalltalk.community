@@ -4,7 +4,7 @@ import { users, userOnboardingResponses, userPrivacySettings, userNotificationPr
 
 // --- Registration Schema ---
 // Used for step 1 account creation
-export const registerSchema = createInsertSchema(users).pick({
+export const registerSchema = (createInsertSchema(users) as any).pick({
     firstName: true,
     lastName: true,
     dateOfBirth: true, // We will validate age in the handler but basic schema is date
@@ -29,7 +29,7 @@ export const registerSchema = createInsertSchema(users).pick({
         const date = new Date(val);
         return !isNaN(date.getTime()) && date < new Date();
     }, "Invalid date of birth"),
-}).refine((data) => data.password === data.confirmPassword, {
+}).refine((data: any) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
 });
@@ -73,11 +73,11 @@ export type IntentInput = z.infer<typeof intentSchema>;
 // Used for step 4
 // We can combine privacy and notifications update in one schema for the frontend form
 export const privacyDetailsSchema = z.object({
-    privacySettings: createInsertSchema(userPrivacySettings).omit({
+    privacySettings: (createInsertSchema(userPrivacySettings) as any).omit({
         id: true, userId: true, createdAt: true, settingsUpdatedAt: true
     }).partial(),
 
-    notificationPreferences: createInsertSchema(userNotificationPreferences).omit({
+    notificationPreferences: (createInsertSchema(userNotificationPreferences) as any).omit({
         id: true, userId: true, createdAt: true, preferencesUpdatedAt: true
     }).partial(),
 });

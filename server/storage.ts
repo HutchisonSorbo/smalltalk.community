@@ -303,8 +303,8 @@ export class DatabaseStorage implements IStorage {
       // Optimization: Use prefix match for name (more efficient index usage)
       // Only use wildcard if the user intends it or for description fields
       const isPrefix = filters.searchQuery.length >= 3;
-      const nameCondition = isPrefix 
-        ? ilike(musicianProfiles.name, `${query}%`) 
+      const nameCondition = isPrefix
+        ? ilike(musicianProfiles.name, `${query}%`)
         : ilike(musicianProfiles.name, `%${query}%`);
 
       const searchCondition = or(
@@ -896,7 +896,7 @@ export class DatabaseStorage implements IStorage {
       .set({ ...review, updatedAt: new Date() })
       .where(eq(reviews.id, id))
       .returning();
-    
+
     if (updated) {
       this._invalidateRatingCache(updated.targetType, updated.targetId);
     }
@@ -946,7 +946,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(reviews)
       .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
-    
+
     const data = {
       average: result[0]?.average || 0,
       count: result[0]?.count || 0,
@@ -1102,7 +1102,7 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`User ${oldId} not found`);
     }
 
-    await db.transaction(async (tx) => {
+    await db.transaction(async (tx: any) => {
       // 1. Create new user with temp email
       const tempEmail = `migrated_${Date.now()}_${oldUser.email}`;
       await tx.insert(users).values({

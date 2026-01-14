@@ -40,7 +40,7 @@ export default async function BandsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {allBands.map((band) => (
+                        {allBands.map((band: any) => (
                             <TableRow key={band.id}>
                                 <TableCell>
                                     <Avatar className="h-9 w-9">
@@ -56,7 +56,7 @@ export default async function BandsPage() {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-wrap gap-1">
-                                        {band.genres.slice(0, 3).map((g) => (
+                                        {band.genres.slice(0, 3).map((g: any) => (
                                             <Badge key={g} variant="secondary" className="text-xs">
                                                 {g}
                                             </Badge>

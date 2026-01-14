@@ -49,7 +49,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid data", errors: parsed.error.errors },
+                { message: "Invalid data", errors: parsed.error.issues },
                 { status: 400 }
             );
         }

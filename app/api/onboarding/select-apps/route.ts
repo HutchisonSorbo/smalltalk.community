@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         const { selectedAppIds } = result.data;
         const userId = user.id;
 
-        await db.transaction(async (tx) => {
+        await db.transaction(async (tx: any) => {
             // 1. Clear existing user apps (if any) to support re-selection or just upsert?
             // Usually re-selection in onboarding replaces previous.
             await tx.delete(userApps).where(eq(userApps.userId, userId));
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             // 2. Insert new selections
             if (selectedAppIds.length > 0) {
                 await tx.insert(userApps).values(
-                    selectedAppIds.map((appId, index) => ({
+                    selectedAppIds.map((appId: any, index: number) => ({
                         userId,
                         appId,
                         position: index,

@@ -166,7 +166,7 @@ export default async function SecurityDashboardPage() {
                 <CardContent>
                     {recentEvents.length > 0 ? (
                         <div className="space-y-3">
-                            {recentEvents.map((event) => (
+                            {recentEvents.map((event: any) => (
                                 <div key={event.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50">
                                     <Activity className="h-4 w-4 mt-1 text-muted-foreground" />
                                     <div className="flex-1 min-w-0">

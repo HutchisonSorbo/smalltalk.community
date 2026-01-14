@@ -42,7 +42,7 @@ export async function checkGigPermission(gigId: string, userId: string) {
     if (!gig) return false;
 
     if (gig.creatorId === userId) return true;
-    if (gig.managers.some(m => m.userId === userId)) return true;
+    if (gig.managers.some((m: any) => m.userId === userId)) return true;
 
     return false;
 }

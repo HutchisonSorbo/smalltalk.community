@@ -23,7 +23,7 @@ import { genres, insertBandSchema } from "@shared/schema";
 import { TagInput } from "@/components/ui/tag-input";
 import type { Band } from "@shared/schema";
 
-const formSchema = insertBandSchema.omit({ userId: true }).extend({
+const formSchema = (insertBandSchema as any).omit({ userId: true }).extend({
     name: z.string().min(2, "Name must be at least 2 characters"),
     bio: z.string().optional(),
     genres: z.array(z.string()).min(1, "Select at least one genre"),
@@ -41,7 +41,7 @@ const formSchema = insertBandSchema.omit({ userId: true }).extend({
         soundcloud: z.string().optional(),
         appleMusic: z.string().optional(),
     }).optional(),
-});
+}) as any;
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -233,7 +233,7 @@ export function BandProfileForm({ band, onSuccess, onCancel }: BandProfileFormPr
                                                             if (checked) {
                                                                 field.onChange([...current, genre]);
                                                             } else {
-                                                                field.onChange(current.filter((v) => v !== genre));
+                                                                field.onChange(current.filter((v: any) => v !== genre));
                                                             }
                                                         }}
                                                         data-testid={`checkbox-genre-${genre.toLowerCase().replace(/\s+/g, "-")}`}

@@ -54,7 +54,7 @@ export async function PATCH(
         const parseResult = updateFeatureFlagSchema.safeParse(body);
         if (!parseResult.success) {
             return NextResponse.json(
-                { error: parseResult.error.errors[0]?.message || "isEnabled must be boolean" },
+                { error: parseResult.error.issues[0]?.message || "isEnabled must be boolean" },
                 { status: 400 }
             );
         }

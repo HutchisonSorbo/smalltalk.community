@@ -19,7 +19,7 @@ export async function UserGrowthSection() {
     const growthData = await getCachedUserGrowthData();
 
     // Calculate trend
-    const totalNewUsers = growthData.reduce((sum, d) => sum + d.users, 0);
+    const totalNewUsers = growthData.reduce((sum: number, d: any) => sum + d.users, 0);
     const avgPerDay = growthData.length > 0 ? Math.round(totalNewUsers / growthData.length * 10) / 10 : 0;
 
     return (

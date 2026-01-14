@@ -61,7 +61,7 @@ export async function PUT(
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid data", errors: parsed.error.errors },
+                { message: "Invalid data", errors: parsed.error.issues },
                 { status: 400 }
             );
         }

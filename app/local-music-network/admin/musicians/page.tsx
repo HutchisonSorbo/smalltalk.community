@@ -39,7 +39,7 @@ export default async function MusiciansPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {musicians.map((musician) => (
+                        {musicians.map((musician: any) => (
                             <TableRow key={musician.id}>
                                 <TableCell>
                                     <Avatar className="h-9 w-9">
@@ -55,7 +55,7 @@ export default async function MusiciansPage() {
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-wrap gap-1">
-                                        {musician.instruments.slice(0, 3).map((inst) => (
+                                        {musician.instruments.slice(0, 3).map((inst: any) => (
                                             <Badge key={inst} variant="secondary" className="text-xs">
                                                 {inst}
                                             </Badge>

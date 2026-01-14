@@ -44,7 +44,7 @@ export async function RecentUsers() {
             <CardContent>
                 {recentUsers.length > 0 ? (
                     <div className="space-y-4">
-                        {recentUsers.map((user) => (
+                        {recentUsers.map((user: any) => (
                             <div key={user.id} className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage src={user.profileImageUrl || undefined} />

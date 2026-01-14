@@ -38,7 +38,7 @@ export default async function GigsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {allGigs.map((gig) => (
+                        {allGigs.map((gig: any) => (
                             <TableRow key={gig.id}>
                                 <TableCell>
                                     <div className="flex flex-col">

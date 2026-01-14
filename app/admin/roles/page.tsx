@@ -36,9 +36,9 @@ async function getRoles() {
             .from(sysUserRoles)
             .groupBy(sysUserRoles.roleId);
 
-        const roleUserMap = new Map(roleUsers.map(r => [r.roleId, r.count]));
+        const roleUserMap = new Map(roleUsers.map((r: any) => [r.roleId, r.count]));
 
-        return roles.map(role => ({
+        return roles.map((role: any) => ({
             ...role,
             userCount: roleUserMap.get(role.id) ?? 0,
         }));
@@ -101,7 +101,7 @@ export default async function RolesAdminPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {roles.reduce((sum, r) => sum + r.userCount, 0)}
+                            {roles.reduce((sum: number, r: any) => sum + r.userCount, 0)}
                         </div>
                     </CardContent>
                 </Card>
@@ -111,7 +111,7 @@ export default async function RolesAdminPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-green-600">
-                            {roles.filter(r => r.userCount > 0).length}
+                            {roles.filter((r: any) => r.userCount > 0).length}
                         </div>
                     </CardContent>
                 </Card>
@@ -138,7 +138,7 @@ export default async function RolesAdminPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {roles.map((role) => (
+                                {roles.map((role: any) => (
                                     <TableRow key={role.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export default async function RolesAdminPage() {
                 <CardContent>
                     {recentMembers.length > 0 ? (
                         <div className="space-y-4">
-                            {recentMembers.map((member) => (
+                            {recentMembers.map((member: any) => (
                                 <div key={`${member.roleId}-${member.userId}`} className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={member.userImage || undefined} />

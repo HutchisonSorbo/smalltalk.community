@@ -29,7 +29,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { marketplaceCategories, itemConditions, insertMarketplaceListingSchema } from "@shared/schema";
 import type { MarketplaceListing } from "@shared/schema";
 
-const formSchema = insertMarketplaceListingSchema.omit({ userId: true }).extend({
+const formSchema = (insertMarketplaceListingSchema as any).omit({ userId: true }).extend({
   title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().optional(),
   category: z.string().min(1, "Please select a category"),
@@ -40,7 +40,7 @@ const formSchema = insertMarketplaceListingSchema.omit({ userId: true }).extend(
   contactEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   contactPhone: z.string().optional(),
   imageUrls: z.array(z.string()).optional(),
-});
+}) as any;
 
 type FormData = z.infer<typeof formSchema>;
 

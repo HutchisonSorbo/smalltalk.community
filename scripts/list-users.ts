@@ -32,9 +32,9 @@ async function main() {
         .innerJoin(sysRoles, eq(sysUserRoles.roleId, sysRoles.id))
         .where(eq(sysUserRoles.userId, user.id));
 
-    console.log("Assigned RBAC Roles:", roles.map(r => r.roleName).join(", ") || "None");
+    console.log("Assigned RBAC Roles:", roles.map((r: any) => r.roleName).join(", ") || "None");
 
-    if (user.isAdmin && roles.some(r => r.roleName === 'super_admin')) {
+    if (user.isAdmin && roles.some((r: any) => r.roleName === 'super_admin')) {
         console.log("✅ Promotion verified successfully.");
     } else {
         console.log("❌ Promotion verification failed.");

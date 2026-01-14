@@ -60,7 +60,7 @@ export async function PATCH(
         const parseResult = updateAnnouncementSchema.safeParse(body);
         if (!parseResult.success) {
             return NextResponse.json(
-                { error: parseResult.error.errors[0]?.message || "Invalid input" },
+                { error: parseResult.error.issues[0]?.message || "Invalid input" },
                 { status: 400 }
             );
         }

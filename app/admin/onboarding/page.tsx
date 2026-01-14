@@ -45,7 +45,7 @@ async function getOnboardingStats() {
         .from(userOnboardingResponses);
 
     const questionCounts: Record<string, number> = {};
-    allResponses.forEach(r => {
+    allResponses.forEach((r: any) => {
         questionCounts[r.questionKey] = (questionCounts[r.questionKey] || 0) + 1;
     });
 
@@ -147,7 +147,7 @@ export default async function OnboardingAdminPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {responses.length > 0 ? responses.map((row) => (
+                            {responses.length > 0 ? responses.map((row: any) => (
                                 <TableRow key={row.id}>
                                     <TableCell>
                                         <div className="font-medium">

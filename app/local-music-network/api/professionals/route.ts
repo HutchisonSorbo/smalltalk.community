@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         if (!parsed.success) {
             return NextResponse.json({
                 message: "Invalid filter parameters",
-                errors: parsed.error.errors
+                errors: parsed.error.issues
             }, { status: 400 });
         }
 

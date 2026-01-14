@@ -50,7 +50,7 @@ export async function DELETE(request: NextRequest) {
         const parseResult = bulkDeleteSchema.safeParse(body);
         if (!parseResult.success) {
             return NextResponse.json(
-                { error: parseResult.error.errors[0]?.message || "Invalid input" },
+                { error: parseResult.error.issues[0]?.message || "Invalid input" },
                 { status: 400 }
             );
         }
@@ -86,7 +86,7 @@ export async function DELETE(request: NextRequest) {
             targetId: "bulk",
             details: {
                 deletedCount: usersToDelete.length,
-                deletedUsers: usersToDelete.map(u => ({
+                deletedUsers: usersToDelete.map((u: any) => ({
                     id: u.id,
                     email: u.email,
                     name: `${u.firstName || ""} ${u.lastName || ""}`.trim(),

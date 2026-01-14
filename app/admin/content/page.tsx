@@ -236,7 +236,7 @@ export default async function ContentOverviewPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {Object.values(stats).reduce((a, b) => a + b, 0) - stats.activeAnnouncements}
+                            {Object.values(stats).reduce((a: number, b: number) => a + b, 0) - stats.activeAnnouncements}
                         </div>
                     </CardContent>
                 </Card>
@@ -283,7 +283,7 @@ export default async function ContentOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {localMusicNetworkContent.map((item) => (
+                        {localMusicNetworkContent.map((item: any) => (
                             <div
                                 key={item.title}
                                 className="flex items-center gap-4 p-4 rounded-lg border bg-card"
@@ -313,7 +313,7 @@ export default async function ContentOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-3">
-                        {volunteerPassportContent.map((item) => (
+                        {volunteerPassportContent.map((item: any) => (
                             <div
                                 key={item.title}
                                 className="flex items-center gap-4 p-4 rounded-lg border bg-card"
@@ -350,7 +350,7 @@ export default async function ContentOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2">
-                        {platformContent.map((item) => (
+                        {platformContent.map((item: any) => (
                             <div
                                 key={item.title}
                                 className="flex items-center gap-4 p-4 rounded-lg border bg-card"

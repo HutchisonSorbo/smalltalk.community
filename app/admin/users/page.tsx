@@ -151,9 +151,9 @@ async function getUserProfiles(userIds: string[]) {
         ]);
 
         return {
-            musicians: new Set(musicians.map(m => m.userId)),
-            volunteers: new Set(volunteers.map(v => v.userId)),
-            professionals: new Set(professionals.map(p => p.userId)),
+            musicians: new Set(musicians.map((m: any) => m.userId)),
+            volunteers: new Set(volunteers.map((v: any) => v.userId)),
+            professionals: new Set(professionals.map((p: any) => p.userId)),
         };
     } catch (error) {
         console.error("[Admin Users] Error fetching user profiles:", error);
@@ -173,7 +173,7 @@ export default async function UsersAdminPage({
     const params = await searchParams;
     const { users: allUsers, total, page, pageSize, totalPages, error } = await getUsers(params);
     const stats = await getUserStats();
-    const userIds = allUsers.map(u => u.id);
+    const userIds = allUsers.map((u: any) => u.id);
     const profiles = await getUserProfiles(userIds);
 
     const accountTypes = ["Individual", "Business", "Government Organisation", "Charity", "Other"];
@@ -306,7 +306,7 @@ export default async function UsersAdminPage({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {allUsers.map((user) => (
+                            {allUsers.map((user: any) => (
                                 <TableRow key={user.id}>
                                     <TableCell>
                                         <div className="flex items-center gap-3">

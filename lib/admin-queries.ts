@@ -58,7 +58,7 @@ export async function getUserGrowthData(
             .groupBy(dateTruncExpr)
             .orderBy(dateTruncExpr);
 
-        return result.map((row) => {
+        return result.map((row: any) => {
             const date = new Date(row.period);
             return {
                 date: date.toISOString(),
@@ -108,7 +108,7 @@ export async function getUsersByAccountType(): Promise<{ type: string; count: nu
             .from(users)
             .groupBy(accountTypeExpr);
 
-        return result.map((row) => ({
+        return result.map((row: any) => ({
             type: row.accountType,
             count: row.count,
         }));

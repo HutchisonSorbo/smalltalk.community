@@ -116,7 +116,7 @@ export const insertMusicianProfileSchema = createInsertSchema(musicianProfiles).
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertMusicianProfile = z.infer<typeof insertMusicianProfileSchema>;
 export type MusicianProfile = typeof musicianProfiles.$inferSelect;
@@ -157,7 +157,7 @@ export const insertMarketplaceListingSchema = createInsertSchema(marketplaceList
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertMarketplaceListing = z.infer<typeof insertMarketplaceListingSchema>;
 export type MarketplaceListing = typeof marketplaceListings.$inferSelect;
@@ -191,7 +191,7 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
@@ -227,7 +227,7 @@ export const contactRequestsRelations = relations(contactRequests, ({ one }) => 
 export const insertContactRequestSchema = createInsertSchema(contactRequests).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
 export type ContactRequest = typeof contactRequests.$inferSelect;
@@ -374,7 +374,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   id: true,
   createdAt: true,
   isRead: true,
-});
+}) as any;
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
@@ -420,7 +420,7 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
@@ -472,7 +472,7 @@ export const insertBandSchema = createInsertSchema(bands).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertBand = z.infer<typeof insertBandSchema>;
 export type Band = typeof bands.$inferSelect;
@@ -527,7 +527,7 @@ export const bandMembersRelations = relations(bandMembers, ({ one }) => ({
 export const insertBandMemberSchema = createInsertSchema(bandMembers).omit({
   id: true,
   joinedAt: true,
-});
+}) as any;
 
 export type InsertBandMember = z.infer<typeof insertBandMemberSchema>;
 export type BandMember = typeof bandMembers.$inferSelect;
@@ -610,7 +610,7 @@ export const insertGigSchema = createInsertSchema(gigs).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertGig = z.infer<typeof insertGigSchema>;
 export type Gig = typeof gigs.$inferSelect;
@@ -644,7 +644,7 @@ export const insertReportSchema = createInsertSchema(reports).omit({
   createdAt: true,
   updatedAt: true,
   status: true,
-});
+}) as any;
 
 export type InsertReport = z.infer<typeof insertReportSchema>;
 export type Report = typeof reports.$inferSelect;
@@ -683,7 +683,7 @@ export const insertClassifiedSchema = createInsertSchema(classifieds).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertClassified = z.infer<typeof insertClassifiedSchema>;
 export type Classified = typeof classifieds.$inferSelect;
@@ -753,7 +753,7 @@ export const insertProfessionalProfileSchema = createInsertSchema(professionalPr
   createdAt: true,
   updatedAt: true,
   verified: true
-});
+}) as any;
 
 export type InsertProfessionalProfile = z.infer<typeof insertProfessionalProfileSchema>;
 export type ProfessionalProfile = typeof professionalProfiles.$inferSelect;
@@ -788,7 +788,7 @@ export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type Announcement = typeof announcements.$inferSelect;
@@ -986,7 +986,7 @@ export const insertVolunteerProfileSchema = createInsertSchema(volunteerProfiles
   createdAt: true,
   updatedAt: true,
   isVerified: true
-});
+}) as any;
 
 export type InsertVolunteerProfile = z.infer<typeof insertVolunteerProfileSchema>;
 export type VolunteerProfile = typeof volunteerProfiles.$inferSelect;
@@ -1018,7 +1018,7 @@ export const insertOrganisationSchema = createInsertSchema(organisations).omit({
   createdAt: true,
   updatedAt: true,
   isVerified: true,
-});
+}) as any;
 
 export type InsertOrganisation = z.infer<typeof insertOrganisationSchema>;
 export type Organisation = typeof organisations.$inferSelect;
@@ -1052,7 +1052,7 @@ export const organisationMembersRelations = relations(organisationMembers, ({ on
 export const insertOrganisationMemberSchema = createInsertSchema(organisationMembers).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type InsertOrganisationMember = z.infer<typeof insertOrganisationMemberSchema>;
 export type OrganisationMember = typeof organisationMembers.$inferSelect;
@@ -1131,7 +1131,7 @@ export const insertCredentialSchema = createInsertSchema(credentials).omit({
   updatedAt: true,
   status: true,
   verifiedAt: true,
-});
+}) as any;
 
 export type InsertCredential = z.infer<typeof insertCredentialSchema>;
 export type Credential = typeof credentials.$inferSelect;
@@ -1165,7 +1165,7 @@ export const insertVolunteerRoleSchema = createInsertSchema(volunteerRoles).omit
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertVolunteerRole = z.infer<typeof insertVolunteerRoleSchema>;
 export type VolunteerRole = typeof volunteerRoles.$inferSelect;
@@ -1201,7 +1201,7 @@ export const insertVolunteerApplicationSchema = createInsertSchema(volunteerAppl
   createdAt: true,
   updatedAt: true,
   status: true,
-});
+}) as any;
 
 export type InsertVolunteerApplication = z.infer<typeof insertVolunteerApplicationSchema>;
 export type VolunteerApplication = typeof volunteerApplications.$inferSelect;
@@ -1271,7 +1271,7 @@ export const insertAppSchema = createInsertSchema(apps).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type App = typeof apps.$inferSelect;
 export type InsertApp = z.infer<typeof insertAppSchema>;
@@ -1279,7 +1279,7 @@ export type InsertApp = z.infer<typeof insertAppSchema>;
 export const insertUserAppSchema = createInsertSchema(userApps).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type UserApp = typeof userApps.$inferSelect;
 export type InsertUserApp = z.infer<typeof insertUserAppSchema>;
@@ -1326,7 +1326,7 @@ export const adminActivityLogRelations = relations(adminActivityLog, ({ one }) =
 export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLog).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type AdminActivityLog = typeof adminActivityLog.$inferSelect;
 export type InsertAdminActivityLog = z.infer<typeof insertAdminActivityLogSchema>;
@@ -1355,7 +1355,7 @@ export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
 export const insertSiteSettingSchema = createInsertSchema(siteSettings).omit({
   id: true,
   updatedAt: true,
-});
+}) as any;
 
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
@@ -1380,7 +1380,7 @@ export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;

@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid data", errors: parsed.error.errors },
+                { message: "Invalid data", errors: parsed.error.issues },
                 { status: 400 }
             );
         }

@@ -94,7 +94,7 @@ export default async function OrganisationsAdminPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {orgs.map((org) => (
+                                {orgs.map((org: any) => (
                                     <TableRow key={org.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">

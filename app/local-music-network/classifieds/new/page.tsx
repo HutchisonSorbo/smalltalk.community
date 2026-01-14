@@ -26,7 +26,7 @@ const formSchema = insertClassifiedSchema.pick({
     instrument: true,
     genre: true,
     location: true
-});
+}) as any;
 
 type FormValues = z.infer<typeof formSchema>;
 

@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
         const result = formSchema.safeParse({ password, confirmPassword });
         if (!result.success) {
             const formattedErrors: { password?: string; confirmPassword?: string } = {};
-            result.error.errors.forEach((err) => {
+            result.error.issues.forEach((err) => {
                 if (err.path[0] === "password") formattedErrors.password = err.message;
                 if (err.path[0] === "confirmPassword") formattedErrors.confirmPassword = err.message;
             });

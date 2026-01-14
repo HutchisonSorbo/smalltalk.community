@@ -274,7 +274,7 @@ export default async function MetricsPage() {
                 <CardContent>
                     {appUsage.length > 0 ? (
                         <div className="space-y-3">
-                            {appUsage.map((app, index) => {
+                            {appUsage.map((app: any, index: number) => {
                                 const maxInstalls = appUsage[0]?.installs || 1;
                                 const percentage = (app.installs / maxInstalls) * 100;
 

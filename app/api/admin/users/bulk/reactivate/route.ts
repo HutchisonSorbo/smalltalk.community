@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         const validation = BulkUserIdsSchema.safeParse(body);
         if (!validation.success) {
             return NextResponse.json(
-                { error: validation.error.errors[0]?.message || "Invalid input" },
+                { error: validation.error.issues[0]?.message || "Invalid input" },
                 { status: 400, headers: CORS_HEADERS }
             );
         }
@@ -71,12 +71,12 @@ export async function POST(request: NextRequest) {
             .where(inArray(users.id, userIds));
 
         const eligibleUserIds = usersToCheck
-            .filter(u => u.isSuspended && !u.isAdmin)
-            .map(u => u.id);
+            .filter((u: any) => u.isSuspended && !u.isAdmin)
+            .map((u: any) => u.id);
 
-        const excludedByAdmin = usersToCheck.filter(u => u.isAdmin).length;
-        const excludedNotSuspended = usersToCheck.filter(u => !u.isSuspended).length;
-        const excludedNotFound = userIds.filter(id => !usersToCheck.some(u => u.id === id)).length;
+        const excludedByAdmin = usersToCheck.filter((u: any) => u.isAdmin).length;
+        const excludedNotSuspended = usersToCheck.filter((u: any) => !u.isSuspended).length;
+        const excludedNotFound = userIds.filter((id: string) => !usersToCheck.some((u: any) => u.id === id)).length;
 
         if (eligibleUserIds.length === 0) {
             return NextResponse.json({
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
                 action: "reactivate",
                 userCount: reactivatedCount,
                 // Partial IDs for tracking without full data exposure
-                obfuscatedUserIds: updatedUsers.map(u => `${u.id.substring(0, 8)}...`),
+                obfuscatedUserIds: updatedUsers.map((u: any) => `${u.id.substring(0, 8)}...`),
                 ignoredCount: userIds.length - eligibleUserIds.length,
                 exclusions: {
                     admin: excludedByAdmin,

@@ -58,7 +58,7 @@ function getStatusBadgeVariant(status: string): "default" | "secondary" | "destr
 export default async function ReportsAdminPage() {
     const allReports = await getReports();
 
-    const pendingCount = allReports.filter(r => r.status === "pending").length;
+    const pendingCount = allReports.filter((r: any) => r.status === "pending").length;
 
     return (
         <div className="space-y-6">
@@ -104,7 +104,7 @@ export default async function ReportsAdminPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {allReports.length > 0 ? allReports.map((report) => (
+                            {allReports.length > 0 ? allReports.map((report: any) => (
                                 <TableRow key={report.id}>
                                     <TableCell>
                                         <div className="text-sm">

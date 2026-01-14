@@ -38,15 +38,15 @@ export async function GET(request: NextRequest) {
         let filtered = roles;
 
         if (orgId) {
-            filtered = filtered.filter(r => r.organisationId === orgId);
+            filtered = filtered.filter((r: any) => r.organisationId === orgId);
         }
 
         if (roleType) {
-            filtered = filtered.filter(r => r.roleType === roleType);
+            filtered = filtered.filter((r: any) => r.roleType === roleType);
         }
 
         if (locationType) {
-            filtered = filtered.filter(r => r.locationType === locationType);
+            filtered = filtered.filter((r: any) => r.locationType === locationType);
         }
 
         return NextResponse.json({ roles: filtered }, { status: 200 });

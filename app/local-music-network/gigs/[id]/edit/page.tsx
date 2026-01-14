@@ -312,7 +312,7 @@ export default function EditGigPage() {
                                             </div>
 
                                             {/* Managers */}
-                                            {gig.managers?.map((m) => (
+                                            {gig.managers?.map((m: any) => (
                                                 <div key={m.id} className="flex items-center justify-between p-2 bg-muted rounded text-sm group">
                                                     <span className="truncate max-w-[150px]">
                                                         {m.user?.firstName || m.user?.email || "User"}

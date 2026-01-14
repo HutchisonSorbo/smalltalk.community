@@ -38,7 +38,7 @@ export default async function AnnouncementsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {allAnnouncements.map((item) => (
+                        {allAnnouncements.map((item: any) => (
                             <TableRow key={item.id}>
                                 <TableCell className="font-medium">{item.message}</TableCell>
                                 <TableCell>

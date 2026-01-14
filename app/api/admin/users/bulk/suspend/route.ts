@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         const validation = BulkUserIdsSchema.safeParse(body);
         if (!validation.success) {
             return NextResponse.json(
-                { error: validation.error.errors[0]?.message || "Invalid input" },
+                { error: validation.error.issues[0]?.message || "Invalid input" },
                 { status: 400, headers: CORS_HEADERS }
             );
         }
@@ -70,14 +70,14 @@ export async function POST(request: NextRequest) {
             .from(users)
             .where(inArray(users.id, userIds));
 
-        const foundUserIds = usersToCheck.map(u => u.id);
-        const excludedNotFound = userIds.filter(id => !foundUserIds.includes(id)).length;
-        const excludedByAdmin = usersToCheck.filter(u => u.isAdmin && u.id !== adminId).length;
-        const excludedSelf = usersToCheck.filter(u => u.id === adminId).length;
+        const foundUserIds = usersToCheck.map((u: any) => u.id);
+        const excludedNotFound = userIds.filter((id: string) => !foundUserIds.includes(id)).length;
+        const excludedByAdmin = usersToCheck.filter((u: any) => u.isAdmin && u.id !== adminId).length;
+        const excludedSelf = usersToCheck.filter((u: any) => u.id === adminId).length;
 
         const eligibleUserIds = usersToCheck
-            .filter(u => !u.isAdmin && u.id !== adminId)  // Cannot suspend admins or self
-            .map(u => u.id);
+            .filter((u: any) => !u.isAdmin && u.id !== adminId)  // Cannot suspend admins or self
+            .map((u: any) => u.id);
 
         if (eligibleUserIds.length === 0) {
             return NextResponse.json({
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
             details: {
                 action: "suspend",
                 userCount: suspendedCount,
-                userIds: updatedUsers.map(u => u.id),
+                userIds: updatedUsers.map((u: any) => u.id),
                 excluded: {
                     admin: excludedByAdmin,
                     self: excludedSelf,

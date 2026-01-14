@@ -125,7 +125,7 @@ export default async function AnnouncementsAdminPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {allAnnouncements.map((announcement) => (
+                                {allAnnouncements.map((announcement: any) => (
                                     <TableRow key={announcement.id}>
                                         <TableCell>
                                             <div>
