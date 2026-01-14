@@ -4,6 +4,10 @@ import fs from "fs";
 import path from "path";
 
 async function main() {
+    if (!process.env.DATABASE_URL) {
+        console.error("DATABASE_URL is not set");
+        process.exit(1);
+    }
     const client = new pg.Client({
         connectionString: process.env.DATABASE_URL,
     });

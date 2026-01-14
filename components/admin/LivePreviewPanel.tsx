@@ -48,7 +48,8 @@ export function LivePreviewPanel({ pageSlug, isOpen, onToggle }: LivePreviewPane
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => window.open(previewUrl, '_blank')}
+                        onClick={() => window.open(previewUrl, '_blank', 'noopener,noreferrer')}
+                        aria-label="Open preview in new tab"
                     >
                         <ExternalLink className="h-4 w-4" />
                     </Button>
@@ -56,10 +57,16 @@ export function LivePreviewPanel({ pageSlug, isOpen, onToggle }: LivePreviewPane
                         variant="ghost"
                         size="sm"
                         onClick={() => setIsFullscreen(!isFullscreen)}
+                        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                     >
                         <Maximize2 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={onToggle}>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onToggle}
+                        aria-label="Close preview"
+                    >
                         <X className="h-4 w-4" />
                     </Button>
                 </div>

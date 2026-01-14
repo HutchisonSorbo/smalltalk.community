@@ -21,7 +21,8 @@ export function LexicalEditorComponent({
 }: RichTextEditorProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-    const insertMarkdown = useCallback((prefix: string, suffix: string = prefix) => {
+    const insertMarkdown = useCallback((prefix: string, suffix?: string) => {
+        const actualSuffix = suffix ?? prefix
         const textarea = textareaRef.current
         if (!textarea) return
 
@@ -45,7 +46,7 @@ export function LexicalEditorComponent({
     const formatBold = () => insertMarkdown('**')
     const formatItalic = () => insertMarkdown('*')
     const formatHeading = () => insertMarkdown('\n## ', '\n')
-    const formatList = () => insertMarkdown('\n- ')
+    const formatList = () => insertMarkdown('\n- ', '')
     const formatCode = () => insertMarkdown('`')
     const formatLink = () => insertMarkdown('[', '](url)')
 
@@ -59,6 +60,7 @@ export function LexicalEditorComponent({
                     size="sm"
                     onClick={formatBold}
                     title="Bold (Ctrl+B)"
+                    aria-label="Bold"
                 >
                     <Bold className="h-4 w-4" />
                 </Button>
@@ -68,6 +70,7 @@ export function LexicalEditorComponent({
                     size="sm"
                     onClick={formatItalic}
                     title="Italic (Ctrl+I)"
+                    aria-label="Italic"
                 >
                     <Italic className="h-4 w-4" />
                 </Button>
@@ -77,6 +80,7 @@ export function LexicalEditorComponent({
                     size="sm"
                     onClick={formatHeading}
                     title="Heading"
+                    aria-label="Heading"
                 >
                     <Heading2 className="h-4 w-4" />
                 </Button>
@@ -86,6 +90,7 @@ export function LexicalEditorComponent({
                     size="sm"
                     onClick={formatList}
                     title="Bullet List"
+                    aria-label="Bullet list"
                 >
                     <List className="h-4 w-4" />
                 </Button>
@@ -95,6 +100,7 @@ export function LexicalEditorComponent({
                     size="sm"
                     onClick={formatCode}
                     title="Inline Code"
+                    aria-label="Inline code"
                 >
                     <Code className="h-4 w-4" />
                 </Button>
@@ -104,6 +110,7 @@ export function LexicalEditorComponent({
                     size="sm"
                     onClick={formatLink}
                     title="Link"
+                    aria-label="Link"
                 >
                     <LinkIcon className="h-4 w-4" />
                 </Button>

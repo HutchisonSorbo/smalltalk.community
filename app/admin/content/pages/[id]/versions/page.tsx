@@ -40,7 +40,7 @@ export default async function VersionsPage({ params }: VersionsPageProps) {
         })
 
         return (
-            <div className="flex-1 space-y-4 pt-2">
+            <div className="flex-1 space-y-4 pt-2 max-w-full">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="sm" asChild>
@@ -49,9 +49,9 @@ export default async function VersionsPage({ params }: VersionsPageProps) {
                                 Back to Editor
                             </Link>
                         </Button>
-                        <div>
+                        <div className="min-w-0">
                             <h2 className="text-2xl font-bold tracking-tight">Version History</h2>
-                            <p className="text-muted-foreground">{page.title}</p>
+                            <p className="text-muted-foreground truncate max-w-full">{page.title}</p>
                         </div>
                     </div>
                 </div>
@@ -72,7 +72,7 @@ export default async function VersionsPage({ params }: VersionsPageProps) {
                             <div className="divide-y">
                                 {versions.docs.map((version: any, index: number) => (
                                     <div
-                                        key={version.id}
+                                        key={(version as any).meta?.id || version.id}
                                         className="flex items-center justify-between py-4"
                                     >
                                         <div>
@@ -88,8 +88,8 @@ export default async function VersionsPage({ params }: VersionsPageProps) {
                                                 )}
                                             </div>
                                             <p className="text-sm text-muted-foreground">
-                                                {format(new Date(version.updatedAt), 'PPpp')} •{' '}
-                                                {formatDistanceToNow(new Date(version.updatedAt))} ago
+                                                {format(new Date((version as any).meta?.updatedAt || version.updatedAt), 'PPpp')} •{' '}
+                                                {formatDistanceToNow(new Date((version as any).meta?.updatedAt || version.updatedAt))} ago
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">

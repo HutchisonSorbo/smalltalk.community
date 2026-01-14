@@ -38,7 +38,7 @@ describe('onboarding-schemas', () => {
                 const result = registerSchema.safeParse(shortPassword);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('12'))).toBe(true);
+                    expect(result.error.issues.some((i: any) => i.message.includes('12'))).toBe(true);
                 }
             });
 
@@ -52,7 +52,7 @@ describe('onboarding-schemas', () => {
                 const result = registerSchema.safeParse(noUppercase);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('uppercase'))).toBe(true);
+                    expect(result.error.issues.some((i: any) => i.message.includes('uppercase'))).toBe(true);
                 }
             });
 
@@ -66,7 +66,7 @@ describe('onboarding-schemas', () => {
                 const result = registerSchema.safeParse(noLowercase);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('lowercase'))).toBe(true);
+                    expect(result.error.issues.some((i: any) => i.message.includes('lowercase'))).toBe(true);
                 }
             });
 
@@ -80,7 +80,7 @@ describe('onboarding-schemas', () => {
                 const result = registerSchema.safeParse(noNumber);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('number'))).toBe(true);
+                    expect(result.error.issues.some((i: any) => i.message.includes('number'))).toBe(true);
                 }
             });
 
@@ -94,7 +94,7 @@ describe('onboarding-schemas', () => {
                 const result = registerSchema.safeParse(noSpecial);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('special'))).toBe(true);
+                    expect(result.error.issues.some((i: any) => i.message.includes('special'))).toBe(true);
                 }
             });
 
@@ -108,7 +108,7 @@ describe('onboarding-schemas', () => {
                 const result = registerSchema.safeParse(withSpaces);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('spaces'))).toBe(true);
+                    expect(result.error.issues.some((i: any) => i.message.includes('spaces'))).toBe(true);
                 }
             });
 
@@ -135,7 +135,7 @@ describe('onboarding-schemas', () => {
                 const result = registerSchema.safeParse(mismatch);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('match'))).toBe(true);
+                    expect(result.error.issues.some((i: any) => i.message.includes('match'))).toBe(true);
                 }
             });
         });

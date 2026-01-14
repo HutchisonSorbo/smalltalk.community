@@ -10,7 +10,7 @@ interface DocumentLockBannerProps {
         name: string
         email?: string
     }
-    lockedAt: Date
+    lockedAt: Date | string
     onTakeOver: () => void
     onViewReadOnly: () => void
     onGoBack: () => void
@@ -23,8 +23,10 @@ export function DocumentLockBanner({
     onViewReadOnly,
     onGoBack,
 }: DocumentLockBannerProps) {
-    const timeAgo = new Date().getTime() - new Date(lockedAt).getTime()
-    const minutesAgo = Math.floor(timeAgo / 60000)
+    const date = new Date(lockedAt)
+    const normalizedDate = isNaN(date.getTime()) ? new Date() : date
+    const deltaMs = Math.max(0, new Date().getTime() - normalizedDate.getTime())
+    const minutesAgo = Math.floor(deltaMs / 60000)
 
     return (
         <Alert variant="destructive" className="mb-4">

@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { requireAdmin } from '@/lib/admin-auth'
+import { z } from 'zod'
+
+const pageUpdateSchema = z.object({
+    title: z.string().min(1).max(255).optional(),
+    slug: z.string().min(1).max(100).regex(/^[a-z0-7-]+$/).optional(),
+    content: z.any().optional(),
+    status: z.enum(['draft', 'published']).optional(),
+    metaTitle: z.string().max(255).optional(),
+    metaDescription: z.string().max(500).optional(),
+})
 
 export const dynamic = 'force-dynamic'
 
@@ -37,19 +47,22 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         await requireAdmin()
         const { id } = await params
         const payload = await getPayload({ config })
-        const body = await request.json()
+        const json = await request.json()
+
+        const result = pageUpdateSchema.safeParse(json)
+        if (!result.success) {
+            return NextResponse.json(
+                { error: 'Validation failed', details: result.error.format() },
+                { status: 400 }
+            )
+        }
+
+        const sanitizedData = result.data
 
         const doc = await payload.update({
             collection: 'pages',
             id,
-            data: {
-                title: body.title,
-                slug: body.slug,
-                content: body.content,
-                status: body.status,
-                metaTitle: body.metaTitle,
-                metaDescription: body.metaDescription,
-            },
+            data: sanitizedData,
         })
 
         return NextResponse.json({ doc })

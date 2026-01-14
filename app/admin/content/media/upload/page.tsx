@@ -5,15 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function MediaUploadPage() {
+    const router = useRouter()
+
     const handleUploadComplete = (files: { id: string; url: string; name: string }[]) => {
-        console.log('Uploaded files:', files)
-        // TODO: Redirect to media library after upload
+        router.push('/admin/content/media')
     }
 
     return (
-        <div className="flex-1 space-y-4 pt-2">
+        <div className="flex-1 space-y-4 pt-2 max-w-full">
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm" asChild>
                     <Link href="/admin/content/media">

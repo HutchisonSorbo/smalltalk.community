@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
+import { useState, useCallback, useEffect, lazy, Suspense, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -50,6 +50,10 @@ export function PageEditor({ initialData, isNew = false }: PageEditorProps) {
         metaDescription: initialData?.metaDescription || '',
     })
 
+    const dirtyWhileSavingRef = useRef(false)
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
     // Auto-generate slug from title
     const generateSlug = (title: string) => {
         return title
@@ -66,23 +70,16 @@ export function PageEditor({ initialData, isNew = false }: PageEditorProps) {
         }))
     }
 
-    // Autosave with debounce
-    useEffect(() => {
-        if (!initialData?.id) return // Don't autosave new pages
-
-        const timer = setTimeout(() => {
-            handleSave(true)
-        }, 3000)
-
-        return () => clearTimeout(timer)
-    }, [formData])
-
-    const handleSave = async (isAutosave = false) => {
-        if (saving) return
+    const handleSave = useCallback(async (isAutosave = false) => {
+        if (saving) {
+            dirtyWhileSavingRef.current = true
+            return
+        }
 
         setSaving(true)
         setSaveStatus('saving')
         setError(null)
+        dirtyWhileSavingRef.current = false
 
         try {
             const endpoint = isNew
@@ -96,7 +93,8 @@ export function PageEditor({ initialData, isNew = false }: PageEditorProps) {
             })
 
             if (!response.ok) {
-                throw new Error('Failed to save page')
+                const data = await response.json().catch(() => ({}))
+                throw new Error(data.error || 'Failed to save page')
             }
 
             const data = await response.json()
@@ -107,14 +105,43 @@ export function PageEditor({ initialData, isNew = false }: PageEditorProps) {
             }
 
             // Reset status after 2 seconds
-            setTimeout(() => setSaveStatus('idle'), 2000)
+            if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current)
+            statusTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000)
+
+            // If dirty while saving, trigger another save soon
+            if (dirtyWhileSavingRef.current) {
+                if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+                saveTimeoutRef.current = setTimeout(() => handleSave(true), 1000)
+            }
         } catch (err) {
             setSaveStatus('error')
             setError(err instanceof Error ? err.message : 'Failed to save')
         } finally {
             setSaving(false)
         }
-    }
+    }, [formData, initialData?.id, isNew, saving, router])
+
+    // Autosave with debounce
+    useEffect(() => {
+        if (!initialData?.id || isNew) return // Don't autosave new pages
+
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+        saveTimeoutRef.current = setTimeout(() => {
+            handleSave(true)
+        }, 3000)
+
+        return () => {
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+        }
+    }, [formData, initialData?.id, isNew, handleSave])
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+            if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current)
+        }
+    }, [])
 
     return (
         <div className="flex-1 space-y-4 pt-2">

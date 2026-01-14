@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Upload, Image as ImageIcon, FileText, Video } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { safeUrl } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export default async function MediaLibraryPage() {
     })
 
     return (
-        <div className="flex-1 space-y-4 pt-2">
+        <div className="flex-1 space-y-4 pt-2 max-w-full">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Media Library</h2>
@@ -70,20 +71,23 @@ export default async function MediaLibraryPage() {
                             {media.totalDocs} file{media.totalDocs !== 1 ? 's' : ''} total
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <CardContent className="max-w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {media.docs.map((item: any) => {
                                 const Icon = getMediaIcon(item.mimeType)
                                 const isImage = item.mimeType?.startsWith('image/')
+                                const sanitizedUrl = item.url ? safeUrl(item.url) : undefined
 
                                 return (
-                                    <div
+                                    <button
                                         key={item.id}
-                                        className="group relative aspect-square rounded-lg border bg-muted overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary"
+                                        type="button"
+                                        aria-label={`Open ${item.filename || item.alt || item.id}`}
+                                        className="group relative aspect-square rounded-lg border bg-muted overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary"
                                     >
-                                        {isImage && item.url ? (
+                                        {isImage && sanitizedUrl ? (
                                             <img
-                                                src={item.url}
+                                                src={sanitizedUrl}
                                                 alt={item.alt || ''}
                                                 className="w-full h-full object-cover"
                                             />
@@ -102,7 +106,7 @@ export default async function MediaLibraryPage() {
                                                 </p>
                                             )}
                                         </div>
-                                    </div>
+                                    </button>
                                 )
                             })}
                         </div>

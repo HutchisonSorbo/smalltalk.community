@@ -136,16 +136,25 @@ export function MediaDropzone({
         <div className={cn('space-y-4', className)}>
             {/* Dropzone */}
             <div
+                role="button"
+                tabIndex={0}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => inputRef.current?.click()}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        inputRef.current?.click()
+                    }
+                }}
                 className={cn(
-                    'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
+                    'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                     isDragging
                         ? 'border-primary bg-primary/5'
                         : 'border-muted-foreground/25 hover:border-primary/50'
                 )}
+                aria-label="Upload files"
             >
                 <input
                     ref={inputRef}
@@ -200,6 +209,7 @@ export function MediaDropzone({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => removeFile(file.id)}
+                                        aria-label={`Remove ${file.name}`}
                                     >
                                         <X className="h-4 w-4" />
                                     </Button>

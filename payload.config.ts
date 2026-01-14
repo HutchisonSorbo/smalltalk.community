@@ -28,7 +28,7 @@ export default buildConfig({
                         interval: 3000,
                     },
                 },
-                maxPerDoc: 25,
+                maxPerDoc: 50,
             },
             lockDocuments: {
                 duration: 300, // 5 minutes
@@ -65,6 +65,7 @@ export default buildConfig({
                 {
                     name: 'publishedAt',
                     type: 'date',
+                    index: true,
                     admin: {
                         date: {
                             pickerAppearance: 'dayAndTime',

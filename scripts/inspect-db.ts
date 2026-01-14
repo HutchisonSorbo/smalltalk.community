@@ -2,6 +2,10 @@ import "dotenv/config";
 import pg from "pg";
 
 async function main() {
+    if (!process.env.DATABASE_URL) {
+        console.error("DATABASE_URL is not set");
+        process.exit(1);
+    }
     const client = new pg.Client({
         connectionString: process.env.DATABASE_URL,
     });

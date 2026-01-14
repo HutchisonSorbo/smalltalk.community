@@ -32,13 +32,13 @@ export function BulkActionBar({
     if (selectedCount === 0) return null
 
     return (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-            <div className="bg-background border shadow-lg rounded-lg px-4 py-3 flex items-center gap-4">
-                <span className="text-sm font-medium">
+        <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-center pointer-events-none">
+            <div className="bg-background border shadow-lg rounded-lg px-4 py-3 flex items-center gap-4 max-w-full overflow-x-auto pointer-events-auto">
+                <span className="text-sm font-medium whitespace-nowrap">
                     {selectedCount} item{selectedCount !== 1 ? 's' : ''} selected
                 </span>
-                <div className="h-4 w-px bg-border" />
-                <div className="flex items-center gap-2">
+                <div className="h-4 w-px bg-border shrink-0" />
+                <div className="flex items-center gap-2 shrink-0">
                     <Button
                         variant="outline"
                         size="sm"
@@ -67,8 +67,8 @@ export function BulkActionBar({
                         Delete
                     </Button>
                 </div>
-                <div className="h-4 w-px bg-border" />
-                <Button variant="ghost" size="sm" onClick={onClearSelection}>
+                <div className="h-4 w-px bg-border shrink-0" />
+                <Button variant="ghost" size="sm" onClick={onClearSelection} className="whitespace-nowrap shrink-0">
                     Clear
                 </Button>
             </div>
@@ -82,6 +82,7 @@ interface SelectableRowProps {
     onSelect: (id: string, selected: boolean) => void
     children: React.ReactNode
     className?: string
+    ariaLabel?: string
 }
 
 export function SelectableRow({
@@ -90,14 +91,19 @@ export function SelectableRow({
     onSelect,
     children,
     className,
+    ariaLabel,
 }: SelectableRowProps) {
+    const labelId = ariaLabel ? undefined : `${id}-label`
+
     return (
         <div className={cn('flex items-center gap-4', className)}>
             <Checkbox
                 checked={selected}
                 onCheckedChange={(checked) => onSelect(id, !!checked)}
+                aria-label={ariaLabel}
+                aria-labelledby={labelId}
             />
-            <div className="flex-1">{children}</div>
+            <div id={labelId} className="flex-1">{children}</div>
         </div>
     )
 }
