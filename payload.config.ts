@@ -7,6 +7,11 @@ import { fileURLToPath } from 'url'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+const payloadSecret = process.env.PAYLOAD_SECRET
+if (!payloadSecret) {
+    throw new Error('PAYLOAD_SECRET is required but was not found in environment variables.')
+}
+
 export default buildConfig({
     // Admin panel is disabled - we use custom UI
     admin: {
@@ -186,7 +191,7 @@ export default buildConfig({
     editor: lexicalEditor({}),
 
     // Secret
-    secret: process.env.PAYLOAD_SECRET || 'default-secret-change-me',
+    secret: payloadSecret,
 
     // TypeScript
     typescript: {

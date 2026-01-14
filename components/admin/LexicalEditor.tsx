@@ -29,7 +29,7 @@ export function LexicalEditorComponent({
         const start = textarea.selectionStart
         const end = textarea.selectionEnd
         const selectedText = value.substring(start, end)
-        const newText = value.substring(0, start) + prefix + selectedText + suffix + value.substring(end)
+        const newText = value.substring(0, start) + prefix + selectedText + actualSuffix + value.substring(end)
 
         onChange?.(newText)
 

@@ -144,7 +144,7 @@ export function PageEditor({ initialData, isNew = false }: PageEditorProps) {
     }, [])
 
     return (
-        <div className="flex-1 space-y-4 pt-2">
+        <div className="flex-1 space-y-4 pt-2 max-w-full">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" asChild>

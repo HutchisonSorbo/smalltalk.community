@@ -4,15 +4,11 @@ import { users, userOnboardingResponses, userPrivacySettings, userNotificationPr
 
 // --- Registration Schema ---
 // Used for step 1 account creation
-export const registerSchema = (createInsertSchema(users) as any).pick({
-    firstName: true,
-    lastName: true,
-    dateOfBirth: true, // We will validate age in the handler but basic schema is date
-    userType: true,
-    accountType: true,
-    accountTypeSpecification: true,
-    organisationName: true,
-}).extend({
+// --- Registration Schema ---
+// Used for step 1 account creation
+export const registerSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email address"),
     password: z.string()
         .min(12, "Password must be at least 12 characters")
@@ -22,14 +18,16 @@ export const registerSchema = (createInsertSchema(users) as any).pick({
         .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character")
         .regex(/^\S*$/, "Password must not contain spaces"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    // Additional validations
+    userType: z.enum(["individual", "organisation"]).default("individual"),
+    accountType: z.enum(["Individual", "Business", "Government Organisation", "Charity", "Other"]).default("Individual"),
+    accountTypeSpecification: z.string().optional(),
+    organisationName: z.string().optional(),
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
-        // Validate logical date if provided
         if (!val) return true;
         const date = new Date(val);
         return !isNaN(date.getTime()) && date < new Date();
     }, "Invalid date of birth"),
-}).refine((data: any) => data.password === data.confirmPassword, {
+}).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
 });

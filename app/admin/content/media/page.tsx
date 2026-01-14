@@ -1,6 +1,22 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import Link from 'next/link'
+// Define local Media type since generated types might be missing in some environments
+export interface Media {
+    id: string
+    url?: string
+    filename?: string
+    mimeType?: string
+    filesize?: number
+    width?: number
+    height?: number
+    alt: string
+    caption?: string
+    updatedAt: string
+    createdAt: string
+}
+
+// import type { Media } from '@/payload-types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Upload, Image as ImageIcon, FileText, Video } from 'lucide-react'
@@ -73,8 +89,8 @@ export default async function MediaLibraryPage() {
                     </CardHeader>
                     <CardContent className="max-w-full">
                         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                            {media.docs.map((item: any) => {
-                                const Icon = getMediaIcon(item.mimeType)
+                            {(media.docs as unknown as Media[]).map((item: Media) => {
+                                const Icon = getMediaIcon(item.mimeType || '')
                                 const isImage = item.mimeType?.startsWith('image/')
                                 const sanitizedUrl = item.url ? safeUrl(item.url) : undefined
 

@@ -1,15 +1,8 @@
 "use client"
 
-import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Trash2, Eye, EyeOff, MoreHorizontal } from 'lucide-react'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { Trash2, Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface BulkActionBarProps {
@@ -21,6 +14,17 @@ interface BulkActionBarProps {
     isProcessing?: boolean
 }
 
+/**
+ * Bulk actions bar for performing operations on multiple selected items.
+ * 
+ * @param props.selectedCount - Number of currently selected items
+ * @param props.onPublish - Callback to publish selected items
+ * @param props.onUnpublish - Callback to unpublish selected items
+ * @param props.onDelete - Callback to delete selected items
+ * @param props.onClearSelection - Callback to clear current selection
+ * @param props.isProcessing - Optional flag indicating if an operation is in progress
+ * @returns A fixed position bar with action buttons, or null if nothing is selected
+ */
 export function BulkActionBar({
     selectedCount,
     onPublish,
@@ -85,6 +89,17 @@ interface SelectableRowProps {
     ariaLabel?: string
 }
 
+/**
+ * A wrapper for table/list rows that adds a selection checkbox.
+ * 
+ * @param props.id - Unique identifier for the row
+ * @param props.selected - Whether the row is currently selected
+ * @param props.onSelect - Callback triggered when selection state changes
+ * @param props.children - Row content
+ * @param props.className - Optional extra CSS classes
+ * @param props.ariaLabel - Optional accessible label for the checkbox
+ * @returns A container with a checkbox and the provided children
+ */
 export function SelectableRow({
     id,
     selected,

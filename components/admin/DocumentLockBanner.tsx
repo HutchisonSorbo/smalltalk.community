@@ -16,6 +16,16 @@ interface DocumentLockBannerProps {
     onGoBack: () => void
 }
 
+/**
+ * Banner displayed when a document is locked by another user.
+ * 
+ * @param props.lockedBy - User details who holds the lock
+ * @param props.lockedAt - Timestamp when the lock was acquired
+ * @param props.onTakeOver - Callback to forcefully take over the lock
+ * @param props.onViewReadOnly - Callback to view the document in read-only mode
+ * @param props.onGoBack - Callback to navigate back to the list
+ * @returns An alert banner with lock details and available actions
+ */
 export function DocumentLockBanner({
     lockedBy,
     lockedAt,
@@ -30,9 +40,9 @@ export function DocumentLockBanner({
 
     return (
         <Alert variant="destructive" className="mb-4">
-            <Lock className="h-4 w-4" />
+            <Lock className="h-4 w-4" aria-hidden="true" />
             <AlertTitle className="flex items-center gap-2">
-                <UserCircle className="h-4 w-4" />
+                <UserCircle className="h-4 w-4" aria-hidden="true" />
                 Document Locked
             </AlertTitle>
             <AlertDescription className="mt-2">
@@ -42,15 +52,15 @@ export function DocumentLockBanner({
                 </p>
                 <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={onViewReadOnly}>
-                        <Eye className="h-4 w-4 mr-2" />
+                        <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                         View Read-Only
                     </Button>
                     <Button variant="destructive" size="sm" onClick={onTakeOver}>
-                        <Lock className="h-4 w-4 mr-2" />
+                        <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
                         Take Over Editing
                     </Button>
                     <Button variant="ghost" size="sm" onClick={onGoBack}>
-                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
                         Go Back
                     </Button>
                 </div>

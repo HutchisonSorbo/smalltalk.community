@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 const pageUpdateSchema = z.object({
     title: z.string().min(1).max(255).optional(),
-    slug: z.string().min(1).max(100).regex(/^[a-z0-7-]+$/).optional(),
+    slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/).optional(),
     content: z.any().optional(),
     status: z.enum(['draft', 'published']).optional(),
     metaTitle: z.string().max(255).optional(),
