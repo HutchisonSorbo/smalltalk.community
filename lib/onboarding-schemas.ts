@@ -29,7 +29,7 @@ export const registerSchema = z.object({
     message: "Passwords do not match",
     path: ["confirmPassword"],
 }).refine((data) => {
-    if (data.userType === "organisation" && !data.organisationName) {
+    if (data.userType === "organisation" && (!data.organisationName || data.organisationName.trim() === "")) {
         return false;
     }
     return true;

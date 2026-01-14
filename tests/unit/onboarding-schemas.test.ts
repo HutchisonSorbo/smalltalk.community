@@ -248,6 +248,40 @@ describe('onboarding-schemas', () => {
                 }
             });
 
+            it('should reject empty organisationName when userType is organisation', () => {
+                const emptyOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    organisationName: '',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(emptyOrg);
+                expect(result.success).toBe(false);
+                if (!result.success) {
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('Organisation name is required'))).toBe(true);
+                }
+            });
+
+            it('should reject whitespace-only organisationName when userType is organisation', () => {
+                const whitespaceOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    organisationName: '   ',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(whitespaceOrg);
+                expect(result.success).toBe(false);
+                if (!result.success) {
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('Organisation name is required'))).toBe(true);
+                }
+            });
+
             it('should accept organisation when organisationName is provided', () => {
                 const validOrg = {
                     email: 'test@example.com',
