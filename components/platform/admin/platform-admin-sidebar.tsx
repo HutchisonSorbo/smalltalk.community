@@ -28,6 +28,7 @@ import {
     UserX,
     History,
     Send,
+    Image,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -89,6 +90,16 @@ const contentItems = [
         title: "Content Overview",
         url: "/admin/content",
         icon: Database,
+    },
+    {
+        title: "Pages",
+        url: "/admin/content/pages",
+        icon: FileText,
+    },
+    {
+        title: "Media Library",
+        url: "/admin/content/media",
+        icon: Image,
     },
     {
         title: "Moderation Queue",
