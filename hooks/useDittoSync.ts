@@ -8,8 +8,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 export interface DittoDocument {
-    _id: string;
-    [key: string]: unknown;
+    _id?: string;
+    id?: string;
 }
 
 export interface UseDittoSyncOptions {
@@ -23,22 +23,33 @@ export interface UseDittoSyncResult<T extends DittoDocument> {
     isLoading: boolean;
     isOnline: boolean;
     error: Error | null;
-    insert: (doc: Omit<T, "_id">) => Promise<string>;
+    insert: (doc: Omit<T, "_id" | "id">) => Promise<string>;
     update: (id: string, updates: Partial<T>) => Promise<void>;
     remove: (id: string) => Promise<void>;
     refresh: () => void;
+    // Aliases for compatibility with CommunityOS apps
+    upsertDocument: (id: string, doc: T) => Promise<void>;
+    deleteDocument: (id: string) => Promise<void>;
 }
 
 /**
  * Hook for syncing documents with Ditto
  * Provides offline-first data access with automatic sync
  * 
+ * Supports two calling conventions:
+ * 1. Full options object: useDittoSync({ collection, tenantId, query })
+ * 2. Simple collection string: useDittoSync("tenantId:collection")
+ * 
  * Note: This is a placeholder implementation until Ditto SDK is integrated
  * In production, this would use the actual Ditto React hooks
  */
 export function useDittoSync<T extends DittoDocument>(
-    options: UseDittoSyncOptions
+    optionsOrCollectionString: UseDittoSyncOptions | string
 ): UseDittoSyncResult<T> {
+    // Support both options object and simple string format
+    const options: UseDittoSyncOptions = typeof optionsOrCollectionString === "string"
+        ? { collection: optionsOrCollectionString, tenantId: "" }
+        : optionsOrCollectionString;
     const { collection, tenantId, query } = options;
     const [documents, setDocuments] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -87,9 +98,9 @@ export function useDittoSync<T extends DittoDocument>(
     }, []);
 
     // Insert document
-    const insert = useCallback(async (doc: Omit<T, "_id">): Promise<string> => {
+    const insert = useCallback(async (doc: Omit<T, "_id" | "id">): Promise<string> => {
         const id = crypto.randomUUID();
-        const newDoc = { ...doc, _id: id } as T;
+        const newDoc = { ...doc, _id: id, id } as T;
 
         setDocuments((prev) => [...prev, newDoc]);
 
@@ -103,7 +114,7 @@ export function useDittoSync<T extends DittoDocument>(
     const update = useCallback(async (id: string, updates: Partial<T>): Promise<void> => {
         setDocuments((prev) =>
             prev.map((doc) =>
-                doc._id === id ? { ...doc, ...updates } : doc
+                (doc._id === id || doc.id === id) ? { ...doc, ...updates } : doc
             )
         );
 
@@ -113,7 +124,7 @@ export function useDittoSync<T extends DittoDocument>(
 
     // Remove document
     const remove = useCallback(async (id: string): Promise<void> => {
-        setDocuments((prev) => prev.filter((doc) => doc._id !== id));
+        setDocuments((prev) => prev.filter((doc) => doc._id !== id && doc.id !== id));
 
         // In production, this would sync to Ditto
         // dittoCollection.findByID(id).remove();
@@ -126,6 +137,29 @@ export function useDittoSync<T extends DittoDocument>(
         console.log("[useDittoSync] Refresh triggered");
     }, []);
 
+    // Upsert document (insert or update) - for CommunityOS app compatibility
+    // Supports both _id and id fields for document identification
+    const upsertDocument = useCallback(async (id: string, doc: T): Promise<void> => {
+        setDocuments((prev) => {
+            const existingIndex = prev.findIndex((d) => d._id === id || (d as Record<string, unknown>).id === id);
+            if (existingIndex >= 0) {
+                // Update existing
+                const updated = [...prev];
+                updated[existingIndex] = { ...doc, _id: id, id } as T;
+                return updated;
+            } else {
+                // Insert new
+                return [...prev, { ...doc, _id: id, id } as T];
+            }
+        });
+    }, []);
+
+    // Delete document - for CommunityOS app compatibility
+    // Supports both _id and id fields for document identification
+    const deleteDocument = useCallback(async (id: string): Promise<void> => {
+        setDocuments((prev) => prev.filter((doc) => doc._id !== id && (doc as Record<string, unknown>).id !== id));
+    }, []);
+
     return {
         documents,
         isLoading,
@@ -135,6 +169,8 @@ export function useDittoSync<T extends DittoDocument>(
         update,
         remove,
         refresh,
+        upsertDocument,
+        deleteDocument,
     };
 }
 
