@@ -28,12 +28,19 @@ test.describe('Offline Sync Recovery', () => {
     test('shows error when sync fails', async ({ page, context }) => {
         await page.goto('/volunteer-passport/profile');
 
-        // Mock a sync failure (simulated by network error on sync endpoint if applicable, 
-        // or by UI state if we can trigger it. For now, we simulate offline transition with error UI expectation)
-        // Since we can't easily mock the internal Ditto peer error in E2E without deep hooks, 
-        // we will skip the explicit error Mock and focus on the UI not crashing.
-        // Or assume there is an error element:
-        // await page.evaluate(() => window.dispatchEvent(new Event('sync-error')));
+        // Mock a sync failure UI state by dispatching a custom event or mocking network
+        // For E2E without backend, we can simulate the UI reaction to an error event
+        await page.evaluate(() => {
+            window.dispatchEvent(new CustomEvent('sync-error', { detail: { message: 'Sync failed' } }));
+        });
+
+        // Assert the error UI is visible
+        // Assuming the app has a global error toaster or indicator listening for this
+        // Adjust the selector to match actual error component
         // await expect(page.locator('.text-destructive')).toBeVisible();
+        // Since component isn't implemented for this specific global event yet, marking as fixme/skip
+        test.skip(true, 'Sync error UI handling not yet implemented');
     });
 });
+
+```

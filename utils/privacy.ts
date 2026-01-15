@@ -6,8 +6,13 @@ export interface Privacy {
     dataSharingConsent?: boolean;
 }
 
+export interface Engagement {
+    lastContactDate?: string | null;
+}
+
 export interface Member {
     privacy?: Privacy;
+    engagement?: Engagement;
 }
 
 /**

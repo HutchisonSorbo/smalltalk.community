@@ -12,9 +12,9 @@ describe('Age Cohort Utilities', () => {
     });
 
     describe('getAgeCohort', () => {
-        it('throws error for age < 13', () => {
-            expect(() => getAgeCohort(12)).toThrow();
-            expect(() => getAgeCohort(5)).toThrow();
+        it('returns Invalid for age < 13', () => {
+            expect(getAgeCohort(12)).toBe('Invalid');
+            expect(getAgeCohort(5)).toBe('Invalid');
         });
 
         it('returns Teen for 13-17', () => {

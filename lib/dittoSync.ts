@@ -46,6 +46,10 @@ export function resolveConflict<T extends Syncable>(local: T, remote: T): T {
  * @returns {T} The merged data.
  */
 export function mergeMemberData<T extends { skills?: string[] } & Record<string, any>>(local: T, remote: Partial<T>): T {
+    if (typeof local !== 'object' || local === null || typeof remote !== 'object' || remote === null) {
+        throw new Error("Invalid inputs: local and remote must be objects");
+    }
+
     const merged = { ...local, ...remote };
 
     if (local.skills && remote.skills) {

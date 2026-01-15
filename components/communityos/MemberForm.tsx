@@ -20,6 +20,16 @@ interface MemberFormProps {
     onSubmit: (data: MemberFormValues) => void;
 }
 
+/**
+ * Form component for creating or editing a community member.
+ * 
+ * @param {MemberFormProps} props - The component props.
+ * @param {Partial<MemberFormValues>} [props.initialData] - Initial data for parsing/editing.
+ * @param {(data: MemberFormValues) => void} props.onSubmit - Callback fired when valid form data is submitted.
+ * @returns {JSX.Element} The rendered form element.
+ * 
+ * Uses `zodResolver(memberSchema)` for validation.
+ */
 export function MemberForm({ initialData, onSubmit }: MemberFormProps) {
     const form = useForm<MemberFormValues>({
         resolver: zodResolver(memberSchema),

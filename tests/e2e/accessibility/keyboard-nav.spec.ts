@@ -1,4 +1,4 @@
-// tests/accessibility/keyboard-nav.spec.ts
+// tests/e2e/accessibility/keyboard-nav.spec.ts
 import { test, expect } from '@playwright/test';
 
 test.describe('Keyboard Navigation', () => {

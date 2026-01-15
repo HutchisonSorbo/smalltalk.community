@@ -38,4 +38,27 @@ describe('Service Referral Bridge', () => {
             patientName: 'Test Member',
         }));
     });
+
+    it('throws error when Ditto client is not initialized', async () => {
+        (getDitto as any).mockReturnValue(null);
+
+        const referralData = { sourceApp: 'App', name: 'User', contact: 'test' };
+
+        await expect(IntegrationBridge.bridgeServiceReferral('tenant-123', referralData))
+            .rejects.toThrow('Ditto client not initialized');
+    });
+
+    it('throws error when sync fails', async () => {
+        const mockUpsert = vi.fn().mockRejectedValue(new Error('Ditto sync failed'));
+        const mockCollection = { upsert: mockUpsert };
+        const mockStore = { collection: vi.fn().mockReturnValue(mockCollection) };
+        const mockDitto = { store: mockStore };
+
+        (getDitto as any).mockReturnValue(mockDitto);
+
+        const referralData = { sourceApp: 'App', name: 'User', contact: 'test' };
+
+        await expect(IntegrationBridge.bridgeServiceReferral('tenant-123', referralData))
+            .rejects.toThrow('Ditto sync failed');
+    });
 });

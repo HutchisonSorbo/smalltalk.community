@@ -2,11 +2,7 @@
  * Engagement Risk Calculation Utilities
  */
 
-interface Member {
-    engagement?: {
-        lastContactDate?: string | null;
-    };
-}
+import { type Member } from "@/utils/privacy";
 
 /**
  * Calculates the engagement risk level based on the last contact date.

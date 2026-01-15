@@ -19,6 +19,8 @@ test.describe('Accessibility Audits', () => {
     test('onboarding flow should be accessible', async ({ page }) => {
         await page.goto('/onboarding');
 
+        await page.waitForLoadState('networkidle');
+
         const accessibilityScanResults = await new AxeBuilder({ page })
             .withTags(['wcag2a', 'wcag2aa'])
             .analyze();

@@ -14,6 +14,13 @@ export function validatePhone(phone: string): boolean {
     return /^04\d{8}$/.test(cleaned);
 }
 
+/**
+ * Validates a Victorian postcode.
+ * Checks if the postcode falls within the standard VIC ranges (3000-3999, 8000-8999).
+ * 
+ * @param {string} postcode - The postcode to validate.
+ * @returns {boolean} True if the postcode is valid for Victoria.
+ */
 export function validatePostcode(postcode: string): boolean {
     // Basic validation for VIC postcodes (3000-3999 range as primary example)
     // Could be expanded for national coverage

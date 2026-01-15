@@ -9,4 +9,14 @@ describe('Tenant Isolation', () => {
     it('allows same-tenant access', () => {
         expect(() => validateTenantAccess('tenant-a', 'tenant-a')).not.toThrow();
     });
+
+    it('rejects invalid inputs', () => {
+        expect(() => validateTenantAccess('', 'tenant-b')).toThrow(/Invalid/);
+        expect(() => validateTenantAccess('tenant-a', '')).toThrow(/Invalid/);
+        expect(() => validateTenantAccess('   ', 'tenant-b')).toThrow(/Invalid/);
+    });
+
+    it('is case-sensitive', () => {
+        expect(() => validateTenantAccess('Tenant-A', 'tenant-a')).toThrow(/denied/);
+    });
 });

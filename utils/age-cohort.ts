@@ -1,3 +1,9 @@
+/**
+ * Calculates a person's age based on their birth date.
+ * 
+ * @param {Date} birthDate - The person's birth date.
+ * @returns {number} The age in years (integer) as of today.
+ */
 export function calculateAge(birthDate: Date): number {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -16,13 +22,12 @@ export function calculateAge(birthDate: Date): number {
  * 
  * @param {number} age - The user's age.
  * @returns {"Teen" | "Adult" | "Senior" | "Invalid"} The cohort group or "Invalid" if under 13.
- * @throws {Error} If age is under 13.
  */
 export function getAgeCohort(age: number): "Teen" | "Adult" | "Senior" | "Invalid" {
     if (age < 0 || isNaN(age)) return "Invalid";
 
     if (age < 13) {
-        throw new Error("Age must be 13 or older.");
+        return "Invalid";
     }
 
     if (age <= 17) return "Teen";

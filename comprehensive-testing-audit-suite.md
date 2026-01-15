@@ -1,7 +1,8 @@
 # AI Agent Prompt: Comprehensive Testing & Audit Suite Implementation
 
 ## Mission
-You are tasked with implementing a production-grade testing infrastructure for **smalltalk.community**, a multi-tenant youth services platform serving regional Victoria, Australia. This system handles sensitive personal data (children aged 5-11, youth 12-24, adults, seniors) and must meet strict privacy, security, accessibility, and performance standards.
+
+You are tasked with implementing a production-grade testing infrastructure for **smalltalk.community**, a multi-tenant youth services platform serving regional Victoria, Australia. This system handles sensitive personal data (Teen 13-17, Adult 18-64, Senior 65+) and must meet strict privacy, security, accessibility, and performance standards. The platform enforces a strict 13+ minimum age policy.
 
 Your implementation must be audit-ready for government funding compliance, ACNC reporting, and potential future scale to other nonprofit organisations across Australia.
 
@@ -10,6 +11,7 @@ Your implementation must be audit-ready for government funding compliance, ACNC 
 ## System Context
 
 ### Technology Stack
+
 - **Framework**: Next.js 15.x (App Router), React 18, TypeScript 5.x
 - **Database**: Supabase (PostgreSQL 15) with Row Level Security (RLS)
 - **Sync Engine**: Ditto offline-first mesh networking
@@ -21,12 +23,14 @@ Your implementation must be audit-ready for government funding compliance, ACNC 
 - **Email**: Resend or SendGrid (if implemented)
 
 ### Critical Data Types
+
 - **Personal Information**: Full names, DOB, addresses, phone numbers, emails
 - **Sensitive Data**: Parent/guardian details, emergency contacts, accessibility needs, safeguarding notes
 - **Financial Data**: Membership fees, donations, grant funding
 - **Consent Records**: Photo/video consent, newsletter opt-ins, data sharing agreements
 
 ### Regulatory Requirements
+
 - **Privacy Act 1988** (Australia)
 - **ACNC Governance Standards**
 - **Victorian Child Safe Standards** (if working with under 18s)
@@ -53,6 +57,7 @@ pnpm add -D vitest @vitest/ui @vitest/coverage-v8 \
 ### 1.2 Configuration Files
 
 #### `vitest.config.ts`
+
 ```typescript
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
@@ -95,6 +100,7 @@ export default defineConfig({
 ```
 
 #### `playwright.config.ts`
+
 ```typescript
 import { defineConfig, devices } from '@playwright/test';
 
@@ -131,6 +137,7 @@ export default defineConfig({
 ```
 
 #### `tests/setup.ts`
+
 ```typescript
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
@@ -161,9 +168,11 @@ global.fetch = vi.fn();
 ## Phase 2: Unit Tests (Critical Business Logic)
 
 ### 2.1 Utility Functions
+
 **Location**: `tests/unit/utils/`
 
 #### Age Calculation & Cohort Assignment
+
 ```typescript
 // tests/unit/utils/age-cohort.test.ts
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -194,15 +203,19 @@ describe('Age Calculation', () => {
 });
 
 describe('Age Cohort Assignment', () => {
-  it('assigns Child cohort for ages 5-11', () => {
-    expect(getAgeCohort(5)).toBe('Child');
-    expect(getAgeCohort(11)).toBe('Child');
+  it('rejects ages under 13', () => {
+    expect(getAgeCohort(5)).toBe('Invalid');
+    expect(getAgeCohort(12)).toBe('Invalid');
   });
 
-  it('assigns Youth cohort for ages 12-24', () => {
-    expect(getAgeCohort(12)).toBe('Youth');
-    expect(getAgeCohort(18)).toBe('Youth');
-    expect(getAgeCohort(24)).toBe('Youth');
+  it('assigns Teen cohort for ages 13-17', () => {
+    expect(getAgeCohort(13)).toBe('Teen');
+    expect(getAgeCohort(17)).toBe('Teen');
+  });
+
+  it('assigns Adult cohort for ages 18-64', () => {
+    expect(getAgeCohort(18)).toBe('Adult');
+    expect(getAgeCohort(24)).toBe('Adult');
   });
 
   it('assigns Adult cohort for ages 25-64', () => {
@@ -216,21 +229,25 @@ describe('Age Cohort Assignment', () => {
   });
 
   it('handles edge cases at boundaries', () => {
-    expect(getAgeCohort(11.9)).toBe('Child');
-    expect(getAgeCohort(24.9)).toBe('Youth');
+    expect(getAgeCohort(12.9)).toBe('Invalid');
+    expect(getAgeCohort(13.0)).toBe('Teen');
+    expect(getAgeCohort(17.9)).toBe('Teen');
+    expect(getAgeCohort(18.0)).toBe('Adult');
   });
 });
 ```
 
 #### Privacy & Consent Validation
+
 ```typescript
 // tests/unit/utils/privacy.test.ts
-import { validateConsent, canShareData, requiresParentalConsent } from '@/utils/privacy';
+import { validateConsent, canShareData, requiresEnhancedModeration } from '@/utils/privacy';
 
 describe('Privacy Consent', () => {
-  it('requires parental consent for users under 18', () => {
-    expect(requiresParentalConsent(17)).toBe(true);
-    expect(requiresParentalConsent(18)).toBe(false);
+  it('requires enhanced moderation for teens 13-17', () => {
+    expect(requiresEnhancedModeration(13)).toBe(true);
+    expect(requiresEnhancedModeration(17)).toBe(true);
+    expect(requiresEnhancedModeration(18)).toBe(false);
   });
 
   it('prevents data sharing without explicit consent', () => {
@@ -247,6 +264,7 @@ describe('Privacy Consent', () => {
 ```
 
 #### Australian Data Validation
+
 ```typescript
 // tests/unit/utils/au-validation.test.ts
 import { validatePhone, validatePostcode, formatAUD } from '@/utils/au-validation';
@@ -284,6 +302,7 @@ describe('Currency Formatting', () => {
 ```
 
 ### 2.2 Engagement Risk Scoring
+
 ```typescript
 // tests/unit/models/engagement.test.ts
 import { calculateRiskLevel, getRiskRecommendations } from '@/lib/engagement';
@@ -327,6 +346,7 @@ describe('Engagement Risk Calculation', () => {
 ```
 
 ### 2.3 Multi-Tenant Data Isolation
+
 ```typescript
 // tests/unit/lib/tenant.test.ts
 import { getTenantMembers, validateTenantAccess } from '@/lib/tenant';
@@ -349,6 +369,7 @@ describe('Tenant Data Isolation', () => {
 ```
 
 ### 2.4 Ditto Sync Conflict Resolution
+
 ```typescript
 // tests/unit/lib/dittoSync.test.ts
 import { resolveConflict, mergeMemberData } from '@/lib/dittoSync';
@@ -379,6 +400,7 @@ describe('Ditto Sync Conflicts', () => {
 ## Phase 3: Integration Tests (Component & Feature Level)
 
 ### 3.1 Member Form Integration
+
 ```typescript
 // tests/integration/components/member-form.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
@@ -408,14 +430,16 @@ describe('Member Form Integration', () => {
     expect(screen.getByText(/full name is required/i)).toBeInTheDocument();
   });
 
-  it('shows parental consent fields for Youth/Child cohorts', async () => {
+  it('triggers enhanced moderation for teen cohort', async () => {
     const user = userEvent.setup();
     render(<MemberForm onSave={vi.fn()} />);
 
     await user.type(screen.getByLabelText(/date of birth/i), '2010-01-01'); // Age 16
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/parent.*guardian/i)).toBeInTheDocument();
+      // Expectation depends on UI implementation of enhanced moderation
+      // e.g., a badge, specific notice, or internal state flag check
+      expect(screen.getByText(/enhanced moderation/i)).toBeInTheDocument();
     });
   });
 
@@ -433,6 +457,7 @@ describe('Member Form Integration', () => {
 ```
 
 ### 3.2 Communication Log Feature
+
 ```typescript
 // tests/integration/features/CommunicationLog.test.tsx
 import { render, screen } from '@testing-library/react';
@@ -474,6 +499,7 @@ describe('Communication Logging', () => {
 ```
 
 ### 3.3 Referral Integration Bridge
+
 ```typescript
 // tests/integration/features/referral-bridge.test.ts
 import { createReferral, syncToTenantCRM } from '@/lib/integration-bridge';
@@ -521,6 +547,7 @@ describe('Public Hub to CRM Referral Flow', () => {
 ## Phase 4: End-to-End Tests (Real User Flows)
 
 ### 4.1 Complete Member Onboarding Journey
+
 ```typescript
 // tests/e2e/member-onboarding.spec.ts
 import { test, expect } from '@playwright/test';
@@ -598,6 +625,7 @@ test.describe('Member Onboarding Flow', () => {
 ```
 
 ### 4.2 Offline Sync Recovery
+
 ```typescript
 // tests/e2e/offline-sync.spec.ts
 test('Member created offline syncs when connection restored', async ({ page, context }) => {
@@ -631,6 +659,7 @@ test('Member created offline syncs when connection restored', async ({ page, con
 ```
 
 ### 4.3 Role-Based Access Control
+
 ```typescript
 // tests/e2e/rbac.spec.ts
 test.describe('Role-Based Access Control', () => {
@@ -664,6 +693,7 @@ test.describe('Role-Based Access Control', () => {
 ```
 
 ### 4.4 Data Export & Privacy Compliance
+
 ```typescript
 // tests/e2e/data-export.spec.ts
 test('Member can request and receive data export (GDPR-like)', async ({ page }) => {
@@ -717,6 +747,7 @@ test('Member deletion removes all associated data', async ({ page }) => {
 ## Phase 5: Accessibility Audits (WCAG 2.1 AA Compliance)
 
 ### 5.1 Automated Accessibility Testing
+
 ```typescript
 // tests/accessibility/wcag-audit.spec.ts
 import { test, expect } from '@playwright/test';
@@ -775,6 +806,7 @@ test.describe('WCAG 2.1 AA Compliance', () => {
 ```
 
 ### 5.2 Keyboard Navigation
+
 ```typescript
 // tests/accessibility/keyboard-nav.spec.ts
 test('Complete member form using only keyboard', async ({ page }) => {
@@ -823,6 +855,7 @@ test('Modal focus trap works correctly', async ({ page }) => {
 ```
 
 ### 5.3 Screen Reader Testing
+
 ```typescript
 // tests/accessibility/screen-reader.spec.ts
 test('Form inputs have proper ARIA labels', async ({ page }) => {
@@ -861,6 +894,7 @@ test('Dynamic content announces changes', async ({ page }) => {
 ## Phase 6: Performance & Core Web Vitals
 
 ### 6.1 Lighthouse CI Integration
+
 ```yaml
 # .github/workflows/lighthouse.yml
 name: Lighthouse CI
@@ -913,6 +947,7 @@ module.exports = {
 ```
 
 ### 6.2 Performance Budget Tests
+
 ```typescript
 // tests/performance/core-web-vitals.spec.ts
 test.describe('Core Web Vitals', () => {
@@ -965,6 +1000,7 @@ test.describe('Core Web Vitals', () => {
 ```
 
 ### 6.3 Bundle Size Monitoring
+
 ```typescript
 // tests/performance/bundle-size.test.ts
 import { readFileSync } from 'fs';
@@ -996,6 +1032,7 @@ test('No duplicate dependencies in bundle', async () => {
 ## Phase 7: Security Testing
 
 ### 7.1 SQL Injection Prevention
+
 ```typescript
 // tests/security/sql-injection.spec.ts
 test('Search inputs are protected against SQL injection', async ({ page }) => {
@@ -1019,6 +1056,7 @@ test('Search inputs are protected against SQL injection', async ({ page }) => {
 ```
 
 ### 7.2 XSS Protection
+
 ```typescript
 // tests/security/xss.spec.ts
 test('User-generated content is sanitised', async ({ page }) => {
@@ -1044,6 +1082,7 @@ test('User-generated content is sanitised', async ({ page }) => {
 ```
 
 ### 7.3 Authentication & Session Security
+
 ```typescript
 // tests/security/auth.spec.ts
 test('Expired sessions redirect to login', async ({ page }) => {
@@ -1072,6 +1111,7 @@ test('CSRF token validated on form submissions', async ({ page, request }) => {
 ```
 
 ### 7.4 Row-Level Security (RLS) Enforcement
+
 ```typescript
 // tests/security/rls.spec.ts
 import { createClient } from '@supabase/supabase-js';
@@ -1122,6 +1162,7 @@ test('RLS prevents cross-tenant updates', async () => {
 ```
 
 ### 7.5 Sensitive Data Encryption
+
 ```typescript
 // tests/security/encryption.spec.ts
 test('Phone numbers are encrypted in database', async () => {
@@ -1155,6 +1196,7 @@ test('Phone numbers are encrypted in database', async () => {
 ```
 
 ### 7.6 Rate Limiting
+
 ```typescript
 // tests/security/rate-limiting.spec.ts
 test('API rate limits prevent brute force attacks', async ({ request }) => {
@@ -1182,6 +1224,7 @@ test('API rate limits prevent brute force attacks', async ({ request }) => {
 ## Phase 8: Continuous Integration & Deployment
 
 ### 8.1 GitHub Actions Workflow
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI/CD Pipeline
@@ -1341,6 +1384,7 @@ jobs:
 ```
 
 ### 8.2 Package Scripts
+
 ```json
 // package.json
 {
@@ -1368,6 +1412,7 @@ jobs:
 ## Phase 9: Monitoring & Observability
 
 ### 9.1 Error Tracking Setup
+
 ```typescript
 // src/lib/monitoring.ts
 import * as Sentry from '@sentry/nextjs';
@@ -1388,6 +1433,7 @@ Sentry.init({
 ```
 
 ### 9.2 Performance Monitoring
+
 ```typescript
 // tests/monitoring/performance-alerts.test.ts
 test('Alert fires when API response time exceeds threshold', async () => {
@@ -1408,6 +1454,7 @@ test('Alert fires when API response time exceeds threshold', async () => {
 ```
 
 ### 9.3 Uptime & Health Checks
+
 ```typescript
 // tests/monitoring/health-check.spec.ts
 test('Health check endpoint responds within 500ms', async ({ request }) => {
@@ -1434,47 +1481,57 @@ test('Health check endpoint responds within 500ms', async ({ request }) => {
 ## Phase 10: Documentation & Reporting
 
 ### 10.1 Test Documentation
+
 Create `TESTING.md` in your repository root:
 
 \`\`\`markdown
+
 # Testing Documentation
 
 ## Running Tests Locally
 
 ### Unit Tests
+
 \`\`\`bash
 pnpm test:unit
 \`\`\`
 
 ### Integration Tests
+
 \`\`\`bash
 pnpm test:integration
 \`\`\`
 
 ### E2E Tests
+
 \`\`\`bash
 pnpm test:e2e
 \`\`\`
 
 ### Accessibility Tests
+
 \`\`\`bash
 pnpm test:a11y
 \`\`\`
 
 ## Coverage Requirements
+
 - **Lines**: 80%
 - **Functions**: 80%
 - **Branches**: 75%
 - **Statements**: 80%
 
 ## Test Database Setup
+
 See `.env.test.example` for required environment variables.
 
 ## CI/CD Pipeline
+
 All tests run automatically on push and pull requests. See `.github/workflows/ci.yml`.
 \`\`\`
 
 ### 10.2 Coverage Badges
+
 Add to your README.md:
 
 \`\`\`markdown
@@ -1503,18 +1560,21 @@ Add to your README.md:
 ## Maintenance Guidelines
 
 ### Running Tests Regularly
+
 - Run full test suite before every deployment
 - Run accessibility tests when adding new UI components
 - Run performance tests monthly to catch regressions
 - Update test data annually to reflect current member demographics
 
 ### Updating Tests
+
 - When adding new features, add corresponding tests first (TDD)
 - When fixing bugs, write a failing test that reproduces the bug, then fix it
 - Review and update test fixtures quarterly to match production data patterns
 - Archive or remove tests for deprecated features
 
 ### Monitoring Test Health
+
 - Review CI/CD failures weekly
 - Address flaky tests immediately (isolate or fix root cause)
 - Track test execution time and optimise slow tests
@@ -1525,12 +1585,14 @@ Add to your README.md:
 ## Support & Resources
 
 ### Documentation
+
 - [Vitest Docs](https://vitest.dev/)
 - [Playwright Docs](https://playwright.dev/)
 - [Testing Library Docs](https://testing-library.com/)
 - [Axe Accessibility Rules](https://github.com/dequelabs/axe-core/blob/develop/doc/rule-descriptions.md)
 
 ### Community
+
 - Report testing issues to `ryan@smalltalk.community`
 - Contribute test improvements via pull requests
 - Share testing patterns in team documentation

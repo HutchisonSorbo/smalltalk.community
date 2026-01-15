@@ -33,6 +33,18 @@ describe('dittoSync Utilities', () => {
             const remote = { id: '1', updatedAt: '2026-01-01T12:00:00Z', value: 'remote' };
             expect(resolveConflict(local, remote)).toEqual(remote);
         });
+
+        it('handles local with timestamp and remote without (prefers local)', () => {
+            const local = { id: '1', updatedAt: '2026-01-01T10:00:00Z', value: 'local' };
+            const remote = { id: '1', value: 'remote' };
+            expect(resolveConflict(local, remote)).toEqual(local);
+        });
+
+        it('throws when inputs are not objects', () => {
+            expect(() => resolveConflict(null, {})).toThrow();
+            expect(() => resolveConflict({}, undefined)).toThrow();
+            expect(() => resolveConflict('string', {})).toThrow();
+        });
     });
 
     describe('mergeMemberData', () => {
@@ -56,6 +68,11 @@ describe('dittoSync Utilities', () => {
             const merged = mergeMemberData(local, remote);
             expect(merged.skills).toEqual(['React']);
             expect(merged.headline).toBe('Dev');
+        });
+
+        it('throws when inputs are not objects', () => {
+            expect(() => mergeMemberData(null, {})).toThrow();
+            expect(() => mergeMemberData({}, undefined)).toThrow();
         });
     });
 });

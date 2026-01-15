@@ -1,7 +1,7 @@
 // tests/integration/components/member-form.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemberForm } from '@/components/communityos/member-form';
+import { MemberForm } from '@/components/communityos/MemberForm';
 import { describe, it, expect, vi } from 'vitest';
 
 describe('MemberForm Integration', () => {
