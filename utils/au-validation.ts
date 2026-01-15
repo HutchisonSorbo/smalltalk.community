@@ -33,6 +33,7 @@ export function validatePhone(phone: string): boolean {
  * @returns {boolean} True if the postcode is valid for Victoria.
  */
 export function validatePostcode(postcode: string): boolean {
+    if (typeof postcode !== 'string') return false;
     // Basic validation for VIC postcodes (3000-3999 range as primary example)
     // Could be expanded for national coverage
     return /^(3\d{3}|8\d{3})$/.test(postcode);
