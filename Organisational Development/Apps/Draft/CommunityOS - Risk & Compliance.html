@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk & Compliance Dashboard | smalltalk.community Inc</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Risk">
+    <link rel="manifest"
+        href="data:application/json;base64,ewogICJuYW1lIjogIlJpc2sgJiBDb21wbGlhbmNlIERhc2hib2FyZCIsCiAgInNob3J0X25hbWUiOiAiUmlzayIsCiAgImRlc2NyaXB0aW9uIjogIlJpc2sgbWFuYWdlbWVudCBmb3Igc21hbGx0YWxrLmNvbW11bml0eSIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzAwM2I2ZiIsCiAgImljb25zIjogW10KfQ==">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary: #3b82f6;
+                    --primary-support: #60a5fa;
+                    --accent: #fb923c;
+                    --text-color: #f1f5f9;
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --border-color: #334155;
+                }
+            }
+
+            body { @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6]; font-size: 16px; }
+            h1, h2, h3, h4, h5, h6 { @apply font-['Plus_Jakarta_Sans'] font-bold; }
+        }
+
+        @layer components {
+            .btn-primary { @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .btn-secondary { @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .input-field { @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)]; }
+            .card { @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6; }
+            .nav-link { @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2; }
+            .nav-link.active { @apply bg-white/20 font-bold; }
+        }
+
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 2px;
+            aspect-ratio: 1/1;
+        }
+        .risk-cell {
+            @apply flex items-center justify-center text-[10px] font-bold text-white/40;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+            .footer-left { flex: 1; text-align: left; }
+            .footer-center { flex: 1; text-align: center; font-weight: 600; }
+            .footer-right { flex: 1; text-align: right; }
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .nav-link, button, select, input {
+                min-height: 44px !important;
+            }
+            .input-field, input, select, textarea {
+                font-size: 16px !important;
+            }
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: { primary: 'var(--primary)', accent: 'var(--accent)', danger: 'var(--danger)', success: 'var(--success)', warning: 'var(--warning)' }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Standard Components ---
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-primary dark:text-white">{title}</h3>
+                            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        {children}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+
+        const AppShell = ({ children, title, currentTab, setTab, onSave, onLoad }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2 text-center">Skip contents</a>
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl font-bold font-display">smalltalk.community</div>
+                                <h1 className="hidden md:block text-lg opacity-80">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={onSave} className="btn-secondary !px-4 text-sm whitespace-nowrap flex items-center justify-center gap-2">💾 Save</button>
+                                <label className="btn-secondary !px-4 text-sm cursor-pointer whitespace-nowrap flex items-center justify-center gap-2">
+                                    📂 Load <input type="file" className="hidden" onChange={onLoad} accept=".json" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary !px-4 text-sm md:block hidden flex items-center justify-center gap-2">🖨️ Print</button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'risks', label: 'Risk Register', icon: '⚡' },
+                                { id: 'compliance', label: 'Compliance Tracker', icon: '📜' },
+                                { id: 'gates', label: 'Decision Gates', icon: '🚪' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                >
+                                    <span>{item.icon}</span> <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print">
+                    <div className="max-w-7xl mx-auto text-center px-4">
+                        <p className="text-sm">We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands.</p>
+                        <p className="text-xs mt-2 opacity-50">© 2026 smalltalk.community Inc. | Risk & Compliance Hub v1.0</p>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "", subtitle }) => (
+            <section className={`card ${className}`}>
+                {title && (
+                    <div className="mb-6">
+                        <h2 className="text-xl font-bold text-primary dark:text-white">{title}</h2>
+                        {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+                    </div>
+                )}
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800',
+                warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                danger: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
+                info: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                default: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+            };
+            return <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colors[type]}`}>{status}</span>;
+        };
+
+        const FormInput = ({ label, id, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <input id={id} className="input-field" {...props} />
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <select id={id} className="input-field" {...props}>
+                    <option value="">Select...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            </div>
+        );
+
+        // --- App Logic ---
+
+        const Dashboard = ({ data, setTab, setFilters }) => {
+            const riskCount = data.risks?.length || 0;
+            const highRiskCount = data.risks?.filter(r => (r.impact * r.likelihood) >= 12).length || 0;
+            const completedGates = data.gates?.filter(g => g.status === 'met').length || 0;
+
+            const handleHeatMapClick = (i, l) => {
+                setFilters({ impact: i, likelihood: l });
+                setTab('risks');
+            };
+
+            return (
+                <div className="space-y-8 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card className="!p-4 border-l-4 border-l-primary cursor-pointer hover:shadow-md transition-all" onClick={() => setTab('risks')}>
+                            <div className="text-[10px] uppercase font-black text-slate-500 mb-1">Total Risks Identified</div>
+                            <div className="text-3xl font-black">{riskCount}</div>
+                        </Card>
+                        <Card className="!p-4 border-l-4 border-l-danger cursor-pointer hover:shadow-md transition-all" onClick={() => { setFilters({ minScore: 12 }); setTab('risks'); }}>
+                            <div className="text-[10px] uppercase font-black text-danger mb-1">High Risks (Score 12+)</div>
+                            <div className="text-3xl font-black text-danger">{highRiskCount}</div>
+                        </Card>
+                        <Card className="!p-4 border-l-4 border-l-success cursor-pointer hover:shadow-md transition-all" onClick={() => setTab('compliance')}>
+                            <div className="text-[10px] uppercase font-black text-success mb-1">Compliance Health</div>
+                            <div className="text-3xl font-black text-success">
+                                {Math.round((data.compliance?.filter(c => c.status === 'Compliant').length || 0) / (data.compliance?.length || 6) * 100)}%
+                            </div>
+                        </Card>
+                        <Card className="!p-4 border-l-4 border-l-warning cursor-pointer hover:shadow-md transition-all" onClick={() => setTab('gates')}>
+                            <div className="text-[10px] uppercase font-black text-warning mb-1">Decision Gates Met</div>
+                            <div className="text-3xl font-black text-warning">{completedGates} / 3</div>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Executive Risk Exposure" subtitle="Overview of the 4x4 Risk Matrix. Click cells to view specific risks.">
+                            <RiskHeatMap risks={data.risks || []} onCellClick={handleHeatMapClick} />
+                            <div className="mt-4 flex justify-between text-[10px] font-black uppercase opacity-60">
+                                <span>← Low Likelihood</span>
+                                <span>High Likelihood →</span>
+                            </div>
+                        </Card>
+                        <Card title="Compliance Health Snapshot" subtitle="Key statutory obligations.">
+                            <div className="space-y-4">
+                                {(data.compliance || [
+                                    { name: 'Incorporation with CAV', status: 'Compliant' },
+                                    { name: 'ACNC Governance Standard 1', status: 'Compliant' },
+                                    { name: 'ACNC Governance Standard 5', status: 'In Progress' }
+                                ]).slice(0, 4).map((item, i) => (
+                                    <div key={i} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                        <span className="font-bold">{item.name}</span>
+                                        <StatusBadge status={item.status} type={item.status === 'Compliant' ? 'success' : item.status === 'In Progress' ? 'warning' : 'default'} />
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={() => setTab('compliance')} className="mt-4 text-primary text-xs font-bold hover:underline">Full Compliance Tracker →</button>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const RiskHeatMap = ({ risks, onCellClick }) => {
+            const getCellColor = (impact, likelihood) => {
+                const score = impact * likelihood;
+                if (score >= 12) return 'bg-danger/80 hover:bg-danger';
+                if (score >= 6) return 'bg-warning/80 hover:bg-warning';
+                return 'bg-success/80 hover:bg-success';
+            };
+
+            const grid = [];
+            for (let i = 4; i >= 1; i--) { // Impact
+                for (let l = 1; l <= 4; l++) { // Likelihood
+                    const count = risks.filter(r => r.impact === i && r.likelihood === l).length;
+                    grid.push({ i, l, count });
+                }
+            }
+
+            return (
+                <div className="relative">
+                    <div className="absolute -left-10 top-1/2 -rotate-90 text-[10px] font-black uppercase tracking-widest opacity-40">Impact</div>
+                    <div className="grid grid-cols-4 gap-1 aspect-square bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                        {grid.map((cell, idx) => (
+                            <div
+                                key={idx}
+                                onClick={() => onCellClick(cell.i, cell.l)}
+                                className={`risk-cell rounded relative cursor-pointer transition-transform hover:scale-105 ${getCellColor(cell.i, cell.l)}`}
+                                title={`Impact: ${cell.i}, Likelihood: ${cell.l}`}
+                            >
+                                {cell.count > 0 && (
+                                    <div className="bg-white text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-lg">
+                                        {cell.count}
+                                    </div>
+                                )}
+                                <div className="absolute bottom-1 right-1 text-[8px] opacity-30">{cell.l},{cell.i}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const RiskRegister = ({ data, setData, filters, setFilters }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({ description: '', category: 'Strategic', impact: 2, likelihood: 2, mitigation: '' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newRisk = { ...formData, id: generateId(), riskScore: formData.impact * formData.likelihood };
+                setData(prev => ({ ...prev, risks: [...(prev.risks || []), newRisk] }));
+                setIsModalOpen(false);
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Interactive Risk Register">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-4">
+                                <h3 className="font-bold">Active Risks</h3>
+                                {Object.keys(filters).length > 0 && (
+                                    <button onClick={() => setFilters({})} className="text-[10px] uppercase font-black text-danger border border-danger px-2 py-0.5 rounded hover:bg-danger hover:text-white transition-colors">Clear Filters ✕</button>
+                                )}
+                            </div>
+                            <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">+ Assess New Risk</button>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800 text-[10px] uppercase font-black">
+                                    <tr>
+                                        <th className="px-6 py-4">Risk Description</th>
+                                        <th className="px-6 py-4">Category</th>
+                                        <th className="px-6 py-4 text-center">Score</th>
+                                        <th className="px-6 py-4">Mitigation Strategy</th>
+                                        <th className="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-sm divide-y">
+                                    {(data.risks || [])
+                                        .filter(r => {
+                                            if (filters.impact && r.impact !== filters.impact) return false;
+                                            if (filters.likelihood && r.likelihood !== filters.likelihood) return false;
+                                            if (filters.minScore && r.riskScore < filters.minScore) return false;
+                                            return true;
+                                        })
+                                        .map(r => (
+                                            <tr key={r.id}>
+                                                <td className="px-6 py-4 font-bold max-w-xs">{r.description}</td>
+                                                <td className="px-6 py-4 text-xs uppercase opacity-70">{r.category}</td>
+                                                <td className="px-6 py-4 text-center font-black">
+                                                    <span className={`px-3 py-1 rounded ${r.riskScore >= 12 ? 'bg-danger text-white' : r.riskScore >= 6 ? 'bg-warning text-white' : 'bg-success text-white'}`}>
+                                                        {r.riskScore}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-xs opacity-80">{r.mitigation}</td>
+                                                <td className="px-6 py-4">
+                                                    <select
+                                                        className="bg-transparent text-[10px] font-bold uppercase cursor-pointer"
+                                                        value={r.status || 'Active'}
+                                                        onChange={(e) => {
+                                                            const newRisks = data.risks.map(risk => risk.id === r.id ? { ...risk, status: e.target.value } : risk);
+                                                            setData({ ...data, risks: newRisks });
+                                                        }}
+                                                    >
+                                                        <option>Active</option>
+                                                        <option>Mitigated</option>
+                                                        <option>Closed</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    {(!data.risks || data.risks.length === 0) && (
+                                        <tr><td colSpan="5" className="p-12 text-center text-slate-400 italic">No risks identified. Start by identifying hazards.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Risk Assessment">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormSelect label="Category" id="rcat" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} options={[
+                                { value: 'Strategic', label: 'Strategic' },
+                                { value: 'Financial', label: 'Financial' },
+                                { value: 'Operational', label: 'Operational' },
+                                { value: 'Reputational', label: 'Reputational' },
+                                { value: 'Legal', label: 'Legal' }
+                            ]} required />
+                            <FormInput label="Risk Description" id="rdesc" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} required />
+                            <div className="grid grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                                <FormSelect label="Impact (1-4)" id="rimp" value={formData.impact} onChange={e => setFormData({ ...formData, impact: Number(e.target.value) })} options={[
+                                    { value: 1, label: '1 - Minor' }, { value: 2, label: '2 - Moderate' }, { value: 3, label: '3 - Major' }, { value: 4, label: '4 - Catastrophic' }
+                                ]} required />
+                                <FormSelect label="Likelihood (1-4)" id="rlike" value={formData.likelihood} onChange={e => setFormData({ ...formData, likelihood: Number(e.target.value) })} options={[
+                                    { value: 1, label: '1 - Unlikely' }, { value: 2, label: '2 - Possible' }, { value: 3, label: '3 - Likely' }, { value: 4, label: '4 - Almost Certain' }
+                                ]} required />
+                            </div>
+                            <FormInput label="Mitigation Plan" id="rmit" value={formData.mitigation} onChange={e => setFormData({ ...formData, mitigation: e.target.value })} placeholder="What actions will reduce this risk?" />
+                            <div className="text-center font-black py-4 border-t">
+                                Initial Risk Score: <span className="text-2xl text-primary">{formData.impact * formData.likelihood}</span>
+                            </div>
+                            <div className="flex gap-4">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary flex-1">Back</button>
+                                <button type="submit" className="btn-primary flex-1">Save Risk Record</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const ComplianceTracker = ({ data, setData }) => {
+            const standards = data.compliance || [
+                { name: '1. Purposes & NFP Nature', status: 'Compliant', desc: 'Objects defined in Constitution correctly.' },
+                { name: '2. Accountability to Members', status: 'Compliant', desc: 'AGM processes documented in App 8.' },
+                { name: '3. Compliance with AU Laws', status: 'In Progress', desc: 'Cav record-keeping review required.' },
+                { name: '4. Suitable Responsible Persons', status: 'Compliant', desc: 'Linked to App 1 Registry.' },
+                { name: '5. Duties of Responsible Persons', status: 'In Progress', desc: 'Board induction scheduled.' },
+                { name: '6. Public Trust & Confidence', status: 'Pending', desc: 'Transparency policy under review.' }
+            ];
+
+            const toggleStatus = (index) => {
+                const nextStatus = { 'Compliant': 'In Progress', 'In Progress': 'Pending', 'Pending': 'Compliant' };
+                const newStandards = [...standards];
+                newStandards[index].status = nextStatus[newStandards[index].status];
+                setData({ ...data, compliance: newStandards });
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Statutory Compliance Audit">
+                        <div className="space-y-6">
+                            <div className="p-4 bg-primary text-white rounded-xl">
+                                <h4 className="font-black text-lg">ACNC Governance Standards</h4>
+                                <p className="opacity-80 text-xs">As a planned charity, smalltalk.community Inc must meet these 6 standards. Click status to toggle.</p>
+                            </div>
+                            {standards.map((s, i) => (
+                                <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-xl gap-4">
+                                    <div>
+                                        <div className="font-black">{s.name}</div>
+                                        <div className="text-xs opacity-60 italic">{s.desc}</div>
+                                    </div>
+                                    <button onClick={() => toggleStatus(i)}>
+                                        <StatusBadge status={s.status} type={s.status === 'Compliant' ? 'success' : s.status === 'Pending' ? 'default' : 'warning'} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const DecisionGates = ({ data, setData }) => {
+            const gates = [
+                { id: 'gate1', name: 'Month 4: Incorporation', criteria: 'CAV Certificate Received', status: 'met', date: 'Oct 2026' },
+                { id: 'gate2', name: 'Month 6: Initial Funding', criteria: 'Min $3,000 Securitised', status: 'pending', date: 'Dec 2026' },
+                { id: 'gate3', name: 'Month 10: 50+ Active Users', criteria: 'User Analytics verification', status: 'pending', date: 'Apr 2027' }
+            ];
+
+            return (
+                <div className="space-y-8">
+                    <Card title="Strategic Decision Gates" subtitle="Non-negotiable milestones from the Month 1-12 Strategic Plan">
+                        <div className="relative pt-8 pb-8">
+                            <div className="absolute left-[17px] top-8 bottom-8 w-1 bg-slate-200 dark:bg-slate-700"></div>
+                            <div className="space-y-12">
+                                {gates.map(g => (
+                                    <div key={g.id} className="relative pl-12">
+                                        <div className={`absolute left-0 top-0 w-9 h-9 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center font-black z-10 ${g.status === 'met' ? 'bg-success text-white' : 'bg-slate-300 text-slate-500'}`}>
+                                            {g.status === 'met' ? '✓' : '!'}
+                                        </div>
+                                        <div className="card !p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-black text-lg">{g.name}</h4>
+                                                <span className="text-[10px] uppercase font-black opacity-40">{g.date}</span>
+                                            </div>
+                                            <p className="text-sm opacity-70 mb-4">{g.criteria}</p>
+                                            <StatusBadge status={g.status} type={g.status === 'met' ? 'success' : 'warning'} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const initialData = {
+            risks: [
+                { id: 'r1', description: 'Loss of key personnel', category: 'Operational', impact: 3, likelihood: 2, riskScore: 6, mitigation: 'Cross-training, succession planning', status: 'Active' },
+                { id: 'r2', description: 'Insufficient funding for operations', category: 'Financial', impact: 4, likelihood: 2, riskScore: 8, mitigation: 'Diversify funding sources, grant applications', status: 'Active' },
+                { id: 'r3', description: 'Negative public perception', category: 'Reputational', impact: 3, likelihood: 1, riskScore: 3, mitigation: 'Proactive PR, community engagement', status: 'Mitigated' },
+                { id: 'r4', description: 'Data breach of user information', category: 'Legal', impact: 4, likelihood: 3, riskScore: 12, mitigation: 'Implement robust cybersecurity measures, regular audits', status: 'Active' },
+                { id: 'r5', description: 'Failure to meet regulatory compliance', category: 'Legal', impact: 3, likelihood: 2, riskScore: 6, mitigation: 'Regular legal reviews, compliance officer', status: 'Active' }
+            ],
+            compliance: [
+                { name: '1. Purposes & NFP Nature', status: 'Compliant', desc: 'Objects defined in Constitution correctly.' },
+                { name: '2. Accountability to Members', status: 'Compliant', desc: 'AGM processes documented in App 8.' },
+                { name: '3. Compliance with AU Laws', status: 'In Progress', desc: 'Cav record-keeping review required.' },
+                { name: '4. Suitable Responsible Persons', status: 'Compliant', desc: 'Linked to App 1 Registry.' },
+                { name: '5. Duties of Responsible Persons', status: 'In Progress', desc: 'Board induction scheduled.' },
+                { name: '6. Public Trust & Confidence', status: 'Pending', desc: 'Transparency policy under review.' }
+            ],
+            gates: [
+                { id: 'gate1', name: 'Month 4: Incorporation', criteria: 'CAV Certificate Received', status: 'met', date: 'Oct 2026' },
+                { id: 'gate2', name: 'Month 6: Initial Funding', criteria: 'Min $3,000 Securitised', status: 'pending', date: 'Dec 2026' },
+                { id: 'gate3', name: 'Month 10: 50+ Active Users', criteria: 'User Analytics verification', status: 'pending', date: 'Apr 2027' }
+            ]
+        };
+
+        const SettingsView = ({ data, setData }) => {
+            const [localData, setLocalData] = useState(() => JSON.stringify(data, null, 2));
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(false);
+
+            useEffect(() => {
+                setLocalData(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(localData);
+                    setData(parsed);
+                    setSuccess(true);
+                    setError(null);
+                    setTimeout(() => setSuccess(false), 3000);
+                } catch (err) {
+                    setError(err.message);
+                    setSuccess(false);
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <Card title="Application Settings" subtitle="Manage application data and preferences">
+                        <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold mb-2">Raw Data Editor</h3>
+                                <p className="text-sm text-slate-500 mb-4">
+                                    Below is the raw JSON data for this application. You can edit it directly to fix issues or batch update records.
+                                    <br />
+                                    <span className="text-red-500 font-bold">Warning:</span> Invalid JSON will prevent saving. Back up your data first.
+                                </p>
+                                <textarea
+                                    value={localData}
+                                    onChange={(e) => setLocalData(e.target.value)}
+                                    className="w-full h-96 font-mono text-xs p-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                                />
+                                {error && (
+                                    <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold border border-red-200">
+                                        Error: {error}
+                                    </div>
+                                )}
+                                {success && (
+                                    <div className="mt-2 p-3 bg-green-50 text-green-700 rounded-lg text-sm font-bold border border-green-200">
+                                        Data successfully saved!
+                                    </div>
+                                )}
+                                <div className="mt-4 flex justify-end">
+                                    <button onClick={handleSave} className="btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentTab, setTab] = useState('dashboard');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem('stRiskComplianceData');
+                return saved ? JSON.parse(saved) : initialData;
+            });
+            const [filters, setFilters] = useState({});
+
+            useEffect(() => {
+                if (isFirstVisit('risk_compliance')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('stRiskComplianceData', JSON.stringify(data));
+            }, [data]);
+
+            const saveDraft = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `risk-compliance-data.json`; a.click();
+            };
+
+            const loadDraft = (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => { setData(JSON.parse(ev.target.result)); alert('Data Loaded'); };
+                reader.readAsText(file);
+            };
+
+            const renderContent = () => {
+                switch (currentTab) {
+                    case 'dashboard':
+                        return <Dashboard data={data} setTab={setTab} setFilters={setFilters} />;
+                    case 'risks':
+                        return <RiskRegister data={data} setData={setData} filters={filters} setFilters={setFilters} />;
+                    case 'compliance':
+                        return <ComplianceTracker data={data} setData={setData} />;
+                    case 'gates':
+                        return <DecisionGates data={data} setData={setData} />;
+                    case 'settings':
+                        return <SettingsView data={data} setData={setData} />;
+                    default:
+                        return <Dashboard data={data} setTab={setTab} setFilters={setFilters} />;
+                }
+            };
+
+            return (
+                <AppShell title="Risk & Compliance" currentTab={currentTab} setTab={setTab} onSave={saveDraft} onLoad={loadDraft}>
+                    {renderContent()}
+                    <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} appName="Risk & Compliance" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

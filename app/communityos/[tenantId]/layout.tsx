@@ -45,8 +45,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
             <div className="min-h-screen">
                 {/* Tenant Header */}
                 <header
-                    className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur dark:bg-gray-900/80"
-                    style={{ borderColor: "var(--tenant-primary, #4F46E5)" }}
+                    className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur dark:bg-gray-900/80 transition-colors"
                 >
                     <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
                         <div className="flex items-center gap-3">
@@ -88,8 +87,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                             Powered by{" "}
                             <a
                                 href="https://smalltalk.community"
-                                className="font-medium"
-                                style={{ color: "var(--tenant-primary, #4F46E5)" }}
+                                className="font-medium hover:underline opacity-80"
                             >
                                 CommunityOS
                             </a>

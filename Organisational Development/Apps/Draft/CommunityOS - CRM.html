@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CommunityOS - CRM | smalltalk.community Inc</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CRM">
+    <link rel="manifest"
+        href="data:application/json;base64,ewogICJuYW1lIjogIk1lbWJlciBEYXRhYmFzZSAmIEVuZ2FnZW1lbnQgQ1JNIiwKICAic2hvcnRfbmFtZSI6ICJDUk0iLAogICJkZXNjcmlwdGlvbiI6ICJDb21tdW5pdHkgcmVsYXRpb25zaGlwIG1hbmFnZW1lbnQgZm9yIHNtYWxsdGFsay5jb21tdW5pdHkiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMwMDNiNmYiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE9USWdNVGt5SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVGt5SWlCb1pXbG5hSFE5SWpFNU1pSWdjbmc5SWpJMElpQm1hV3hzUFNJak1EQXpZalkwSWk4K1BIUmxlSFFnZUQwaU9UWWlJSGs5SWpFd09DSWdabTl1ZEMxbVlXMXBiSGs5SWtGd2NHeGxJRk5xYzNSbGJTd2dZWEpwWVd3aUlHWnZiblF0YzJsNlpUMGlORGdpSUdacGJHdzlJaU5tWm1ZaUlIUmxlSFF0WVc1amFHOXlQU0p0YVdSa2JHVWlQa05TVFR3dmRHVjRkRDQ4TDNOMlp6ND0iLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9">
+    <link rel="apple-touch-icon"
+        href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjI0IiBmaWxsPSIjMDAzYjZmIi8+PHRleHQgeD0iOTYiIHk9IjEwOCIgZm9udC1mYW1pbHk9IkFwcGxlIFNqc3RlbSwgYXJpYWwiIGZvbnQtc2l6ZT0iNDgiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkNSTTwvdGV4dD48L3N2Zz4=">
+
+    <!--
+    App: Member Database & Engagement CRM
+    Purpose: Relationship management for community organisations.
+    Author: smalltalk.community Inc
+    Version: 1.0 (2026-01-10)
+    -->
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel (for JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --info: #3b82f6;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary: #3b82f6;
+                    --primary-support: #60a5fa;
+                    --accent: #fb923c;
+                    --text-color: #f1f5f9;
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --border-color: #334155;
+                }
+            }
+
+            body {
+                @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6];
+                font-size: 16px;
+                letter-spacing: -0.01em;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-['Plus_Jakarta_Sans'] font-bold;
+            }
+        }
+
+        @layer components {
+            .btn-primary {
+                @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none disabled:opacity-50 min-h-[44px] flex items-center justify-center gap-2;
+            }
+            .btn-secondary {
+                @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px] flex items-center justify-center gap-2;
+            }
+            .btn-danger {
+                @apply bg-[var(--danger)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--danger)] outline-none min-h-[44px] flex items-center justify-center gap-2;
+            }
+            .card {
+                @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6;
+            }
+            .input-field {
+                @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)] transition-all duration-200;
+            }
+            .nav-link {
+                @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2;
+            }
+            .nav-link.active {
+                @apply bg-white/20 font-bold;
+            }
+            .status-badge {
+                @apply px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border whitespace-nowrap;
+            }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+            }
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile optimisation - WCAG 2.2 touch targets */
+        button, a, [role="button"] {
+            min-height: 44px;
+        }
+
+        /* Prevent iOS zoom on form inputs */
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        input[type="password"],
+        input[type="search"],
+        input[type="date"],
+        input[type="tel"],
+        textarea,
+        select {
+            font-size: 16px !important;
+        }
+    </style>
+
+    <script shadow>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--primary)',
+                        'primary-support': 'var(--primary-support)',
+                        accent: 'var(--accent)',
+                        danger: 'var(--danger)',
+                        success: 'var(--success)',
+                        warning: 'var(--warning)',
+                        info: 'var(--info)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- PWA Service Worker Registration (Offline Support) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'crm-cache-v1';
+                const OFFLINE_URLS = [self.location.href];
+                
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_URLS))
+                    );
+                    self.skipWaiting();
+                });
+                
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(
+                        caches.keys().then((keys) => 
+                            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+                        )
+                    );
+                    self.clients.claim();
+                });
+                
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then((cached) => {
+                            return cached || fetch(event.request).then((response) => {
+                                if (response.status === 200) {
+                                    const clone = response.clone();
+                                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                                }
+                                return response;
+                            });
+                        }).catch(() => caches.match(self.location.href))
+                    );
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(blob))
+                .then(() => console.log('CommunityOS: Service Worker registered for offline support'))
+                .catch((err) => console.warn('CommunityOS: SW registration failed', err));
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- Constants & Defaults ---
+        const DEFAULT_ORG_NAME = "smalltalk.community Inc";
+        const MEMBER_TYPES = ["Full Member", "Community Participant", "Organisational Partner", "Sustaining Supporter"];
+        const AGE_COHORTS = [
+            { name: "Child", min: 5, max: 11, color: "success" },
+            { name: "Youth", min: 12, max: 24, color: "info" },
+            { name: "Adult", min: 25, max: 64, color: "primary" },
+            { name: "Senior", min: 65, max: 150, color: "warning" }
+        ];
+
+        // --- Utils ---
+        const generateId = (prefix = 'm') => `${prefix}${Math.random().toString(36).substr(2, 9)}`;
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+        const calculateAge = (dob) => {
+            if (!dob) return 0;
+            const today = new Date();
+            const birthDate = new Date(dob);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        };
+        const getAgeCohort = (age) => {
+            const cohort = AGE_COHORTS.find(c => age >= c.min && age <= c.max);
+            return cohort ? cohort.name : "Unknown";
+        };
+
+        // --- First Visit & Welcome Modal ---
+        const FIRST_VISIT_KEY = 'sm_crm_first_visit';
+        const isFirstVisit = () => {
+            try {
+                return localStorage.getItem(FIRST_VISIT_KEY) !== 'false';
+            } catch { return true; }
+        };
+        const markFirstVisitComplete = () => {
+            try {
+                localStorage.setItem(FIRST_VISIT_KEY, 'false');
+            } catch { }
+        };
+
+        const WelcomeModal = ({ onClose }) => (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="p-8">
+                        <div className="text-center mb-6">
+                            <div className="text-5xl mb-4">👥</div>
+                            <h2 className="text-2xl font-bold text-primary dark:text-white mb-2">Welcome to the CRM</h2>
+                            <p className="text-slate-500">Member Database & Engagement Tracker</p>
+                        </div>
+                        <div className="space-y-4 mb-8">
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">📊</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Dashboard</div>
+                                    <div className="text-sm text-slate-500">View member stats, at-risk members, and upcoming birthdays</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">👤</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Members</div>
+                                    <div className="text-sm text-slate-500">Add, edit, and manage member profiles with age cohort tracking</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">📞</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Communications</div>
+                                    <div className="text-sm text-slate-500">Log interactions and track follow-ups</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">💾</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Save & Load</div>
+                                    <div className="text-sm text-slate-500">Export data as JSON for backup or sharing</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="w-full py-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-support transition-colors">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- Common Components ---
+
+        const AppShell = ({ title, currentTab, setTab, onSave, onLoad, lastSaved, children, orgName }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2 text-center no-print">
+                    Skip to main content
+                </a>
+
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <span className="text-2xl font-bold font-display tracking-tight">CommunityOS</span>
+                                <div className="hidden md:block h-6 w-px bg-white/20"></div>
+                                <h1 className="hidden md:block text-lg font-medium opacity-90">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                {lastSaved && <span className="hidden lg:flex items-center text-xs opacity-70 mr-2">Last save: {lastSaved}</span>}
+                                <button onClick={onSave} className="btn-secondary text-xs !px-3 h-9" title="Download JSON Backup">
+                                    💾 Save
+                                </button>
+                                <label className="btn-secondary text-xs !px-3 h-9 cursor-pointer" title="Upload JSON Backup">
+                                    📂 Load
+                                    <input type="file" className="hidden" onChange={onLoad} accept=".json" aria-label="Upload JSON Data" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary text-xs !px-3 h-9">
+                                    🖨️ Print
+                                </button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'members', label: 'Members', icon: '👥' },
+                                { id: 'communications', label: 'Comms', icon: '📞' },
+                                { id: 'partners', label: 'Partners', icon: '🏢' },
+                                { id: 'segments', label: 'Segments', icon: '📋' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap text-sm ${currentTab === item.id ? 'active' : ''}`}
+                                    aria-current={currentTab === item.id ? 'page' : undefined}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full outline-none">
+                    {children}
+                </main>
+
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print border-t border-slate-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <p className="text-sm mb-4">
+                            <strong>Acknowledgment of Country:</strong> We acknowledge the Taungurung and Wurundjeri peoples
+                            as the Traditional Custodians of the lands on which we operate.
+                        </p>
+                        <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-xs opacity-70">
+                            <span>© 2026 {orgName}.</span>
+                            <span>{title} v1.0</span>
+                            <span className="hidden md:inline">|</span>
+                            <span>WCAG 2.1 AA Compliant</span>
+                        </div>
+                    </div>
+                </footer>
+
+                {/* Print Footer */}
+                <div className="print-footer no-print-on-screen">
+                    <div className="flex-1 text-left" id="print-org-name">{orgName}</div>
+                    <div className="flex-1 text-center font-semibold" id="print-doc-title">{title}</div>
+                    <div className="flex-1 text-right" id="print-timestamp"></div>
+                </div>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "", subtitle, action }) => (
+            <section className={`card ${className}`}>
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        {title && <h2 className="text-2xl font-bold text-primary dark:text-white leading-tight">{title}</h2>}
+                        {subtitle && <p className="text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+                    </div>
+                    {action && <div className="no-print">{action}</div>}
+                </div>
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+                warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+                danger: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+                info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+                primary: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
+                default: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
+            };
+            return (
+                <span className={`status-badge ${colors[type] || colors.default}`}>
+                    {status}
+                </span>
+            );
+        };
+
+        const FormInput = ({ label, id, error, required, helpText, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                    {label} {required && <span className="text-danger" aria-hidden="true">*</span>}
+                    {helpText && <span className="text-xs text-slate-400 font-normal">({helpText})</span>}
+                </label>
+                <input id={id} className={`input-field ${error ? 'border-danger' : ''}`} {...props} />
+                {error && <p className="text-danger text-xs mt-1" role="alert">{error}</p>}
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, error, required, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {label} {required && <span className="text-danger">*</span>}
+                </label>
+                <select id={id} className={`input-field ${error ? 'border-danger' : ''}`} {...props}>
+                    <option value="">Select option...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                {error && <p className="text-danger text-xs mt-1" role="alert">{error}</p>}
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl" }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print" onClick={onClose}>
+                    <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full ${maxWidth} max-h-[90vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-inherit sticky top-0 z-10">
+                            <h2 className="text-xl font-bold text-primary dark:text-white">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors" aria-label="Close modal">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- View Components ---
+
+        const Dashboard = ({ data, setTab }) => {
+            const activeMembers = data.members.filter(m => m.membership.status === 'Active');
+            const atRiskCount = data.members.filter(m => m.engagement.riskLevel !== 'Green').length;
+            const youthCount = data.members.filter(m => m.basicInfo.ageCohort === 'Youth').length;
+            const seniorsCount = data.members.filter(m => m.basicInfo.ageCohort === 'Senior').length;
+
+            const upcomingBirthdays = data.members.filter(m => {
+                if (!m.basicInfo.dateOfBirth) return false;
+                const dob = new Date(m.basicInfo.dateOfBirth);
+                const today = new Date();
+                const nextBday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+                if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
+                const diff = (nextBday - today) / (1000 * 60 * 60 * 24);
+                return diff <= 30;
+            }).sort((a, b) => new Date(a.basicInfo.dateOfBirth).getMonth() - new Date(b.basicInfo.dateOfBirth).getMonth());
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card className="!p-4 bg-primary/5 border-primary/20">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Total Members</div>
+                            <div className="text-4xl font-black text-primary dark:text-blue-400">{data.members.length}</div>
+                            <div className="text-xs text-slate-400 mt-1">{activeMembers.length} Active</div>
+                        </Card>
+                        <Card className="!p-4 border-amber-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">At-Risk Members</div>
+                            <div className="text-4xl font-black text-amber-600">{atRiskCount}</div>
+                            <div className="text-xs text-slate-400 mt-1">No contact in 30+ days</div>
+                        </Card>
+                        <Card className="!p-4 border-blue-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Youth Cohort</div>
+                            <div className="text-4xl font-black text-blue-600">{youthCount}</div>
+                            <div className="text-xs text-slate-400 mt-1">Aged 12-24</div>
+                        </Card>
+                        <Card className="!p-4 border-emerald-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Follow-ups Due</div>
+                            <div className="text-4xl font-black text-emerald-600">{data.communications.filter(c => c.followUpRequired).length}</div>
+                            <div className="text-xs text-slate-400 mt-1">Active tasks</div>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Engagement Risk" subtitle="Members requiring outreach">
+                            <div className="space-y-4">
+                                {data.members.filter(m => m.engagement.riskLevel !== 'Green').slice(0, 5).map(m => (
+                                    <div key={m.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                        <div>
+                                            <div className="font-bold">{m.basicInfo.fullName}</div>
+                                            <div className="text-xs text-slate-500">Last contact: {m.engagement.lastContactDate || 'Never'}</div>
+                                        </div>
+                                        <StatusBadge status={m.engagement.riskLevel} type={m.engagement.riskLevel === 'Amber' ? 'warning' : 'danger'} />
+                                    </div>
+                                ))}
+                                {atRiskCount === 0 && <p className="text-slate-400 italic">No high-risk members identified. Relationship health is good!</p>}
+                                <button onClick={() => setTab('members')} className="btn-secondary w-full text-sm">View All Members</button>
+                            </div>
+                        </Card>
+
+                        <Card title="Upcoming Birthdays" subtitle="Next 30 days">
+                            <div className="space-y-4">
+                                {upcomingBirthdays.slice(0, 5).map(m => {
+                                    const dob = new Date(m.basicInfo.dateOfBirth);
+                                    return (
+                                        <div key={m.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                            <div>
+                                                <div className="font-bold">{m.basicInfo.fullName}</div>
+                                                <div className="text-xs text-slate-500">{m.basicInfo.ageCohort} Cohort</div>
+                                            </div>
+                                            <div className="text-sm font-bold text-primary">{dob.getDate()} {dob.toLocaleString('default', { month: 'short' })}</div>
+                                        </div>
+                                    );
+                                })}
+                                {upcomingBirthdays.length === 0 && <p className="text-slate-400 italic">No birthdays in the next 30 days.</p>}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const MemberRegistry = ({ members, setMembers, communications }) => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filterType, setFilterType] = useState('All');
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [selectedMember, setSelectedMember] = useState(null);
+
+            const filteredMembers = useMemo(() => {
+                return members.filter(m => {
+                    const matchesSearch =
+                        m.basicInfo.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        m.basicInfo.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        m.basicInfo.phone.includes(searchTerm);
+                    const matchesType = filterType === 'All' || m.membership.memberType === filterType;
+                    return matchesSearch && matchesType;
+                });
+            }, [members, searchTerm, filterType]);
+
+            const deleteMember = (id) => {
+                if (window.confirm("Archive this member? They will be moved to inactive status.")) {
+                    setMembers(prev => prev.map(m => m.id === id ? { ...m, membership: { ...m.membership, status: 'Archived' } } : m));
+                }
+            };
+
+            return (
+                <Card
+                    title="Member Registry"
+                    subtitle="Central directory of all community participants"
+                    action={<button onClick={() => { setSelectedMember(null); setIsModalOpen(true); }} className="btn-primary">+ Add Member</button>}
+                >
+                    <div className="flex flex-col md:flex-row gap-4 mb-6">
+                        <div className="flex-grow">
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, phone..."
+                                className="input-field"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                aria-label="Search members"
+                            />
+                        </div>
+                        <div className="w-full md:w-64">
+                            <select
+                                className="input-field"
+                                value={filterType}
+                                onChange={e => setFilterType(e.target.value)}
+                                aria-label="Filter by member type"
+                            >
+                                <option value="All">All Member Types</option>
+                                {MEMBER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-slate-50 dark:bg-slate-800">
+                                <tr>
+                                    <th className="px-6 py-4 text-sm font-semibold">Member</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Cohort</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Type</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Last Contact</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Health</th>
+                                    <th className="px-6 py-4 text-sm font-semibold no-print text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+                                {filteredMembers.map(m => (
+                                    <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-slate-800 dark:text-slate-200">{m.basicInfo.fullName}</div>
+                                            <div className="text-xs text-slate-500">{m.basicInfo.email}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <StatusBadge
+                                                status={m.basicInfo.ageCohort}
+                                                type={AGE_COHORTS.find(c => c.name === m.basicInfo.ageCohort)?.color || 'default'}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{m.membership.memberType}</td>
+                                        <td className="px-6 py-4">{m.engagement.lastContactDate || 'None'}</td>
+                                        <td className="px-6 py-4">
+                                            <StatusBadge status={m.engagement.riskLevel} type={m.engagement.riskLevel === 'Green' ? 'success' : m.engagement.riskLevel === 'Amber' ? 'warning' : 'danger'} />
+                                        </td>
+                                        <td className="px-6 py-4 no-print text-right space-x-3">
+                                            <button onClick={() => { setSelectedMember(m); setIsModalOpen(true); }} className="text-primary hover:underline font-semibold">Edit</button>
+                                            <button onClick={() => deleteMember(m.id)} className="text-danger hover:underline font-semibold">Archive</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredMembers.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6" className="px-6 py-12 text-center text-slate-400 italic">No members found matching your search.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedMember ? "Edit Member Profile" : "Add New Member"} maxWidth="max-w-4xl">
+                        <MemberForm
+                            member={selectedMember}
+                            onSave={(newData) => {
+                                if (selectedMember) {
+                                    setMembers(prev => prev.map(m => m.id === selectedMember.id ? newData : m));
+                                } else {
+                                    setMembers(prev => [...prev, { ...newData, id: generateId('m') }]);
+                                }
+                                setIsModalOpen(false);
+                            }}
+                            onCancel={() => setIsModalOpen(false)}
+                        />
+                    </Modal>
+                </Card>
+            );
+        };
+
+        const MemberForm = ({ member, onSave, onCancel }) => {
+            const [step, setStep] = useState(1);
+            const [formData, setFormData] = useState(member || {
+                basicInfo: { fullName: '', preferredName: '', email: '', phone: '', dateOfBirth: '', ageCohort: '', gender: '', pronouns: '' },
+                address: { street: '', suburb: '', state: 'VIC', postcode: '', region: 'Mitchell Shire' },
+                membership: { memberType: 'Community Participant', status: 'Active', joinDate: new Date().toISOString().split('T')[0], memberNumber: `ST-${Date.now().toString().slice(-6)}`, renewalDate: '' },
+                engagement: { lastContactDate: '', totalInteractions: 0, participationFrequency: 'Low', riskLevel: 'Green', preferredContactMethod: 'Email' },
+                cohortSpecific: { parentGuardianName: '', emergencyContact: '', accessibilityNeeds: 'None', culturalConsiderations: '' },
+                skillsInterests: { skills: [], interests: [], availableVolunteer: false, availableMentor: false },
+                privacy: { photoVideoConsent: 'No', newsletterOptIn: true, dataSharingConsent: false, privacyStatementSigned: '' },
+                notes: '', internalNotes: ''
+            });
+
+            useEffect(() => {
+                if (formData.basicInfo.dateOfBirth) {
+                    const age = calculateAge(formData.basicInfo.dateOfBirth);
+                    const cohort = getAgeCohort(age);
+                    setFormData(prev => ({
+                        ...prev,
+                        basicInfo: { ...prev.basicInfo, ageCohort: cohort }
+                    }));
+                }
+            }, [formData.basicInfo.dateOfBirth]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSave(formData);
+            };
+
+            return (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Stepper */}
+                    <div className="flex justify-between mb-8 overflow-x-auto pb-4">
+                        {[1, 2, 3, 4].map(s => (
+                            <div key={s} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${step === s ? 'bg-primary text-white' : 'text-slate-400'}`}>
+                                <span className={`w-6 h-6 flex items-center justify-center rounded-full border-2 ${step === s ? 'border-white' : 'border-slate-300'}`}>{s}</span>
+                                <span className="whitespace-nowrap">{s === 1 ? 'Basic' : s === 2 ? 'Contact' : s === 3 ? 'Membership' : 'Additional'}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {step === 1 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                            <FormInput label="Full Name" id="fname" value={formData.basicInfo.fullName} onChange={e => setFormData({ ...formData, basicInfo: { ...formData.basicInfo, fullName: e.target.value } })} required />
+                            <FormInput label="Preferred Name" id="pname" value={formData.basicInfo.preferredName} onChange={e => setFormData({ ...formData, basicInfo: { ...formData.basicInfo, preferredName: e.target.value } })} />
+                            <FormInput label="Email" id="email" type="email" value={formData.basicInfo.email} onChange={e => setFormData({ ...formData, basicInfo: { ...formData.basicInfo, email: e.target.value } })} required />
+                            <FormInput label="Phone (AU)" id="phone" value={formData.basicInfo.phone} placeholder="04XX XXX XXX" onChange={e => setFormData({ ...formData, basicInfo: { ...formData.basicInfo, phone: e.target.value } })} />
+                            <FormInput label="Date of Birth" id="dob" type="date" value={formData.basicInfo.dateOfBirth} onChange={e => setFormData({ ...formData, basicInfo: { ...formData.basicInfo, dateOfBirth: e.target.value } })} />
+                            <div className="mb-4">
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Age Cohort (Auto)</label>
+                                <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm font-bold">{formData.basicInfo.ageCohort || 'Select Date of Birth'}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 2 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                            <div className="col-span-full">
+                                <FormInput label="Street Address" id="street" value={formData.address.street} onChange={e => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })} />
+                            </div>
+                            <FormInput label="Suburb/Town" id="suburb" value={formData.address.suburb} onChange={e => setFormData({ ...formData, address: { ...formData.address, suburb: e.target.value } })} />
+                            <FormSelect label="State" id="state" value={formData.address.state} options={[{ value: 'VIC', label: 'Victoria' }, { value: 'NSW', label: 'NSW' }, { value: 'QLD', label: 'Queensland' }, { value: 'TAS', label: 'Tasmania' }, { value: 'SA', label: 'South Australia' }, { value: 'WA', label: 'Western Australia' }]} onChange={e => setFormData({ ...formData, address: { ...formData.address, state: e.target.value } })} />
+                            <FormInput label="Postcode" id="postcode" value={formData.address.postcode} onChange={e => setFormData({ ...formData, address: { ...formData.address, postcode: e.target.value } })} />
+                            <FormSelect label="Region" id="region" value={formData.address.region} options={[{ value: 'Mitchell Shire', label: 'Mitchell Shire' }, { value: 'Murrindindi', label: 'Murrindindi' }, { value: 'Other', label: 'Other' }]} onChange={e => setFormData({ ...formData, address: { ...formData.address, region: e.target.value } })} />
+                        </div>
+                    )}
+
+                    {step === 3 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                            <FormSelect label="Member Type" id="mtype" value={formData.membership.memberType} options={MEMBER_TYPES.map(t => ({ value: t, label: t }))} onChange={e => setFormData({ ...formData, membership: { ...formData.membership, memberType: e.target.value } })} required />
+                            <FormSelect label="Status" id="mstatus" value={formData.membership.status} options={[{ value: 'Active', label: 'Active' }, { value: 'Inactive', label: 'Inactive' }, { value: 'On Leave', label: 'On Leave' }, { value: 'Archived', label: 'Archived' }]} onChange={e => setFormData({ ...formData, membership: { ...formData.membership, status: e.target.value } })} required />
+                            <FormInput label="Join Date" id="joindate" type="date" value={formData.membership.joinDate} onChange={e => setFormData({ ...formData, membership: { ...formData.membership, joinDate: e.target.value } })} />
+                            <FormInput label="Member ID" id="mid" value={formData.membership.memberNumber} readOnly className="bg-slate-50 cursor-not-allowed" />
+                        </div>
+                    )}
+
+                    {step === 4 && (
+                        <div className="space-y-6 animate-fade-in">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="col-span-full font-bold text-sm uppercase text-slate-500 tracking-wider">Cohort Specific & Safeguarding</h3>
+                                <FormInput label="Parent/Guardian (if Youth/Child)" id="parent" value={formData.cohortSpecific.parentGuardianName} onChange={e => setFormData({ ...formData, cohortSpecific: { ...formData.cohortSpecific, parentGuardianName: e.target.value } })} />
+                                <FormInput label="Emergency Contact Phone" id="ephone" value={formData.cohortSpecific.emergencyContact} onChange={e => setFormData({ ...formData, cohortSpecific: { ...formData.cohortSpecific, emergencyContact: e.target.value } })} />
+                                <FormInput label="Accessibility Needs" id="acc" value={formData.cohortSpecific.accessibilityNeeds} onChange={e => setFormData({ ...formData, cohortSpecific: { ...formData.cohortSpecific, accessibilityNeeds: e.target.value } })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Member Notes</label>
+                                <textarea className="input-field min-h-[100px]" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="General notes about engagement, goals, etc."></textarea>
+                            </div>
+                            <div className="flex flex-wrap gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" className="w-4 h-4 text-primary" checked={formData.privacy.newsletterOptIn} onChange={e => setFormData({ ...formData, privacy: { ...formData.privacy, newsletterOptIn: e.target.checked } })} />
+                                    <span className="text-sm font-medium">Newsletter Opt-in</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" className="w-4 h-4 text-primary" checked={formData.privacy.dataSharingConsent} onChange={e => setFormData({ ...formData, privacy: { ...formData.privacy, dataSharingConsent: e.target.checked } })} />
+                                    <span className="text-sm font-medium">Consent to share data with partners</span>
+                                </label>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-700">
+                        <div>
+                            {step > 1 && (
+                                <button type="button" onClick={() => setStep(step - 1)} className="btn-secondary">Back</button>
+                            )}
+                        </div>
+                        <div className="flex gap-3">
+                            <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
+                            {step < 4 ? (
+                                <button type="button" onClick={() => setStep(step + 1)} className="btn-primary">Next Step</button>
+                            ) : (
+                                <button type="submit" className="btn-primary">Save Member</button>
+                            )}
+                        </div>
+                    </div>
+                </form>
+            );
+        };
+
+        const CommunicationLog = ({ communications, members, setCommunications }) => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({
+                memberId: '', date: new Date().toISOString().split('T')[0],
+                method: 'Email', type: 'General', summary: '', followUpRequired: false,
+                followUpDate: '', loggedBy: 'Ryan', tags: []
+            });
+
+            const filteredLogs = communications.filter(c => {
+                const member = members.find(m => m.id === c.memberId);
+                const memberName = member ? member.basicInfo.fullName : 'Unknown';
+                return memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    c.summary.toLowerCase().includes(searchTerm.toLowerCase());
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setCommunications(prev => [{ ...formData, id: generateId('com') }, ...prev]);
+                setIsModalOpen(false);
+            };
+
+            return (
+                <Card title="Communication Log" subtitle="Track every interaction with your members" action={<button onClick={() => setIsModalOpen(true)} className="btn-primary">+ Log Interaction</button>}>
+                    <div className="mb-6">
+                        <input
+                            type="text"
+                            placeholder="Search logs by member name or summary content..."
+                            className="input-field"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="space-y-4">
+                        {filteredLogs.map(log => {
+                            const member = members.find(m => m.id === log.memberId);
+                            return (
+                                <div key={log.id} className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span className="text-primary font-bold">{member?.basicInfo.fullName || 'Unknown Member'}</span>
+                                            <span className="mx-2 text-slate-300">•</span>
+                                            <span className="text-sm font-medium text-slate-500">{formatDate(log.date)} via {log.method}</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <StatusBadge status={log.type} type="info" />
+                                            {log.followUpRequired && <StatusBadge status="Follow-up Due" type="warning" />}
+                                        </div>
+                                    </div>
+                                    <p className="text-slate-700 dark:text-slate-300 mb-3">{log.summary}</p>
+                                    <div className="flex justify-between items-center text-xs text-slate-400">
+                                        <div className="flex gap-2">
+                                            {log.tags.map(t => <span key={t} className="bg-slate-100 px-1.5 py-0.5 rounded border">#{t}</span>)}
+                                        </div>
+                                        <span>Logged by: {log.loggedBy}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {filteredLogs.length === 0 && (
+                            <div className="py-12 text-center text-slate-400 italic bg-slate-50 border border-dashed rounded-xl">No logs found. Start by recording your first interaction!</div>
+                        )}
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Log New Interaction">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormSelect
+                                label="Member" id="lmem" required
+                                options={members.map(m => ({ value: m.id, label: m.basicInfo.fullName }))}
+                                value={formData.memberId} onChange={e => setFormData({ ...formData, memberId: e.target.value })}
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Date" id="ldate" type="date" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                                <FormSelect label="Method" id="lmet" required options={[{ value: 'Email', label: 'Email' }, { value: 'Phone', label: 'Phone' }, { value: 'SMS', label: 'SMS' }, { value: 'In Person', label: 'In Person' }, { value: 'Video Call', label: 'Video Call' }]} value={formData.method} onChange={e => setFormData({ ...formData, method: e.target.value })} />
+                            </div>
+                            <FormSelect label="Contact Type" id="ltype" required options={[{ value: 'Outreach', label: 'Outreach' }, { value: 'Follow-up', label: 'Follow-up' }, { value: 'Support', label: 'Support' }, { value: 'Event Invitation', label: 'Event Invitation' }, { value: 'General', label: 'General' }]} value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} />
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5">Summary</label>
+                                <textarea className="input-field min-h-[80px]" required value={formData.summary} onChange={e => setFormData({ ...formData, summary: e.target.value })} placeholder="What was discussed?"></textarea>
+                            </div>
+                            <div className="flex items-center gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" className="w-4 h-4" checked={formData.followUpRequired} onChange={e => setFormData({ ...formData, followUpRequired: e.target.checked })} />
+                                    <span className="text-sm font-medium">Follow-up Required?</span>
+                                </label>
+                                {formData.followUpRequired && (
+                                    <input type="date" className="input-field !w-auto" value={formData.followUpDate} onChange={e => setFormData({ ...formData, followUpDate: e.target.value })} />
+                                )}
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Save Interaction</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </Card>
+            );
+        };
+
+        const Partners = ({ partners, setPartners }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [selectedPartner, setSelectedPartner] = useState(null);
+            const [formData, setFormData] = useState({
+                orgName: '', abn: '', orgType: 'Community Service', primaryContact: '',
+                primaryContactEmail: '', partnershipStatus: 'Active', partnershipType: [],
+                partnershipStartDate: new Date().toISOString().split('T')[0], servicesProvided: '', notes: ''
+            });
+
+            const openAdd = () => {
+                setFormData({
+                    orgName: '', abn: '', orgType: 'Community Service', primaryContact: '',
+                    primaryContactEmail: '', partnershipStatus: 'Active', partnershipType: [],
+                    partnershipStartDate: new Date().toISOString().split('T')[0], servicesProvided: '', notes: ''
+                });
+                setSelectedPartner(null);
+                setIsModalOpen(true);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (selectedPartner) {
+                    setPartners(prev => prev.map(p => p.id === selectedPartner.id ? { ...formData, id: p.id } : p));
+                } else {
+                    setPartners(prev => [...prev, { ...formData, id: generateId('org') }]);
+                }
+                setIsModalOpen(false);
+            };
+
+            return (
+                <Card title="Organisational Partners" subtitle="Manage b2b relationships and service agreements" action={<button onClick={openAdd} className="btn-primary">+ Add Partner</button>}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {partners.map(p => (
+                            <div key={p.id} className="card border-slate-200 dark:border-slate-700 hover:border-primary transition-all group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{p.orgName}</h3>
+                                    <StatusBadge status={p.partnershipStatus} type={p.partnershipStatus === 'Active' ? 'success' : 'default'} />
+                                </div>
+                                <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-6">
+                                    <p><strong>Type:</strong> {p.orgType}</p>
+                                    <p><strong>Contact:</strong> {p.primaryContact}</p>
+                                    <p className="truncate"><strong>Email:</strong> {p.primaryContactEmail}</p>
+                                </div>
+                                <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                                    <button onClick={() => { setSelectedPartner(p); setFormData(p); setIsModalOpen(true); }} className="btn-secondary !text-xs !py-1 !px-3">Edit Details</button>
+                                </div>
+                            </div>
+                        ))}
+                        {partners.length === 0 && (
+                            <div className="col-span-full py-12 text-center text-slate-400 italic">No partners registered yet.</div>
+                        )}
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={selectedPartner ? "Edit Partner" : "Add New Partner"}>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormInput label="Organisation Name" id="oname" required value={formData.orgName} onChange={e => setFormData({ ...formData, orgName: e.target.value })} />
+                            <FormInput label="ABN (Optional)" id="oabn" value={formData.abn} onChange={e => setFormData({ ...formData, abn: e.target.value })} />
+                            <FormSelect label="Partner Type" id="otype" required options={[{ value: 'School', label: 'School' }, { value: 'Community Service', label: 'Community Service' }, { value: 'Business', label: 'Business' }, { value: 'Government', label: 'Government' }]} value={formData.orgType} onChange={e => setFormData({ ...formData, orgType: e.target.value })} />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Primary Contact" id="pcontact" required value={formData.primaryContact} onChange={e => setFormData({ ...formData, primaryContact: e.target.value })} />
+                                <FormInput label="Contact Email" id="pemail" type="email" required value={formData.primaryContactEmail} onChange={e => setFormData({ ...formData, primaryContactEmail: e.target.value })} />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Save Partner</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </Card>
+            );
+        };
+
+        const Segments = ({ members }) => {
+            const [rules, setRules] = useState([]);
+            const [newRule, setNewRule] = useState({ field: 'membership.memberType', operator: 'equals', value: '' });
+
+            const staticSegments = [
+                { name: "Youth (12-24)", count: members.filter(m => m.basicInfo.ageCohort === 'Youth').length, filter: 'Youth' },
+                { name: "Seniors (65+)", count: members.filter(m => m.basicInfo.ageCohort === 'Senior').length, filter: 'Senior' },
+                { name: "Newsletter Subscribers", count: members.filter(m => m.privacy.newsletterOptIn).length, filter: 'Newsletter' },
+                { name: "Active Members", count: members.filter(m => m.membership.status === 'Active').length, filter: 'Active' },
+                { name: "At Risk (Engagement)", count: members.filter(m => m.engagement.riskLevel !== 'Green').length, filter: 'Risk' }
+            ];
+
+            const fields = [
+                { label: 'Member Type', value: 'membership.memberType' },
+                { label: 'Age Cohort', value: 'basicInfo.ageCohort' },
+                { label: 'Region', value: 'address.region' },
+                { label: 'Gender', value: 'basicInfo.gender' },
+                { label: 'Risk Level', value: 'engagement.riskLevel' }
+            ];
+
+            const addRule = () => {
+                if (!newRule.value) return;
+                setRules([...rules, { ...newRule, id: Date.now() }]);
+                setNewRule({ ...newRule, value: '' });
+            };
+
+            const removeRule = (id) => setRules(rules.filter(r => r.id !== id));
+
+            const filteredMembers = useMemo(() => {
+                if (rules.length === 0) return [];
+                return members.filter(m => {
+                    return rules.every(rule => {
+                        const [cat, key] = rule.field.split('.');
+                        const val = m[cat][key];
+                        if (rule.operator === 'equals') return val === rule.value;
+                        if (rule.operator === 'not_equals') return val !== rule.value;
+                        return true;
+                    });
+                });
+            }, [members, rules]);
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Member Segments" subtitle="Automated and custom lists for targeted outreach">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {staticSegments.map(seg => (
+                                <div key={seg.name} className="p-6 border rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 flex justify-between items-center group hover:border-primary transition-all">
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 dark:text-slate-200">{seg.name}</h3>
+                                        <p className="text-sm text-slate-500">{seg.count} Members</p>
+                                    </div>
+                                    <div className="h-10 w-10 rounded-full bg-white dark:bg-slate-700 border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">→</div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <Card title="Custom Segment Builder" subtitle="Create targeted lists based on multiple criteria">
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <FormSelect
+                                    label="Field" options={fields} value={newRule.field}
+                                    onChange={e => setNewRule({ ...newRule, field: e.target.value })}
+                                />
+                                <FormSelect
+                                    label="Operator" options={[{ label: 'Equals', value: 'equals' }, { label: 'Does Not Equal', value: 'not_equals' }]}
+                                    value={newRule.operator} onChange={e => setNewRule({ ...newRule, operator: e.target.value })}
+                                />
+                                <FormInput
+                                    label="Value" value={newRule.value}
+                                    onChange={e => setNewRule({ ...newRule, value: e.target.value })}
+                                />
+                                <div className="flex items-end pb-4">
+                                    <button onClick={addRule} className="btn-primary w-full">Add Rule</button>
+                                </div>
+                            </div>
+
+                            {rules.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="flex flex-wrap gap-2">
+                                        {rules.map(r => (
+                                            <span key={r.id} className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold border border-primary/20">
+                                                {fields.find(f => f.value === r.field)?.label} {r.operator === 'equals' ? '=' : '≠'} "{r.value}"
+                                                <button onClick={() => removeRule(r.id)} className="hover:text-danger">✕</button>
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                                        <table className="w-full text-left text-sm">
+                                            <thead className="bg-slate-50 dark:bg-slate-800">
+                                                <tr>
+                                                    <th className="px-4 py-3 font-bold">Name</th>
+                                                    <th className="px-4 py-3 font-bold">Cohort</th>
+                                                    <th className="px-4 py-3 font-bold">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                                {filteredMembers.map(m => (
+                                                    <tr key={m.id}>
+                                                        <td className="px-4 py-3 font-medium">{m.basicInfo.fullName}</td>
+                                                        <td className="px-4 py-3">{m.basicInfo.ageCohort}</td>
+                                                        <td className="px-4 py-3">{m.membership.status}</td>
+                                                    </tr>
+                                                ))}
+                                                {filteredMembers.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="3" className="px-4 py-8 text-center text-slate-400 italic">No members match these criteria.</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs text-slate-500">
+                                        <span>Total Matching: {filteredMembers.length}</span>
+                                        <button className="text-primary font-bold hover:underline" onClick={() => window.print()}>Print Segment List</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const Settings = ({ config, setConfig, members, setMembers, communications, setCommunications, partners, setPartners }) => {
+            const [jsonInput, setJsonInput] = useState('');
+            const [error, setError] = useState('');
+
+            // Initialize jsonInput with all data
+            useEffect(() => {
+                const fullData = { members, communications, partners, config };
+                setJsonInput(JSON.stringify(fullData, null, 2));
+            }, [members, communications, partners, config]);
+
+            const handleSaveRaw = () => {
+                try {
+                    const parsed = JSON.parse(jsonInput);
+                    // Validation could go here
+                    if (parsed.members) setMembers(parsed.members);
+                    if (parsed.communications) setCommunications(parsed.communications);
+                    if (parsed.partners) setPartners(parsed.partners);
+                    if (parsed.config) setConfig(parsed.config);
+                    setError('');
+                    alert('Data updated successfully!');
+                } catch (e) {
+                    setError('Invalid JSON: ' + e.message);
+                }
+            };
+
+            const handleReset = () => {
+                if (window.confirm("ARE YOU SURE? This will return all branding and naming settings to default. This cannot be undone.")) {
+                    setConfig({
+                        orgName: DEFAULT_ORG_NAME,
+                        primaryColor: '#003b6f',
+                        logoUrl: '',
+                        footerText: 'Acknowledgment of Country...'
+                    });
+                }
+            };
+
+            return (
+                <Card title="White Label Settings" subtitle="Customise the application for your organisation">
+                    <div className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <h3 className="font-bold border-b pb-2">Branding</h3>
+                                <FormInput label="Organisation Name" id="orgname" value={config.orgName} onChange={e => setConfig({ ...config, orgName: e.target.value })} />
+                                <div className="mb-4">
+                                    <label className="block text-sm font-semibold mb-1.5">Primary Theme Colour</label>
+                                    <div className="flex gap-4">
+                                        <input type="color" className="h-12 w-12 rounded border p-1" value={config.primaryColor} onChange={e => setConfig({ ...config, primaryColor: e.target.value })} />
+                                        <input type="text" className="input-field" value={config.primaryColor} onChange={e => setConfig({ ...config, primaryColor: e.target.value })} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <h3 className="font-bold border-b pb-2">Compliance & Data</h3>
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                    <p className="text-xs text-slate-500 mb-2">Data stored in this app is currently maintained in local storage. We recommend exporting a backup monthly.</p>
+                                    <button onClick={handleReset} className="text-xs text-danger font-bold hover:underline">Reset to Defaults</button>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold mb-1.5">Footer Credits / Acknowledgment</label>
+                                    <textarea className="input-field min-h-[100px]" value={config.footerText} onChange={e => setConfig({ ...config, footerText: e.target.value })}></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-6 border-t font-bold text-slate-400 uppercase tracking-widest text-xs">Technical Info</div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono text-slate-400">
+                            <div>App Version: 1.0.0-PROD</div>
+                            <div>Storage Engine: LocalStorage (v3)</div>
+                            <div>Build Date: 10/01/2026</div>
+                        </div>
+
+                        {/* NEW Raw Data Editor */}
+                        <div className="mt-8 pt-8 border-t">
+                            <h3 className="font-bold mb-4">Raw Data Editor</h3>
+                            <div className="space-y-4">
+                                <p className="text-xs text-slate-500">Edit the entire application state.</p>
+                                <textarea
+                                    className="input-field font-mono text-xs h-96"
+                                    value={jsonInput}
+                                    onChange={e => setJsonInput(e.target.value)}
+                                />
+                                {error && <div className="text-danger text-sm font-bold">{error}</div>}
+                                <button onClick={handleSaveRaw} className="btn-primary">Update All Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            );
+        };
+
+        // --- Main App ---
+
+        const App = () => {
+            const [currentTab, setCurrentTab] = useState('dashboard');
+            const [members, setMembers] = useState([]);
+            const [communications, setCommunications] = useState([]);
+            const [partners, setPartners] = useState([]);
+            const [config, setConfig] = useState({
+                orgName: DEFAULT_ORG_NAME,
+                primaryColor: '#003b6f',
+                logoUrl: '',
+                footerText: 'We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands on which we operate.'
+            });
+            const [lastSaved, setLastSaved] = useState(null);
+            const [showWelcome, setShowWelcome] = useState(false);
+
+            // Init & Persist
+            useEffect(() => {
+                const savedData = localStorage.getItem('sm_crm_data');
+                if (savedData) {
+                    try {
+                        const parsed = JSON.parse(savedData);
+                        setMembers(parsed.members || []);
+                        setCommunications(parsed.communications || []);
+                        setPartners(parsed.partners || []);
+                        setConfig(parsed.config || { orgName: DEFAULT_ORG_NAME, primaryColor: '#003b6f', footerText: '...' });
+                    } catch (e) {
+                        console.error("Load failed", e);
+                    }
+                } else {
+                    // Sample Data
+                    setMembers([
+                        { id: 'm001', basicInfo: { fullName: "Sarah Chen", email: "sarah.chen@example.com", phone: "0412 345 678", dateOfBirth: "2005-03-15", ageCohort: "Youth" }, address: { suburb: "Seymour", state: "VIC" }, membership: { memberType: "Community Participant", status: "Active", joinDate: "2026-01-01" }, engagement: { riskLevel: "Green", lastContactDate: "2026-01-08" }, privacy: { newsletterOptIn: true }, cohortSpecific: { accessibilityNeeds: "None" } },
+                        { id: 'm002', basicInfo: { fullName: "Robert Miller", email: "robert.m@test.com", phone: "03 5792 1111", dateOfBirth: "1945-09-22", ageCohort: "Senior" }, address: { suburb: "Kilmore", state: "VIC" }, membership: { memberType: "Full Member", status: "Active", joinDate: "2025-06-12" }, engagement: { riskLevel: "Amber", lastContactDate: "2025-11-20" }, privacy: { newsletterOptIn: false }, cohortSpecific: { accessibilityNeeds: "Low digital confidence" } }
+                    ]);
+                    setPartners([
+                        { id: 'org001', orgName: "Seymour College", primaryContact: "Jane Smith", primaryContactEmail: "jane@sc.edu.au", orgType: "School", partnershipStatus: "Active" }
+                    ]);
+                }
+                // Check first visit
+                if (isFirstVisit()) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    saveToLocalStorage();
+                }, 30000);
+                return () => clearInterval(timer);
+            }, [members, communications, partners, config]);
+
+            const saveToLocalStorage = () => {
+                const payload = { members, communications, partners, config };
+                localStorage.setItem('sm_crm_data', JSON.stringify(payload));
+                setLastSaved(new Date().toLocaleTimeString());
+            };
+
+            const handleExport = () => {
+                const payload = {
+                    dataType: "crm_export",
+                    source: "smalltalk.community CRM",
+                    exportDate: new Date().toISOString(),
+                    data: { members, communications, partners, config }
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sm-crm-backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            };
+
+            const handleLoad = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const parsed = JSON.parse(event.target.result);
+                        const data = parsed.data || parsed; // Handle both wrapper and raw formats
+                        setMembers(data.members || []);
+                        setCommunications(data.communications || []);
+                        setPartners(data.partners || []);
+                        if (data.config) setConfig(data.config);
+                        alert("Data loaded successfully!");
+                    } catch (e) {
+                        alert("Invalid JSON file.");
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            return (
+                <>
+                    <AppShell
+                        title="Member Database & Engagement CRM"
+                        currentTab={currentTab}
+                        setTab={setCurrentTab}
+                        onSave={handleExport}
+                        onLoad={handleLoad}
+                        lastSaved={lastSaved}
+                        orgName={config.orgName}
+                    >
+                        <div style={{ '--primary': config.primaryColor }}>
+                            {currentTab === 'dashboard' && <Dashboard data={{ members, communications }} setTab={setCurrentTab} />}
+                            {currentTab === 'members' && <MemberRegistry members={members} setMembers={setMembers} communications={communications} />}
+                            {currentTab === 'communications' && <CommunicationLog communications={communications} members={members} setCommunications={setCommunications} />}
+                            {currentTab === 'partners' && <Partners partners={partners} setPartners={setPartners} />}
+                            {currentTab === 'segments' && <Segments members={members} />}
+                            {currentTab === 'settings' && <Settings config={config} setConfig={setConfig} members={members} setMembers={setMembers} communications={communications} setCommunications={setCommunications} partners={partners} setPartners={setPartners} />}
+                        </div>
+                    </AppShell>
+                    {showWelcome && <WelcomeModal onClose={() => { setShowWelcome(false); markFirstVisitComplete(); }} />}
+                </>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+
+        // Print Timestamp
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            const tsEl = document.getElementById('print-timestamp');
+            if (tsEl) tsEl.textContent = `Printed: ${timestamp}`;
+        });
+    </script>
+</body>
+
+</html>

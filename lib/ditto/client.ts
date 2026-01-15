@@ -5,13 +5,9 @@
  * Requires Ditto Portal credentials:
  * - DITTO_APP_ID: Your Ditto app ID
  * - DITTO_PLAYGROUND_TOKEN: Token for development (or use Auth Webhook for production)
- * 
- * Note: Install @dittolive/ditto when ready: npm install @dittolive/ditto
- * Then uncomment the SDK import and remove the mock implementation.
  */
 
-// Type stubs - replace with actual import when Ditto SDK is installed
-// import { Ditto, type IdentityOfflinePlayground } from "@dittolive/ditto";
+import { Ditto, type IdentityOfflinePlayground, type IdentityOnlineWithAuthentication } from "@dittolive/ditto";
 
 export interface DittoConfig {
     appId: string;
@@ -19,68 +15,40 @@ export interface DittoConfig {
     authUrl?: string;
 }
 
-interface DittoPresence {
-    graph: { remotePeers: unknown[] };
-}
+// Re-export Ditto types for use in other files if needed
+export type { Ditto } from "@dittolive/ditto";
 
-interface DittoInstance {
-    startSync(): Promise<void>;
-    stopSync(): Promise<void>;
-    presence: DittoPresence;
-}
-
-let dittoInstance: DittoInstance | null = null;
+let dittoInstance: Ditto | null = null;
 
 /**
  * Get or initialize Ditto instance
  * Uses singleton pattern to ensure only one instance exists
  */
-export function getDitto(): DittoInstance | null {
+export function getDitto(): Ditto | null {
     return dittoInstance;
-}
-
-/**
- * Mock Ditto instance for development
- * Replace with actual Ditto SDK when installed
- */
-function createMockDitto(): DittoInstance {
-    return {
-        presence: {
-            graph: { remotePeers: [] },
-        },
-        async startSync() {
-            console.log("[Ditto Mock] Sync started (install @dittolive/ditto for real sync)");
-        },
-        async stopSync() {
-            console.log("[Ditto Mock] Sync stopped");
-        },
-    };
 }
 
 /**
  * Initialize Ditto with offline playground identity (for development)
  * In production, use the Auth Webhook for proper authentication
  */
-export async function initDitto(config: DittoConfig): Promise<DittoInstance> {
+export async function initDitto(config: DittoConfig): Promise<Ditto> {
     if (dittoInstance) {
         return dittoInstance;
     }
 
-    // TODO: Replace with actual Ditto SDK when installed
-    // const identity: IdentityOfflinePlayground = {
-    //   type: "offlinePlayground",
-    //   appID: config.appId,
-    //   token: config.token,
-    // };
-    // dittoInstance = new Ditto(identity, "/ditto");
+    const identity: IdentityOfflinePlayground = {
+        type: "offlinePlayground",
+        appID: config.appId,
+        token: config.token,
+    };
 
-    // Mock implementation
-    console.log("[Ditto] Initializing with config:", { appId: config.appId });
-    dittoInstance = createMockDitto();
+    // Initialize Ditto with the identity and a persistence path
+    dittoInstance = new Ditto(identity, "/ditto");
 
     try {
         await dittoInstance.startSync();
-        console.log("[Ditto] Sync started successfully");
+        console.log("[Ditto] Sync started successfully (Playground Mode)");
     } catch (error) {
         console.error("[Ditto] Failed to start sync:", error);
     }
@@ -96,14 +64,49 @@ export async function initDittoWithAuth(
     appId: string,
     authUrl: string,
     getSupabaseToken: () => Promise<string>
-): Promise<DittoInstance> {
+): Promise<Ditto> {
     if (dittoInstance) {
         return dittoInstance;
     }
 
-    // TODO: Replace with actual Ditto SDK when installed
-    console.log("[Ditto] Initializing with auth:", { appId, authUrl });
-    dittoInstance = createMockDitto();
+    const identity: IdentityOnlineWithAuthentication = {
+        type: "onlineWithAuthentication",
+        appID: appId,
+        authenticationDelegate: {
+            async authenticate() {
+                // Fetch the Supabase JWT token
+                const token = await getSupabaseToken();
+
+                // Call the Ditto auth webhook (Supabase Edge Function)
+                const response = await fetch(authUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        token,
+                        clientId: "community-os-web",
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ditto authentication failed: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                if (!data.authenticated) {
+                    throw new Error(data.error || "Ditto authentication failed");
+                }
+
+                return data.token; // This is the Ditto-signed token from the webhook if applicable, 
+                // but often the webhook returns the token directly to Ditto.
+                // Actually, for OnlineWithAuthentication, Ditto expects a token to be returned 
+                // from the authenticate method if using a custom provider.
+            }
+        }
+    };
+
+    dittoInstance = new Ditto(identity, "/ditto");
 
     try {
         await dittoInstance.startSync();
