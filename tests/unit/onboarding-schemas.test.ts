@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { registerSchema } from '@/lib/onboarding-schemas';
+import { ZodIssue } from 'zod';
 
 describe('onboarding-schemas', () => {
     describe('registerSchema', () => {
@@ -9,7 +10,9 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SecurePass123!',
                     confirmPassword: 'SecurePass123!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(validData);
                 expect(result.success).toBe(true);
@@ -33,12 +36,14 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'Short1!',
                     confirmPassword: 'Short1!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(shortPassword);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('12'))).toBe(true);
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('12'))).toBe(true);
                 }
             });
 
@@ -47,12 +52,14 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'securepass123!',
                     confirmPassword: 'securepass123!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(noUppercase);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('uppercase'))).toBe(true);
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('uppercase'))).toBe(true);
                 }
             });
 
@@ -61,12 +68,14 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SECUREPASS123!',
                     confirmPassword: 'SECUREPASS123!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(noLowercase);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('lowercase'))).toBe(true);
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('lowercase'))).toBe(true);
                 }
             });
 
@@ -75,12 +84,14 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SecurePassword!!',
                     confirmPassword: 'SecurePassword!!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(noNumber);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('number'))).toBe(true);
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('number'))).toBe(true);
                 }
             });
 
@@ -89,12 +100,14 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SecurePassword12',
                     confirmPassword: 'SecurePassword12',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(noSpecial);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('special'))).toBe(true);
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('special'))).toBe(true);
                 }
             });
 
@@ -103,12 +116,14 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'Secure Pass123!',
                     confirmPassword: 'Secure Pass123!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(withSpaces);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('spaces'))).toBe(true);
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('spaces'))).toBe(true);
                 }
             });
 
@@ -117,7 +132,9 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SecurePass123!@#',
                     confirmPassword: 'SecurePass123!@#',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(validPassword);
                 expect(result.success).toBe(true);
@@ -130,12 +147,14 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SecurePass123!',
                     confirmPassword: 'DifferentPass123!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(mismatch);
                 expect(result.success).toBe(false);
                 if (!result.success) {
-                    expect(result.error.issues.some(i => i.message.includes('match'))).toBe(true);
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('match'))).toBe(true);
                 }
             });
         });
@@ -147,7 +166,9 @@ describe('onboarding-schemas', () => {
                     password: 'SecurePass123!',
                     confirmPassword: 'SecurePass123!',
                     accountType: 'Individual',
-                    dateOfBirth: '1990-01-15'
+                    dateOfBirth: '1990-01-15',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(validDOB);
                 expect(result.success).toBe(true);
@@ -159,7 +180,9 @@ describe('onboarding-schemas', () => {
                     password: 'SecurePass123!',
                     confirmPassword: 'SecurePass123!',
                     accountType: 'Individual',
-                    dateOfBirth: '2099-01-15'
+                    dateOfBirth: '2099-01-15',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(futureDOB);
                 expect(result.success).toBe(false);
@@ -170,7 +193,9 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SecurePass123!',
                     confirmPassword: 'SecurePass123!',
-                    accountType: 'Business'
+                    accountType: 'Business',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(noDOB);
                 expect(result.success).toBe(true);
@@ -183,7 +208,9 @@ describe('onboarding-schemas', () => {
                     email: 'test@example.com',
                     password: 'SecurePass123!',
                     confirmPassword: 'SecurePass123!',
-                    accountType: 'Individual'
+                    accountType: 'Individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(individual);
                 expect(result.success).toBe(true);
@@ -195,9 +222,90 @@ describe('onboarding-schemas', () => {
                     password: 'SecurePass123!',
                     confirmPassword: 'SecurePass123!',
                     accountType: 'Business',
-                    organisationName: 'Test Corp'
+                    organisationName: 'Test Corp',
+                    firstName: 'John',
+                    lastName: 'Doe'
                 };
                 const result = registerSchema.safeParse(business);
+                expect(result.success).toBe(true);
+            });
+        });
+
+        describe('organisation validation', () => {
+            it('should require organisationName when userType is organisation', () => {
+                const invalidOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(invalidOrg);
+                expect(result.success).toBe(false);
+                if (!result.success) {
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('Organisation name is required'))).toBe(true);
+                }
+            });
+
+            it('should reject empty organisationName when userType is organisation', () => {
+                const emptyOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    organisationName: '',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(emptyOrg);
+                expect(result.success).toBe(false);
+                if (!result.success) {
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('Organisation name is required'))).toBe(true);
+                }
+            });
+
+            it('should reject whitespace-only organisationName when userType is organisation', () => {
+                const whitespaceOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    organisationName: '   ',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(whitespaceOrg);
+                expect(result.success).toBe(false);
+                if (!result.success) {
+                    expect(result.error.issues.some((i: ZodIssue) => i.message.includes('Organisation name is required'))).toBe(true);
+                }
+            });
+
+            it('should accept organisation when organisationName is provided', () => {
+                const validOrg = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'organisation',
+                    organisationName: 'Smalltalk Community',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(validOrg);
+                expect(result.success).toBe(true);
+            });
+
+            it('should not require organisationName when userType is individual', () => {
+                const validIndividual = {
+                    email: 'test@example.com',
+                    password: 'SecurePass123!',
+                    confirmPassword: 'SecurePass123!',
+                    userType: 'individual',
+                    firstName: 'John',
+                    lastName: 'Doe'
+                };
+                const result = registerSchema.safeParse(validIndividual);
                 expect(result.success).toBe(true);
             });
         });
