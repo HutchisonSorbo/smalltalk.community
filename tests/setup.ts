@@ -11,3 +11,5 @@
 if (!process.env.DATABASE_URL) {
     process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test_db';
 }
+
+import '@testing-library/jest-dom';
