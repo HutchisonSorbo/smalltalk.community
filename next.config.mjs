@@ -3,7 +3,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 
-    serverExternalPackages: ['mysql2', 'drizzle-kit'],
+    serverExternalPackages: ['mysql2', 'drizzle-kit', '@dittolive/ditto'],
     typescript: {
         ignoreBuildErrors: false, // Ensure we still catch TS errors
     },

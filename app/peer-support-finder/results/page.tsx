@@ -202,7 +202,7 @@ function ResultsContent() {
 
                             {/* Tags */}
                             <div className="flex flex-wrap gap-2 mb-4">
-                                {group.tags.map((tag) => (
+                                {group.tags.map((tag: string) => (
                                     <Badge key={tag} variant="outline">
                                         {tag}
                                     </Badge>

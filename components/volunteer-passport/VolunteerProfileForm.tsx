@@ -21,17 +21,19 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+import { type VolunteerProfile } from "@shared/schema";
+
 interface VolunteerProfileFormProps {
-    initialData?: ProfileFormValues;
+    initialData?: Partial<VolunteerProfile> | null;
 }
 
 export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
-        defaultValues: initialData || {
+        defaultValues: {
             headline: "",
             bio: "",
             locationSuburb: "",
@@ -39,10 +41,24 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
         },
     });
 
+    // Populate form with existing profile data
+    useEffect(() => {
+        if (initialData) {
+            form.reset({
+                headline: initialData.headline || "",
+                bio: initialData.bio || "",
+                locationSuburb: initialData.locationSuburb || "",
+                locationPostcode: initialData.locationPostcode || "",
+            });
+        }
+    }, [initialData, form]);
+
     async function onSubmit(data: ProfileFormValues) {
-        setIsSubmitting(true);
+        setIsSaving(true);
         try {
+            const profileId = initialData?.id || crypto.randomUUID();
             await upsertVolunteerProfile({
+                id: profileId, // Assuming upsertVolunteerProfile now accepts an ID
                 headline: data.headline || "",
                 bio: data.bio || "",
                 locationSuburb: data.locationSuburb || "",
