@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>smalltalk.community - Lessons & Workshops</title>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lessons & Workshops">
+    <link rel="manifest"
+        href="data:application/json;base64,eyJzaG9ydF9uYW1lIjoiTGVzc29ucyIsIm5hbWUiOiJzbWFsbHRhbGsuY29tbXVuaXR5IC0gTGVzc29ucyAmIFdvcmtzaG9wcyIsImRlc2NyaXB0aW9uIjoiU2Vzc2lvbiBwbGFubmluZyBhbmQgd29ya3Nob3AgbWFuYWdlbWVudCBmb3Igc21hbGx0YWxrLmNvbW11bml0eSBJbmMiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzAwM2I2ZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDE5MiAxOTInJTNFJTNDcmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5Micgcng9JzI0JyBmaWxsPSclMjMwMDNiNmYnLyUzRSUzQ3RleHQgeD0nNTAlJyB5PSc1MCUnIGRvbWluYW50LWJhc2VsaW5lPSdjZW50cmFsJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzgwJyBmaWxsPSd3aGl0ZSclM0VMVyUzQy90ZXh0JTNFJTNDJTJGc3ZnJTNFIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+    <!-- Scripts -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.min.js"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#003b6f',
+                        secondary: '#f8fafc',
+                        accent: '#c2410c',
+                        support: '#1e40af',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        background: '#ffffff',
+                        surface: '#ffffff',
+                        charcoal: '#0f172a',
+                    },
+                    fontFamily: {
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'premium': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-display {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #003b6f;
+            border-radius: 4px;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                padding: 0 !important;
+                margin: 0 !important;
+                color: black !important;
+                background: white !important;
+            }
+
+            @page {
+                margin: 1cm 1.5cm 1.5cm 1.5cm !important;
+            }
+
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger,
+            .nav-link,
+            button,
+            select,
+            input {
+                min-height: 44px !important;
+            }
+
+            .input-field,
+            input,
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
+
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // Icons
+        const Icons = {
+            Plan: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>,
+            Audience: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-6.338M12 7.217a4.5 4.5 0 00-4.5 4.5M12 7.217a4.5 4.5 0 014.5 4.5M12 7.217V4.5" /></svg>,
+            Delivery: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            Evaluation: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
+            Resources: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+            Moon: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>,
+            Sun: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+            Printer: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>,
+            Save: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>,
+            Load: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
+            Settings: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        };
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm shadow-2xl overflow-y-auto" onClick={onClose}>
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-premium w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-content translate-y-0 opacity-100 transition-all duration-300" onClick={e => e.stopPropagation()}>
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-inherit z-10">
+                            <h2 className="text-xl font-bold font-display text-primary dark:text-white">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Components
+        const Card = ({ title, subtitle, children, className = "" }) => (
+            <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-premium border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
+                {(title || subtitle) && (
+                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                        {title && <h3 className="text-lg font-bold text-slate-900 dark:text-white font-display">{title}</h3>}
+                        {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>}
+                    </div>
+                )}
+                <div className="p-6">{children}</div>
+            </div>
+        );
+
+        const AppShell = ({ children, activeTab, setTab, onSave, onLoad }) => {
+            const [theme, setTheme] = useState('light');
+
+            useEffect(() => {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                setTheme(savedTheme);
+                document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+            }, []);
+
+            const toggleTheme = () => {
+                const newTheme = theme === 'light' ? 'dark' : 'light';
+                setTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+                document.documentElement.classList.toggle('dark', newTheme === 'dark');
+            };
+
+            const navItems = [
+                { id: 'planning', label: 'Planning', icon: Icons.Plan },
+                { id: 'audience', label: 'Audience', icon: Icons.Audience },
+                { id: 'delivery', label: 'Delivery', icon: Icons.Delivery },
+                { id: 'evaluation', label: 'Evaluation', icon: Icons.Evaluation },
+                { id: 'resources', label: 'Resources', icon: Icons.Resources },
+                { id: 'settings', label: 'Settings', icon: Icons.Settings },
+            ];
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    <header className="no-print sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+                        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg ring-4 ring-primary/10">LW</div>
+                                <div className="hidden sm:block">
+                                    <h1 className="text-slate-900 dark:text-white font-bold font-display leading-tight">Lessons & Workshops</h1>
+                                    <p className="text-[10px] text-primary dark:text-accent font-bold tracking-wider uppercase">smalltalk.community Inc</p>
+                                </div>
+                            </div>
+
+                            <nav className="hidden md:flex items-center space-x-1">
+                                {navItems.map(item => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setTab(item.id)}
+                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === item.id
+                                            ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-white'
+                                            : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+                                            }`}
+                                    >
+                                        <item.icon />
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </nav>
+
+                            <div className="flex items-center gap-2">
+                                <button onClick={onSave} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors" title="Export JSON"><Icons.Save /></button>
+                                <button onClick={onLoad} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors" title="Import JSON"><Icons.Load /></button>
+                                <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                                <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">
+                                    {theme === 'light' ? <Icons.Moon /> : <Icons.Sun />}
+                                </button>
+                                <button onClick={() => window.print()} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"><Icons.Printer /></button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+                        {children}
+                    </main>
+
+                    <footer className="print-footer hidden">
+                        <div>smalltalk.community Inc - Lessons & Workshops</div>
+                        <div id="print-timestamp">{new Date().toLocaleString('en-AU')}</div>
+                        <div>Page <span className="page-number"></span></div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const Input = ({ label, id, type = "text", value, onChange, placeholder, rows }) => (
+            <div className="space-y-2">
+                <label htmlFor={id} className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</label>
+                {type === "textarea" ? (
+                    <textarea id={id} rows={rows || 3} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}></textarea>
+                ) : (
+                    <input id={id} type={type} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+                )}
+            </div>
+        );
+
+        const PlanningSection = ({ data, updateData }) => {
+            const addActivity = () => {
+                const newActivity = { id: Date.now(), time: 15, title: '', description: '', outcome: '' };
+                updateData({ activities: [...data.activities, newActivity] });
+            };
+
+            const removeActivity = (id) => {
+                updateData({ activities: data.activities.filter(a => a.id !== id) });
+            };
+
+            const updateActivity = (id, field, value) => {
+                updateData({
+                    activities: data.activities.map(a => a.id === id ? { ...a, [field]: value } : a)
+                });
+            };
+
+            const totalTime = data.activities.reduce((acc, curr) => acc + parseInt(curr.time || 0), 0);
+
+            return (
+                <div className="space-y-8 animate-fade-in pb-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <Card title="Session Overview" className="lg:col-span-2">
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <Input label="Session Title" value={data.title} onChange={v => updateData({ title: v })} placeholder="e.g. Digital Storytelling Workshop" />
+                                    <Input label="Target Facilitator" value={data.facilitator} onChange={v => updateData({ facilitator: v })} placeholder="Name or Role" />
+                                </div>
+                                <Input label="Learning Objectives" type="textarea" value={data.objectives} onChange={v => updateData({ objectives: v })} placeholder="What should participants achieve?" />
+                            </div>
+                        </Card>
+
+                        <Card title="ACFE / Compliance" subtitle="Victorian Standards">
+                            <div className="space-y-4">
+                                <div className="p-4 bg-primary/5 dark:bg-primary/20 rounded-xl border border-primary/10">
+                                    <h4 className="text-sm font-bold text-primary dark:text-white mb-1">A-frame Alignment</h4>
+                                    <p className="text-[10px] text-slate-500 italic">Ensures pre-accredited training documentation compliance.</p>
+                                </div>
+                                <div className="space-y-3">
+                                    {['Andragogy Principles', 'Risk Assessment Complete', 'WWCC Verified', 'Co-Design Integrated'].map(check => (
+                                        <label key={check} className="flex items-center gap-3 cursor-pointer group">
+                                            <input type="checkbox" className="w-4 h-4 rounded accent-primary border-slate-300" checked={data.compliance?.[check]} onChange={e => updateData({ compliance: { ...data.compliance, [check]: e.target.checked } })} />
+                                            <span className="text-xs text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">{check}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <Card title="Session Builder" subtitle={`Total Duration: ${totalTime} minutes`}>
+                        <div className="space-y-4">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 dark:border-slate-700">
+                                            <th className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Time (min)</th>
+                                            <th className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Activity Title</th>
+                                            <th className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Description / Method</th>
+                                            <th className="py-3 px-4 text-xs font-bold uppercase text-slate-500">Outcome Link</th>
+                                            <th className="py-3 px-4 text-xs font-bold uppercase text-slate-500"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                        {data.activities.map((act) => (
+                                            <tr key={act.id} className="group hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                                                <td className="py-3 px-2 w-20">
+                                                    <input type="number" className="w-full bg-transparent border-none focus:ring-0 text-sm font-bold text-primary dark:text-accent" value={act.time} onChange={e => updateActivity(act.id, 'time', e.target.value)} />
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <input type="text" className="w-full bg-transparent border-none focus:ring-0 text-sm" placeholder="Intro..." value={act.title} onChange={e => updateActivity(act.id, 'title', e.target.value)} />
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <input type="text" className="w-full bg-transparent border-none focus:ring-0 text-sm opacity-70" placeholder="Interactive discussion..." value={act.description} onChange={e => updateActivity(act.id, 'description', e.target.value)} />
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <input type="text" className="w-full bg-transparent border-none focus:ring-0 text-xs text-slate-400" placeholder="LO1..." value={act.outcome} onChange={e => updateActivity(act.id, 'outcome', e.target.value)} />
+                                                </td>
+                                                <td className="py-3 px-4 text-right">
+                                                    <button onClick={() => removeActivity(act.id)} className="p-1 text-slate-300 hover:text-danger opacity-0 group-hover:opacity-100 transition-all">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button onClick={addActivity} className="flex items-center gap-2 text-primary font-bold text-sm hover:underline p-2">
+                                <span>+</span> Add Activity
+                            </button>
+                        </div>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card title="Resources Checklist">
+                            <textarea className="w-full h-32 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="Enter resources line by line...&#10;- Printed A-frame session plans&#10;- 20 Tablets (Fully charged)&#10;- Hand sanitizer" value={data.resources} onChange={e => updateData({ resources: e.target.value })}></textarea>
+                        </Card>
+                        <Card title="Co-Design Integration">
+                            <p className="text-xs text-slate-500 mb-4 italic">Document how participants shaped this session.</p>
+                            <Input label="Consultation Method" value={data.codesignMethod} onChange={v => updateData({ codesignMethod: v })} placeholder="e.g. Previous session survey" />
+                            <div className="mt-4">
+                                <Input label="Adjustments Made" value={data.codesignAdjustments} onChange={v => updateData({ codesignAdjustments: v })} placeholder="e.g. Added extra 15 mins for tech troubleshooting" />
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const AudienceSection = ({ data, updateData }) => (
+            <div className="space-y-6 animate-fade-in pb-20">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card title="Cohort Profile" className="md:col-span-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            {[
+                                { label: 'Youth (13-17)', id: 'youthCount' },
+                                { label: 'Adult (18-64)', id: 'adultCount' },
+                                { label: 'Senior (65+)', id: 'seniorCount' }
+                            ].map(group => (
+                                <div key={group.id} className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-2">{group.label}</label>
+                                    <input type="number" className="text-2xl font-bold bg-transparent border-none focus:ring-0 w-full text-primary dark:text-accent" value={data.audience?.[group.id] || 0} onChange={e => updateData({ audience: { ...data.audience, [group.id]: e.target.value } })} />
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <Card title="Cultural Protocol">
+                        <div className="space-y-4">
+                            <p className="text-xs text-slate-500 italic">Integration for First Nations and CALD groups.</p>
+                            <Input label="Acknowledgement Type" value={data.audience?.acknowledgment} onChange={v => updateData({ audience: { ...data.audience, acknowledgment: v } })} placeholder="e.g. Traditional Owner specific" />
+                            <label className="flex items-center gap-3 cursor-pointer group mt-2">
+                                <input type="checkbox" className="w-4 h-4 rounded accent-primary border-slate-300" checked={data.audience?.culturalSensitivity} onChange={e => updateData({ audience: { ...data.audience, culturalSensitivity: e.target.checked } })} />
+                                <span className="text-xs text-slate-600 dark:text-slate-400">Cultural Sensitivity Check Performed</span>
+                            </label>
+                        </div>
+                    </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card title="Accessibility Needs Register">
+                        <textarea className="w-full h-32 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Document specific support needs line by line...&#10;- Large print materials required (2 participants)&#10;- Hearing loop setup needed&#10;- Wheelchair access path verified" value={data.audience?.accessNeeds} onChange={e => updateData({ audience: { ...data.audience, accessNeeds: e.target.value } })}></textarea>
+                    </Card>
+                    <Card title="Intergenerational Interaction Plan">
+                        <p className="text-xs text-slate-500 mb-4 italic">How will different age groups connect during this session?</p>
+                        <Input label="Connection Method" value={data.audience?.intergenMethod} onChange={v => updateData({ audience: { ...data.audience, intergenMethod: v } })} placeholder="e.g. Reverse-mentoring on tablet setup" />
+                        <div className="mt-4">
+                            <Input label="Potential Barriers" value={data.audience?.intergenBarriers} onChange={v => updateData({ audience: { ...data.audience, intergenBarriers: v } })} placeholder="e.g. Jargon differences, energy levels" />
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        );
+
+        const DeliverySection = ({ data }) => {
+            const [currentActIdx, setCurrentActIdx] = useState(0);
+            const [timeLeft, setTimeLeft] = useState(null);
+            const [isRunning, setIsRunning] = useState(false);
+
+            useEffect(() => {
+                let interval;
+                if (isRunning && timeLeft > 0) {
+                    interval = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+                } else if (timeLeft === 0) {
+                    setIsRunning(false);
+                }
+                return () => clearInterval(interval);
+            }, [isRunning, timeLeft]);
+
+            const startTimer = (mins) => {
+                setTimeLeft(mins * 60);
+                setIsRunning(true);
+            };
+
+            const currentAct = data.activities[currentActIdx];
+
+            const formatTime = (seconds) => {
+                if (seconds === null) return "--:--";
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m}:${s.toString().padStart(2, "0")}`;
+            };
+
+            return (
+                <div className="space-y-8 animate-fade-in pb-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <Card title="Live Delivery Console" className="lg:col-span-2">
+                            {currentAct ? (
+                                <div className="space-y-8">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-700 pb-6">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary dark:text-accent mb-1">Current Activity ({currentActIdx + 1}/{data.activities.length})</p>
+                                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display leading-tight">{currentAct.title}</h2>
+                                        </div>
+                                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 px-6 py-3 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            <div className="text-center">
+                                                <p className="text-[8px] font-bold uppercase tracking-tighter text-slate-400">Time Remaining</p>
+                                                <p className={`text-2xl font-mono font-bold ${timeLeft < 60 ? 'text-danger' : 'text-slate-900 dark:text-white'}`}>{formatTime(timeLeft)}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => isRunning ? setIsRunning(false) : (timeLeft === null ? startTimer(currentAct.time) : setIsRunning(true))}
+                                                className={`p-3 rounded-xl transition-all ${isRunning ? 'bg-warning/10 text-warning hover:bg-warning/20' : 'bg-primary text-white hover:bg-primary/90'}`}
+                                            >
+                                                {isRunning ? <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> : <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400">Facilitation Notes</h4>
+                                            <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{currentAct.description || "No specific facilitation notes provided."}</p>
+                                            <div className="p-4 bg-accent/5 dark:bg-accent/20 border border-accent/10 rounded-xl">
+                                                <h5 className="text-[10px] font-bold text-accent uppercase mb-1">Anti-Boring energy check</h5>
+                                                <p className="text-xs text-slate-600 dark:text-slate-400 italic">"Is everyone's energy still in the room? Try a 30-second stand-up stretch if focus is dipping."</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400">Target Outcome</h4>
+                                            <div className="p-4 bg-success/5 dark:bg-success/20 border border-success/10 rounded-xl">
+                                                <p className="text-sm font-bold text-success-700 dark:text-success-400">{currentAct.outcome || "Build baseline connection"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between pt-6 border-t border-slate-100 dark:border-slate-700">
+                                        <button
+                                            disabled={currentActIdx === 0}
+                                            onClick={() => { setCurrentActIdx(prev => prev - 1); setTimeLeft(null); setIsRunning(false); }}
+                                            className="px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 disabled:opacity-30"
+                                        >
+                                            Previous Activity
+                                        </button>
+                                        <button
+                                            disabled={currentActIdx === data.activities.length - 1}
+                                            onClick={() => { setCurrentActIdx(prev => prev + 1); setTimeLeft(null); setIsRunning(false); }}
+                                            className="px-6 py-2 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 disabled:opacity-30"
+                                        >
+                                            Next Activity
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 text-slate-500 italic">No activities defined. Go to Planning to build your session.</div>
+                            )}
+                        </Card>
+
+                        <div className="space-y-6">
+                            <Card title="Engagement Tracker">
+                                <p className="text-[10px] text-slate-500 mb-4">Real-time participation observation.</p>
+                                <div className="space-y-4">
+                                    {['Group Energy', 'Youth Participation', 'Senior Engagement'].map(label => (
+                                        <div key={label} className="space-y-1">
+                                            <div className="flex justify-between text-[10px] font-bold uppercase text-slate-400">
+                                                <span>{label}</span>
+                                                <span>Moderate</span>
+                                            </div>
+                                            <div className="w-full h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                                                <div className="w-1/2 h-full bg-primary" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                            <Card title="Troubleshooting Guide">
+                                <ul className="text-xs space-y-3 opacity-80">
+                                    <li className="flex gap-2"><span>⚠️</span> <span><strong>Tech fail:</strong> Pivot to analog storytelling prompts.</span></li>
+                                    <li className="flex gap-2"><span>⚠️</span> <span><strong>Low energy:</strong> Use the 2-minute "Stand & Shake" reset.</span></li>
+                                    <li className="flex gap-2"><span>⚠️</span> <span><strong>Dominant voice:</strong> Move to structured pair-shares.</span></li>
+                                </ul>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const EvaluationSection = ({ data, updateData }) => (
+            <div className="space-y-8 animate-fade-in pb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card title="UCLA Loneliness Scale (3-Item)" subtitle="Pre/Post Wellbeing Proxy">
+                        <div className="space-y-6">
+                            <p className="text-xs text-slate-500 italic leading-relaxed">Standardised tool to measure social isolation impact. Usually administered at the start and end of a multi-session programme.</p>
+                            <div className="space-y-6">
+                                {[
+                                    "How often do you feel you lack companionship?",
+                                    "How often do you feel left out?",
+                                    "How often do you feel isolated from others?"
+                                ].map((q, idx) => (
+                                    <div key={idx} className="space-y-3">
+                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{q}</p>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['Hardly Ever', 'Some of the time', 'Often'].map(val => (
+                                                <button key={val} className="py-2 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-primary/10 transition-colors">{val}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+
+                    <div className="space-y-6">
+                        <Card title="Facilitator Reflection Log">
+                            <div className="space-y-4">
+                                <Input label="What went well?" type="textarea" placeholder="Identify key engagement moments..." />
+                                <Input label="Areas for improvement" type="textarea" placeholder="Tech issues, timing adjustments..." />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Energy Peak" placeholder="Activity 4" />
+                                    <Input label="Energy Dip" placeholder="Activity 2" />
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+
+                <Card title="ACFE Reporting Metrics">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            { label: 'Participation %', val: '92%' },
+                            { label: "Outcomes Met", val: "4/5" },
+                            { label: 'Safety Incidents', val: '0' },
+                            { label: 'Avg Feedback', val: '4.8/5' }
+                        ].map(metric => (
+                            <div key={metric.label} className="p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-700 text-center">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{metric.label}</p>
+                                <p className="text-3xl font-bold font-display text-primary dark:text-white">{metric.val}</p>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            </div>
+        );
+
+        const ResourcesSection = () => (
+            <div className="space-y-6 animate-fade-in pb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card title="Best Practice Library">
+                        <div className="space-y-4">
+                            {[
+                                { title: 'ACFE Board Guidelines', desc: 'Official pre-accredited training standards for Victoria.' },
+                                { title: 'Adult Learning (Andragogy)', desc: 'Principles of self-directed and experiential learning.' },
+                                { title: 'Universal Design for Learning', desc: 'Making workshops accessible to all neurotypes and abilities.' },
+                                { title: 'YACVic Ethical Foundations', desc: 'Code of Ethics for the Victorian youth sector.' }
+                            ].map(item => (
+                                <div key={item.title} className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/30 transition-all cursor-pointer group">
+                                    <h4 className="text-sm font-bold group-hover:text-primary transition-colors">{item.title}</h4>
+                                    <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <Card title="Victorian Accessibility Toolkit">
+                        <div className="space-y-3">
+                            {[
+                                'Screen Reader Compatibility Guide',
+                                'Large Print Template (Plus Jakarta Sans)',
+                                'Sensory-Friendly Environment Checklist',
+                                'Easy English Translation Prompts'
+                            ].map(tool => (
+                                <div key={tool} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{tool}</span>
+                                    <button className="text-[10px] text-primary hover:underline uppercase font-bold tracking-wider">Download</button>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        );
+
+        const SettingsView = ({ data, setData }) => {
+            const [jsonInput, setJsonInput] = useState(JSON.stringify(data, null, 2));
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                setJsonInput(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSaveRaw = () => {
+                try {
+                    const parsed = JSON.parse(jsonInput);
+                    setData(parsed);
+                    setError('');
+                    alert('Data updated successfully!');
+                } catch (e) {
+                    setError('Invalid JSON: ' + e.message);
+                }
+            };
+
+            return (
+                <Card title="Application Settings" subtitle="Advanced Configuration">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold mb-2">Raw Data Editor</label>
+                            <p className="text-xs text-slate-500 mb-2">Directly edit the application state. Valid JSON required.</p>
+                            <textarea
+                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono text-xs h-96"
+                                value={jsonInput}
+                                onChange={e => setJsonInput(e.target.value)}
+                            />
+                        </div>
+                        {error && (
+                            <div className="p-3 bg-red-100 text-red-800 rounded-lg text-sm border border-red-200">
+                                <strong>Error:</strong> {error}
+                            </div>
+                        )}
+                        <button onClick={handleSaveRaw} className="px-6 py-2 rounded-lg font-semibold bg-primary text-white w-full hover:bg-primary/90 transition-colors">
+                            Update Data
+                        </button>
+                    </div>
+                </Card>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setTab] = useState('planning');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem('lw_draft');
+                return saved ? JSON.parse(saved) : {
+                    title: '',
+                    facilitator: '',
+                    objectives: '',
+                    compliance: {},
+                    activities: [
+                        { id: 1, time: 10, title: 'Welcome & Acknowledgement', description: 'Settling in and cultural protocols', outcome: 'Safe space' },
+                        { id: 2, time: 15, title: 'Check-in Activity', description: 'Opening energy check', outcome: 'Baseline' }
+                    ],
+                    resources: '',
+                    codesignMethod: '',
+                    codesignAdjustments: '',
+                    audience: {
+                        youthCount: 0,
+                        adultCount: 0,
+                        seniorCount: 0,
+                        accessNeeds: '',
+                        acknowledgment: 'Standard Taungurung/Gunaikurnai',
+                    }
+                };
+            });
+
+            useEffect(() => {
+                if (isFirstVisit('lessons_workshops')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('lw_draft', JSON.stringify(data));
+            }, [data]);
+
+            const updateData = (updates) => setData(prev => ({ ...prev, ...updates }));
+
+            const renderContent = () => {
+                switch (activeTab) {
+                    case 'planning': return <PlanningSection data={data} updateData={updateData} />;
+                    case 'audience': return <AudienceSection data={data} updateData={updateData} />;
+                    case 'delivery': return <DeliverySection data={data} />;
+                    case 'evaluation': return <EvaluationSection data={data} updateData={updateData} />;
+                    case 'resources': return <ResourcesSection />;
+                    case 'settings': return <SettingsView data={data} setData={setData} />;
+                    default: return <div className="p-12 text-center text-slate-500 italic animate-fade-in">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} functionality coming in next update.</div>;
+                }
+            };
+
+            const handleSave = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `session-plan-${new Date().getTime()}.json`;
+                a.click();
+            };
+
+            const handleLoad = () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = event => {
+                        try {
+                            const importedData = JSON.parse(event.target.result);
+                            setData(importedData);
+                            alert('Session plan imported successfully!');
+                        } catch (err) {
+                            alert('Error loading file. Please ensure it is a valid session JSON.');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            };
+
+            return (
+                <AppShell activeTab={activeTab} setTab={setTab} onSave={handleSave} onLoad={handleLoad}>
+                    {renderContent()}
+                    <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} appName="Lessons & Workshops" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

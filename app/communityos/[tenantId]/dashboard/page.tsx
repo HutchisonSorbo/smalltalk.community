@@ -69,9 +69,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                             key={app.id}
                             href={`/communityos/${tenantId}/apps/${app.id}`}
                             className="group flex flex-col items-center rounded-lg border bg-white p-4 shadow-sm transition hover:border-primary hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-                            style={{
-                                "--tw-border-opacity": "1",
-                            } as React.CSSProperties}
                         >
                             <span className="text-3xl" role="img" aria-label={app.name}>
                                 {app.icon}

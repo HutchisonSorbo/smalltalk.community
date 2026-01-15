@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>smalltalk.community Inc | Unified Governance Hub</title>
+    <meta name="description"
+        content="Governance hub for smalltalk.community Inc - Constitution, Strategic Plan, and Operational Frameworks unified.">
+
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#003b6f',
+                        secondary: '#f8fafc',
+                        accent: '#c2410c',
+                        support: '#1e40af',
+                        governance: '#059669',
+                        'risk-extreme': '#dc2626',
+                        'risk-high': '#f97316',
+                        'risk-medium': '#eab308',
+                        'risk-low': '#84cc16'
+                    },
+                    fontFamily: {
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .font-display {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, createContext, useContext } = React;
+
+        // ========== DATA STRUCTURES ==========
+
+        const constitutionData = {
+            parts: [
+                {
+                    id: "part1", title: "What smalltalk.community Inc Is and What We Aim to Achieve", clauses: [
+                        { id: 1, title: "Our Name", summary: "We are smalltalk.community Inc, an incorporated association in Victoria." },
+                        { id: 2, title: "What We Do (Our Charitable Purposes)", summary: "Strengthen regional communities by bringing people together across all ages." },
+                        { id: 3, title: "We Are A Not-for-Profit", summary: "Everything we do is for community benefit, not private profit." }
+                    ]
+                },
+                {
+                    id: "part2", title: "Who Can Be Part of smalltalk.community Inc", clauses: [
+                        { id: 4, title: "Types of Members", summary: "Four types: Full Members, Community Participants, Organisational Partners, Sustaining Supporters." },
+                        { id: 5, title: "How to Become A Member", summary: "Write to us, no membership fee, we'll respond within 2 weeks." },
+                        { id: 6, title: "Accessibility and Inclusion Standards", summary: "WCAG 2.1 AA, cultural safety, LGBTIQA+ inclusion, cost-free participation." },
+                        { id: 7, title: "What Members Can Do", summary: "Full Members can vote; Community Participants co-design programs." },
+                        { id: 8, title: "When Participation Ends", summary: "Voluntary leaving, data removal request, or serious safety violations." }
+                    ]
+                },
+                {
+                    id: "part3", title: "How smalltalk.community Inc Is Led", clauses: [
+                        { id: 9, title: "Our Leadership Team (The Committee)", summary: "Chair, Co-Chair, Secretary, Treasurer, up to 5 additional members (max 9)." },
+                        { id: 10, title: "How Committee Members Are Chosen", summary: "Every two years at AGM, elected by Full Members." },
+                        { id: 11, title: "Special Protections for Our Founder", summary: "Ryan Hutchison has special consultation rights and removal protections." },
+                        { id: 12, title: "What The Committee Does", summary: "Manages money, sets policies, hires staff, ensures legal compliance." },
+                        { id: 13, title: "Responsible Persons and Legal Duties", summary: "Committee members have legal duties under ACNC and Victorian law." },
+                        { id: 14, title: "Who Cannot Be On The Committee", summary: "Disqualified persons, those banned by ACNC, serious criminal convictions." },
+                        { id: 15, title: "Removing Committee Members", summary: "Resignation, disqualification, or two-thirds vote with 4 weeks notice." },
+                        { id: 16, title: "Conflicts of Interest", summary: "Must declare conflicts, not vote on affected decisions, step out of room." },
+                        { id: 17, title: "How The Committee Makes Decisions", summary: "7 days notice, 50% quorum, majority vote, Chair has casting vote." }
+                    ]
+                },
+                {
+                    id: "part4", title: "Member Meetings and Having a Say", clauses: [
+                        { id: 18, title: "Annual General Meeting (AGM)", summary: "Held yearly in May-July with 3 weeks notice, accessible venue." },
+                        { id: 19, title: "Special Meetings", summary: "Called by Committee or 25% of Full Members, 2 weeks notice." },
+                        { id: 20, title: "How Voting Works", summary: "Full Members vote; ordinary decisions need >50%, big decisions need 2/3." },
+                        { id: 21, title: "Quorum", summary: "Need 10 Full Members; rescheduled meetings can proceed with any number." }
+                    ]
+                },
+                {
+                    id: "part5", title: "Money and Resources", clauses: [
+                        { id: 22, title: "Financial Year", summary: "1 July to 30 June." },
+                        { id: 23, title: "How We Manage Money", summary: "Two-to-sign banking, monthly checks, >$5k needs Committee approval." },
+                        { id: 24, title: "Annual Financial Report", summary: "Prepared within 4 months, presented at AGM, follows ACNC rules." },
+                        { id: 25, title: "Audits and Checks", summary: "External auditor for larger organisations, independent review." }
+                    ]
+                },
+                {
+                    id: "part6", title: "How We Work Together", clauses: [
+                        { id: 26, title: "Advisory Forums", summary: "Youth (12-24), Children (5-11), Senior (65+), Community, Professional forums." },
+                        { id: 27, title: "Policies We'll Create", summary: "Child Safeguarding, Risk Management, Privacy, Whistleblower, and more." },
+                        { id: 28, title: "Records We Keep", summary: "Members, minutes, financials, policies, incident reports." },
+                        { id: 29, title: "Community Partnership", summary: "Work with schools, health services, First Nations, LGBTIQA+ networks." }
+                    ]
+                },
+                {
+                    id: "part7", title: "Making Changes", clauses: [
+                        { id: 30, title: "Changing The Constitution", summary: "3 weeks notice, two-thirds vote, notify Consumer Affairs Victoria." }
+                    ]
+                },
+                {
+                    id: "part8", title: "What Happens If smalltalk.community Inc Closes Down", clauses: [
+                        { id: 31, title: "Winding Up", summary: "Two-thirds vote, pay debts, remaining funds to similar charity." }
+                    ]
+                },
+                {
+                    id: "part9", title: "Following Australian Charity Standards", clauses: [
+                        { id: 32, title: "ACNC Governance Standards", summary: "6 standards: Purpose, Accountability, Legal, Suitable People, Duties, Complaints." },
+                        { id: 33, title: "YACVic Code of Ethical Practice", summary: "13 principles including empowerment, participation, safety, transparency." },
+                        { id: 34, title: "Regular Review", summary: "Every 3 years review governance with community input." }
+                    ]
+                },
+                {
+                    id: "part10", title: "Words We Use and Final Notes", clauses: [
+                        { id: 35, title: "Definitions", summary: "Key terms defined: Committee, Members, Responsible Persons, etc." },
+                        { id: 36, title: "If Part Doesn't Work", summary: "Remove invalid parts, keep rest." },
+                        { id: 37, title: "What Law Applies", summary: "Victorian and Australian law prevails over Constitution." }
+                    ]
+                }
+            ],
+            membershipTypes: [
+                { type: "Full Members", age: "18+", voting: true, fee: 0, description: "Can vote and stand for Committee" },
+                { type: "Community Participants", age: "All ages", voting: false, fee: 0, description: "Engage with programs and platforms" },
+                { type: "Organisational Partners", age: "N/A", voting: false, fee: 0, description: "Schools, services, businesses collaborating" },
+                { type: "Sustaining Supporters", age: "All ages", voting: false, fee: 0, description: "Volunteers, donors, ongoing contributors" }
+            ],
+            committeeRoles: [
+                { title: "Chair", required: true, time: "6-8 hrs/month Year 1, 4-5 ongoing" },
+                { title: "Co-Chair", required: false, time: "4-5 hrs/month" },
+                { title: "Secretary", required: true, time: "4-6 hrs/month Year 1, 2-3 ongoing" },
+                { title: "Treasurer", required: true, time: "8-10 hrs/month Year 1, 5-6 ongoing" },
+                { title: "Additional Members", required: false, time: "2-3 hrs/month", max: 5 }
+            ]
+        };
+
+        const frameworkData = {
+            geographicalFirewall: {
+                included: "Murrindindi Shire",
+                excluded: "Mitchell Shire",
+                townships: ["Kinglake", "Marysville", "Yea", "Alexandra", "Eildon", "Narbethong"],
+                rationale: "Founder works full-time at Mitchell Shire Council. Strict geographic separation prevents conflict of interest."
+            },
+            risks: [
+                { id: 1, name: "Founder Burnout", category: "Human Capital", likelihood: "Almost Certain", consequence: "Major", rating: "EXTREME", color: "risk-extreme", mitigation: "Core Hours protocol (6hr/week), Founder's Manual (SOPs), recruit Shadow Deputy by Q3" },
+                { id: 2, name: "Google Ad Grant Suspension", category: "Financial", likelihood: "Possible", consequence: "Moderate", rating: "HIGH", color: "risk-high", mitigation: "Weekly keyword audit, remove single-word terms, diversify traffic sources" },
+                { id: 3, name: "Key Person Unavailable (Cass)", category: "Governance", likelihood: "Possible", consequence: "Moderate", rating: "MEDIUM", color: "risk-medium", mitigation: "Casual Vacancy clause in Constitution, recruit third General Member in Q2" },
+                { id: 4, name: "Community Complaint", category: "Reputational", likelihood: "Possible", consequence: "Major", rating: "HIGH", color: "risk-high", mitigation: "Strict moderation policy, Complaints Handling Policy, founder recusal from Council matters" },
+                { id: 5, name: "Platform Lock-out / Data Loss", category: "Technical", likelihood: "Unlikely", consequence: "Major", rating: "HIGH", color: "risk-high", mitigation: "3-2-1 backup rule, weekly CSV export, Zapier backup to Google Sheets" }
+            ],
+            coreHours: {
+                weekday: "6:30 PM – 8:00 PM (Tuesday & Thursday only)",
+                weekend: "Saturday 9:00 AM – 12:00 PM",
+                weeklyMax: 6,
+                blackout: "8:30 AM – 5:00 PM (Council work hours)"
+            },
+            burnoutSystem: {
+                green: { label: "Green", description: "Energy good, tasks on track", action: "Continue as planned" },
+                amber: { label: "Amber", description: "Feeling tired, slipping on work/family", action: "Pause new website features for 2 weeks" },
+                red: { label: "Red", description: "Dread, exhaustion, cynicism", action: "Mandatory 1-week total charity shutdown" }
+            },
+            roadmap2026: [
+                {
+                    phase: 1, name: "Foundation & Compliance", period: "Jan – Mar 2026", tasks: [
+                        { month: "Jan", items: ["Convene Inaugural Meeting", "Lodge Incorporation Application", "Submit Secondary Employment Declaration to Mitchell Shire HR"] },
+                        { month: "Feb", items: ["Open Westpac Community Account", "Apply for ABN and ACNC Registration", "Finalize logo and accessible colour palette"] },
+                        { month: "Mar", items: ["Register with Connecting Up", "Apply for Google for Nonprofits", "Setup Wix website with domain", "Submit Quick Response Grant"] }
+                    ]
+                },
+                {
+                    phase: 2, name: "Content & Contingency", period: "Apr – Jun 2026", tasks: [
+                        { month: "Apr", items: ["Map assets (Neighbourhood Houses, support groups)", "Draft 5 Community Spotlight articles", "Run WCAG accessibility validators"] },
+                        { month: "May", items: ["Soft Launch with Neighbourhood Houses", "Setup Google Ad Grant and campaigns", "Chair reviews Q1 Financials"] },
+                        { month: "Jun", items: ["Capacity Review (burnout assessment)", "Draft FRRR grant application", "Re-confirm with Mitchell Shire HR (no conflicts)"] }
+                    ]
+                },
+                {
+                    phase: 3, name: "Engagement & Measurement", period: "Jul – Sep 2026", tasks: [
+                        { month: "Jul", items: ["Activate Google Ads - Go Live", "Launch social media channels", "Winter Warmers campaign", "Email Murrindindi Councillors and TLaWC"] },
+                        { month: "Aug", items: ["Reduced capacity month (Founder Downtime)", "Launch Recharge Point mapping project", "Host first Digital Roundtable"] },
+                        { month: "Sep", items: ["Acquit Quick Response Grant", "Review traffic stats and adjust keywords", "Collect first Loneliness Scale data"] }
+                    ]
+                },
+                {
+                    phase: 4, name: "Review & Transition", period: "Oct – Dec 2026", tasks: [
+                        { month: "Oct", items: ["Mental Health Month digital feature", "Schedule AGM", "Decision Gate: Continue/Pause assessment"] },
+                        { month: "Nov", items: ["Hold first AGM - Present Annual Report", "Lodge Annual Statement with Consumer Affairs", "Draft 2027 Strategic Plan (maintain Murrindindi firewall)"] },
+                        { month: "Dec", items: ["Bushfire Preparedness messaging", "Mandatory founder break", "Year-end reflection"] }
+                    ]
+                }
+            ],
+            kpis: [
+                { category: "Impact", metric: "Loneliness Reduction", definition: "Change in UCLA 3-Item Scale score", target: ">10% improvement" },
+                { category: "Reach", metric: "Unique Regional Visitors", definition: "Unique IPs from Murrindindi postcodes", target: "500+" },
+                { category: "Engagement", metric: "Return Rate", definition: "Users returning more than once/month", target: ">20%" },
+                { category: "Operational", metric: "Grant Success Rate", definition: "% of applications successful", target: ">50%" },
+                { category: "Governance", metric: "Compliance Score", definition: "Timely ACNC/CAV lodgements", target: "100%" }
+            ],
+            stakeholders: [
+                { name: "Neighbourhood Houses", locations: ["Kinglake", "Marysville", "Yea", "Alexandra"], type: "Partner" },
+                { name: "Taungurung Land and Waters Council", type: "First Nations" },
+                { name: "Nexus Primary Health", type: "Health Provider" },
+                { name: "Menzies Support Services", type: "NDIS Provider" },
+                { name: "Murrindindi Shire Council", type: "Local Government" }
+            ]
+        };
+
+        const strategicPlanData = {
+            organisation: {
+                name: "smalltalk.community Inc",
+                vision: "A region where people of all ages find connection and belonging.",
+                mission: "To provide digital infrastructure and governance frameworks for community collaboration across Murrindindi Shire."
+            },
+            values: [
+                { title: "Belonging", icon: "🏠", description: "Everyone deserves a space to be heard." },
+                { title: "Intergenerational", icon: "🤝", description: "Value is created when we connect different ages." },
+                { title: "Transparency", icon: "🔍", description: "We're honest about constraints and challenges." },
+                { title: "Safety-first", icon: "🛡️", description: "Rigorous protection for the vulnerable is non-negotiable." },
+                { title: "Sustainability", icon: "🌱", description: "Building a model that doesn't depend on extractive labour." }
+            ],
+            boardRoles: [
+                { id: "chair", title: "Chair", required: true, icon: "⚖️", time: "6-8 hrs/month Year 1", purpose: "Legal officer, board leadership, governance oversight." },
+                { id: "secretary", title: "Secretary", required: true, icon: "📋", time: "4-6 hrs/month Year 1", purpose: "Record-keeping, compliance, official correspondence." },
+                { id: "treasurer", title: "Treasurer", required: true, icon: "💰", time: "8-10 hrs/month Year 1", purpose: "Financial stewardship, reporting, grant compliance." }
+            ]
+        };
+
+        // ========== CONTEXT ==========
+        const AppContext = createContext();
+
+        // ========== COMPONENTS ==========
+
+        const Nav = ({ activeSection, scrollTo, isDark, toggleDark, userRole, setUserRole }) => {
+            const [menuOpen, setMenuOpen] = useState(false);
+            const sections = [
+                { id: 'home', label: 'Home' },
+                { id: 'constitution', label: 'Constitution' },
+                { id: 'strategic', label: 'Strategic Plan' },
+                { id: 'operations', label: 'Operations' },
+                { id: 'calendar', label: 'Calendar' }
+            ];
+
+            return (
+                <nav className="fixed top-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-sm z-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center cursor-pointer" onClick={() => scrollTo('home')}>
+                                <span className="text-xl font-bold text-primary dark:text-blue-400">smalltalk.community Inc</span>
+                            </div>
+
+                            <div className="hidden md:flex items-center space-x-1">
+                                {sections.map(s => (
+                                    <button key={s.id} onClick={() => scrollTo(s.id)}
+                                        className={`px-3 py-2 rounded-md text-sm font-medium transition ${activeSection === s.id ? 'text-primary font-bold' : 'text-gray-600 hover:text-primary dark:text-gray-300'}`}>
+                                        {s.label}
+                                    </button>
+                                ))}
+                                <select value={userRole} onChange={e => setUserRole(e.target.value)}
+                                    className="ml-4 px-2 py-1 text-sm border rounded-md bg-white dark:bg-slate-800 dark:border-slate-600">
+                                    <option value="all">View As: Everyone</option>
+                                    <option value="board">Board Member</option>
+                                    <option value="community">Community Member</option>
+                                    <option value="funder">Funder</option>
+                                    <option value="partner">Partner</option>
+                                </select>
+                                <button onClick={toggleDark} className="ml-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800">
+                                    {isDark ? '☀️' : '🌙'}
+                                </button>
+                            </div>
+
+                            <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {menuOpen && (
+                        <div className="md:hidden bg-white dark:bg-slate-800 border-t p-4">
+                            {sections.map(s => (
+                                <button key={s.id} onClick={() => { scrollTo(s.id); setMenuOpen(false); }}
+                                    className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200">
+                                    {s.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </nav>
+            );
+        };
+
+        const Hero = () => (
+            <section id="home" className="min-h-screen flex items-center justify-center pt-20 pb-12 bg-gradient-to-br from-primary/5 via-white to-governance/5 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+                <div className="max-w-4xl mx-auto px-4 text-center animate-fade-in-up">
+                    <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                        🏛️ Unified Governance Hub
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-bold text-primary dark:text-blue-400 mb-6">
+                        Governed with Integrity,<br />Built for Impact
+                    </h1>
+                    <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+                        Constitution, Strategic Plan, and Operational Frameworks unified in one accessible, interactive platform for Murrindindi Shire.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-4 mb-12">
+                        <Stat value="37" label="Constitution Clauses" />
+                        <Stat value="4" label="2026 Phases" />
+                        <Stat value="5" label="Risk Areas" />
+                        <Stat value="6" label="Hours/Week Cap" />
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4 max-w-xl mx-auto">
+                        <p className="text-amber-800 dark:text-amber-200 text-sm">
+                            <strong>🔒 Geographical Firewall Active:</strong> Operations limited to Murrindindi Shire. Mitchell Shire excluded due to founder's Council employment.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Stat = ({ value, label }) => (
+            <div className="bg-white dark:bg-slate-800 px-6 py-4 rounded-xl shadow-sm">
+                <div className="text-2xl font-bold text-primary dark:text-blue-400">{value}</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide">{label}</div>
+            </div>
+        );
+
+        const SectionHeader = ({ title, subtitle, icon }) => (
+            <div className="text-center mb-12">
+                {icon && <div className="text-4xl mb-4">{icon}</div>}
+                <h2 className="text-3xl font-bold text-primary dark:text-blue-400 mb-2">{title}</h2>
+                {subtitle && <p className="text-gray-600 dark:text-gray-400">{subtitle}</p>}
+            </div>
+        );
+
+        const ConstitutionSection = () => {
+            const [expandedPart, setExpandedPart] = useState(null);
+            const [plainEnglish, setPlainEnglish] = useState(true);
+
+            return (
+                <section id="constitution" className="py-20 bg-white dark:bg-slate-900">
+                    <div className="max-w-6xl mx-auto px-4">
+                        <SectionHeader title="Constitution Navigator" subtitle="37 clauses across 10 parts - click to explore" icon="📜" />
+
+                        <div className="flex justify-center mb-8">
+                            <label className="flex items-center gap-2 text-sm">
+                                <input type="checkbox" checked={plainEnglish} onChange={() => setPlainEnglish(!plainEnglish)} className="rounded" />
+                                Plain English Mode
+                            </label>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {constitutionData.parts.map((part, idx) => (
+                                <div key={part.id}
+                                    className={`bg-gray-50 dark:bg-slate-800 rounded-xl border-2 transition-all cursor-pointer ${expandedPart === idx ? 'border-primary col-span-full' : 'border-transparent hover:border-primary/30'}`}
+                                    onClick={() => setExpandedPart(expandedPart === idx ? null : idx)}>
+                                    <div className="p-4">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">Part {idx + 1}</span>
+                                                <h3 className="mt-2 font-semibold text-gray-900 dark:text-white">{part.title}</h3>
+                                            </div>
+                                            <span className="text-gray-400">{expandedPart === idx ? '▼' : '▶'}</span>
+                                        </div>
+
+                                        {expandedPart === idx && (
+                                            <div className="mt-4 space-y-2">
+                                                {part.clauses.map(clause => (
+                                                    <div key={clause.id} className="bg-white dark:bg-slate-700 p-3 rounded-lg">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-xs font-bold bg-governance/10 text-governance px-2 py-0.5 rounded">Clause {clause.id}</span>
+                                                            <span className="font-medium text-sm">{clause.title}</span>
+                                                        </div>
+                                                        {plainEnglish && <p className="text-sm text-gray-600 dark:text-gray-400">{clause.summary}</p>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Membership Types */}
+                        <div className="mt-16">
+                            <h3 className="text-2xl font-bold text-center mb-8">Membership Types</h3>
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {constitutionData.membershipTypes.map(m => (
+                                    <div key={m.type} className="bg-gradient-to-br from-primary/5 to-governance/5 dark:from-slate-800 dark:to-slate-700 p-6 rounded-xl">
+                                        <h4 className="font-bold text-primary dark:text-blue-400">{m.type}</h4>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{m.description}</p>
+                                        <div className="mt-4 flex gap-2">
+                                            <span className={`text-xs px-2 py-1 rounded ${m.voting ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                {m.voting ? '✓ Can Vote' : 'No Voting'}
+                                            </span>
+                                            <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">Free</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const StrategicSection = () => (
+            <section id="strategic" className="py-20 bg-gray-50 dark:bg-slate-800">
+                <div className="max-w-6xl mx-auto px-4">
+                    <SectionHeader title="Strategic Direction" subtitle="Vision, values, and board structure" icon="🎯" />
+
+                    <div className="text-center mb-12 max-w-2xl mx-auto">
+                        <p className="text-xl font-medium text-gray-800 dark:text-gray-200">"{strategicPlanData.organisation.vision}"</p>
+                    </div>
+
+                    <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-16">
+                        {strategicPlanData.values.map(v => (
+                            <div key={v.title} className="bg-white dark:bg-slate-700 p-4 rounded-xl text-center hover:shadow-lg transition">
+                                <div className="text-3xl mb-2">{v.icon}</div>
+                                <h4 className="font-bold text-primary dark:text-blue-400">{v.title}</h4>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{v.description}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-center mb-8">Board Roles (Required)</h3>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {strategicPlanData.boardRoles.map(role => (
+                            <div key={role.id} className="bg-white dark:bg-slate-700 p-6 rounded-xl border-l-4 border-primary">
+                                <div className="text-3xl mb-2">{role.icon}</div>
+                                <h4 className="text-lg font-bold">{role.title}</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{role.purpose}</p>
+                                <p className="text-xs text-primary mt-2">⏱️ {role.time}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        const OperationsSection = () => {
+            const [activePhase, setActivePhase] = useState(0);
+
+            return (
+                <section id="operations" className="py-20 bg-white dark:bg-slate-900">
+                    <div className="max-w-6xl mx-auto px-4">
+                        <SectionHeader title="Operations & Risk" subtitle="2026 Roadmap, Risk Register, and Founder Capacity" icon="⚙️" />
+
+                        {/* Geographical Firewall */}
+                        <div className="bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-900/20 dark:to-amber-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-12">
+                            <h3 className="text-lg font-bold text-red-700 dark:text-red-400 mb-2">🔒 Geographical Firewall</h3>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
+                                    <p className="font-bold text-green-700 dark:text-green-400">✓ Included: {frameworkData.geographicalFirewall.included}</p>
+                                    <p className="text-sm text-green-600 mt-1">Towns: {frameworkData.geographicalFirewall.townships.join(", ")}</p>
+                                </div>
+                                <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-lg">
+                                    <p className="font-bold text-red-700 dark:text-red-400">✗ Excluded: {frameworkData.geographicalFirewall.excluded}</p>
+                                    <p className="text-sm text-red-600 mt-1">{frameworkData.geographicalFirewall.rationale}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Risk Matrix */}
+                        <h3 className="text-xl font-bold mb-4">Risk Register</h3>
+                        <div className="grid gap-4 mb-12">
+                            {frameworkData.risks.map(risk => (
+                                <div key={risk.id} className={`border-l-4 p-4 rounded-lg bg-gray-50 dark:bg-slate-800 ${risk.rating === 'EXTREME' ? 'border-red-500' :
+                                    risk.rating === 'HIGH' ? 'border-orange-500' : 'border-yellow-500'
+                                    }`}>
+                                    <div className="flex items-center justify-between flex-wrap gap-2">
+                                        <div>
+                                            <span className={`text-xs font-bold px-2 py-1 rounded ${risk.rating === 'EXTREME' ? 'bg-red-100 text-red-700' :
+                                                risk.rating === 'HIGH' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'
+                                                }`}>{risk.rating}</span>
+                                            <span className="ml-2 font-semibold">{risk.name}</span>
+                                            <span className="ml-2 text-sm text-gray-500">({risk.category})</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2"><strong>Mitigation:</strong> {risk.mitigation}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Core Hours */}
+                        <div className="grid md:grid-cols-2 gap-6 mb-12">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
+                                <h3 className="text-lg font-bold text-blue-700 dark:text-blue-400 mb-4">⏰ Core Hours Protocol</h3>
+                                <div className="space-y-2 text-sm">
+                                    <p><strong>Weekdays:</strong> {frameworkData.coreHours.weekday}</p>
+                                    <p><strong>Weekends:</strong> {frameworkData.coreHours.weekend}</p>
+                                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400">Max: {frameworkData.coreHours.weeklyMax} hours/week</p>
+                                    <p className="text-red-700 dark:text-red-400 font-medium"><strong>Blackout:</strong> {frameworkData.coreHours.blackout}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-slate-800 p-6 rounded-xl">
+                                <h3 className="text-lg font-bold mb-4">🚦 Burnout Traffic Light System</h3>
+                                <div className="space-y-3">
+                                    {Object.values(frameworkData.burnoutSystem).map(status => (
+                                        <div key={status.label} className={`p-4 rounded-lg shadow-sm ${status.label === 'Green' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-50' :
+                                            status.label === 'Amber' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-50' :
+                                                'bg-rose-100 dark:bg-rose-900/40 text-rose-900 dark:text-rose-50'
+                                            }`}>
+                                            <p className="font-bold mb-1">{status.label}: {status.description}</p>
+                                            <p className="text-sm opacity-90">→ {status.action}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2026 Roadmap */}
+                        <h3 className="text-xl font-bold mb-4">2026 Roadmap</h3>
+                        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                            {frameworkData.roadmap2026.map((phase, idx) => (
+                                <button key={phase.phase} onClick={() => setActivePhase(idx)}
+                                    className={`px-4 py-2 rounded-full whitespace-nowrap transition ${activePhase === idx ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200'}`}>
+                                    Phase {phase.phase}: {phase.name}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-6">
+                            <h4 className="font-bold text-lg mb-4">{frameworkData.roadmap2026[activePhase].name} ({frameworkData.roadmap2026[activePhase].period})</h4>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                {frameworkData.roadmap2026[activePhase].tasks.map(month => (
+                                    <div key={month.month} className="bg-white dark:bg-slate-700 p-4 rounded-lg">
+                                        <h5 className="font-bold text-primary mb-2">{month.month}</h5>
+                                        <ul className="space-y-1">
+                                            {month.items.map((item, i) => (
+                                                <li key={i} className="text-sm flex items-start gap-2">
+                                                    <span className="text-governance">•</span>
+                                                    {item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const CalendarSection = () => {
+            const allTasks = frameworkData.roadmap2026.flatMap(phase =>
+                phase.tasks.flatMap(month => month.items.map(item => ({ month: month.month, task: item, phase: phase.name })))
+            );
+
+            return (
+                <section id="calendar" className="py-20 bg-gray-50 dark:bg-slate-800">
+                    <div className="max-w-6xl mx-auto px-4">
+                        <SectionHeader title="Governance Calendar 2026" subtitle="Key milestones and compliance deadlines" icon="📅" />
+
+                        <div className="grid md:grid-cols-4 gap-4">
+                            {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(month => {
+                                const tasks = allTasks.filter(t => t.month === month);
+                                return (
+                                    <div key={month} className="bg-white dark:bg-slate-700 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-slate-600">
+                                        <div className="bg-primary/5 dark:bg-primary/20 px-4 py-2 border-b border-gray-100 dark:border-slate-600">
+                                            <h4 className="font-bold text-primary dark:text-blue-400">{month} 2026</h4>
+                                        </div>
+                                        <div className="p-4">
+                                            {tasks.length > 0 ? (
+                                                <ul className="space-y-2">
+                                                    {tasks.slice(0, 3).map((t, i) => (
+                                                        <li key={i} className="text-xs text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                                                            <span className="text-primary mt-1">•</span>
+                                                            <span>{t.task.substring(0, 45)}...</span>
+                                                        </li>
+                                                    ))}
+                                                    {tasks.length > 3 && <li className="text-xs font-medium text-primary dark:text-blue-400 mt-2">+{tasks.length - 3} more items</li>}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-xs text-gray-400 italic">No scheduled items</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* KPIs */}
+                        <h3 className="text-2xl font-bold text-center mt-16 mb-8">Performance Metrics (Year 1 Targets)</h3>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            {frameworkData.kpis.map(kpi => (
+                                <div key={kpi.metric} className="bg-white dark:bg-slate-700 p-4 rounded-xl text-center">
+                                    <span className="text-xs font-bold text-governance bg-governance/10 px-2 py-1 rounded">{kpi.category}</span>
+                                    <h4 className="font-bold mt-2">{kpi.metric}</h4>
+                                    <p className="text-2xl font-bold text-primary dark:text-blue-400 mt-2">{kpi.target}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Footer = () => (
+            <footer className="bg-primary text-white py-12">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <div>
+                            <h4 className="font-bold text-lg mb-4">smalltalk.community Inc</h4>
+                            <p className="text-sm opacity-80">Strengthening regional communities in Murrindindi Shire through connection and collaboration.</p>
+                        </div>
+                        <div>
+                            <h4 className="font-bold mb-4">Quick Links</h4>
+                            <ul className="space-y-2 text-sm opacity-80">
+                                <li>Constitution (37 Clauses)</li>
+                                <li>Strategic Plan 2026</li>
+                                <li>Risk Register</li>
+                                <li>Governance Calendar</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold mb-4">Contact</h4>
+                            <p className="text-sm opacity-80">Ryan Hutchison (Founder)</p>
+                            <p className="text-sm opacity-80">ryanhutchison@outlook.com.au</p>
+                        </div>
+                    </div>
+                    <div className="mt-8 pt-8 border-t border-white/20 text-center text-sm opacity-60">
+                        <p>We acknowledge the Taungurung people as the Traditional Owners of the lands on which we operate.</p>
+                        <p className="mt-2">© 2026 smalltalk.community Inc. ABN Pending.</p>
+                    </div>
+                </div>
+            </footer>
+        );
+
+        // ========== MAIN APP ==========
+        const App = () => {
+            const [isDark, setIsDark] = useState(false);
+            const [activeSection, setActiveSection] = useState('home');
+            const [userRole, setUserRole] = useState('all');
+
+            useEffect(() => {
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }, [isDark]);
+
+            const scrollTo = (id) => {
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+                setActiveSection(id);
+            };
+
+            return (
+                <div className={isDark ? 'dark' : ''}>
+                    <Nav activeSection={activeSection} scrollTo={scrollTo} isDark={isDark} toggleDark={() => setIsDark(!isDark)} userRole={userRole} setUserRole={setUserRole} />
+                    <main>
+                        <Hero />
+                        <ConstitutionSection />
+                        <StrategicSection />
+                        <OperationsSection />
+                        <CalendarSection />
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+
+</html>

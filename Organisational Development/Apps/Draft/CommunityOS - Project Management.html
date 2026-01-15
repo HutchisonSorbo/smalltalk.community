@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management | smalltalk.community Inc</title>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Project Management">
+    <link rel="manifest"
+        href="data:application/json;base64,eyJzaG9ydF9uYW1lIjoiUHJvamVjdHMiLCJuYW1lIjoic21hbGx0YWxrLmNvbW11bml0eSAtIFByb2plY3QgTWFuYWdlbWVudCIsImRlc2NyaXB0aW9uIjoiVmlzdWFsIHRhc2sgbWFuYWdlbWVudCBhbmQgcHJvamVjdCB0cmFja2luZyBmb3Igc21hbGx0YWxrLmNvbW11bml0eSBJbmMiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzAwM2I2ZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDE5MiAxOTInJTNFJTNDcmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5Micgcng9JzI0JyBmaWxsPSclMjMwMDNiNmYnLyUzRSUzQ3RleHQgeD0nNTAlJyB5PSc1MCUnIGRvbWluYW50LWJhc2VsaW5lPSdjZW50cmFsJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzgwJyBmaWxsPSd3aGl0ZSclM0VQTSUzQy90ZXh0JTNFJTNDJTJGc3ZnJTNFIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+
+    <!--
+    App: Project Management
+    Purpose: Visual task management across multiple boards with decision gate integration.
+    Author: smalltalk.community Inc
+    Version: 1.0 (2026-01-10)
+    -->
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel (for JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--primary)',
+                        'primary-support': 'var(--primary-support)',
+                        accent: 'var(--accent)',
+                        danger: 'var(--danger)',
+                        success: 'var(--success)',
+                        warning: 'var(--warning)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary: #3b82f6;
+                    --primary-support: #60a5fa;
+                    --accent: #fb923c;
+                    --text-color: #f1f5f9;
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --border-color: #334155;
+                }
+            }
+
+            body {
+                @apply bg-[var(--bg-color)] text-[var(--text-color)] font-sans leading-[1.6];
+                font-size: 16px;
+                letter-spacing: -0.01em;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-display font-bold;
+            }
+        }
+
+        @layer components {
+            .btn-primary {
+                @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none disabled:opacity-50 min-h-[44px];
+            }
+            .btn-secondary {
+                @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px];
+            }
+            .btn-danger {
+                @apply bg-[var(--danger)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--danger)] outline-none min-h-[44px];
+            }
+            .card {
+                @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6;
+            }
+            .input-field {
+                @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)] transition-all duration-200;
+            }
+            .focus-ring {
+                @apply focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none;
+            }
+            .nav-link {
+                @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2;
+            }
+            .nav-link.active {
+                @apply bg-white/20 font-bold;
+            }
+            .priority-low { @apply border-l-4 border-slate-300 !important; }
+            .priority-medium { @apply border-l-4 border-blue-500 !important; }
+            .priority-high { @apply border-l-4 border-amber-500 !important; }
+            .priority-critical { @apply border-l-4 border-red-600 !important; }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            .page-break { page-break-before: always; }
+            .project-column { min-width: 0 !important; overflow: visible !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+            .footer-left { flex: 1; text-align: left; }
+            .footer-center { flex: 1; text-align: center; font-weight: 600; }
+            .footer-right { flex: 1; text-align: right; }
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .nav-link, button, select, input {
+                min-height: 44px !important;
+            }
+            .input-field, input, select, textarea {
+                font-size: 16px !important;
+            }
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+            .project-column {
+                width: 85vw !important;
+            }
+        }
+
+        .project-container::-webkit-scrollbar { height: 8px; }
+        .project-container::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-700 rounded-full; }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- Utils ---
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+        const getDueDateLabel = (date) => {
+            if (!date) return null;
+            const diffTime = new Date(date) - new Date();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return { text: 'Overdue', color: 'text-red-500' };
+            if (diffDays === 0) return { text: 'Due Today', color: 'text-amber-500' };
+            return { text: `${diffDays} days`, color: 'text-slate-500' };
+        };
+
+        // --- Common Components ---
+
+        const AppShell = ({ title, currentTab, setTab, onSave, onLoad, children, lastSaved }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2 text-center no-print">
+                    Skip to main content
+                </a>
+
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <span className="text-2xl font-bold font-display tracking-tight">CommunityOS</span>
+                                <div className="hidden md:block h-6 w-px bg-white/20"></div>
+                                <h1 className="hidden md:block text-lg font-medium opacity-90">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                {lastSaved && <span className="hidden lg:flex items-center text-xs opacity-70 mr-2">Last save: {lastSaved}</span>}
+                                <button onClick={onSave} className="btn-secondary text-sm !px-4 flex items-center justify-center gap-2" title="Download JSON Draft">
+                                    💾 Save
+                                </button>
+                                <label className="btn-secondary text-sm !px-4 cursor-pointer flex items-center justify-center gap-2" title="Upload JSON Draft">
+                                    📂 Load
+                                    <input type="file" className="hidden" onChange={onLoad} accept=".json" aria-label="Upload JSON Data" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary text-sm !px-4 flex items-center justify-center gap-2">
+                                    🖨️ Print
+                                </button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'boards', label: 'Boards', icon: '📋' },
+                                { id: 'list', label: 'List View', icon: '📝' },
+                                { id: 'gates', label: 'Decision Gates', icon: '🎯' },
+                                { id: 'about', label: 'About', icon: 'ℹ️' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                    aria-current={currentTab === item.id ? 'page' : undefined}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print border-t border-slate-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <p className="text-sm mb-4">
+                            <strong>Acknowledgment of Country:</strong> We acknowledge the Taungurung and Wurundjeri peoples
+                            as the Traditional Custodians of the lands on which we operate.
+                        </p>
+                        <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-xs opacity-70">
+                            <span>© 2026 smalltalk.community Inc.</span>
+                            <span>{title} v1.0</span>
+                            <span className="hidden md:inline">|</span>
+                            <span>WCAG 2.1 AA Compliant</span>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "", subtitle, action }) => (
+            <section className={`card ${className}`}>
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        {title && <h2 className="text-2xl font-bold text-primary dark:text-white leading-tight">{title}</h2>}
+                        {subtitle && <p className="text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+                    </div>
+                    {action && <div className="no-print">{action}</div>}
+                </div>
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+                warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+                danger: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+                info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+                default: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
+            };
+            return (
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border whitespace-nowrap ${colors[type]}`}>
+                    {status}
+                </span>
+            );
+        };
+
+        const FormInput = ({ label, id, error, required, children, helpText, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                    {label} {required && <span className="text-danger" aria-hidden="true">*</span>}
+                </label>
+                <input id={id} className={`input-field ${error ? 'border-danger' : ''}`} {...props} />
+                {error && <p className="text-danger text-xs mt-1" role="alert">{error}</p>}
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, error, required, children, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {label} {required && <span className="text-danger">*</span>}
+                </label>
+                <select id={id} className={`input-field ${error ? 'border-danger' : ''}`} {...props}>
+                    <option value="">Select option...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print" onClick={onClose}>
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-inherit sticky top-0 z-10">
+                            <h2 className="text-xl font-bold text-primary dark:text-white">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- View Components ---
+
+        const Dashboard = ({ data, setTab }) => {
+            const overdueCards = data.cards.filter(c => {
+                if (!c.dueDate || c.status === 'Done') return false;
+                return new Date(c.dueDate) < new Date();
+            });
+
+            const criticalCards = data.cards.filter(c => c.priority === 'Critical' && c.status !== 'Done');
+            const gatesAtRisk = data.decisionGates.filter(g => g.status === 'At Risk');
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card className="!p-4 bg-primary/5 border-primary/20">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Total Active Cards</div>
+                            <div className="text-4xl font-black text-primary dark:text-blue-400">{data.cards.filter(c => c.status !== 'Done').length}</div>
+                        </Card>
+                        <Card className="!p-4 border-red-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Overdue Tasks</div>
+                            <div className="text-4xl font-black text-red-600">{overdueCards.length}</div>
+                        </Card>
+                        <Card className="!p-4 border-amber-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Critical Priority</div>
+                            <div className="text-4xl font-black text-amber-600">{criticalCards.length}</div>
+                        </Card>
+                        <Card className="!p-4 border-emerald-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Decision Gates Met</div>
+                            <div className="text-4xl font-black text-emerald-600">{data.decisionGates.filter(g => g.status === 'Met').length}</div>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Priority Focus" subtitle="Non-negotiable and urgent items">
+                            {criticalCards.length > 0 ? (
+                                <ul className="space-y-3">
+                                    {criticalCards.map(c => (
+                                        <li key={c.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded border-l-4 border-red-600">
+                                            <div>
+                                                <div className="font-bold">{c.title}</div>
+                                                <div className="text-xs text-slate-500">{c.assignedTo} • {c.status}</div>
+                                            </div>
+                                            <div className="text-xs font-bold text-red-600">{formatDate(c.dueDate)}</div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-slate-400 italic">No critical items to show.</p>
+                            )}
+                        </Card>
+
+                        <Card title="Decision Gates Status" subtitle="Key milestones from Strategic Plan">
+                            <div className="space-y-4">
+                                {data.decisionGates.map(g => (
+                                    <div key={g.id} className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800 rounded">
+                                        <div>
+                                            <div className="text-sm font-bold">{g.name}</div>
+                                            <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Target: {formatDate(g.targetDate)}</div>
+                                        </div>
+                                        <StatusBadge status={g.status} type={g.status === 'Met' ? 'success' : g.status === 'At Risk' ? 'danger' : 'default'} />
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const BoardView = ({ boards, cards, setCards, gates }) => {
+            const [activeBoardId, setActiveBoardId] = useState(boards[0]?.id || '');
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [editCard, setEditCard] = useState(null);
+            const [filter, setFilter] = useState({ priority: '', tag: '', assignedTo: '' });
+            const [formData, setFormData] = useState({
+                title: '', description: '', assignedTo: '', priority: 'Medium',
+                dueDate: '', tags: [], decisionGate: '', status: 'To Do', notes: ''
+            });
+
+            const currentBoard = boards.find(b => b.id === activeBoardId);
+            const columns = currentBoard?.columns || ["Backlog", "To Do", "In Progress", "Review", "Done"];
+
+            const filteredCards = cards.filter(c => {
+                if (c.boardId !== activeBoardId) return false;
+                if (filter.priority && c.priority !== filter.priority) return false;
+                if (filter.tag && !c.tags.includes(filter.tag)) return false;
+                if (filter.assignedTo && c.assignedTo !== filter.assignedTo) return false;
+                return true;
+            });
+
+            const openAdd = (status) => {
+                setEditCard(null);
+                setFormData({
+                    title: '', description: '', assignedTo: '', priority: 'Medium',
+                    dueDate: '', tags: [], decisionGate: '', status: status || 'To Do', notes: ''
+                });
+                setIsModalOpen(true);
+            };
+
+            const openEdit = (c) => {
+                setEditCard(c);
+                setFormData(c);
+                setIsModalOpen(true);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (editCard) {
+                    setCards(prev => prev.map(c => c.id === editCard.id ? { ...formData, id: c.id, boardId: activeBoardId, modified: new Date().toISOString() } : c));
+                } else {
+                    setCards(prev => [...prev, { ...formData, id: generateId(), boardId: activeBoardId, created: new Date().toISOString(), modified: new Date().toISOString() }]);
+                }
+                setIsModalOpen(false);
+            };
+
+            const moveCard = (card, direction) => {
+                const currentIndex = columns.indexOf(card.status);
+                let nextIndex = currentIndex + direction;
+                if (nextIndex >= 0 && nextIndex < columns.length) {
+                    setCards(prev => prev.map(c => c.id === card.id ? { ...c, status: columns[nextIndex] } : c));
+                }
+            };
+
+            // All unique tags and assignees for filters
+            const allTags = [...new Set(cards.flatMap(c => c.tags))];
+            const allAssignees = [...new Set(cards.map(c => c.assignedTo))];
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
+                        <select className="input-field max-w-xs font-bold text-primary" value={activeBoardId} onChange={e => setActiveBoardId(e.target.value)}>
+                            {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        </select>
+                        <div className="flex flex-wrap gap-2">
+                            <select className="input-field text-xs py-1 px-2 w-auto" value={filter.priority} onChange={e => setFilter({ ...filter, priority: e.target.value })}>
+                                <option value="">All Priorities</option>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                            <select className="input-field text-xs py-1 px-2 w-auto" value={filter.tag} onChange={e => setFilter({ ...filter, tag: e.target.value })}>
+                                <option value="">All Tags</option>
+                                {allTags.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                            <select className="input-field text-xs py-1 px-2 w-auto" value={filter.assignedTo} onChange={e => setFilter({ ...filter, assignedTo: e.target.value })}>
+                                <option value="">All Assignees</option>
+                                {allAssignees.map(a => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                            <button onClick={() => openAdd()} className="btn-primary text-sm whitespace-nowrap">+ New Card</button>
+                        </div>
+                    </div>
+
+                    <div className="project-container flex gap-6 overflow-x-auto pb-6 scroll-smooth">
+                        {columns.map(col => (
+                            <div key={col} className="project-column shrink-0 w-[300px] flex flex-col gap-4">
+                                <div className="flex justify-between items-center px-2">
+                                    <h3 className="font-bold text-sm uppercase text-slate-500 tracking-wider flex items-center gap-2">
+                                        {col} <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">{filteredCards.filter(c => c.status === col).length}</span>
+                                    </h3>
+                                    <button onClick={() => openAdd(col)} className="text-slate-400 hover:text-primary transition-colors no-print">+</button>
+                                </div>
+                                <div className="flex flex-col gap-3 min-h-[400px]">
+                                    {filteredCards.filter(c => c.status === col).map(c => {
+                                        const due = getDueDateLabel(c.dueDate);
+                                        return (
+                                            <div key={c.id} onClick={() => openEdit(c)} className={`card !p-4 cursor-pointer hover:shadow-md transition-all duration-200 relative group priority-${c.priority.toLowerCase()} animate-fade-in focus-within:ring-2 focus-within:ring-primary`} tabIndex="0" onKeyDown={(e) => e.key === 'Enter' && openEdit(c)} aria-label={`Task: ${c.title}, Priority: ${c.priority}`}>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h4 className="font-bold text-sm leading-tight pr-2">{c.title}</h4>
+                                                    <div className="flex flex-col gap-1 items-end shrink-0 no-print opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex gap-1">
+                                                            {columns.indexOf(c.status) > 0 && <button onClick={(e) => { e.stopPropagation(); moveCard(c, -1); }} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-[10px]">◀</button>}
+                                                            {columns.indexOf(c.status) < columns.length - 1 && <button onClick={(e) => { e.stopPropagation(); moveCard(c, 1); }} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-[10px]">▶</button>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1 mb-3">
+                                                    {c.tags.map(t => <span key={t} className="text-[9px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 uppercase font-bold">{t}</span>)}
+                                                </div>
+                                                <div className="flex justify-between items-center mt-auto">
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary" title={c.assignedTo}>
+                                                            {c.assignedTo.split(' ').map(n => n[0]).join('')}
+                                                        </div>
+                                                        <span className="text-[10px] text-slate-500">{c.assignedTo}</span>
+                                                    </div>
+                                                    {due && <span className={`text-[10px] font-bold ${due.color}`}>{due.text}</span>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editCard ? "Edit Card" : "New Task"}>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormInput label="Title" id="ctitle" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormSelect
+                                    label="Assigned To" id="cas" value={formData.assignedTo} onChange={e => setFormData({ ...formData, assignedTo: e.target.value })}
+                                    options={[
+                                        { value: 'Ryan', label: 'Ryan' }, { value: 'Chair', label: 'Chair' }, { value: 'Treasurer', label: 'Treasurer' },
+                                        { value: 'Secretary', label: 'Secretary' }, { value: 'Volunteer Team', label: 'Volunteer Team' }, { value: 'External', label: 'External' }
+                                    ]}
+                                    required
+                                />
+                                <FormSelect
+                                    label="Priority" id="cprio" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                                    options={[{ value: 'Low', label: 'Low' }, { value: 'Medium', label: 'Medium' }, { value: 'High', label: 'High' }, { value: 'Critical', label: 'Critical' }]}
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Due Date" id="cdue" type="date" value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
+                                <FormSelect
+                                    label="Decision Gate" id="cgate" value={formData.decisionGate} onChange={e => setFormData({ ...formData, decisionGate: e.target.value })}
+                                    options={gates.map(g => ({ value: g.id, label: g.name }))}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5">Tags (Comma separated)</label>
+                                <input className="input-field" value={formData.tags.join(', ')} onChange={e => setFormData({ ...formData, tags: e.target.value.split(',').map(s => s.trim()).filter(s => s) })} placeholder="Governance, Legal, Tech" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold mb-1.5">Description</label>
+                                <textarea className="input-field" rows="3" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
+                            </div>
+                            <FormSelect
+                                label="Status" id="cstatus" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}
+                                options={columns.map(col => ({ value: col, label: col }))}
+                                required
+                            />
+                            <div className="flex justify-between items-center pt-4 border-t border-slate-200">
+                                {editCard && <button type="button" onClick={() => { if (window.confirm("Delete this card?")) { setCards(prev => prev.filter(x => x.id !== editCard.id)); setIsModalOpen(false); } }} className="text-danger text-sm hover:underline">Delete Card</button>}
+                                <div className="flex gap-3 ml-auto">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                    <button type="submit" className="btn-primary">{editCard ? 'Save Changes' : 'Create Card'}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const ListView = ({ boards, cards, setCards }) => {
+            const [filter, setFilter] = useState('');
+            const currentBoardCards = cards.filter(c => c.title.toLowerCase().includes(filter.toLowerCase()) || c.assignedTo.toLowerCase().includes(filter.toLowerCase()));
+
+            return (
+                <Card title="Project List View" subtitle="Comprehensive overview across all boards">
+                    <div className="mb-6 flex justify-end no-print">
+                        <input type="text" placeholder="Search cards..." className="input-field max-w-xs" value={filter} onChange={e => setFilter(e.target.value)} />
+                    </div>
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-slate-50 dark:bg-slate-900/50">
+                                <tr>
+                                    <th className="px-6 py-4 text-sm font-semibold">Title</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Board</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Status</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Assigned</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Priority</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Due</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                                {currentBoardCards.map(c => (
+                                    <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-6 py-4 font-bold text-sm">{c.title}</td>
+                                        <td className="px-6 py-4 text-xs">{boards.find(b => b.id === c.boardId)?.name}</td>
+                                        <td className="px-6 py-4"><StatusBadge status={c.status} /></td>
+                                        <td className="px-6 py-4 text-sm">{c.assignedTo}</td>
+                                        <td className="px-6 py-4"><StatusBadge status={c.priority} type={c.priority === 'Critical' ? 'danger' : c.priority === 'High' ? 'warning' : 'default'} /></td>
+                                        <td className="px-6 py-4 text-sm whitespace-nowrap">{formatDate(c.dueDate)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            );
+        };
+
+        const DecisionGates = ({ gates, setGates, cards }) => {
+            return (
+                <div className="space-y-8">
+                    <Card title="Strategic Plan Decision Gates" subtitle="Key validation milestones for foundation years">
+                        <div className="space-y-6">
+                            {gates.map(g => {
+                                const linkedCards = cards.filter(c => c.decisionGate === g.id);
+                                return (
+                                    <div key={g.id} className="p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h3 className="text-xl font-bold">{g.name}</h3>
+                                                <p className="text-sm text-slate-500">{g.criteria}</p>
+                                            </div>
+                                            <StatusBadge status={g.status} type={g.status === 'Met' ? 'success' : g.status === 'At Risk' ? 'danger' : 'warning'} />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Target Delivery</div>
+                                                <div className="font-bold">{formatDate(g.targetDate)}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Linked Work Items</div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {linkedCards.map(c => (
+                                                        <span key={c.id} className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded font-bold">
+                                                            {c.title}
+                                                        </span>
+                                                    ))}
+                                                    {linkedCards.length === 0 && <span className="text-[10px] italic text-slate-400">No cards linked</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const About = () => (
+            <div className="space-y-8 max-w-4xl mx-auto">
+                <Card title="About Project Management" subtitle="System Version 1.0">
+                    <div className="prose dark:prose-invert max-w-none space-y-4">
+                        <p>
+                            The <strong>smalltalk.community Project Management</strong> tool is a specialized interface
+                            designed to bridge high-level strategy with daily execution. Unlike general-purpose tools, it is
+                            pre-configured with <strong>Decision Gates</strong> that align directly with our Strategic Plan milestones.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <h3 className="font-bold text-primary dark:text-blue-400 mb-2">Key Concepts</h3>
+                                <ul className="list-disc list-inside text-sm space-y-2 text-slate-600 dark:text-slate-400">
+                                    <li><strong>Boards:</strong> Major workstreams (e.g., Foundation, Programs).</li>
+                                    <li><strong>Cards:</strong> Individual tasks with ownership and due dates.</li>
+                                    <li><strong>Decision Gates:</strong> Strategic milestones that <em>must</em> be met for project continuity.</li>
+                                    <li><strong>Priority Levels:</strong> Visual indicators from Low to Critical.</li>
+                                </ul>
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <h3 className="font-bold text-primary dark:text-blue-400 mb-2">Workflow Guide</h3>
+                                <ol className="list-decimal list-inside text-sm space-y-2 text-slate-600 dark:text-slate-400">
+                                    <li>Create a card for a new task.</li>
+                                    <li>Link it to a <strong>Decision Gate</strong> if it impacts a milestone.</li>
+                                    <li>Move cards through the columns (To Do → Done).</li>
+                                    <li>Monitor the <strong>Dashboard</strong> for overdue items.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card title="Data & Safety" subtitle="Local-first architecture">
+                    <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                        <p>
+                            Just like all smalltalk.community administrative tools, your project data stays in <strong>LocalStorage</strong>.
+                            If you switch computers or browsers, you must use the <strong>Save</strong> button to export a JSON file
+                            and <strong>Load</strong> it on the new device.
+                        </p>
+                        <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 flex items-start gap-3">
+                            <span className="text-xl">💡</span>
+                            <p className="text-xs italic">
+                                <strong>Tip:</strong> Link your "Critical" cards to Decision Gates. This ensures that the board-level view
+                                always reflects our progress towards legal incorporation and program stability.
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        );
+
+        // --- Main App ---
+
+        const SettingsView = ({ data, setData }) => {
+            const [localData, setLocalData] = useState(JSON.stringify(data, null, 2));
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(false);
+
+            useEffect(() => {
+                setLocalData(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(localData);
+                    setData(parsed);
+                    setSuccess(true);
+                    setError(null);
+                    setTimeout(() => setSuccess(false), 3000);
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            return (
+                <div className="space-y-6 max-w-4xl mx-auto">
+                    <Card title="Application Settings" subtitle="manage application data and configuration">
+                        <div className="space-y-4">
+                            <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold text-sm mb-2">Raw Data Editor</h3>
+                                <p className="text-xs text-slate-500 mb-4">
+                                    Directly edit the application state.
+                                    <span className="text-red-500 font-bold ml-1">WARNING: invalid JSON will break the app.</span>
+                                </p>
+                                <textarea
+                                    value={localData}
+                                    onChange={(e) => setLocalData(e.target.value)}
+                                    className="w-full h-96 font-mono text-xs p-4 bg-white dark:bg-black border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                                />
+                                {error && (
+                                    <div className="mt-2 p-2 bg-red-50 text-red-600 text-xs rounded border border-red-100 flex items-center gap-2">
+                                        <span>❌</span> {error}
+                                    </div>
+                                )}
+                                {success && (
+                                    <div className="mt-2 p-2 bg-green-50 text-green-600 text-xs rounded border border-green-100 flex items-center gap-2">
+                                        <span>✅</span> Data updated successfully!
+                                    </div>
+                                )}
+                                <div className="mt-4 flex justify-end">
+                                    <button
+                                        onClick={handleSave}
+                                        className="btn-primary toggle-settings-btn"
+                                    >
+                                        Update Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const ProjectApp = () => {
+            const [currentTab, setTab] = useState('dashboard');
+            const [lastSaved, setLastSaved] = useState('');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState({
+                boards: [
+                    { id: "b001", name: "Phase 1: Foundation", description: "Months 1-4 incorporation and validation work", columns: ["Backlog", "To Do", "In Progress", "Review", "Done"], status: "Active" },
+                    { id: "b002", name: "Phase 2: Build & Beta", description: "Months 5-8 platform setup and user testing", columns: ["Backlog", "To Do", "In Progress", "Review", "Done"], status: "Active" }
+                ],
+                cards: [
+                    { id: "c001", boardId: "b001", title: "Incorporate Association (CAV)", description: "Prepare and lodge Form A1 with Consumer Affairs Victoria", assignedTo: "Ryan", priority: "Critical", dueDate: "2026-01-31", tags: ["Legal", "Governance"], status: "In Progress", decisionGate: "g001", created: "2026-01-05", modified: "2026-01-10", notes: "" },
+                    { id: "c002", boardId: "b001", title: "Mighty Networks Validation Sprint", description: "Test age-gating, seniors accessibility, and data export", assignedTo: "Ryan", priority: "High", dueDate: "2026-02-15", tags: ["Tech"], status: "To Do", decisionGate: "g001", created: "2026-01-06", modified: "2026-01-07", notes: "" },
+                    { id: "c003", boardId: "b001", title: "Establish Board Charter", description: "Draft Director Duties explainer and board rules", assignedTo: "Chair", priority: "High", dueDate: "2026-02-28", tags: ["Governance"], status: "To Do", decisionGate: "g001", created: "2026-01-08", modified: "2026-01-08", notes: "" },
+                    { id: "c004", boardId: "b002", title: "Recruit 3-5 Volunteer Moderators", description: "Based on observed beta patterns", assignedTo: "Ryan", priority: "Medium", dueDate: "2026-05-20", tags: ["Recruitment"], status: "Backlog", decisionGate: "g002", created: "2026-01-09", modified: "2026-01-09", notes: "" },
+                    { id: "c005", boardId: "b001", title: "Professional Safeguarding Policy", description: "Commission review from external consultant", assignedTo: "Ryan", priority: "Critical", dueDate: "2026-03-30", tags: ["Safety", "Legal"], status: "To Do", decisionGate: "g001", created: "2026-01-10", modified: "2026-01-10", notes: "" }
+                ],
+                decisionGates: [
+                    { id: "g001", name: "Foundation: Legal & Safety", criteria: "Incorporate + ACNC + Safeguarding Policy", targetDate: "2026-04-30", status: "Pending" },
+                    { id: "g002", name: "Build: Platform Validation", criteria: "Mighty Networks sprint + Beta results", targetDate: "2026-06-30", status: "Pending" }
+                ]
+            });
+
+            // LocalStorage Autosave
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    localStorage.setItem('st_project_data', JSON.stringify(data));
+                    setLastSaved(new Date().toLocaleTimeString());
+                }, 30000);
+                return () => clearInterval(timer);
+            }, [data]);
+
+            // Initial Load
+            useEffect(() => {
+                const saved = localStorage.getItem('st_project_data');
+                if (saved) setData(JSON.parse(saved));
+                if (isFirstVisit('project_management')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            const saveData = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `smalltalk-project-data-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            };
+
+            const loadData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const imported = JSON.parse(evt.target.result);
+                        setData(imported);
+                        alert("Data loaded successfully!");
+                    } catch (err) { alert("Error loading file."); }
+                };
+                reader.readAsText(file);
+            };
+
+            return (
+                <AppShell
+                    title="Project Management"
+                    currentTab={currentTab}
+                    setTab={setTab}
+                    onSave={saveData}
+                    onLoad={loadData}
+                    lastSaved={lastSaved}
+                >
+                    {currentTab === 'dashboard' && <Dashboard data={data} setTab={setTab} />}
+                    {currentTab === 'boards' && <BoardView boards={data.boards} cards={data.cards} setCards={v => setData({ ...data, cards: typeof v === 'function' ? v(data.cards) : v })} gates={data.decisionGates} />}
+                    {currentTab === 'list' && <ListView boards={data.boards} cards={data.cards} setCards={v => setData({ ...data, cards: typeof v === 'function' ? v(data.cards) : v })} />}
+                    {currentTab === 'gates' && <DecisionGates gates={data.decisionGates} setGates={v => setData({ ...data, decisionGates: typeof v === 'function' ? v(data.decisionGates) : v })} cards={data.cards} />}
+                    {currentTab === 'about' && <About />}
+                    {currentTab === 'settings' && <SettingsView data={data} setData={setData} />}<WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} appName="Project Management" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ProjectApp />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>
