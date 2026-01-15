@@ -10,7 +10,7 @@ Your implementation must be audit-ready for government funding compliance, ACNC 
 ## System Context
 
 ### Technology Stack
-- **Framework**: Next.js 16.x (App Router), React 18, TypeScript 5.x
+- **Framework**: Next.js 15.x (App Router), React 18, TypeScript 5.x
 - **Database**: Supabase (PostgreSQL 15) with Row Level Security (RLS)
 - **Sync Engine**: Ditto offline-first mesh networking
 - **Hosting**: Vercel (Edge Functions, CDN)
@@ -350,8 +350,8 @@ describe('Tenant Data Isolation', () => {
 
 ### 2.4 Ditto Sync Conflict Resolution
 ```typescript
-// tests/unit/lib/ditto-sync.test.ts
-import { resolveConflict, mergeMemberData } from '@/lib/ditto-sync';
+// tests/unit/lib/dittoSync.test.ts
+import { resolveConflict, mergeMemberData } from '@/lib/dittoSync';
 
 describe('Ditto Sync Conflicts', () => {
   it('uses last-write-wins for simple fields', () => {
@@ -434,10 +434,10 @@ describe('Member Form Integration', () => {
 
 ### 3.2 Communication Log Feature
 ```typescript
-// tests/integration/features/communication-log.test.tsx
+// tests/integration/features/CommunicationLog.test.tsx
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { CommunicationLog } from '@/components/crm/communication-log';
+import { CommunicationLog } from '@/components/crm/CommunicationLog';
 
 describe('Communication Logging', () => {
   it('creates new log entry and updates member engagement', async () => {

@@ -1,21 +1,9 @@
-/**
- * Age Calculation and Cohort Assignment Utilities
- */
-
-/**
- * Calculates age from a date string (YYYY-MM-DD)
- */
-export function calculateAge(dob: string | null | undefined): number {
-    if (!dob) return 0;
-
-    const birthDate = new Date(dob);
-    if (isNaN(birthDate.getTime())) return 0;
-
+export function calculateAge(birthDate: Date): number {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
     }
 
@@ -23,12 +11,21 @@ export function calculateAge(dob: string | null | undefined): number {
 }
 
 /**
- * Assigns an age cohort based on the calculated age
+ * Determines the age cohort based on age.
+ * Enforces a strict 13+ minimum age policy.
+ * 
+ * @param {number} age - The user's age.
+ * @returns {"Teen" | "Adult" | "Senior" | "Invalid"} The cohort group or "Invalid" if under 13.
+ * @throws {Error} If age is under 13.
  */
-export function getAgeCohort(age: number): string {
-    if (age < 5) return "Underage";
-    if (age < 12) return "Child";
-    if (age < 25) return "Youth";
-    if (age < 65) return "Adult";
+export function getAgeCohort(age: number): "Teen" | "Adult" | "Senior" | "Invalid" {
+    if (age < 0 || isNaN(age)) return "Invalid";
+
+    if (age < 13) {
+        throw new Error("Age must be 13 or older.");
+    }
+
+    if (age <= 17) return "Teen";
+    if (age <= 64) return "Adult";
     return "Senior";
 }

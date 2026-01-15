@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const memberSchema = z.object({
-    firstName: z.string().min(2, "First name is required"),
-    lastName: z.string().min(2, "Last name is required"),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email address"),
 });
 

@@ -2,21 +2,34 @@
  * Australian Data Validation Utilities
  */
 
+/**
+ * Validates an Australian mobile phone number.
+ * Removes whitespace and checks against the pattern starting with '04' followed by 8 digits.
+ * 
+ * @param {string} phone - The phone number to validate.
+ * @returns {boolean} True if the phone number is a valid Australian mobile.
+ */
 export function validatePhone(phone: string): boolean {
-    const cleaned = phone.replace(/\s/g, "");
-    const mobileRegex = /^(?:\+61|0)4\d{8}$/;
-    return mobileRegex.test(cleaned);
+    const cleaned = phone.replace(/\s+/g, "");
+    return /^04\d{8}$/.test(cleaned);
 }
 
-export function validatePostcode(postcode: string, state: string): boolean {
-    if (state !== "VIC") return true;
-    const pc = parseInt(postcode, 10);
-    return (pc >= 3000 && pc <= 3999) || (pc >= 8000 && pc <= 8999);
+export function validatePostcode(postcode: string): boolean {
+    // Basic validation for VIC postcodes (3000-3999 range as primary example)
+    // Could be expanded for national coverage
+    return /^(3\d{3}|8\d{3})$/.test(postcode);
 }
 
+/**
+ * Formats a number as Australian Currency (AUD).
+ * 
+ * @param {number} amount - The amount to format.
+ * @returns {string} The formatted currency string (e.g., "$1,234.50").
+ */
 export function formatAUD(amount: number): string {
-    return new Intl.NumberFormat("en-AU", {
-        style: "currency",
-        currency: "AUD",
+    if (isNaN(amount)) return "";
+    return new Intl.NumberFormat('en-AU', {
+        style: 'currency',
+        currency: 'AUD'
     }).format(amount);
 }

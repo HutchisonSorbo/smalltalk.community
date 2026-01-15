@@ -11,6 +11,7 @@ import { upsertVolunteerProfile } from "@/app/volunteer-passport/actions/volunte
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { type VolunteerProfile } from "@shared/schema";
 
 const profileSchema = z.object({
     headline: z.string().max(255).optional(),
@@ -20,8 +21,6 @@ const profileSchema = z.object({
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
-
-import { type VolunteerProfile } from "@shared/schema";
 
 interface VolunteerProfileFormProps {
     initialData?: Partial<VolunteerProfile> | null;
@@ -33,6 +32,12 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
+        values: {
+            headline: initialData?.headline || "",
+            bio: initialData?.bio || "",
+            locationSuburb: initialData?.locationSuburb || "",
+            locationPostcode: initialData?.locationPostcode || "",
+        },
         defaultValues: {
             headline: "",
             bio: "",
@@ -40,18 +45,6 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
             locationPostcode: "",
         },
     });
-
-    // Populate form with existing profile data
-    useEffect(() => {
-        if (initialData) {
-            form.reset({
-                headline: initialData.headline || "",
-                bio: initialData.bio || "",
-                locationSuburb: initialData.locationSuburb || "",
-                locationPostcode: initialData.locationPostcode || "",
-            });
-        }
-    }, [initialData, form]);
 
     async function onSubmit(data: ProfileFormValues) {
         setIsSaving(true);
@@ -75,7 +68,7 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
                 variant: "destructive",
             });
         } finally {
-            setIsSubmitting(false);
+            setIsSaving(false);
         }
     }
 
@@ -136,8 +129,8 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
                         )}
                     />
                 </div>
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Profile
                 </Button>
             </form>

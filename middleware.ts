@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 // Middleware updated at: 2025-12-23T10:55:00+11:00 (Fix Login 404 on Hub)
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     // CRITICAL: CVE-2025-29927 protection - Block middleware subrequest bypass
     if (request.headers.has('x-middleware-subrequest')) {
         return new NextResponse('Forbidden', { status: 403 });

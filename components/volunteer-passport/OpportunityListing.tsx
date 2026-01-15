@@ -10,19 +10,37 @@ import { useDittoSync } from "@/hooks/useDittoSync";
 import { useAuth } from "@/hooks/useAuth";
 import type { VolunteerRole } from "@shared/schema";
 
-interface OpportunityListingProps {
-    role: VolunteerRole;
-    isApplied?: boolean;
+// Extend VolunteerRole to include the organization relation if available
+interface RoleWithOrg extends VolunteerRole {
+    organisation?: {
+        name: string;
+    };
 }
 
-export function OpportunityListing({ role, isApplied: initialIsApplied }: OpportunityListingProps) {
+interface OpportunityListingProps {
+    role: RoleWithOrg;
+    isApplied?: boolean;
+    tenantId: string; // Added tenantId prop
+}
+
+interface VolunteerApplication {
+    _id: string;
+    roleId: string;
+    volunteerId: string;
+    status: "pending" | "accepted" | "rejected";
+    createdAt: string;
+    updatedAt: string;
+}
+
+export function OpportunityListing({ role, isApplied: initialIsApplied, tenantId }: OpportunityListingProps) {
     const { toast } = useToast();
     const { user } = useAuth();
     const [isApplied, setIsApplied] = useState(initialIsApplied);
     const [isApplying, setIsApplying] = useState(false);
 
-    const { upsert, isOnline } = useDittoSync({
+    const { insert, isOnline } = useDittoSync<VolunteerApplication>({
         collection: "volunteer_applications",
+        tenantId, // Pass tenantId
     });
 
     const handleApply = async () => {
@@ -37,14 +55,13 @@ export function OpportunityListing({ role, isApplied: initialIsApplied }: Opport
 
         setIsApplying(true);
         try {
-            await upsert({
-                _id: crypto.randomUUID(),
+            await insert({
                 roleId: role.id,
                 volunteerId: user.id,
                 status: "pending",
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-            } as any);
+            });
 
             setIsApplied(true);
             toast({
@@ -65,7 +82,7 @@ export function OpportunityListing({ role, isApplied: initialIsApplied }: Opport
         }
     };
 
-    const getRoleTypeBadge = (type: string) => {
+    const getRoleTypeBadge = (type: string | null) => {
         switch (type) {
             case "ongoing":
                 return <Badge variant="default">Ongoing</Badge>;
@@ -74,11 +91,11 @@ export function OpportunityListing({ role, isApplied: initialIsApplied }: Opport
             case "event_based":
                 return <Badge variant="outline">Event</Badge>;
             default:
-                return <Badge variant="outline">{type}</Badge>;
+                return <Badge variant="outline">{type || "Unknown"}</Badge>;
         }
     };
 
-    const getLocationTypeBadge = (type: string) => {
+    const getLocationTypeBadge = (type: string | null) => {
         switch (type) {
             case "remote":
                 return <Badge variant="secondary">Remote</Badge>;
@@ -99,16 +116,18 @@ export function OpportunityListing({ role, isApplied: initialIsApplied }: Opport
                         </div>
                         <div>
                             <div className="flex items-center gap-1">
-                                <span className="text-sm font-medium">Community Organisation</span>
+                                <span className="text-sm font-medium">
+                                    {role.organisation?.name || "Community Organisation"}
+                                </span>
                                 <CheckCircle className="h-3.5 w-3.5 text-blue-500" />
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
                         {isOnline ? (
-                            <Cloud className="w-3 h-3 text-green-500" />
+                            <Cloud className="w-3 h-3 text-green-500" aria-label="Online" />
                         ) : (
-                            <CloudOff className="w-3 h-3 text-orange-500" />
+                            <CloudOff className="w-3 h-3 text-orange-500" aria-label="Offline" />
                         )}
                     </div>
                 </div>

@@ -22,7 +22,7 @@ describe('Service Referral Bridge', () => {
             store: mockStore,
         };
 
-        (getDitto as any).mockResolvedValue(mockDitto);
+        (getDitto as any).mockReturnValue(mockDitto);
 
         const referralData = {
             sourceApp: 'Youth Navigator',

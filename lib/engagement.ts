@@ -2,7 +2,19 @@
  * Engagement Risk Calculation Utilities
  */
 
-export function calculateRiskLevel(member: any): "Green" | "Amber" | "Red" {
+interface Member {
+    engagement?: {
+        lastContactDate?: string | null;
+    };
+}
+
+/**
+ * Calculates the engagement risk level based on the last contact date.
+ * 
+ * @param {Member} member - The member object containing engagement details.
+ * @returns {"Green" | "Amber" | "Red"} The calculated risk level.
+ */
+export function calculateRiskLevel(member: Member): "Green" | "Amber" | "Red" {
     const lastContact = member?.engagement?.lastContactDate;
     if (!lastContact) return "Red";
 
@@ -18,6 +30,14 @@ export function calculateRiskLevel(member: any): "Green" | "Amber" | "Red" {
     return "Red";
 }
 
+/**
+ * Returns recommended actions based on the engagement risk level.
+ * 
+ * @param {"Green" | "Amber" | "Red"} level - The risk level.
+ * @returns {string[]} A list of recommended actions.
+ * @example
+ * getRiskRecommendations("Green") // ["Maintain current engagement", ...]
+ */
 export function getRiskRecommendations(level: "Green" | "Amber" | "Red"): string[] {
     switch (level) {
         case "Green": return ["Maintain current engagement", "Monitor for changes"];

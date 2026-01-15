@@ -8,7 +8,7 @@ test.describe('Data Export & Privacy Compliance', () => {
         // This is a placeholder as the export page might be different
         if (await page.locator('button:has-text("Export My Data")').isVisible()) {
             await page.click('button:has-text("Export My Data")');
-            await expect(screen.getByText(/export started/i)).toBeInTheDocument();
+            await expect(page.getByText(/export started/i)).toBeVisible();
         }
     });
 

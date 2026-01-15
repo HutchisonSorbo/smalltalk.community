@@ -1,6 +1,6 @@
-// tests/integration/features/communication-log.test.tsx
+// tests/integration/features/CommunicationLog.test.tsx
 import { render, screen } from '@testing-library/react';
-import { CommunicationLog } from '@/components/communityos/communication-log';
+import { CommunicationLog } from '@/components/communityos/CommunicationLog';
 import { describe, it, expect } from 'vitest';
 
 describe('Communication Log Feature', () => {
@@ -9,11 +9,13 @@ describe('Communication Log Feature', () => {
         { id: '2', type: 'SMS', subject: 'Reminder', status: 'Draft' as const, date: '2026-01-12' },
     ];
 
-    it('filters and displays logs correctly', () => {
+    it('renders logs correctly', () => {
         render(<CommunicationLog logs={mockLogs} />);
 
         expect(screen.getByText(/welcome/i)).toBeInTheDocument();
         expect(screen.getByText(/reminder/i)).toBeInTheDocument();
+        expect(screen.getAllByTestId('log-item')).toHaveLength(2);
+        expect(screen.getByText(/Email • 2026-01-10/)).toBeInTheDocument();
     });
 
     it('shows correct status badges', () => {
@@ -21,5 +23,10 @@ describe('Communication Log Feature', () => {
 
         expect(screen.getByText('Sent')).toBeInTheDocument();
         expect(screen.getByText('Draft')).toBeInTheDocument();
+    });
+
+    it('displays empty state message when no logs provided', () => {
+        render(<CommunicationLog logs={[]} />);
+        expect(screen.getByText(/no communication logs found/i)).toBeInTheDocument();
     });
 });
