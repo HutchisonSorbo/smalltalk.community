@@ -2,9 +2,8 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
+
+    serverExternalPackages: ['mysql2', 'drizzle-kit'],
     typescript: {
         ignoreBuildErrors: false, // Ensure we still catch TS errors
     },

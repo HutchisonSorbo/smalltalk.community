@@ -31,7 +31,7 @@ export async function POST() {
         ];
 
         for (const tag of revalidatedTags) {
-            revalidateTag(tag);
+            revalidateTag(tag, {});
         }
 
         console.log("[Admin Revalidate] Cleared cache tags:", revalidatedTags);
