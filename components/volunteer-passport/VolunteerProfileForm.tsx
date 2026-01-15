@@ -49,9 +49,7 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
     async function onSubmit(data: ProfileFormValues) {
         setIsSaving(true);
         try {
-            const profileId = initialData?.id || crypto.randomUUID();
             await upsertVolunteerProfile({
-                id: profileId, // Assuming upsertVolunteerProfile now accepts an ID
                 headline: data.headline || "",
                 bio: data.bio || "",
                 locationSuburb: data.locationSuburb || "",

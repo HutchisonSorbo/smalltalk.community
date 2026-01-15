@@ -37,11 +37,11 @@ export async function initDitto(config: DittoConfig): Promise<Ditto> {
         return dittoInstance;
     }
 
-    const identity: IdentityOfflinePlayground = {
+    const identity = {
         type: "offlinePlayground",
         appID: config.appId,
         token: config.token,
-    };
+    } as IdentityOfflinePlayground;
 
     // Initialize Ditto with the identity and a persistence path
     dittoInstance = new Ditto(identity, "/ditto");
@@ -69,7 +69,7 @@ export async function initDittoWithAuth(
         return dittoInstance;
     }
 
-    const identity: IdentityOnlineWithAuthentication = {
+    const identity = {
         type: "onlineWithAuthentication",
         appID: appId,
         authenticationDelegate: {
@@ -104,7 +104,7 @@ export async function initDittoWithAuth(
                 // from the authenticate method if using a custom provider.
             }
         }
-    };
+    } as unknown as IdentityOnlineWithAuthentication;
 
     dittoInstance = new Ditto(identity, "/ditto");
 

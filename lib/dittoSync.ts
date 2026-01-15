@@ -53,7 +53,7 @@ export function mergeMemberData<T extends { skills?: string[] } & Record<string,
     const merged = { ...local, ...remote };
 
     if (local.skills && remote.skills) {
-        merged.skills = [...new Set([...local.skills, ...remote.skills])];
+        merged.skills = Array.from(new Set([...local.skills, ...remote.skills]));
     }
 
     return merged;

@@ -41,9 +41,9 @@ describe('dittoSync Utilities', () => {
         });
 
         it('throws when inputs are not objects', () => {
-            expect(() => resolveConflict(null, {})).toThrow();
-            expect(() => resolveConflict({}, undefined)).toThrow();
-            expect(() => resolveConflict('string', {})).toThrow();
+            expect(() => resolveConflict(null as unknown as { updatedAt?: string }, {})).toThrow();
+            expect(() => resolveConflict({}, undefined as unknown as { updatedAt?: string })).toThrow();
+            expect(() => resolveConflict('string' as unknown as { updatedAt?: string }, {})).toThrow();
         });
     });
 
@@ -63,16 +63,16 @@ describe('dittoSync Utilities', () => {
         });
 
         it('handles missing/undefined skills on one side', () => {
-            const local = { skills: ['React'] };
-            const remote = { headline: 'Dev' }; // no skills
+            const local = { skills: ['React'] } as { skills?: string[]; headline?: string };
+            const remote = { headline: 'Dev' } as { skills?: string[]; headline?: string }; // no skills
             const merged = mergeMemberData(local, remote);
             expect(merged.skills).toEqual(['React']);
             expect(merged.headline).toBe('Dev');
         });
 
         it('throws when inputs are not objects', () => {
-            expect(() => mergeMemberData(null, {})).toThrow();
-            expect(() => mergeMemberData({}, undefined)).toThrow();
+            expect(() => mergeMemberData(null as unknown as { skills?: string[] }, {})).toThrow();
+            expect(() => mergeMemberData({}, undefined as unknown as Partial<{ skills?: string[] }>)).toThrow();
         });
     });
 });
