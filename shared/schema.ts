@@ -1384,3 +1384,131 @@ export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
 
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
+
+// ------------------------------------------------------------------
+// COMMUNITYOS MULTI-TENANCY TABLES
+// ------------------------------------------------------------------
+
+// Tenants table: organisations using CommunityOS
+export const tenants = pgTable("tenants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: varchar("code", { length: 50 }).notNull().unique(), // URL slug, e.g. 'stc'
+  name: varchar("name", { length: 255 }).notNull(),
+  logoUrl: varchar("logo_url", { length: 500 }),
+  primaryColor: varchar("primary_color", { length: 7 }).default("#4F46E5"),
+  secondaryColor: varchar("secondary_color", { length: 7 }).default("#818CF8"),
+  description: text("description"),
+  website: varchar("website", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("tenants_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("tenants_service_write", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("tenants_code_idx").on(table.code),
+]);
+
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  members: many(tenantMembers),
+  invites: many(tenantInvites),
+}));
+
+export type Tenant = typeof tenants.$inferSelect;
+export type InsertTenant = typeof tenants.$inferInsert;
+
+// Tenant members: users who belong to a tenant with role-based access
+export const tenantMembers = pgTable("tenant_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull().default("member"), // 'admin', 'board', 'member'
+  invitedBy: varchar("invited_by").references(() => users.id, { onDelete: "set null" }),
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => [
+  pgPolicy("tenant_members_self_read", { for: "select", to: "authenticated", using: sql`(auth.uid())::text = ${table.userId}` }),
+  pgPolicy("tenant_members_admin_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = ${table.tenantId}
+        AND tm.user_id = (auth.uid())::text
+        AND tm.role = 'admin'
+    )`
+  }),
+  pgPolicy("tenant_members_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  uniqueIndex("tenant_members_tenant_user_idx").on(table.tenantId, table.userId),
+  index("tenant_members_tenant_id_idx").on(table.tenantId),
+  index("tenant_members_user_id_idx").on(table.userId),
+]);
+
+export const tenantMembersRelations = relations(tenantMembers, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tenantMembers.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [tenantMembers.userId],
+    references: [users.id],
+  }),
+  inviter: one(users, {
+    fields: [tenantMembers.invitedBy],
+    references: [users.id],
+    relationName: "inviter",
+  }),
+}));
+
+export type TenantMember = typeof tenantMembers.$inferSelect;
+export type InsertTenantMember = typeof tenantMembers.$inferInsert;
+
+// Tenant member roles
+export const tenantRoles = ["admin", "board", "member"] as const;
+export type TenantRole = (typeof tenantRoles)[number];
+
+// Tenant invites: pending invitations to join a tenant
+export const tenantInvites = pgTable("tenant_invites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  email: varchar("email", { length: 255 }).notNull(),
+  role: varchar("role", { length: 20 }).notNull().default("member"),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  invitedBy: varchar("invited_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull().default(sql`NOW() + INTERVAL '7 days'`),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("tenant_invites_admin_all", {
+    for: "all",
+    to: "authenticated",
+    using: sql`EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = ${table.tenantId}
+        AND tm.user_id = (auth.uid())::text
+        AND tm.role = 'admin'
+    )`,
+    withCheck: sql`EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = ${table.tenantId}
+        AND tm.user_id = (auth.uid())::text
+        AND tm.role = 'admin'
+    )`
+  }),
+  pgPolicy("tenant_invites_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  uniqueIndex("tenant_invites_token_idx").on(table.token),
+  index("tenant_invites_email_idx").on(table.email),
+  index("tenant_invites_tenant_id_idx").on(table.tenantId),
+]);
+
+export const tenantInvitesRelations = relations(tenantInvites, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tenantInvites.tenantId],
+    references: [tenants.id],
+  }),
+  inviter: one(users, {
+    fields: [tenantInvites.invitedBy],
+    references: [users.id],
+  }),
+}));
+
+export type TenantInvite = typeof tenantInvites.$inferSelect;
+export type InsertTenantInvite = typeof tenantInvites.$inferInsert;
+
