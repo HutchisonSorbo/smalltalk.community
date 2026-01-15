@@ -1,4 +1,4 @@
-// tests/accessibility/wcag-audit.spec.ts
+// tests/e2e/accessibility/wcag-audit.spec.ts
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -22,7 +22,7 @@ test.describe('Accessibility Audits', () => {
         await page.waitForLoadState('networkidle');
 
         const accessibilityScanResults = await new AxeBuilder({ page })
-            .withTags(['wcag2a', 'wcag2aa'])
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
             .analyze();
 
         expect(accessibilityScanResults.violations).toEqual([]);

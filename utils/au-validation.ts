@@ -34,7 +34,7 @@ export function validatePostcode(postcode: string): boolean {
  * @returns {string} The formatted currency string (e.g., "$1,234.50").
  */
 export function formatAUD(amount: number): string {
-    if (isNaN(amount)) return "";
+    if (!Number.isFinite(amount)) return "";
     return new Intl.NumberFormat('en-AU', {
         style: 'currency',
         currency: 'AUD'

@@ -42,5 +42,3 @@ test.describe('Offline Sync Recovery', () => {
         test.skip(true, 'Sync error UI handling not yet implemented');
     });
 });
-
-```

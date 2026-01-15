@@ -9,6 +9,26 @@ describe('Age Cohort Utilities', () => {
             birth.setFullYear(today.getFullYear() - 20);
             expect(calculateAge(birth)).toBe(20);
         });
+
+        it('returns age-1 if birthday has not yet occurred this year', () => {
+            const today = new Date();
+            const birth = new Date(today);
+            birth.setFullYear(today.getFullYear() - 20);
+            birth.setMonth(today.getMonth() + 1); // Birthday is next month
+            expect(calculateAge(birth)).toBe(19);
+        });
+
+        it('returns correct age if birthday is today', () => {
+            const today = new Date();
+            const birth = new Date(today);
+            birth.setFullYear(today.getFullYear() - 20);
+            expect(calculateAge(birth)).toBe(20);
+        });
+
+        it('returns NaN for invalid Date inputs', () => {
+            expect(calculateAge(null as any)).toBeNaN();
+            expect(calculateAge(new Date('invalid-date'))).toBeNaN();
+        });
     });
 
     describe('getAgeCohort', () => {

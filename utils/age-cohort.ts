@@ -2,9 +2,13 @@
  * Calculates a person's age based on their birth date.
  * 
  * @param {Date} birthDate - The person's birth date.
- * @returns {number} The age in years (integer) as of today.
+ * @returns {number} The age in years (integer) as of today, or NaN if invalid.
  */
 export function calculateAge(birthDate: Date): number {
+    if (!(birthDate instanceof Date) || isNaN(birthDate.getTime())) {
+        return NaN;
+    }
+
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();

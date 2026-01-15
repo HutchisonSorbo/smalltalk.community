@@ -215,10 +215,6 @@ describe('Age Cohort Assignment', () => {
 
   it('assigns Adult cohort for ages 18-64', () => {
     expect(getAgeCohort(18)).toBe('Adult');
-    expect(getAgeCohort(24)).toBe('Adult');
-  });
-
-  it('assigns Adult cohort for ages 25-64', () => {
     expect(getAgeCohort(25)).toBe('Adult');
     expect(getAgeCohort(64)).toBe('Adult');
   });
@@ -415,7 +411,7 @@ describe('Member Form Integration', () => {
     await user.type(screen.getByLabelText(/date of birth/i), '2008-06-15');
 
     await waitFor(() => {
-      expect(screen.getByText('Youth')).toBeInTheDocument();
+      expect(screen.getByText('Teen')).toBeInTheDocument();
     });
   });
 
@@ -553,7 +549,7 @@ describe('Public Hub to CRM Referral Flow', () => {
 import { test, expect } from '@playwright/test';
 
 test.describe('Member Onboarding Flow', () => {
-  test('Youth worker onboards new youth participant', async ({ page }) => {
+  test('Teen worker onboards new teen participant', async ({ page }) => {
     // Login as youth worker
     await page.goto('/login');
     await page.fill('[name="email"]', 'ryan@smalltalk.community');
@@ -572,8 +568,8 @@ test.describe('Member Onboarding Flow', () => {
     await page.fill('#pname', 'Saz');
     await page.fill('#email', 'sarah.j@example.com');
     await page.fill('#phone', '0412 345 678');
-    await page.fill('#dob', '2008-03-20'); // Youth cohort
-    await expect(page.locator('text=Youth')).toBeVisible();
+    await page.fill('#dob', '2008-03-20'); // Teen cohort
+    await expect(page.locator('text=Teen')).toBeVisible();
     await page.click('text=Next Step');
 
     // Step 2: Contact Details
@@ -600,7 +596,7 @@ test.describe('Member Onboarding Flow', () => {
 
     // Verify member appears in registry
     await expect(page.locator('text=Sarah Johnson')).toBeVisible();
-    await expect(page.locator('text=Youth')).toBeVisible();
+    await expect(page.locator('text=Teen')).toBeVisible();
     await expect(page.locator('text=sarah.j@example.com')).toBeVisible();
 
     // Verify engagement risk is Green (new member)

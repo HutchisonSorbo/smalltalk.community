@@ -2,11 +2,7 @@
  * Multi-tenant Isolation Utilities
  */
 
-interface TenantMember {
-    id: string;
-    tenantId: string;
-    name: string;
-}
+import { type TenantMember } from "@/shared/schema";
 
 /**
  * Validates that the requested tenant ID matches the member's assigned tenant.
