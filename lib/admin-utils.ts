@@ -128,9 +128,9 @@ export async function logAdminAction({
         });
 
         // Revalidate admin caches so the dashboard updates immediately
-        revalidateTag(CACHE_TAGS.ADMIN_RECENT_ACTIVITY, {});
-        revalidateTag(CACHE_TAGS.ADMIN_DASHBOARD_STATS, {});
-        revalidateTag(CACHE_TAGS.ADMIN_RECENT_USERS, {});
+        revalidateTag(CACHE_TAGS.ADMIN_RECENT_ACTIVITY, { expire: 0 });
+        revalidateTag(CACHE_TAGS.ADMIN_DASHBOARD_STATS, { expire: 0 });
+        revalidateTag(CACHE_TAGS.ADMIN_RECENT_USERS, { expire: 0 });
     } catch (error) {
         // Log to console but don't throw - activity logging shouldn't break admin operations
         console.error("[Admin Activity Log] Failed to log action:", error);
