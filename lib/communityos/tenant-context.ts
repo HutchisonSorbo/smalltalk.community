@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase-server";
+import { createServiceClient } from "@/lib/supabase-service";
 import type { Tenant, TenantMember, TenantRole } from "@/shared/schema";
 
 /**
@@ -69,7 +70,8 @@ export async function getTenantMembership(
     userId: string,
     tenantId: string
 ): Promise<TenantMember | null> {
-    const supabase = await createClient();
+    // Use service role client to bypass RLS for membership lookups
+    const supabase = createServiceClient();
     const { data, error } = await supabase
         .from("tenant_members")
         .select("*")
