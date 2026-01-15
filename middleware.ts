@@ -120,7 +120,23 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(next || "/dashboard", request.url));
     }
 
-    // Rewrite Logic
+    // --- CommunityOS Route Protection ---
+    // Protect /communityos/* routes - require authentication and tenant membership
+    if (path.startsWith("/communityos")) {
+        // Extract tenant code from path: /communityos/{tenantCode}/...
+        const pathParts = path.split("/");
+        const tenantCode = pathParts[2]; // e.g., 'stc'
+
+        if (!user && !isBypass) {
+            // Not logged in - redirect to login with return URL
+            const returnUrl = encodeURIComponent(path);
+            return NextResponse.redirect(new URL(`/login?next=${returnUrl}`, request.url));
+        }
+
+        // Allow through - tenant membership will be verified at the page level
+        // This avoids additional DB queries in middleware for every request
+        return response;
+    }
 
     // 1. Explicit Routes: Allow app paths to pass through without rewriting
     if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport") ||
