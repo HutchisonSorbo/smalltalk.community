@@ -85,6 +85,19 @@ const nextConfig = {
     },
 };
 
+/**
+ * Sentry Configuration
+ * 
+ * KNOWN WARNINGS (can be safely ignored):
+ * - "*_client-reference-manifest.js (no sourcemap found)" - These are internal Next.js
+ *   build artifacts that don't have source maps by design. They don't affect error
+ *   tracking for application code. Your actual source files will still be properly
+ *   symbolicated in Sentry.
+ * 
+ * Requirements for Turbopack source map support:
+ * - @sentry/nextjs >= 10.13.0 (current: 10.32.1 ✓)
+ * - next >= 15.4.1 (current: 16.1.2 ✓)
+ */
 export default withSentryConfig(nextConfig, {
     // For all available options, see:
     // https://www.npmjs.com/package/@sentry/webpack-plugin#options
@@ -121,4 +134,8 @@ export default withSentryConfig(nextConfig, {
             removeDebugLogging: true,
         },
     },
+
+    // Suppress verbose debug logging during source map upload
+    // This reduces noise from client-reference-manifest.js warnings
+    debug: false,
 });
