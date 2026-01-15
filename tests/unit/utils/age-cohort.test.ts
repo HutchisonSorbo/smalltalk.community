@@ -23,7 +23,9 @@ describe('Age Cohort Utilities', () => {
             // Feb 29, 2004 was a leap year
             const birth = new Date(2004, 1, 29);
             const today = new Date();
-            const expectedAge = today.getFullYear() - 2004 - (today < new Date(today.getFullYear(), 1, 29) ? 1 : 0);
+            const feb29ThisYear = new Date(today.getFullYear(), 1, 29);
+            const hasHadBirthdayThisYear = today >= feb29ThisYear;
+            const expectedAge = today.getFullYear() - 2004 - (hasHadBirthdayThisYear ? 0 : 1);
             expect(calculateAge(birth)).toBe(expectedAge);
         });
 
@@ -51,6 +53,7 @@ describe('Age Cohort Utilities', () => {
 
         it('returns Senior for 65+', () => {
             expect(getAgeCohort(65)).toBe('Senior');
+            expect(getAgeCohort(100)).toBe('Senior');
         });
 
         it('returns Invalid for negative/NaN', () => {

@@ -12,8 +12,8 @@
 export function validatePhone(phone: string): boolean {
     if (typeof phone !== 'string') return false;
 
-    // Remove whitespace and normalize
-    let cleaned = phone.replace(/\s+/g, "");
+    // Remove whitespace and common formatting characters (dashes, dots, parentheses, slashes)
+    let cleaned = phone.replace(/[\s\-\.\(\)\/]+/g, "");
 
     // Handle international formats: +614... or 614...
     if (cleaned.startsWith('+61')) {
