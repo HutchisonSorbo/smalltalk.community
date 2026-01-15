@@ -33,6 +33,7 @@ export function requiresEnhancedModeration(age: number): boolean {
  * @returns {boolean} True if the value is valid.
  */
 export function isConsentValueValid(consent: string): boolean {
+    if (consent == null || typeof consent !== 'string') return false;
     const normalized = consent.trim().toLowerCase();
     return normalized === "yes" || normalized === "no";
 }

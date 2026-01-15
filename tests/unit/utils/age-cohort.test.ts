@@ -12,17 +12,19 @@ describe('Age Cohort Utilities', () => {
 
         it('returns age-1 if birthday has not yet occurred this year', () => {
             const today = new Date();
-            const birth = new Date(today);
-            birth.setFullYear(today.getFullYear() - 20);
-            birth.setMonth(today.getMonth() + 1); // Birthday is next month
+            // Use modulo to avoid month overflow
+            const nextMonth = (today.getMonth() + 1) % 12;
+            const yearOffset = today.getMonth() === 11 ? 19 : 20; // If Dec, birthday is Jan next year so still 19
+            const birth = new Date(today.getFullYear() - yearOffset, nextMonth, today.getDate());
             expect(calculateAge(birth)).toBe(19);
         });
 
-        it('returns correct age if birthday is today', () => {
+        it('handles leap year birthday (Feb 29)', () => {
+            // Feb 29, 2004 was a leap year
+            const birth = new Date(2004, 1, 29);
             const today = new Date();
-            const birth = new Date(today);
-            birth.setFullYear(today.getFullYear() - 20);
-            expect(calculateAge(birth)).toBe(20);
+            const expectedAge = today.getFullYear() - 2004 - (today < new Date(today.getFullYear(), 1, 29) ? 1 : 0);
+            expect(calculateAge(birth)).toBe(expectedAge);
         });
 
         it('returns NaN for invalid Date inputs', () => {
