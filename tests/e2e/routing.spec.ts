@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Middleware Routing', () => {
+test.describe('Proxy Routing', () => {
 
     test('Host: Local Music Network (Default) -> Loads Local Music Network App', async ({ page }) => {
         // Override headers for all requests

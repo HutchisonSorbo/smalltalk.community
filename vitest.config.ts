@@ -21,7 +21,7 @@ export default defineConfig({
                 'shared/**/*.{ts,tsx}',
                 'hooks/**/*.{ts,tsx}',
                 'scripts/**/*.{ts,tsx}',
-                'middleware.ts',
+                'proxy.ts',
                 'instrumentation.ts',
                 'instrumentation-client.ts'
             ],

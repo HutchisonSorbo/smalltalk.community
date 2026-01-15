@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Middleware updated at: 2025-12-23T10:55:00+11:00 (Fix Login 404 on Hub)
+// Proxy file migrated from middleware.ts for Next.js 16 compatibility
+// Migration date: 2026-01-15
+// Original middleware updated at: 2025-12-23T10:55:00+11:00 (Fix Login 404 on Hub)
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     // CRITICAL: CVE-2025-29927 protection - Block middleware subrequest bypass
     if (request.headers.has('x-middleware-subrequest')) {
         return new NextResponse('Forbidden', { status: 403 });
@@ -19,7 +21,7 @@ export async function middleware(request: NextRequest) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || supabaseUrl.includes('placeholder') || !supabaseAnonKey || supabaseAnonKey.includes('placeholder')) {
-        console.error("[Middleware] Missing or invalid Supabase configuration");
+        console.error("[Proxy] Missing or invalid Supabase configuration");
         return new NextResponse(
             JSON.stringify({ error: "Internal Server Error: Missing configuration" }),
             { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -66,18 +68,18 @@ export async function middleware(request: NextRequest) {
             if (error) {
                 // Log the error but allow through - suspension check shouldn't block login
                 // PGRST116 = profile doesn't exist (new user), other errors = DB issues
-                console.warn(`[Middleware] Could not check suspension for user ${user.id}: ${error.code} - ${error.message}`);
+                console.warn(`[Proxy] Could not check suspension for user ${user.id}: ${error.code} - ${error.message}`);
                 // Allow through - user might need to complete onboarding, or there's a DB issue
             } else if (profile?.is_suspended === true) {
                 // Only block if explicitly suspended
-                console.log(`[Middleware] User ${user.id} is suspended - blocking access`);
+                console.log(`[Proxy] User ${user.id} is suspended - blocking access`);
                 await supabase.auth.signOut();
                 return NextResponse.redirect(new URL(`/login?error=account_suspended`, request.url));
             }
             // Profile exists and is not suspended, or check failed - allow through
         } catch (e) {
             // Unexpected error - log and allow through
-            console.error("[Middleware] Unexpected error in suspension check:", e);
+            console.error("[Proxy] Unexpected error in suspension check:", e);
         }
     }
 
@@ -187,4 +189,3 @@ function rewriteRootToHub(request: NextRequest, response: NextResponse) {
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
     return rewriteResponse;
 }
-
