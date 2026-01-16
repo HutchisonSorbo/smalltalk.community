@@ -1,9 +1,0 @@
-ALTER POLICY "classifieds_owner_insert" ON "classifieds" TO authenticated WITH CHECK (( (select auth.uid()) )::text = "classifieds"."user_id");--> statement-breakpoint
-ALTER POLICY "classifieds_owner_update" ON "classifieds" TO authenticated USING (( (select auth.uid()) )::text = "classifieds"."user_id") WITH CHECK (( (select auth.uid()) )::text = "classifieds"."user_id");--> statement-breakpoint
-ALTER POLICY "classifieds_owner_delete" ON "classifieds" TO authenticated USING (( (select auth.uid()) )::text = "classifieds"."user_id");--> statement-breakpoint
-ALTER POLICY "messages_read" ON "messages" TO authenticated USING (( (select auth.uid()) )::text = "messages"."sender_id" OR ( (select auth.uid()) )::text = "messages"."receiver_id");--> statement-breakpoint
-ALTER POLICY "messages_insert" ON "messages" TO authenticated WITH CHECK (( (select auth.uid()) )::text = "messages"."sender_id");--> statement-breakpoint
-ALTER POLICY "pro_profiles_owner_insert" ON "professional_profiles" TO authenticated WITH CHECK (( (select auth.uid()) )::text = "professional_profiles"."user_id");--> statement-breakpoint
-ALTER POLICY "pro_profiles_owner_update" ON "professional_profiles" TO authenticated USING (( (select auth.uid()) )::text = "professional_profiles"."user_id") WITH CHECK (( (select auth.uid()) )::text = "professional_profiles"."user_id");--> statement-breakpoint
-ALTER POLICY "pro_profiles_owner_delete" ON "professional_profiles" TO authenticated USING (( (select auth.uid()) )::text = "professional_profiles"."user_id");--> statement-breakpoint
-ALTER POLICY "reports_insert" ON "reports" TO authenticated WITH CHECK (( (select auth.uid()) )::text = "reports"."reporter_id");

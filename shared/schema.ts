@@ -1239,6 +1239,7 @@ export const apps = pgTable("apps", {
   pgPolicy("apps_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("apps_admin_write", { for: "all", to: "service_role", using: sql`true` }),
   // Indexes for common query patterns
+  index("apps_is_active_idx").on(table.isActive),
 ]);
 
 // User <-> Apps Join Table
@@ -1499,7 +1500,6 @@ export const tenantInvites = pgTable("tenant_invites", {
     )`
   }),
   pgPolicy("tenant_invites_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
-  uniqueIndex("tenant_invites_token_idx").on(table.token),
   index("tenant_invites_email_idx").on(table.email),
   index("tenant_invites_tenant_id_idx").on(table.tenantId),
   index("tenant_invites_invited_by_idx").on(table.invitedBy),

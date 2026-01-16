@@ -1,6 +1,6 @@
 {
-  "id": "50ab9e97-5537-4f57-935f-d3055e404aeb",
-  "prevId": "24a13416-740e-4674-8612-a04e84cb873d",
+  "id": "348cba41-5c3b-4028-b35a-fccde179ca65",
+  "prevId": "dd0daa8a-2c47-4f3e-afc8-d9b1409955b2",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -349,7 +349,23 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "apps_is_active_idx": {
+          "name": "apps_is_active_idx",
+          "columns": [
+            {
+              "expression": "is_active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -3874,21 +3890,6 @@
         }
       },
       "indexes": {
-        "tenant_invites_token_idx": {
-          "name": "tenant_invites_token_idx",
-          "columns": [
-            {
-              "expression": "token",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "tenant_invites_email_idx": {
           "name": "tenant_invites_email_idx",
           "columns": [

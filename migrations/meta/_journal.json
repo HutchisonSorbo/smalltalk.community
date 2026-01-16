@@ -57,6 +57,13 @@
       "when": 1768603570774,
       "tag": "0007_aromatic_sauron",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1768604905644,
+      "tag": "0008_nice_shiver_man",
+      "breakpoints": true
     }
   ]
 }
