@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { safeUrl } from "@/lib/utils";
 import { stcTenantData } from "./data/tenantData";
 import { defaultTenantData } from "./data/tenantDataTemplate";
 import type { TenantData } from "./data/tenantData";
@@ -21,6 +22,7 @@ function getTenantData(tenantCode: string): TenantData {
 }
 
 interface InformationHubProps {
+    /** The tenant code used to fetch tenant-specific data */
     tenantCode: string;
 }
 
@@ -43,18 +45,19 @@ function Section({
     return (
         <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
             <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 aria-expanded={isOpen}
                 aria-controls={`section-${id}`}
             >
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl">{icon}</span>
+                    <span className="text-2xl" aria-hidden="true">{icon}</span>
                     <span className="text-lg font-semibold text-gray-900 dark:text-white">
                         {title}
                     </span>
                 </div>
-                <span className={`text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                <span className={`text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} aria-hidden="true">
                     ▼
                 </span>
             </button>
@@ -93,6 +96,7 @@ function ConstitutionClause({
                         {showPlain ? plain : content}
                     </p>
                     <button
+                        type="button"
                         onClick={() => setShowPlain(!showPlain)}
                         className="mt-1 text-xs text-primary hover:underline"
                     >
@@ -104,7 +108,18 @@ function ConstitutionClause({
     );
 }
 
-export function InformationHub({ tenantCode }: InformationHubProps) {
+/**
+ * InformationHub component displays governance, strategy, and organisational information
+ * for a specific tenant. Uses {@link getTenantData} to fetch tenant-specific data based
+ * on the provided tenant code.
+ *
+ * @param props - The component props
+ * @param props.tenantCode - The unique code identifying the tenant (e.g., "stc")
+ * @returns A React element containing expandable sections for organisation overview,
+ *          constitution, strategic direction, safeguarding, get involved, operations,
+ *          risk register, and board roles
+ */
+export function InformationHub({ tenantCode }: InformationHubProps): React.ReactElement {
     const data = getTenantData(tenantCode);
     const { organisation, constitution, strategicPlan, safeguarding, getInvolved, operationalFramework } = data;
 
@@ -135,7 +150,7 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {organisation.values.map((value, i) => (
                                 <div key={i} className="flex items-start gap-3 rounded-lg border p-3 dark:border-gray-700">
-                                    <span className="text-2xl">{value.icon}</span>
+                                    <span className="text-2xl" aria-hidden="true">{value.icon}</span>
                                     <div>
                                         <h5 className="font-semibold text-gray-900 dark:text-white">{value.title}</h5>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">{value.description}</p>
@@ -152,7 +167,7 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
                 <div className="space-y-6">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                         Our constitution contains {Object.keys(constitution.clauses).length} clauses organised into {constitution.parts.length} parts.
-                        Click "Plain English" to see simplified explanations.
+                        Click &quot;Plain English&quot; to see simplified explanations.
                     </p>
                     {constitution.parts.map((part) => (
                         <div key={part.id}>
@@ -187,7 +202,7 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
                             {strategicPlan.pillars.map((pillar) => (
                                 <div key={pillar.id} className="rounded-lg border p-4 dark:border-gray-700">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-2xl">{pillar.icon}</span>
+                                        <span className="text-2xl" aria-hidden="true">{pillar.icon}</span>
                                         <div>
                                             <h5 className="font-bold text-gray-900 dark:text-white">{pillar.title}</h5>
                                             <span className="text-xs text-gray-500">{pillar.subtitle}</span>
@@ -210,7 +225,7 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
                             {strategicPlan.timeline.map((phase) => (
                                 <div key={phase.phase} className={`flex items-start gap-3 rounded-lg border p-3 ${phase.status === "current" ? "border-primary bg-primary/5" : "dark:border-gray-700"
                                     }`}>
-                                    <span className="text-2xl">{phase.icon}</span>
+                                    <span className="text-2xl" aria-hidden="true">{phase.icon}</span>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
                                             <h5 className="font-bold text-gray-900 dark:text-white">Phase {phase.phase}: {phase.name}</h5>
@@ -266,7 +281,7 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">{opp.shortDesc}</p>
                             <a
-                                href={`mailto:${organisation.founder.email}?subject=${encodeURIComponent(opp.emailSubject)}`}
+                                href={safeUrl(`mailto:${organisation.founder.email}?subject=${encodeURIComponent(opp.emailSubject)}`)}
                                 className="mt-3 inline-block rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90"
                             >
                                 {opp.cta}
@@ -312,7 +327,8 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
             {/* Risk Register Section */}
             <Section id="risks" title="Risk Register" icon="⚠️">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm" aria-label="Strategic Plan Risk Register">
+                        <caption className="sr-only">Strategic Plan Risk Register showing risks, categories, impact, likelihood, and mitigations</caption>
                         <thead>
                             <tr className="border-b dark:border-gray-700">
                                 <th className="py-2 text-left font-semibold text-gray-900 dark:text-white">Risk</th>
@@ -343,7 +359,7 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
                     {strategicPlan.boardRoles.map((role) => (
                         <div key={role.id} className="rounded-lg border p-4 dark:border-gray-700">
                             <div className="flex items-center gap-2">
-                                <span className="text-2xl">{role.icon}</span>
+                                <span className="text-2xl" aria-hidden="true">{role.icon}</span>
                                 <div>
                                     <h4 className="font-bold text-gray-900 dark:text-white">{role.title}</h4>
                                     <span className="text-xs text-gray-500">{role.timeCommitment}</span>
@@ -364,3 +380,4 @@ export function InformationHub({ tenantCode }: InformationHubProps) {
         </div>
     );
 }
+

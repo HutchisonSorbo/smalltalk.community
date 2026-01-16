@@ -2,11 +2,10 @@
 
 /**
  * AppContentLoader Component
- * Dynamically loads CommunityOS app components with proper Suspense boundaries
+ * Dynamically loads CommunityOS app components with proper client-side boundaries
  * to avoid Server Component hydration errors
  */
 
-import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { communityOSApps } from "./AppLauncher";
 
@@ -58,36 +57,51 @@ interface AppContentLoaderProps {
     appId: string;
 }
 
-export function AppContentLoader({ appId }: AppContentLoaderProps) {
-    const renderApp = () => {
-        switch (appId) {
-            case "crm":
-                return <CRMApp />;
-            case "rostering":
-                return <RosteringApp />;
-            case "assets":
-            case "inventory":
-                return <InventoryApp />;
-            default: {
-                // Use GenericCommunityApp for all other apps
-                const app = communityOSApps.find((a) => a.id === appId);
-                if (!app) return null;
-                return (
-                    <GenericCommunityApp
-                        appId={appId}
-                        title={app.name}
-                        description={app.description}
-                        placeholder={`No ${app.name.toLowerCase()} items found yet.`}
-                        itemType={app.name.endsWith("s") ? app.name.slice(0, -1) : "Record"}
-                    />
-                );
-            }
-        }
-    };
+/**
+ * Derives item type from app name for multi-word names
+ * Prefers explicit itemType if set, otherwise extracts last word and removes trailing 's'
+ */
+function deriveItemType(appName: string, explicitItemType?: string): string {
+    if (explicitItemType) return explicitItemType;
 
-    return (
-        <Suspense fallback={<AppLoadingSkeleton />}>
-            {renderApp()}
-        </Suspense>
-    );
+    // Split on whitespace and get last word
+    const words = appName.trim().split(/\s+/);
+    const lastWord = words[words.length - 1] || "Record";
+
+    // Remove trailing punctuation and trim
+    const cleaned = lastWord.replace(/[^\w]/g, "");
+
+    // Simple plural removal (trailing 's')
+    if (cleaned.endsWith("s") && cleaned.length > 1) {
+        return cleaned.slice(0, -1);
+    }
+
+    return cleaned || "Record";
 }
+
+export function AppContentLoader({ appId }: AppContentLoaderProps) {
+    switch (appId) {
+        case "crm":
+            return <CRMApp />;
+        case "rostering":
+            return <RosteringApp />;
+        case "assets":
+        case "inventory":
+            return <InventoryApp />;
+        default: {
+            // Use GenericCommunityApp for all other apps
+            const app = communityOSApps.find((a) => a.id === appId);
+            if (!app) return null;
+            return (
+                <GenericCommunityApp
+                    appId={appId}
+                    title={app.name}
+                    description={app.description}
+                    placeholder={`No ${app.name.toLowerCase()} items found yet.`}
+                    itemType={deriveItemType(app.name, app.itemType)}
+                />
+            );
+        }
+    }
+}
+
