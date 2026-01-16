@@ -79,7 +79,17 @@ function deriveItemType(appName: string, explicitItemType?: string): string {
     return cleaned || "Record";
 }
 
-export function AppContentLoader({ appId }: AppContentLoaderProps) {
+/**
+ * AppContentLoader component dynamically renders the appropriate CommunityOS app
+ * based on the provided appId. Uses dynamic imports with code splitting to load
+ * specialized app components (CRM, Rostering, Inventory) or falls back to
+ * GenericCommunityApp for other registered apps.
+ *
+ * @param props - The component props conforming to {@link AppContentLoaderProps}
+ * @param props.appId - The unique identifier of the app to render (e.g., "crm", "rostering", "assets")
+ * @returns A React.ReactElement containing the rendered app component, or null if the appId is not found
+ */
+export function AppContentLoader({ appId }: AppContentLoaderProps): React.ReactElement | null {
     switch (appId) {
         case "crm":
             return <CRMApp />;
