@@ -17,6 +17,8 @@ export interface CommunityOSApp {
     description: string;
     category: "operations" | "governance" | "programs" | "finance" | "admin";
     requiredRole?: "admin" | "board" | "member";
+    /** Explicit item type for GenericCommunityApp, derived from name if not provided */
+    itemType?: string;
 }
 
 export const communityOSApps: CommunityOSApp[] = [
