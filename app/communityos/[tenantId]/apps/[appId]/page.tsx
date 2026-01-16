@@ -5,11 +5,8 @@
 
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/communityos/AppShell";
+import { AppContentLoader } from "@/components/communityos/AppContentLoader";
 import { communityOSApps } from "@/components/communityos/AppLauncher";
-import { CRMApp } from "@/components/communityos/apps/CRMApp";
-import { RosteringApp } from "@/components/communityos/apps/RosteringApp";
-import { InventoryApp } from "@/components/communityos/apps/InventoryApp";
-import { GenericCommunityApp } from "@/components/communityos/apps/GenericCommunityApp";
 
 interface AppPageProps {
     params: Promise<{ tenantId: string; appId: string }>;
@@ -38,33 +35,10 @@ export default async function AppPage({ params }: AppPageProps) {
         notFound();
     }
 
-    const renderApp = (appId: string) => {
-        switch (appId) {
-            case "crm":
-                return <CRMApp />;
-            case "rostering":
-                return <RosteringApp />;
-            case "inventory":
-                return <InventoryApp />;
-            default: {
-                const app = communityOSApps.find((a) => a.id === appId);
-                if (!app) return null;
-                return (
-                    <GenericCommunityApp
-                        appId={appId}
-                        title={app.name}
-                        description={app.description}
-                        placeholder={`No ${app.name.toLowerCase()} items found yet.`}
-                        itemType={app.name.endsWith('s') ? app.name.slice(0, -1) : "Record"}
-                    />
-                );
-            }
-        }
-    };
-
     return (
         <AppShell appId={appId} tenantCode={tenantId}>
-            {renderApp(appId)}
+            <AppContentLoader appId={appId} />
         </AppShell>
     );
 }
+
