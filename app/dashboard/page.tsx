@@ -5,7 +5,8 @@ import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, User, CheckCircle, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,19 @@ interface UserProfile {
     profileCompletionPercentage?: number;
     accountType?: string;
     dateOfBirth?: string;
+}
+
+interface TenantMembership {
+    tenant: {
+        id: string;
+        code: string;
+        name: string;
+        logoUrl: string | null;
+        primaryColor: string | null;
+        description: string | null;
+    };
+    role: "admin" | "board" | "member";
+    joinedAt: string;
 }
 
 function calculateProfileCompletion(user: UserProfile | null): { percentage: number; missing: string[] } {
@@ -40,9 +54,18 @@ function calculateProfileCompletion(user: UserProfile | null): { percentage: num
     return { percentage, missing };
 }
 
+function getRoleBadgeVariant(role: string): "default" | "secondary" | "outline" {
+    switch (role) {
+        case "admin": return "default";
+        case "board": return "secondary";
+        default: return "outline";
+    }
+}
+
 export default function DashboardPage() {
     const [apps, setApps] = useState<AppData[]>([]);
     const [user, setUser] = useState<UserProfile | null>(null);
+    const [tenantMemberships, setTenantMemberships] = useState<TenantMembership[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
@@ -61,6 +84,15 @@ export default function DashboardPage() {
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     setUser(userData.user || userData);
+                }
+
+                // Fetch CommunityOS tenant memberships
+                const tenantsRes = await fetch("/api/user/tenants");
+                if (tenantsRes.ok) {
+                    const tenantsData = await tenantsRes.json();
+                    if (Array.isArray(tenantsData.tenants)) {
+                        setTenantMemberships(tenantsData.tenants);
+                    }
                 }
             } catch (error) {
                 console.error(error);
@@ -197,6 +229,68 @@ export default function DashboardPage() {
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* CommunityOS Workspaces - shown if user has tenant memberships */}
+                            {tenantMemberships.length > 0 && (
+                                <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Building2 className="h-5 w-5 text-primary" />
+                                            CommunityOS
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Access your organisation workspaces
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        {tenantMemberships.map((membership) => (
+                                            <Link
+                                                key={membership.tenant.id}
+                                                href={`/communityos/${membership.tenant.code}/dashboard`}
+                                                className="block"
+                                            >
+                                                <div
+                                                    className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-accent transition-colors group"
+                                                    style={{
+                                                        borderColor: membership.tenant.primaryColor || undefined,
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        {membership.tenant.logoUrl ? (
+                                                            <img
+                                                                src={membership.tenant.logoUrl}
+                                                                alt={membership.tenant.name}
+                                                                className="h-8 w-8 rounded object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                className="h-8 w-8 rounded flex items-center justify-center text-white font-bold text-sm"
+                                                                style={{
+                                                                    backgroundColor: membership.tenant.primaryColor || "#6366f1"
+                                                                }}
+                                                            >
+                                                                {membership.tenant.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                        <div className="min-w-0">
+                                                            <p className="font-medium text-sm truncate">
+                                                                {membership.tenant.name}
+                                                            </p>
+                                                            <Badge
+                                                                variant={getRoleBadgeVariant(membership.role)}
+                                                                className="mt-1 capitalize text-xs"
+                                                            >
+                                                                {membership.role}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             <Card>
                                 <CardHeader>

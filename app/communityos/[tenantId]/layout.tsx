@@ -4,7 +4,7 @@
  */
 
 import { redirect, notFound } from "next/navigation";
-import { TenantProvider } from "@/components/communityos/TenantProvider";
+import { TenantProviders } from "@/components/communityos/TenantProviders";
 import { getTenantByCode, verifyTenantAccess } from "@/lib/communityos/tenant-context";
 import { createClient } from "@/lib/supabase-server";
 import type { TenantRole } from "@/shared/schema";
@@ -68,7 +68,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
     }
 
     return (
-        <TenantProvider tenant={tenant} userRole={role as TenantRole}>
+        <TenantProviders tenant={tenant} userRole={role as TenantRole}>
             <div className="min-h-screen">
                 {/* Tenant Header */}
                 <header
@@ -122,7 +122,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                     </div>
                 </footer>
             </div>
-        </TenantProvider>
+        </TenantProviders>
     );
 }
 

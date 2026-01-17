@@ -33,11 +33,34 @@ function AppLoadingSkeleton() {
     );
 }
 
-// Error Fallback Component
-function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErrorBoundary: () => void }) {
-    // Log the error securely (dev only)
-    if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
-        console.error("AppContentLoader Error:", error);
+// Error Fallback Component with enhanced logging
+function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) {
+    // Generate a unique error code for support reference
+    const errorCode = `ERR-${Date.now().toString(36).toUpperCase()}`;
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    // Log the error (securely in production with Sentry)
+    if (typeof window !== "undefined") {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[AppContentLoader] Error:", error);
+            console.error("[AppContentLoader] Stack:", errorStack);
+        } else {
+            // Log to Sentry in production
+            import("@sentry/nextjs").then((Sentry) => {
+                Sentry.captureException(error, {
+                    tags: {
+                        component: "AppContentLoader",
+                        errorCode,
+                    },
+                    extra: {
+                        errorMessage,
+                    },
+                });
+            }).catch(() => {
+                // Sentry may not be available
+            });
+        }
     }
 
     return (
@@ -47,14 +70,24 @@ function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErro
             </h3>
             <p className="mb-4 max-w-md text-sm text-red-600 dark:text-red-300">
                 An unexpected error occurred. Please try refreshing the page.
+                If this problem persists, contact support with error code: <code className="font-mono text-xs">{errorCode}</code>
             </p>
-            <button
-                type="button"
-                onClick={resetErrorBoundary}
-                className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
-            >
-                Try again
-            </button>
+            <div className="flex gap-3">
+                <button
+                    type="button"
+                    onClick={resetErrorBoundary}
+                    className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
+                >
+                    Try again
+                </button>
+                <button
+                    type="button"
+                    onClick={() => window.location.href = "/dashboard"}
+                    className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                >
+                    Go to Dashboard
+                </button>
+            </div>
         </div>
     );
 }
