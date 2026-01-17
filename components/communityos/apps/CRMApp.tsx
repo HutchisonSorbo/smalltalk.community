@@ -22,6 +22,13 @@ interface Contact {
 export function CRMApp() {
     const { tenant, isLoading } = useTenant();
 
+    // Always call hooks unconditionally
+    const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
+        useDittoSync<Contact>(tenant?.id ? `${tenant.id}:crm_contacts` : "");
+
+    const [isEditing, setIsEditing] = useState<string | null>(null); // Reverted to original type to maintain functionality
+    const [formData, setFormData] = useState<Partial<Contact>>({});
+
     // Guard against missing tenant
     if (isLoading) {
         return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
@@ -35,16 +42,10 @@ export function CRMApp() {
         );
     }
 
-    const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<Contact>(`${tenant.id}:crm_contacts`);
-
-    const [isEditing, setIsEditing] = useState<string | null>(null);
-    const [formData, setFormData] = useState<Partial<Contact>>({});
-
     const handleSave = () => {
         if (formData.firstName && formData.lastName) {
             upsertDocument(
-                isEditing || Math.random().toString(36).substr(2, 9),
+                isEditing === "new" ? Math.random().toString(36).substr(2, 9) : (isEditing as string), // Adjusted logic for isEditing
                 {
                     firstName: formData.firstName,
                     lastName: formData.lastName,

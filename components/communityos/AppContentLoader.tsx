@@ -7,6 +7,7 @@
  */
 
 import dynamic from "next/dynamic";
+import { ErrorBoundary } from "react-error-boundary";
 import { communityOSApps } from "./AppLauncher";
 
 // Loading skeleton for apps
@@ -33,28 +34,29 @@ function AppLoadingSkeleton() {
 }
 
 // Error Fallback Component
-import { ErrorBoundary } from "react-error-boundary";
-
 function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErrorBoundary: () => void }) {
+    // Log the error securely
+    console.error("AppContentLoader Error:", error);
+
     return (
         <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/50 dark:bg-red-900/20">
             <h3 className="mb-2 text-lg font-semibold text-red-800 dark:text-red-200">
                 Failed to load application
             </h3>
             <p className="mb-4 max-w-md text-sm text-red-600 dark:text-red-300">
-                {error?.message || "An unexpected error occurred while loading this component."}
+                An unexpected error occurred. Please try refreshing the page.
             </p>
             <button
+                type="button"
                 onClick={resetErrorBoundary}
-                className="mt-4 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
             >
-                Try Again
+                Try again
             </button>
         </div>
     );
 }
 
-// Dynamic imports for apps - loaded client-side with code splitting
 const CRMApp = dynamic(
     () => import("./apps/CRMApp").then((m) => ({ default: m.CRMApp })),
     { loading: () => <AppLoadingSkeleton />, ssr: false }
@@ -108,9 +110,9 @@ function deriveItemType(appName: string, explicitItemType?: string): string {
  * GenericCommunityApp for other registered apps.
  *
  * @param props - The component props conforming to {@link AppContentLoaderProps}
- * @param props.appId - The unique identifier of the app to render (e.g., "crm", "rostering", "assets")
- * @returns A React.ReactElement containing the rendered app component, or null if the appId is not found
- */
+                    * @param props.appId - The unique identifier of the app to render (e.g., "crm", "rostering", "assets")
+                    * @returns A React.ReactElement containing the rendered app component, or null if the appId is not found
+                    */
 export function AppContentLoader({ appId }: AppContentLoaderProps): React.ReactElement | null {
     const renderContent = () => {
         switch (appId) {

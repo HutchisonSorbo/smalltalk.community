@@ -22,6 +22,13 @@ interface Shift {
 export function RosteringApp() {
     const { tenant, isLoading } = useTenant();
 
+    // Always call hooks unconditionally
+    const { documents: shifts, upsertDocument, deleteDocument, isOnline } =
+        useDittoSync<Shift>(tenant?.id ? `${tenant.id}:rostering_shifts` : "");
+
+    const [isEditing, setIsEditing] = useState<string | null>(null);
+    const [formData, setFormData] = useState<Partial<Shift>>({});
+
     // Guard against missing tenant
     if (isLoading) {
         return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
@@ -34,12 +41,6 @@ export function RosteringApp() {
             </div>
         );
     }
-
-    const { documents: shifts, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<Shift>(`${tenant.id}:rostering_shifts`);
-
-    const [isEditing, setIsEditing] = useState<string | null>(null);
-    const [formData, setFormData] = useState<Partial<Shift>>({});
 
     const handleSave = () => {
         if (formData.workerName && formData.startTime && formData.endTime) {

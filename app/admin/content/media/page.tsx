@@ -65,10 +65,10 @@ export default async function MediaLibraryPage() {
                 </div>
 
                 {error != null && (
-                    <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                    <div className="rounded-md bg-red-50 p-4 border border-red-200 mb-4" role="alert">
                         <div className="flex">
                             <div className="ml-3">
-                                <h3 className="text-sm font-medium text-red-800">Error loading mediaLibrary</h3>
+                                <h3 className="text-sm font-medium text-red-800">Error loading media library</h3>
                                 <div className="mt-2 text-sm text-red-700">
                                     <p>There was a problem connecting to the CMS. Please try again later.</p>
                                 </div>

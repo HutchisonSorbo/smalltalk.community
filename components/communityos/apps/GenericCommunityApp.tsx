@@ -33,6 +33,13 @@ export function GenericCommunityApp({
 }) {
     const { tenant, isLoading } = useTenant();
 
+    // Always call hooks unconditionally
+    const { documents: items, upsertDocument, deleteDocument, isOnline } =
+        useDittoSync<GenericItem>(tenant?.id ? `${tenant.id}:${appId}_data` : "");
+
+    const [isEditing, setIsEditing] = useState<string | null>(null);
+    const [formData, setFormData] = useState<Partial<GenericItem>>({});
+
     // Guard against missing tenant
     if (isLoading) {
         return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
@@ -45,12 +52,6 @@ export function GenericCommunityApp({
             </div>
         );
     }
-
-    const { documents: items, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<GenericItem>(`${tenant.id}:${appId}_data`);
-
-    const [isEditing, setIsEditing] = useState<string | null>(null);
-    const [formData, setFormData] = useState<Partial<GenericItem>>({});
 
     const handleSave = () => {
         if (formData.title) {

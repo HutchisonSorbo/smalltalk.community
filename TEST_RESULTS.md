@@ -19,11 +19,7 @@ Comprehensive testing completed for authentication, admin panel, public apps, an
 - ✅ **User Dashboard**: Core features working
 - ⚠️ **Admin Panel**: 4 critical issues (504 timeouts, Payload CMS errors)
 - ❌ **Password Reset**: Blocked by captcha error
-- ⚠️ **CommunityOS**: Not accessible for organisation accounts without tenant setup
-
----
-
-## Quick Stats
+- ⚠️ **CommunityOS**: Inaccessible for organisation accounts without tenant setup (`white-label configuration`)ck Stats
 
 | Metric | Value |
 |--------|-------|
@@ -373,7 +369,9 @@ import Link from 'next/link';
 | `app/settings/page.tsx` | ERR015 | Medium |
 | `public/favicon.ico` | ERR001 | Low |
 
----
+--- **Captcha**: Implemented Turnstile on `forgot-password` endpoint.
+
+- *Recommendation*: Ensure `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is present in all environments. Added safe fallback to empty string to prevent crashes if missing.
 
 ## Post-Testing Cleanup Required
 

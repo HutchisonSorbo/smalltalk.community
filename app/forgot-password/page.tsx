@@ -146,7 +146,10 @@ export default function ForgotPasswordPage() {
                             <Turnstile
                                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
                                 onSuccess={setCaptchaToken}
-                                onError={() => setError("Captcha verification failed.")}
+                                onError={() => {
+                                    setCaptchaToken(null);
+                                    setError("Captcha verification failed.");
+                                }}
                                 onExpire={() => setCaptchaToken(null)}
                             />
                         </div>

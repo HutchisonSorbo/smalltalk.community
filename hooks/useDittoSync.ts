@@ -57,16 +57,23 @@ export function useDittoSync<T extends DittoDocument>(
     const [error, setError] = useState<Error | null>(null);
 
     // VALIDATION: Warn if tenantId is missing
-    if (!tenantId && typeof optionsOrCollectionString === "object") {
-        console.warn("[useDittoSync] No tenantId provided - data may not persist correctly");
-    }
+    useEffect(() => {
+        if (!tenantId && typeof optionsOrCollectionString === "object") {
+            console.warn("[useDittoSync] No tenantId provided - data may not persist correctly");
+        }
+    }, [tenantId, optionsOrCollectionString]);
 
     // VALIDATION: Prevent undefined in storage key
-    const safeTenantId = tenantId || "local";
-    const storageKey = `ditto:${safeTenantId}:${collection}`;
+    // Only persist if we have a valid tenantId
+    const storageKey = tenantId ? `ditto:${tenantId}:${collection}` : undefined;
 
     // Load from localStorage on mount
     useEffect(() => {
+        if (!storageKey) {
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const stored = localStorage.getItem(storageKey);
             if (stored) {
@@ -80,7 +87,7 @@ export function useDittoSync<T extends DittoDocument>(
 
     // Persist to localStorage when documents change
     useEffect(() => {
-        if (!isLoading) {
+        if (!isLoading && storageKey) {
             try {
                 localStorage.setItem(storageKey, JSON.stringify(documents));
             } catch (e) {
