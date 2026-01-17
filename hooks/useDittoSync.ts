@@ -81,7 +81,7 @@ export function useDittoSync<T extends DittoDocument>(
 
     // Determine if we're in mock mode (using localStorage instead of real Ditto)
     const isMockMode = !ditto || !!dittoError;
-    const isOnline = isMockMode ? dittoOnline : dittoOnline; // dittoOnline comes from context which tracks navigator.onLine
+    const isOnline = dittoOnline;
     const isSyncing = isMockMode ? false : dittoSyncing;
 
     // Sanitize and validate collection name
@@ -89,6 +89,25 @@ export function useDittoSync<T extends DittoDocument>(
         // Remove special characters that might break Ditto queries
         return collection.replace(/[^a-zA-Z0-9_\-:]/g, "");
     }, [collection]);
+
+    // Early return if collection name is invalid after sanitization
+    if (sanitizedCollection === "") {
+        return {
+            documents: [],
+            isLoading: false,
+            isOnline,
+            isSyncing: false,
+            pendingChanges: 0,
+            isMockMode: true,
+            error: new Error(`[useDittoSync] Invalid collection name: "${collection}" sanitizes to empty string`),
+            insert: async () => { throw new Error("Invalid collection"); },
+            update: async () => { throw new Error("Invalid collection"); },
+            remove: async () => { throw new Error("Invalid collection"); },
+            refresh: async () => { },
+            upsertDocument: async () => { throw new Error("Invalid collection"); },
+            deleteDocument: async () => { throw new Error("Invalid collection"); },
+        };
+    }
 
     // VALIDATION: Warn if tenantId is missing
     useEffect(() => {

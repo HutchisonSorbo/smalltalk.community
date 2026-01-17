@@ -70,7 +70,7 @@ export function CommunityOsWorkspaces({ memberships }: CommunityOsWorkspacesProp
                         </CardHeader>
                         <CardContent>
                             <Link
-                                href={`/communityos/${membership.tenant.code}/dashboard`}
+                                href={`/communityos/${encodeURIComponent(membership.tenant.code)}/dashboard`}
                                 className="inline-flex items-center text-sm font-medium text-primary hover:underline group-hover:translate-x-0.5 transition-transform"
                             >
                                 Enter Workspace <ArrowRight className="ml-2 h-4 w-4" />

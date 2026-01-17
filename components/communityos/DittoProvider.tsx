@@ -223,18 +223,17 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
         initDitto();
 
         return () => {
-            if (isMounted.current && dittoRef.current) {
+            // Set unmounted state first so callbacks see the unmounted state during cleanup
+            isMounted.current = false;
+            if (dittoRef.current) {
                 dittoRef.current.stopSync();
                 dittoRef.current = null;
             }
-            if (isMounted.current) {
-                setIsInitialized(false);
-                setInitialized(false);
-                initializingRef.current = false;
-            }
-            isMounted.current = false;
+            setIsInitialized(false);
+            setInitialized(false);
+            initializingRef.current = false;
         };
-    }, [tenantId, setInitialized, setLocalOnline, setInitialized, setSyncing]);
+    }, [tenantId, setInitialized, setLocalOnline, setSyncing]);
 
     // Handle authentication changes
     useEffect(() => {

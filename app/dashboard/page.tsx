@@ -5,13 +5,23 @@ import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2, ArrowRight } from "lucide-react";
+import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { safeUrl } from "@/lib/utils";
-import type { TenantWithMembership, CommunityOsRole } from "@/shared/schema";
+import type { TenantWithMembership } from "@/shared/schema";
 import { CommunityOsWorkspaces } from "@/components/communityos/CommunityOsWorkspaces";
+
+interface UserProfile {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    profileImageUrl?: string;
+    onboardingCompleted?: boolean;
+    onboardingStep?: number;
+    profileCompletionPercentage?: number;
+    accountType?: string;
+    dateOfBirth?: string;
+}
 
 
 function calculateProfileCompletion(user: UserProfile | null): { percentage: number; missing: string[] } {
@@ -36,7 +46,7 @@ function calculateProfileCompletion(user: UserProfile | null): { percentage: num
 
 export default function DashboardPage() {
     const [apps, setApps] = useState<AppData[]>([]);
-    const [user, setUser] = useState<any | null>(null);
+    const [user, setUser] = useState<UserProfile | null>(null);
     const [tenantMemberships, setTenantMemberships] = useState<TenantWithMembership[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
@@ -65,6 +75,14 @@ export default function DashboardPage() {
                     if (Array.isArray(tenantsData.tenants)) {
                         setTenantMemberships(tenantsData.tenants);
                     }
+                } else {
+                    // Log failure details for debugging
+                    const errorText = await tenantsRes.text().catch(() => "Unable to read response");
+                    console.error(
+                        `[Dashboard] Failed to fetch tenants: status=${tenantsRes.status}, body=${errorText}`
+                    );
+                    // Set empty array as fallback to avoid silent failures
+                    setTenantMemberships([]);
                 }
             } catch (error) {
                 console.error(error);

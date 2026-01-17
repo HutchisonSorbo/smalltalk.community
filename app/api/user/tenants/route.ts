@@ -43,11 +43,10 @@ export async function GET(req: NextRequest) {
         const validationResult = querySchema.safeParse(queryParams);
 
         if (!validationResult.success) {
+            // Log validation details server-side for debugging
+            console.error("[API] Query validation failed:", validationResult.error.format());
             return NextResponse.json(
-                {
-                    error: "Invalid query parameters",
-                    details: validationResult.error.format()
-                },
+                { error: "Invalid query parameters" },
                 {
                     status: 400,
                     headers: corsHeaders
