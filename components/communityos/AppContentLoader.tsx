@@ -32,6 +32,28 @@ function AppLoadingSkeleton() {
     );
 }
 
+// Error Fallback Component
+import { ErrorBoundary } from "react-error-boundary";
+
+function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErrorBoundary: () => void }) {
+    return (
+        <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/50 dark:bg-red-900/20">
+            <h3 className="mb-2 text-lg font-semibold text-red-800 dark:text-red-200">
+                Failed to load application
+            </h3>
+            <p className="mb-4 max-w-md text-sm text-red-600 dark:text-red-300">
+                {error?.message || "An unexpected error occurred while loading this component."}
+            </p>
+            <button
+                onClick={resetErrorBoundary}
+                className="mt-4 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+            >
+                Try Again
+            </button>
+        </div>
+    );
+}
+
 // Dynamic imports for apps - loaded client-side with code splitting
 const CRMApp = dynamic(
     () => import("./apps/CRMApp").then((m) => ({ default: m.CRMApp })),
@@ -90,28 +112,36 @@ function deriveItemType(appName: string, explicitItemType?: string): string {
  * @returns A React.ReactElement containing the rendered app component, or null if the appId is not found
  */
 export function AppContentLoader({ appId }: AppContentLoaderProps): React.ReactElement | null {
-    switch (appId) {
-        case "crm":
-            return <CRMApp />;
-        case "rostering":
-            return <RosteringApp />;
-        case "assets":
-        case "inventory":
-            return <InventoryApp />;
-        default: {
-            // Use GenericCommunityApp for all other apps
-            const app = communityOSApps.find((a) => a.id === appId);
-            if (!app) return null;
-            return (
-                <GenericCommunityApp
-                    appId={appId}
-                    title={app.name}
-                    description={app.description}
-                    placeholder={`No ${app.name.toLowerCase()} items found yet.`}
-                    itemType={deriveItemType(app.name, app.itemType)}
-                />
-            );
+    const renderContent = () => {
+        switch (appId) {
+            case "crm":
+                return <CRMApp />;
+            case "rostering":
+                return <RosteringApp />;
+            case "assets":
+            case "inventory":
+                return <InventoryApp />;
+            default: {
+                // Use GenericCommunityApp for all other apps
+                const app = communityOSApps.find((a) => a.id === appId);
+                if (!app) return null;
+                return (
+                    <GenericCommunityApp
+                        appId={appId}
+                        title={app.name}
+                        description={app.description}
+                        placeholder={`No ${app.name.toLowerCase()} items found yet.`}
+                        itemType={deriveItemType(app.name, app.itemType)}
+                    />
+                );
+            }
         }
-    }
+    };
+
+    return (
+        <ErrorBoundary FallbackComponent={AppErrorFallback}>
+            {renderContent()}
+        </ErrorBoundary>
+    );
 }
 

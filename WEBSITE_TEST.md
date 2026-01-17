@@ -71,14 +71,6 @@ You are tasked with **comprehensive production testing** of https://smalltalk.co
 
 ### 1.1 Environment Preparation
 
-```bash
-# Clone repository
-git clone https://github.com/HutchisonSorbo/smalltalk.community.git
-cd smalltalk.community
-
-# Install dependencies
-pnpm install
-
 # Verify node version
 node --version  # Should be 22.x
 

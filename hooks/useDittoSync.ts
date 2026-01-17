@@ -56,8 +56,14 @@ export function useDittoSync<T extends DittoDocument>(
     const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
     const [error, setError] = useState<Error | null>(null);
 
-    // Local storage key for offline persistence
-    const storageKey = `ditto:${tenantId}:${collection}`;
+    // VALIDATION: Warn if tenantId is missing
+    if (!tenantId && typeof optionsOrCollectionString === "object") {
+        console.warn("[useDittoSync] No tenantId provided - data may not persist correctly");
+    }
+
+    // VALIDATION: Prevent undefined in storage key
+    const safeTenantId = tenantId || "local";
+    const storageKey = `ditto:${safeTenantId}:${collection}`;
 
     // Load from localStorage on mount
     useEffect(() => {

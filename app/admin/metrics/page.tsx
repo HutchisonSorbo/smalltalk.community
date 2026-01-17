@@ -23,6 +23,15 @@ import {
     Calendar,
     BarChart3,
 } from "lucide-react";
+import { unstable_cache } from "next/cache";
+
+const getCachedMetrics = unstable_cache(
+    async () => {
+        return await getMetrics();
+    },
+    ['admin-metrics'],
+    { revalidate: 60, tags: ['metrics'] }
+);
 
 async function getMetrics() {
     const now = new Date();
@@ -126,7 +135,7 @@ async function getAppUsageStats() {
 
 
 export default async function MetricsPage() {
-    const metrics = await getMetrics();
+    const metrics = await getCachedMetrics();
     const appUsage = await getAppUsageStats();
 
     const onboardingRate = metrics.users.total > 0

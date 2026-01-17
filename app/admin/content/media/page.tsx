@@ -40,11 +40,19 @@ function formatFileSize(bytes: number) {
 export default async function MediaLibraryPage() {
     const payload = await getPayload({ config })
 
-    const media = await payload.find({
-        collection: 'media',
-        limit: 50,
-        sort: '-createdAt',
-    })
+    let media: any = { docs: [], totalDocs: 0 };
+    let error = null;
+
+    try {
+        media = await payload.find({
+            collection: 'media',
+            limit: 50,
+            sort: '-createdAt',
+        });
+    } catch (err) {
+        console.error("Failed to fetch media:", err);
+        error = err;
+    }
 
     return (
         <div className="flex-1 space-y-4 pt-2 max-w-full">
@@ -55,6 +63,19 @@ export default async function MediaLibraryPage() {
                         Upload and manage images, videos, and documents
                     </p>
                 </div>
+
+                {error != null && (
+                    <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                        <div className="flex">
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">Error loading mediaLibrary</h3>
+                                <div className="mt-2 text-sm text-red-700">
+                                    <p>There was a problem connecting to the CMS. Please try again later.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <Button asChild>
                     <Link href="/admin/content/media/upload">
                         <Upload className="mr-2 h-4 w-4" />

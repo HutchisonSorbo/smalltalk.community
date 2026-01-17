@@ -17,10 +17,37 @@ interface TenantLayoutProps {
 export default async function TenantLayout({ children, params }: TenantLayoutProps) {
     const { tenantId: tenantCode } = await params;
 
-    // Fetch tenant by code
-    const tenant = await getTenantByCode(tenantCode);
+    let tenant = null;
+    let fetchError: Error | null = null;
+
+    try {
+        // Fetch tenant by code
+        tenant = await getTenantByCode(tenantCode);
+    } catch (error) {
+        fetchError = error instanceof Error ? error : new Error("Unknown error");
+        console.error(`[CommunityOS] Failed to fetch tenant "${tenantCode}":`, error);
+        // Log to Sentry in production if available
+    }
+
     if (!tenant) {
-        notFound();
+        return (
+            <div className="flex min-h-screen items-center justify-center p-4">
+                <div className="text-center max-w-md">
+                    <h1 className="text-2xl font-bold text-red-600">
+                        Organisation Not Found
+                    </h1>
+                    <p className="mt-2 text-gray-600">
+                        {fetchError
+                            ? "There was an error loading this organisation. Please try again later."
+                            : `The organisation "${tenantCode}" could not be found.`
+                        }
+                    </p>
+                    <a href="/dashboard" className="mt-4 inline-block text-primary hover:underline">
+                        Return to Dashboard
+                    </a>
+                </div>
+            </div>
+        );
     }
 
     // Get current user

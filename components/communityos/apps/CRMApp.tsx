@@ -20,9 +20,23 @@ interface Contact {
 }
 
 export function CRMApp() {
-    const { tenant } = useTenant();
+    const { tenant, isLoading } = useTenant();
+
+    // Guard against missing tenant
+    if (isLoading) {
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+    }
+
+    if (!tenant) {
+        return (
+            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
+                <p>Unable to load CRM - Organisation context not available.</p>
+            </div>
+        );
+    }
+
     const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<Contact>(`${tenant?.id}:crm_contacts`);
+        useDittoSync<Contact>(`${tenant.id}:crm_contacts`);
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<Contact>>({});

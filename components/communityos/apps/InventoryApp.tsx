@@ -21,9 +21,23 @@ interface InventoryItem {
 }
 
 export function InventoryApp() {
-    const { tenant } = useTenant();
+    const { tenant, isLoading } = useTenant();
+
+    // Guard against missing tenant
+    if (isLoading) {
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+    }
+
+    if (!tenant) {
+        return (
+            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
+                <p>Unable to load Inventory - Organisation context not available.</p>
+            </div>
+        );
+    }
+
     const { documents: items, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<InventoryItem>(`${tenant?.id}:inventory_items`);
+        useDittoSync<InventoryItem>(`${tenant.id}:inventory_items`);
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<InventoryItem>>({});
