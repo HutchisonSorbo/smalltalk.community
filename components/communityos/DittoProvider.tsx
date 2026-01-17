@@ -7,7 +7,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 
 // Ditto SDK types (imported conditionally to handle SSR)
@@ -94,95 +94,101 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
             return;
         }
 
+        let cleanupFn: (() => void) | undefined;
+
         async function initDitto() {
             try {
-                // Dynamic import to avoid SSR issues
-                const { Ditto } = await import("@dittolive/ditto");
-                const supabase = createClient();
+                // ... (existing initDitto logic)
+                // Capture the cleanup function from initDitto
+                cleanupFn = await (async () => {
+                    // Dynamic import to avoid SSR issues
+                    const { Ditto } = await import("@dittolive/ditto");
+                    const supabase = createClient();
 
-                // Get current session for initial auth
-                const { data: { session } } = await supabase.auth.getSession();
+                    // Get current session for initial auth
+                    const { data: { session } } = await supabase.auth.getSession();
 
-                if (!session?.access_token) {
-                    console.warn("[DittoProvider] No session available, deferring Ditto init");
-                    setIsInitialized(true);
-                    return;
-                }
+                    if (!session?.access_token) {
+                        console.warn("[DittoProvider] No session available, deferring Ditto init");
+                        setIsInitialized(true);
+                        return undefined;
+                    }
 
-                // Create Ditto with Online with Authentication identity
-                const dittoInstance = new Ditto({
-                    type: "onlineWithAuthentication",
-                    appID: appId as string,
-                    authHandler: {
-                        authenticationRequired: async (authenticator) => {
-                            try {
-                                // Get fresh session token
-                                const { data: { session: currentSession } } = await supabase.auth.getSession();
+                    // Create Ditto with Online with Authentication identity
+                    const dittoInstance = new Ditto({
+                        type: "onlineWithAuthentication",
+                        appID: appId as string,
+                        authHandler: {
+                            authenticationRequired: async (authenticator) => {
+                                try {
+                                    // Get fresh session token
+                                    const { data: { session: currentSession } } = await supabase.auth.getSession();
 
-                                if (currentSession?.access_token) {
-                                    authenticator.loginWithToken(
-                                        currentSession.access_token,
-                                        "supabase"
-                                    );
-                                    setIsSyncing(true);
-                                } else {
-                                    console.error("[DittoProvider] No session for auth");
+                                    if (currentSession?.access_token) {
+                                        authenticator.loginWithToken(
+                                            currentSession.access_token,
+                                            "supabase"
+                                        );
+                                        setIsSyncing(true);
+                                    } else {
+                                        console.error("[DittoProvider] No session for auth");
+                                        authenticator.logout();
+                                    }
+                                } catch (authError) {
+                                    console.error("[DittoProvider] Auth handler error:", authError);
                                     authenticator.logout();
                                 }
-                            } catch (authError) {
-                                console.error("[DittoProvider] Auth handler error:", authError);
-                                authenticator.logout();
-                            }
-                        },
-                        authenticationExpiringSoon: async (authenticator, secondsRemaining) => {
-                            console.log(`[DittoProvider] Auth expiring in ${secondsRemaining}s, refreshing...`);
-                            try {
-                                // Refresh Supabase session
-                                const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+                            },
+                            authenticationExpiringSoon: async (authenticator, secondsRemaining) => {
+                                console.log(`[DittoProvider] Auth expiring in ${secondsRemaining}s, refreshing...`);
+                                try {
+                                    // Refresh Supabase session
+                                    const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
 
-                                if (refreshedSession?.access_token) {
-                                    authenticator.loginWithToken(
-                                        refreshedSession.access_token,
-                                        "supabase"
-                                    );
+                                    if (refreshedSession?.access_token) {
+                                        authenticator.loginWithToken(
+                                            refreshedSession.access_token,
+                                            "supabase"
+                                        );
+                                    }
+                                } catch (refreshError) {
+                                    console.error("[DittoProvider] Token refresh error:", refreshError);
                                 }
-                            } catch (refreshError) {
-                                console.error("[DittoProvider] Token refresh error:", refreshError);
-                            }
+                            },
                         },
-                    },
-                });
+                    });
 
-                // Start sync
-                dittoInstance.startSync();
+                    // Start sync
+                    dittoInstance.startSync();
 
-                // Observe peer connections
-                const peerObserver = (dittoInstance as unknown as DittoInstance).observePeers((peers: unknown[]) => {
-                    setPeerCount(Array.isArray(peers) ? peers.length : 0);
-                    setIsSyncing(Array.isArray(peers) && peers.length > 0);
-                });
+                    // Observe peer connections
+                    const peerObserver = (dittoInstance as unknown as DittoInstance).observePeers((peers: unknown[]) => {
+                        setPeerCount(Array.isArray(peers) ? peers.length : 0);
+                        setIsSyncing(Array.isArray(peers) && peers.length > 0);
+                    });
 
-                // Listen for online/offline status
-                const handleOnline = () => setIsOnline(true);
-                const handleOffline = () => setIsOnline(false);
-                window.addEventListener("online", handleOnline);
-                window.addEventListener("offline", handleOffline);
-                setIsOnline(navigator.onLine);
+                    // Listen for online/offline status
+                    const handleOnline = () => setIsOnline(true);
+                    const handleOffline = () => setIsOnline(false);
+                    window.addEventListener("online", handleOnline);
+                    window.addEventListener("offline", handleOffline);
+                    setIsOnline(navigator.onLine);
 
-                dittoRef.current = dittoInstance as unknown as DittoInstance;
-                setDitto(dittoInstance as unknown as DittoInstance);
-                setIsInitialized(true);
-                setError(null);
+                    dittoRef.current = dittoInstance as unknown as DittoInstance;
+                    setDitto(dittoInstance as unknown as DittoInstance);
+                    setIsInitialized(true);
+                    setError(null);
 
-                console.log("[DittoProvider] Ditto initialized successfully for tenant:", tenantId);
+                    console.log("[DittoProvider] Ditto initialized successfully for tenant:", tenantId);
 
-                // Cleanup
-                return () => {
-                    peerObserver.cancel();
-                    window.removeEventListener("online", handleOnline);
-                    window.removeEventListener("offline", handleOffline);
-                    dittoInstance.stopSync();
-                };
+                    // Return cleanup function
+                    return () => {
+                        peerObserver.cancel();
+                        window.removeEventListener("online", handleOnline);
+                        window.removeEventListener("offline", handleOffline);
+                        dittoInstance.stopSync();
+                    };
+                })();
             } catch (initError) {
                 console.error("[DittoProvider] Initialization error:", initError);
                 setError(initError instanceof Error ? initError : new Error("Failed to initialize Ditto"));
@@ -193,6 +199,9 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
         initDitto();
 
         return () => {
+            if (cleanupFn) {
+                cleanupFn();
+            }
             if (dittoRef.current) {
                 dittoRef.current.stopSync();
                 dittoRef.current = null;
@@ -223,15 +232,7 @@ export function useDitto(): DittoContextValue {
     const context = useContext(DittoContext);
 
     if (!context) {
-        // Return fallback for components outside DittoProvider
-        return {
-            ditto: null,
-            isInitialized: true,
-            isOnline: true,
-            isSyncing: false,
-            error: new Error("DittoProvider not found"),
-            peerCount: 0,
-        };
+        throw new Error("useDitto must be used within a DittoProvider. Check that you have wrapped your component tree with <DittoProvider>.");
     }
 
     return context;

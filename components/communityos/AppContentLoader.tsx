@@ -7,6 +7,8 @@
  */
 
 import dynamic from "next/dynamic";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ErrorBoundary } from "react-error-boundary";
 import { communityOSApps } from "./AppLauncher";
 
@@ -35,33 +37,42 @@ function AppLoadingSkeleton() {
 
 // Error Fallback Component with enhanced logging
 function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) {
-    // Generate a unique error code for support reference
-    const errorCode = `ERR-${Date.now().toString(36).toUpperCase()}`;
+    const router = useRouter();
+    // Use a stable error code for the lifetime of this component instance
+    const errorCodeRef = useRef(`ERR-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
+    const errorCode = errorCodeRef.current;
+
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     const errorStack = error instanceof Error ? error.stack : undefined;
 
-    // Log the error (securely in production with Sentry)
-    if (typeof window !== "undefined") {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[AppContentLoader] Error:", error);
-            console.error("[AppContentLoader] Stack:", errorStack);
-        } else {
-            // Log to Sentry in production
-            import("@sentry/nextjs").then((Sentry) => {
-                Sentry.captureException(error, {
-                    tags: {
-                        component: "AppContentLoader",
-                        errorCode,
-                    },
-                    extra: {
-                        errorMessage,
-                    },
-                });
-            }).catch(() => {
-                // Sentry may not be available
-            });
+    // Log the error (securely in production with Sentry) via useEffect
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            if (process.env.NODE_ENV === "development") {
+                console.error("[AppContentLoader] Error:", error);
+                console.error("[AppContentLoader] Stack:", errorStack);
+            } else {
+                // Log to Sentry in production
+                const logToSentry = async () => {
+                    try {
+                        const Sentry = await import("@sentry/nextjs");
+                        Sentry.captureException(error, {
+                            tags: {
+                                component: "AppContentLoader",
+                                errorCode,
+                            },
+                            extra: {
+                                errorMessage,
+                            },
+                        });
+                    } catch (err) {
+                        console.error("[AppContentLoader] Failed to load Sentry:", err);
+                    }
+                };
+                logToSentry();
+            }
         }
-    }
+    }, [error, errorMessage, errorStack, errorCode]);
 
     return (
         <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/50 dark:bg-red-900/20">
@@ -82,7 +93,7 @@ function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; reset
                 </button>
                 <button
                     type="button"
-                    onClick={() => window.location.href = "/dashboard"}
+                    onClick={() => router.push("/dashboard")}
                     className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 >
                     Go to Dashboard

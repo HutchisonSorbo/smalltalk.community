@@ -7,6 +7,25 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { getUserTenants } from "@/lib/communityos/tenant-context";
 
+// CORS Headers
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+};
+
+/**
+ * OPTIONS /api/user/tenants
+ * Handles CORS preflight requests
+ */
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 204,
+        headers: corsHeaders,
+    });
+}
+
 /**
  * GET /api/user/tenants
  * Returns an array of tenant memberships for the authenticated user
@@ -20,7 +39,10 @@ export async function GET() {
         if (authError || !user) {
             return NextResponse.json(
                 { error: "Unauthorized" },
-                { status: 401 }
+                {
+                    status: 401,
+                    headers: corsHeaders
+                }
             );
         }
 
@@ -41,12 +63,15 @@ export async function GET() {
             joinedAt: membership.joinedAt,
         }));
 
-        return NextResponse.json({ tenants });
+        return NextResponse.json({ tenants }, { headers: corsHeaders });
     } catch (error) {
         console.error("[API] Error fetching user tenants:", error);
         return NextResponse.json(
             { error: "Internal server error" },
-            { status: 500 }
+            {
+                status: 500,
+                headers: corsHeaders
+            }
         );
     }
 }

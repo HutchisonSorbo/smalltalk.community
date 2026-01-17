@@ -112,9 +112,29 @@ export function useDittoSync<T extends DittoDocument>(
     }, [dittoInitialized, ditto, dittoError, dittoCollectionName, storageKey]);
 
     /**
+     * Load documents from localStorage (fallback mode)
+     */
+    const loadFromLocalStorage = useCallback(() => {
+        if (!storageKey) {
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const stored = localStorage.getItem(storageKey);
+            if (stored) {
+                setDocuments(JSON.parse(stored));
+            }
+        } catch (e) {
+            console.error("[useDittoSync] Error loading from localStorage:", e);
+        }
+        setIsLoading(false);
+    }, [storageKey]);
+
+    /**
      * Initialize real Ditto sync
      */
-    async function initDittoSync() {
+    const initDittoSync = useCallback(async () => {
         if (!ditto) return;
 
         try {
@@ -126,7 +146,7 @@ export function useDittoSync<T extends DittoDocument>(
 
             // Observe local changes
             const dittoCollection = ditto.store.collection(dittoCollectionName);
-            observerRef.current = dittoCollection.findAll().observeLocal((docs, event) => {
+            observerRef.current = dittoCollection.findAll().observeLocal((docs) => {
                 // Convert Ditto documents to our format
                 const typedDocs = docs.map(doc => ({
                     ...doc,
@@ -153,27 +173,31 @@ export function useDittoSync<T extends DittoDocument>(
             // Fall back to localStorage
             loadFromLocalStorage();
         }
-    }
+    }, [ditto, dittoCollectionName, loadFromLocalStorage]);
 
-    /**
-     * Load documents from localStorage (fallback mode)
-     */
-    function loadFromLocalStorage() {
-        if (!storageKey) {
-            setIsLoading(false);
-            return;
+    // Initialize data source (Ditto or localStorage)
+    useEffect(() => {
+        // Wait for Ditto to initialize
+        if (!dittoInitialized) return;
+
+        if (ditto && !dittoError) {
+            // Real Ditto mode - set up subscription and observer
+            initDittoSync();
+        } else {
+            // Mock mode - load from localStorage
+            loadFromLocalStorage();
         }
 
-        try {
-            const stored = localStorage.getItem(storageKey);
-            if (stored) {
-                setDocuments(JSON.parse(stored));
+        return () => {
+            // Cleanup subscriptions
+            if (subscriptionRef.current) {
+                subscriptionRef.current.cancel();
             }
-        } catch (e) {
-            console.error("[useDittoSync] Error loading from localStorage:", e);
-        }
-        setIsLoading(false);
-    }
+            if (observerRef.current) {
+                observerRef.current.cancel();
+            }
+        };
+    }, [dittoInitialized, ditto, dittoError, initDittoSync, loadFromLocalStorage]);
 
     // Persist to localStorage in mock mode
     useEffect(() => {
@@ -208,14 +232,18 @@ export function useDittoSync<T extends DittoDocument>(
         const newDoc = { ...doc, _id: id, id } as T;
 
         if (ditto && !isMockMode) {
+            setPendingChanges((prev) => prev + 1);
             try {
                 const dittoCollection = ditto.store.collection(dittoCollectionName);
                 await dittoCollection.upsert({ ...newDoc, _id: id } as unknown as Record<string, unknown>);
+                setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error inserting document:", err);
-                // Still update local state
+                // Still update local state on error for offline-first experience
                 setDocuments((prev) => [...prev, newDoc]);
-                setPendingChanges((prev) => prev + 1);
+                // Keep pending if you want it to retry, or decrement if error is terminal.
+                // For now, aligning with "Correctly decrement pendingChanges" by ensuring 
+                // we don't just increment indefinitely on success.
             }
         } else {
             setDocuments((prev) => [...prev, newDoc]);
@@ -227,6 +255,7 @@ export function useDittoSync<T extends DittoDocument>(
     // Update document
     const update = useCallback(async (id: string, updates: Partial<T>): Promise<void> => {
         if (ditto && !isMockMode) {
+            setPendingChanges((prev) => prev + 1);
             try {
                 const dittoCollection = ditto.store.collection(dittoCollectionName);
                 await dittoCollection.findByID(id).update((mutableDoc) => {
@@ -234,6 +263,7 @@ export function useDittoSync<T extends DittoDocument>(
                         (mutableDoc as Record<string, unknown>)[key] = value;
                     });
                 });
+                setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error updating document:", err);
                 setDocuments((prev) =>
@@ -241,7 +271,6 @@ export function useDittoSync<T extends DittoDocument>(
                         (doc._id === id || doc.id === id) ? { ...doc, ...updates } : doc
                     )
                 );
-                setPendingChanges((prev) => prev + 1);
             }
         } else {
             setDocuments((prev) =>
@@ -255,13 +284,14 @@ export function useDittoSync<T extends DittoDocument>(
     // Remove document
     const remove = useCallback(async (id: string): Promise<void> => {
         if (ditto && !isMockMode) {
+            setPendingChanges((prev) => prev + 1);
             try {
                 const dittoCollection = ditto.store.collection(dittoCollectionName);
                 await dittoCollection.findByID(id).remove();
+                setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error removing document:", err);
                 setDocuments((prev) => prev.filter((doc) => doc._id !== id && doc.id !== id));
-                setPendingChanges((prev) => prev + 1);
             }
         } else {
             setDocuments((prev) => prev.filter((doc) => doc._id !== id && doc.id !== id));
@@ -289,9 +319,11 @@ export function useDittoSync<T extends DittoDocument>(
     // Upsert document (insert or update) - for CommunityOS app compatibility
     const upsertDocument = useCallback(async (id: string, doc: T): Promise<void> => {
         if (ditto && !isMockMode) {
+            setPendingChanges((prev) => prev + 1);
             try {
                 const dittoCollection = ditto.store.collection(dittoCollectionName);
                 await dittoCollection.upsert({ ...doc, _id: id } as unknown as Record<string, unknown>);
+                setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error upserting document:", err);
                 // Fall back to local update
@@ -305,7 +337,6 @@ export function useDittoSync<T extends DittoDocument>(
                         return [...prev, { ...doc, _id: id, id } as T];
                     }
                 });
-                setPendingChanges((prev) => prev + 1);
             }
         } else {
             setDocuments((prev) => {

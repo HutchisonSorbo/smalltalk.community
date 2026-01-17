@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { safeUrl } from "@/lib/utils";
 
 interface UserProfile {
     firstName?: string;
@@ -258,7 +259,7 @@ export default function DashboardPage() {
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         {membership.tenant.logoUrl ? (
                                                             <img
-                                                                src={membership.tenant.logoUrl}
+                                                                src={safeUrl(membership.tenant.logoUrl)}
                                                                 alt={membership.tenant.name}
                                                                 className="h-8 w-8 rounded object-cover"
                                                             />
