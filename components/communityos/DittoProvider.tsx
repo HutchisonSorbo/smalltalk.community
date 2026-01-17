@@ -201,11 +201,12 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
         return () => {
             if (cleanupFn) {
                 cleanupFn();
-            }
-            if (dittoRef.current) {
+                // cleanupFn returned by startSync handles stopSync internally
+            } else if (dittoRef.current) {
+                // Fallback only if no cleanupFn was returned
                 dittoRef.current.stopSync();
-                dittoRef.current = null;
             }
+            dittoRef.current = null;
         };
     }, [tenantId]);
 

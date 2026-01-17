@@ -66,7 +66,7 @@ function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; reset
                             },
                         });
                     } catch (err) {
-                        console.error("[AppContentLoader] Failed to load Sentry:", err);
+                        // Silent fallback - avoid leaking internals to console
                     }
                 };
                 logToSentry();

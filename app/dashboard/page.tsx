@@ -244,51 +244,54 @@ export default function DashboardPage() {
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-3">
-                                        {tenantMemberships.map((membership) => (
-                                            <Link
-                                                key={membership.tenant.id}
-                                                href={`/communityos/${membership.tenant.code}/dashboard`}
-                                                className="block"
-                                            >
-                                                <div
-                                                    className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-accent transition-colors group"
-                                                    style={{
-                                                        borderColor: membership.tenant.primaryColor || undefined,
-                                                    }}
+                                        {tenantMemberships.map((membership) => {
+                                            const logoSrc = safeUrl(membership.tenant.logoUrl);
+                                            return (
+                                                <Link
+                                                    key={membership.tenant.id}
+                                                    href={`/communityos/${membership.tenant.code}/dashboard`}
+                                                    className="block"
                                                 >
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        {membership.tenant.logoUrl ? (
-                                                            <img
-                                                                src={safeUrl(membership.tenant.logoUrl)}
-                                                                alt={membership.tenant.name}
-                                                                className="h-8 w-8 rounded object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div
-                                                                className="h-8 w-8 rounded flex items-center justify-center text-white font-bold text-sm"
-                                                                style={{
-                                                                    backgroundColor: membership.tenant.primaryColor || "#6366f1"
-                                                                }}
-                                                            >
-                                                                {membership.tenant.name.charAt(0).toUpperCase()}
+                                                    <div
+                                                        className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-accent transition-colors group"
+                                                        style={{
+                                                            borderColor: membership.tenant.primaryColor || undefined,
+                                                        }}
+                                                    >
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            {logoSrc ? (
+                                                                <img
+                                                                    src={logoSrc}
+                                                                    alt={membership.tenant.name}
+                                                                    className="h-8 w-8 rounded object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div
+                                                                    className="h-8 w-8 rounded flex items-center justify-center text-white font-bold text-sm"
+                                                                    style={{
+                                                                        backgroundColor: membership.tenant.primaryColor || "#6366f1"
+                                                                    }}
+                                                                >
+                                                                    {membership.tenant.name.charAt(0).toUpperCase()}
+                                                                </div>
+                                                            )}
+                                                            <div className="min-w-0">
+                                                                <p className="font-medium text-sm truncate">
+                                                                    {membership.tenant.name}
+                                                                </p>
+                                                                <Badge
+                                                                    variant={getRoleBadgeVariant(membership.role)}
+                                                                    className="mt-1 capitalize text-xs"
+                                                                >
+                                                                    {membership.role}
+                                                                </Badge>
                                                             </div>
-                                                        )}
-                                                        <div className="min-w-0">
-                                                            <p className="font-medium text-sm truncate">
-                                                                {membership.tenant.name}
-                                                            </p>
-                                                            <Badge
-                                                                variant={getRoleBadgeVariant(membership.role)}
-                                                                className="mt-1 capitalize text-xs"
-                                                            >
-                                                                {membership.role}
-                                                            </Badge>
                                                         </div>
+                                                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                                                     </div>
-                                                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                                                </div>
-                                            </Link>
-                                        ))}
+                                                </Link>
+                                            );
+                                        })}
                                     </CardContent>
                                 </Card>
                             )}

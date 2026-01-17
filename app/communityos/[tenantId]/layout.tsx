@@ -3,6 +3,7 @@
  * Wraps all tenant pages with TenantProvider and handles tenant verification
  */
 
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import * as Sentry from "@sentry/nextjs";
 import { TenantProviders } from "@/components/communityos/TenantProviders";
@@ -104,7 +105,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                             <nav aria-label="Breadcrumb" className="hidden border-l border-gray-200 pl-4 sm:block dark:border-gray-700">
                                 <ol className="flex items-center space-x-2 text-sm text-gray-500">
                                     <li>
-                                        <a href="/dashboard" className="hover:text-gray-900 dark:hover:text-white">Dashboard</a>
+                                        <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-white">Dashboard</Link>
                                     </li>
                                     <li aria-hidden="true">/</li>
                                     <li className="font-medium text-gray-900 dark:text-white truncate max-w-[100px] md:max-w-xs">
@@ -115,18 +116,18 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                         </div>
 
                         <nav className="flex items-center gap-6">
-                            <a
+                            <Link
                                 href={`/communityos/${tenantCode}/dashboard`}
                                 className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
                             >
                                 Home
-                            </a>
-                            <a
+                            </Link>
+                            <Link
                                 href="/dashboard"
                                 className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
                             >
                                 Switch Organisation
-                            </a>
+                            </Link>
                         </nav>
                     </div>
                 </header>

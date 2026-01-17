@@ -87,29 +87,6 @@ export function useDittoSync<T extends DittoDocument>(
     // Storage key for localStorage fallback
     const storageKey = tenantId ? `ditto:${tenantId}:${collection}` : undefined;
 
-    // Initialize data source (Ditto or localStorage)
-    useEffect(() => {
-        // Wait for Ditto to initialize
-        if (!dittoInitialized) return;
-
-        if (ditto && !dittoError) {
-            // Real Ditto mode - set up subscription and observer
-            initDittoSync();
-        } else {
-            // Mock mode - load from localStorage
-            loadFromLocalStorage();
-        }
-
-        return () => {
-            // Cleanup subscriptions
-            if (subscriptionRef.current) {
-                subscriptionRef.current.cancel();
-            }
-            if (observerRef.current) {
-                observerRef.current.cancel();
-            }
-        };
-    }, [dittoInitialized, ditto, dittoError, dittoCollectionName, storageKey]);
 
     /**
      * Load documents from localStorage (fallback mode)
@@ -239,11 +216,11 @@ export function useDittoSync<T extends DittoDocument>(
                 setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error inserting document:", err);
+                // Decrement pending changes on error
+                setPendingChanges((prev) => Math.max(0, prev - 1));
+
                 // Still update local state on error for offline-first experience
                 setDocuments((prev) => [...prev, newDoc]);
-                // Keep pending if you want it to retry, or decrement if error is terminal.
-                // For now, aligning with "Correctly decrement pendingChanges" by ensuring 
-                // we don't just increment indefinitely on success.
             }
         } else {
             setDocuments((prev) => [...prev, newDoc]);
@@ -266,6 +243,9 @@ export function useDittoSync<T extends DittoDocument>(
                 setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error updating document:", err);
+                // Decrement pending changes on error
+                setPendingChanges((prev) => Math.max(0, prev - 1));
+
                 setDocuments((prev) =>
                     prev.map((doc) =>
                         (doc._id === id || doc.id === id) ? { ...doc, ...updates } : doc
@@ -291,6 +271,9 @@ export function useDittoSync<T extends DittoDocument>(
                 setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error removing document:", err);
+                // Decrement pending changes on error
+                setPendingChanges((prev) => Math.max(0, prev - 1));
+
                 setDocuments((prev) => prev.filter((doc) => doc._id !== id && doc.id !== id));
             }
         } else {
@@ -312,8 +295,9 @@ export function useDittoSync<T extends DittoDocument>(
             }).catch((err) => {
                 console.error("[useDittoSync] Error refreshing:", err);
             });
+
+            console.log("[useDittoSync] Refresh triggered");
         }
-        console.log("[useDittoSync] Refresh triggered");
     }, [ditto, isMockMode, dittoCollectionName]);
 
     // Upsert document (insert or update) - for CommunityOS app compatibility
@@ -326,6 +310,9 @@ export function useDittoSync<T extends DittoDocument>(
                 setPendingChanges((prev) => Math.max(0, prev - 1));
             } catch (err) {
                 console.error("[useDittoSync] Error upserting document:", err);
+                // Decrement pending changes on error
+                setPendingChanges((prev) => Math.max(0, prev - 1));
+
                 // Fall back to local update
                 setDocuments((prev) => {
                     const existingIndex = prev.findIndex((d) => d._id === id || d.id === id);
