@@ -20,12 +20,30 @@ interface Shift {
 }
 
 export function RosteringApp() {
-    const { tenant } = useTenant();
+    const { tenant, isLoading } = useTenant();
+
+    // Always call hooks unconditionally
     const { documents: shifts, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<Shift>(`${tenant?.id}:rostering_shifts`);
+        useDittoSync<Shift>({
+            collection: "rostering_shifts",
+            tenantId: tenant?.id || ""
+        });
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<Shift>>({});
+
+    // Guard against missing tenant
+    if (isLoading) {
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+    }
+
+    if (!tenant) {
+        return (
+            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
+                <p>Unable to load Rostering - Organisation context not available.</p>
+            </div>
+        );
+    }
 
     const handleSave = () => {
         if (formData.workerName && formData.startTime && formData.endTime) {

@@ -12,11 +12,19 @@ export const dynamic = 'force-dynamic'
 export default async function ContentPagesPage() {
     const payload = await getPayload({ config })
 
-    const pages = await payload.find({
-        collection: 'pages',
-        limit: 50,
-        sort: '-updatedAt',
-    })
+    let pages: any = { docs: [], totalDocs: 0 };
+    let error = null;
+
+    try {
+        pages = await payload.find({
+            collection: 'pages',
+            limit: 50,
+            sort: '-updatedAt',
+        });
+    } catch (err) {
+        console.error("Failed to fetch pages:", err);
+        error = err;
+    }
 
     return (
         <div className="flex-1 space-y-4 pt-2">
@@ -27,6 +35,7 @@ export default async function ContentPagesPage() {
                         Manage website pages and content
                     </p>
                 </div>
+
                 <Button asChild>
                     <Link href="/admin/content/pages/new">
                         <Plus className="mr-2 h-4 w-4" />
@@ -34,6 +43,19 @@ export default async function ContentPagesPage() {
                     </Link>
                 </Button>
             </div>
+
+            {error != null && (
+                <div className="rounded-md bg-red-50 p-4 border border-red-200" role="alert">
+                    <div className="flex">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800">Error loading pages</h3>
+                            <div className="mt-2 text-sm text-red-700">
+                                <p>There was a problem connecting to the CMS. Please try again later.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {pages.docs.length === 0 ? (
                 <Card>

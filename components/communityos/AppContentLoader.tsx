@@ -7,6 +7,7 @@
  */
 
 import dynamic from "next/dynamic";
+import { ErrorBoundary } from "react-error-boundary";
 import { communityOSApps } from "./AppLauncher";
 
 // Loading skeleton for apps
@@ -32,7 +33,32 @@ function AppLoadingSkeleton() {
     );
 }
 
-// Dynamic imports for apps - loaded client-side with code splitting
+// Error Fallback Component
+function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErrorBoundary: () => void }) {
+    // Log the error securely (dev only)
+    if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
+        console.error("AppContentLoader Error:", error);
+    }
+
+    return (
+        <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/50 dark:bg-red-900/20">
+            <h3 className="mb-2 text-lg font-semibold text-red-800 dark:text-red-200">
+                Failed to load application
+            </h3>
+            <p className="mb-4 max-w-md text-sm text-red-600 dark:text-red-300">
+                An unexpected error occurred. Please try refreshing the page.
+            </p>
+            <button
+                type="button"
+                onClick={resetErrorBoundary}
+                className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
+            >
+                Try again
+            </button>
+        </div>
+    );
+}
+
 const CRMApp = dynamic(
     () => import("./apps/CRMApp").then((m) => ({ default: m.CRMApp })),
     { loading: () => <AppLoadingSkeleton />, ssr: false }
@@ -86,32 +112,40 @@ function deriveItemType(appName: string, explicitItemType?: string): string {
  * GenericCommunityApp for other registered apps.
  *
  * @param props - The component props conforming to {@link AppContentLoaderProps}
- * @param props.appId - The unique identifier of the app to render (e.g., "crm", "rostering", "assets")
- * @returns A React.ReactElement containing the rendered app component, or null if the appId is not found
- */
+                    * @param props.appId - The unique identifier of the app to render (e.g., "crm", "rostering", "assets")
+                    * @returns A React.ReactElement containing the rendered app component, or null if the appId is not found
+                    */
 export function AppContentLoader({ appId }: AppContentLoaderProps): React.ReactElement | null {
-    switch (appId) {
-        case "crm":
-            return <CRMApp />;
-        case "rostering":
-            return <RosteringApp />;
-        case "assets":
-        case "inventory":
-            return <InventoryApp />;
-        default: {
-            // Use GenericCommunityApp for all other apps
-            const app = communityOSApps.find((a) => a.id === appId);
-            if (!app) return null;
-            return (
-                <GenericCommunityApp
-                    appId={appId}
-                    title={app.name}
-                    description={app.description}
-                    placeholder={`No ${app.name.toLowerCase()} items found yet.`}
-                    itemType={deriveItemType(app.name, app.itemType)}
-                />
-            );
+    const renderContent = () => {
+        switch (appId) {
+            case "crm":
+                return <CRMApp />;
+            case "rostering":
+                return <RosteringApp />;
+            case "assets":
+            case "inventory":
+                return <InventoryApp />;
+            default: {
+                // Use GenericCommunityApp for all other apps
+                const app = communityOSApps.find((a) => a.id === appId);
+                if (!app) return null;
+                return (
+                    <GenericCommunityApp
+                        appId={appId}
+                        title={app.name}
+                        description={app.description}
+                        placeholder={`No ${app.name.toLowerCase()} items found yet.`}
+                        itemType={deriveItemType(app.name, app.itemType)}
+                    />
+                );
+            }
         }
-    }
+    };
+
+    return (
+        <ErrorBoundary FallbackComponent={AppErrorFallback}>
+            {renderContent()}
+        </ErrorBoundary>
+    );
 }
 

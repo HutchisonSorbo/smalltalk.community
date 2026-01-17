@@ -31,12 +31,30 @@ export function GenericCommunityApp({
     placeholder: string;
     itemType?: string;
 }) {
-    const { tenant } = useTenant();
+    const { tenant, isLoading } = useTenant();
+
+    // Always call hooks unconditionally
     const { documents: items, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<GenericItem>(`${tenant?.id}:${appId}_data`);
+        useDittoSync<GenericItem>({
+            collection: `${appId}_data`,
+            tenantId: tenant?.id || ""
+        });
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<GenericItem>>({});
+
+    // Guard against missing tenant
+    if (isLoading) {
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+    }
+
+    if (!tenant) {
+        return (
+            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
+                <p>Unable to load {title} - Organisation context not available.</p>
+            </div>
+        );
+    }
 
     const handleSave = () => {
         if (formData.title) {
@@ -96,6 +114,8 @@ export function GenericCommunityApp({
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                             <textarea
+                                title="Description"
+                                placeholder="Enter description"
                                 value={formData.description || ""}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 rows={3}

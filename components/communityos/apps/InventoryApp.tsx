@@ -21,12 +21,30 @@ interface InventoryItem {
 }
 
 export function InventoryApp() {
-    const { tenant } = useTenant();
-    const { documents: items, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<InventoryItem>(`${tenant?.id}:inventory_items`);
+    const { tenant, isLoading } = useTenant();
 
-    const [isEditing, setIsEditing] = useState<string | null>(null);
+    // Always call hooks unconditionally
+    const { documents: items, upsertDocument, deleteDocument, isOnline } =
+        useDittoSync<InventoryItem>({
+            collection: "inventory_items",
+            tenantId: tenant?.id || ""
+        });
+
+    const [isEditing, setIsEditing] = useState<string | null>(null); // Reverted to original type to maintain functionality
     const [formData, setFormData] = useState<Partial<InventoryItem>>({});
+
+    // Guard against missing tenant
+    if (isLoading) {
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+    }
+
+    if (!tenant) {
+        return (
+            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
+                <p>Unable to load Inventory - Organisation context not available.</p>
+            </div>
+        );
+    }
 
     const handleSave = () => {
         if (formData.name && formData.quantity !== undefined) {

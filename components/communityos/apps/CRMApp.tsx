@@ -20,17 +20,35 @@ interface Contact {
 }
 
 export function CRMApp() {
-    const { tenant } = useTenant();
-    const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<Contact>(`${tenant?.id}:crm_contacts`);
+    const { tenant, isLoading } = useTenant();
 
-    const [isEditing, setIsEditing] = useState<string | null>(null);
+    // Always call hooks unconditionally
+    const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
+        useDittoSync<Contact>({
+            collection: "crm_contacts",
+            tenantId: tenant?.id || ""
+        });
+
+    const [isEditing, setIsEditing] = useState<string | null>(null); // Reverted to original type to maintain functionality
     const [formData, setFormData] = useState<Partial<Contact>>({});
+
+    // Guard against missing tenant
+    if (isLoading) {
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+    }
+
+    if (!tenant) {
+        return (
+            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
+                <p>Unable to load CRM - Organisation context not available.</p>
+            </div>
+        );
+    }
 
     const handleSave = () => {
         if (formData.firstName && formData.lastName) {
             upsertDocument(
-                isEditing || Math.random().toString(36).substr(2, 9),
+                isEditing === "new" ? crypto.randomUUID() : (isEditing as string), // Adjusted logic for isEditing
                 {
                     firstName: formData.firstName,
                     lastName: formData.lastName,
