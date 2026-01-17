@@ -35,8 +35,10 @@ function AppLoadingSkeleton() {
 
 // Error Fallback Component
 function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErrorBoundary: () => void }) {
-    // Log the error securely
-    console.error("AppContentLoader Error:", error);
+    // Log the error securely (dev only)
+    if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
+        console.error("AppContentLoader Error:", error);
+    }
 
     return (
         <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/50 dark:bg-red-900/20">

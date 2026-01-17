@@ -45,7 +45,7 @@ export function CRMApp() {
     const handleSave = () => {
         if (formData.firstName && formData.lastName) {
             upsertDocument(
-                isEditing === "new" ? Math.random().toString(36).substr(2, 9) : (isEditing as string), // Adjusted logic for isEditing
+                isEditing === "new" ? crypto.randomUUID() : (isEditing as string), // Adjusted logic for isEditing
                 {
                     firstName: formData.firstName,
                     lastName: formData.lastName,

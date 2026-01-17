@@ -19,7 +19,7 @@ Comprehensive testing completed for authentication, admin panel, public apps, an
 - ✅ **User Dashboard**: Core features working
 - ⚠️ **Admin Panel**: 4 critical issues (504 timeouts, Payload CMS errors)
 - ❌ **Password Reset**: Blocked by captcha error
-- ⚠️ **CommunityOS**: Inaccessible for organisation accounts without tenant setup (`white-label configuration`)ck Stats
+- ⚠️ **CommunityOS**: Inaccessible for organisation accounts without tenant setup (`white-label configuration`).
 
 | Metric | Value |
 |--------|-------|
@@ -371,11 +371,7 @@ import Link from 'next/link';
 
 --- **Captcha**: Implemented Turnstile on `forgot-password` endpoint.
 
-- *Recommendation*: Ensure `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is present in all environments. Added safe fallback to empty string to prevent crashes if missing.
-
-## Post-Testing Cleanup Required
-
-- [ ] Revert `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to production key in Vercel
+- *Recommendation> **Note:** The `NEXT_PUBLIC_TURNSTILE_SITE_KEY` environment variable is required for production. The application now falls back to an empty string (`""`) if this key is missing to prevent insecure defaults and silent failures (both in Login and Password Reset flows). Ensure this variable is set in Vercel.
 - [ ] Revert Supabase Turnstile secret key to production key
 - [ ] Consider revoking admin access for test user `winomor358@mustaer.com`
 - [ ] Remove test data if created
