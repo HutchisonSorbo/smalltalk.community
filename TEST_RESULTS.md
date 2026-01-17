@@ -369,7 +369,9 @@ import Link from 'next/link';
 | `app/settings/page.tsx` | ERR015 | Medium |
 | `public/favicon.ico` | ERR001 | Low |
 
---- **Captcha**: Implemented Turnstile on `forgot-password` endpoint.
+### Captcha
+
+Implemented Turnstile on `forgot-password` endpoint. Note: the `NEXT_PUBLIC_TURNSTILE_SITE_KEY` environment variable is required for production.
 
 - *Recommendation> **Note:** The `NEXT_PUBLIC_TURNSTILE_SITE_KEY` environment variable is required for production. The application now falls back to an empty string (`""`) if this key is missing to prevent insecure defaults and silent failures (both in Login and Password Reset flows). Ensure this variable is set in Vercel.
 - [ ] Revert Supabase Turnstile secret key to production key

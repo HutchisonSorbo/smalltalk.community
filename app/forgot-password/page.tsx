@@ -35,8 +35,8 @@ export default function ForgotPasswordPage() {
             return;
         }
 
-        if (!captchaToken) {
-            setError("Please complete the captcha verification");
+        if (!isDevelopment && !captchaToken) {
+            setError("Please complete the security check.");
             return;
         }
 
@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password`,
-                captchaToken,
+                captchaToken: captchaToken || undefined,
             });
 
             if (error) {
