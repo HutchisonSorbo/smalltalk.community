@@ -9,6 +9,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
+import { useDittoStore } from "@/lib/store/ditto-store";
 
 // Ditto SDK types (imported conditionally to handle SSR)
 type DittoInstance = {
@@ -74,9 +75,19 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
     const [peerCount, setPeerCount] = useState(0);
     const initializingRef = useRef(false);
     const dittoRef = useRef<DittoInstance | null>(null);
+    const isMounted = useRef(true);
+
+    const {
+        setSyncing,
+        setInitialized,
+        setLocalOnline,
+        isSyncing: storeIsSyncing,
+        isInitialized: storeIsInitialized
+    } = useDittoStore();
 
     // Initialize Ditto SDK
     useEffect(() => {
+        isMounted.current = true;
         // Skip on server side
         if (typeof window === "undefined") return;
 
@@ -129,7 +140,10 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
                                             currentSession.access_token,
                                             "supabase"
                                         );
-                                        setIsSyncing(true);
+                                        if (isMounted.current) {
+                                            setIsSyncing(true);
+                                            setSyncing(true);
+                                        }
                                     } else {
                                         console.error("[DittoProvider] No session for auth");
                                         authenticator.logout();
@@ -168,18 +182,28 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
                     });
 
                     // Listen for online/offline status
-                    const handleOnline = () => setIsOnline(true);
-                    const handleOffline = () => setIsOnline(false);
+                    const handleOnline = () => {
+                        setIsOnline(true);
+                        setLocalOnline(true);
+                    };
+                    const handleOffline = () => {
+                        setIsOnline(false);
+                        setLocalOnline(false);
+                    };
                     window.addEventListener("online", handleOnline);
                     window.addEventListener("offline", handleOffline);
-                    setIsOnline(navigator.onLine);
+                    const isOnlineNav = typeof navigator !== "undefined" ? navigator.onLine : true;
+                    setIsOnline(isOnlineNav);
+                    setLocalOnline(isOnlineNav);
 
-                    dittoRef.current = dittoInstance as unknown as DittoInstance;
-                    setDitto(dittoInstance as unknown as DittoInstance);
-                    setIsInitialized(true);
-                    setError(null);
-
-                    console.log("[DittoProvider] Ditto initialized successfully for tenant:", tenantId);
+                    if (isMounted.current) {
+                        dittoRef.current = dittoInstance as unknown as DittoInstance;
+                        setDitto(dittoInstance as unknown as DittoInstance);
+                        setIsInitialized(true);
+                        setInitialized(true);
+                        setError(null);
+                        console.log("[DittoProvider] Ditto initialized successfully for tenant:", tenantId);
+                    }
 
                     // Return cleanup function
                     return () => {
@@ -199,16 +223,44 @@ export function DittoProvider({ children, tenantId }: DittoProviderProps) {
         initDitto();
 
         return () => {
-            if (cleanupFn) {
-                cleanupFn();
-                // cleanupFn returned by startSync handles stopSync internally
-            } else if (dittoRef.current) {
-                // Fallback only if no cleanupFn was returned
+            if (isMounted.current && dittoRef.current) {
                 dittoRef.current.stopSync();
+                dittoRef.current = null;
             }
-            dittoRef.current = null;
+            if (isMounted.current) {
+                setIsInitialized(false);
+                setInitialized(false);
+                initializingRef.current = false;
+            }
+            isMounted.current = false;
         };
-    }, [tenantId]);
+    }, [tenantId, setInitialized, setLocalOnline, setInitialized, setSyncing]);
+
+    // Handle authentication changes
+    useEffect(() => {
+        const supabase = createClient();
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+            if (event === 'SIGNED_OUT') {
+                // Reset Ditto on sign out
+                if (dittoRef.current) {
+                    dittoRef.current.stopSync();
+                    dittoRef.current = null;
+                }
+                if (isMounted.current) {
+                    setIsInitialized(false);
+                    setInitialized(false);
+                    initializingRef.current = false;
+                }
+            } else if (event === 'SIGNED_IN') {
+                // Unlock initialization on sign in
+                initializingRef.current = false;
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [setInitialized]);
 
     const value: DittoContextValue = {
         ditto,

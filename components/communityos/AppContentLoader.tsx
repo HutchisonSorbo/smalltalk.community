@@ -87,14 +87,14 @@ function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; reset
                 <button
                     type="button"
                     onClick={resetErrorBoundary}
-                    className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
+                    className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 transition-all dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
                 >
                     Try again
                 </button>
                 <button
                     type="button"
                     onClick={() => router.push("/dashboard")}
-                    className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                    className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-all dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 >
                     Go to Dashboard
                 </button>

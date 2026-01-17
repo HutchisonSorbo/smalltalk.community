@@ -594,6 +594,22 @@ export const gigsRelations = relations(gigs, ({ one, many }) => ({
   managers: many(gigManagers),
 }));
 
+// CommunityOS Shared Types
+export type CommunityOsRole = "admin" | "board" | "member";
+
+export interface TenantWithMembership {
+  tenant: {
+    id: string;
+    code: string;
+    name: string;
+    logoUrl: string | null;
+    primaryColor: string | null;
+    description: string | null;
+  };
+  role: CommunityOsRole;
+  joinedAt: string;
+}
+
 export const gigManagersRelations = relations(gigManagers, ({ one }) => ({
   gig: one(gigs, {
     fields: [gigManagers.gigId],

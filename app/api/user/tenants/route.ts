@@ -20,8 +20,8 @@ const corsHeaders = {
 };
 
 /**
- * OPTIONS /api/user/tenants
- * Handles CORS preflight requests
+ * Handle OPTIONS requests for CORS preflight
+ * @returns {Promise<NextResponse>} 204 response with CORS headers
  */
 export async function OPTIONS() {
     return new NextResponse(null, {
@@ -31,8 +31,9 @@ export async function OPTIONS() {
 }
 
 /**
- * GET /api/user/tenants
- * Returns an array of tenant memberships for the authenticated user
+ * Fetch all tenant memberships for the authenticated user
+ * @param {NextRequest} req - The incoming request object
+ * @returns {Promise<NextResponse>} JSON response with valid tenant memberships or error
  */
 export async function GET(req: NextRequest) {
     try {
