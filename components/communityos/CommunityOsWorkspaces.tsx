@@ -51,10 +51,9 @@ export function CommunityOsWorkspaces({ memberships }: CommunityOsWorkspacesProp
                                     />
                                 ) : (
                                     <div
-                                        className="h-10 w-10 rounded flex items-center justify-center text-white font-bold"
-                                        style={{
-                                            backgroundColor: membership.tenant.primaryColor || "#6366f1"
-                                        }}
+                                        className="h-10 w-10 rounded flex items-center justify-center text-white font-bold bg-[var(--tenant-color,#6366f1)]"
+                                        // Dynamic color from tenant data - CSS custom property allows theming
+                                        {...{ style: { '--tenant-color': membership.tenant.primaryColor } as React.CSSProperties }}
                                     >
                                         {membership.tenant.name.charAt(0).toUpperCase()}
                                     </div>
