@@ -24,7 +24,10 @@ export function CRMApp() {
 
     // Always call hooks unconditionally
     const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<Contact>(tenant?.id ? `${tenant.id}:crm_contacts` : "");
+        useDittoSync<Contact>({
+            collection: "crm_contacts",
+            tenantId: tenant?.id || ""
+        });
 
     const [isEditing, setIsEditing] = useState<string | null>(null); // Reverted to original type to maintain functionality
     const [formData, setFormData] = useState<Partial<Contact>>({});

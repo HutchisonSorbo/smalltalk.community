@@ -22,6 +22,8 @@ export default function ForgotPasswordPage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const isDevelopment = process.env.NODE_ENV === "development";
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -143,19 +145,30 @@ export default function ForgotPasswordPage() {
                             )}
                         </div>
                         <div className="flex justify-center">
-                            <Turnstile
-                                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
-                                onSuccess={setCaptchaToken}
-                                onError={() => {
-                                    setCaptchaToken(null);
-                                    setError("Captcha verification failed.");
-                                }}
-                                onExpire={() => setCaptchaToken(null)}
-                            />
+                            {!isDevelopment && (
+                                <div className="flex justify-center flex-col items-center gap-2">
+                                    {!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
+                                        <div className="w-full rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
+                                            <p className="font-semibold">Configuration Error</p>
+                                            <p>Turnstile site key missing: contact admin / check .env</p>
+                                        </div>
+                                    ) : (
+                                        <Turnstile
+                                            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                                            onSuccess={(token) => setCaptchaToken(token)}
+                                            onError={() => {
+                                                setCaptchaToken(null);
+                                                setError("Captcha verification failed.");
+                                            }}
+                                            onExpire={() => setCaptchaToken(null)}
+                                        />
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button className="w-full" type="submit" disabled={isLoading || !captchaToken}>
+                        <Button className="w-full" type="submit" disabled={isLoading || (!isDevelopment && !captchaToken)}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Send Reset Link
                         </Button>

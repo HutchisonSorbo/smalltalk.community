@@ -25,7 +25,10 @@ export function InventoryApp() {
 
     // Always call hooks unconditionally
     const { documents: items, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<InventoryItem>(tenant?.id ? `${tenant.id}:inventory_items` : "");
+        useDittoSync<InventoryItem>({
+            collection: "inventory_items",
+            tenantId: tenant?.id || ""
+        });
 
     const [isEditing, setIsEditing] = useState<string | null>(null); // Reverted to original type to maintain functionality
     const [formData, setFormData] = useState<Partial<InventoryItem>>({});

@@ -35,7 +35,10 @@ export function GenericCommunityApp({
 
     // Always call hooks unconditionally
     const { documents: items, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<GenericItem>(tenant?.id ? `${tenant.id}:${appId}_data` : "");
+        useDittoSync<GenericItem>({
+            collection: `${appId}_data`,
+            tenantId: tenant?.id || ""
+        });
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<GenericItem>>({});

@@ -27,7 +27,7 @@ Comprehensive testing completed for authentication, admin panel, public apps, an
 | Passed | 52 |
 | Failed | 8 |
 | Blocked | 0 (resolved) |
-| Critical Issues | 5 |
+| Critical Issues | 7 |
 | Medium Issues | 6 |
 | Low Issues | 3 |
 

@@ -24,7 +24,10 @@ export function RosteringApp() {
 
     // Always call hooks unconditionally
     const { documents: shifts, upsertDocument, deleteDocument, isOnline } =
-        useDittoSync<Shift>(tenant?.id ? `${tenant.id}:rostering_shifts` : "");
+        useDittoSync<Shift>({
+            collection: "rostering_shifts",
+            tenantId: tenant?.id || ""
+        });
 
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<Shift>>({});

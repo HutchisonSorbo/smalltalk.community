@@ -364,20 +364,27 @@ function LoginForm() {
                         )}
                         {/* Turnstile captcha - hidden in development mode for testing */}
                         {!isDevelopment && (
-                            <div className="flex justify-center">
-                                <Turnstile
-                                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
-                                    onSuccess={(token) => setCaptchaToken(token)}
-                                    onError={() => {
-                                        setCaptchaToken(null);
-                                        toast({
-                                            title: "Security Check Failed",
-                                            description: "Please disable adblockers or try a different network.",
-                                            variant: "destructive"
-                                        });
-                                    }}
-                                    onExpire={() => setCaptchaToken(null)}
-                                />
+                            <div className="flex justify-center flex-col items-center gap-2">
+                                {!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
+                                    <div className="w-full rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
+                                        <p className="font-semibold">Configuration Error</p>
+                                        <p>Turnstile site key missing: contact admin / check .env</p>
+                                    </div>
+                                ) : (
+                                    <Turnstile
+                                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                                        onSuccess={(token) => setCaptchaToken(token)}
+                                        onError={() => {
+                                            setCaptchaToken(null);
+                                            toast({
+                                                title: "Security Check Failed",
+                                                description: "Please disable adblockers or try a different network.",
+                                                variant: "destructive"
+                                            });
+                                        }}
+                                        onExpire={() => setCaptchaToken(null)}
+                                    />
+                                )}
                             </div>
                         )}
                         {isDevelopment && (
