@@ -113,17 +113,27 @@ export function CommunityInsightsAI({
 
             const data = await response.json();
 
-            const assistantMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                role: "assistant",
-                content: data.insights,
-                demographics: data.demographics,
-                amenities: data.amenities,
-                sources: data.sources,
-                isAIUnavailable: data.isAIUnavailable || false,
-            };
-
-            setMessages((prev) => [...prev, assistantMessage]);
+            // Handle AI unavailable state with a friendly message
+            if (data.isAIUnavailable) {
+                const assistantMessage: Message = {
+                    id: (Date.now() + 1).toString(),
+                    role: "assistant",
+                    content: data.insights || "AI-powered analysis is currently being configured. This feature will be available soon!",
+                    isAIUnavailable: true,
+                };
+                setMessages((prev) => [...prev, assistantMessage]);
+            } else {
+                const assistantMessage: Message = {
+                    id: (Date.now() + 1).toString(),
+                    role: "assistant",
+                    content: data.insights,
+                    demographics: data.demographics,
+                    amenities: data.amenities,
+                    sources: data.sources,
+                    isAIUnavailable: false,
+                };
+                setMessages((prev) => [...prev, assistantMessage]);
+            }
         } catch (err) {
             if (err instanceof Error && err.name === 'AbortError') {
                 setError("Request timed out. The AI service is taking too long to respond. Please try again.");
@@ -207,9 +217,16 @@ export function CommunityInsightsAI({
                         <div
                             className={`max-w-[80%] rounded-lg px-4 py-2 ${msg.role === "user"
                                 ? "bg-primary text-white"
-                                : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
+                                : msg.isAIUnavailable
+                                    ? "bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800"
+                                    : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
                                 }`}
                         >
+                            {msg.isAIUnavailable && (
+                                <p className="mb-1 flex items-center gap-1 text-xs font-medium opacity-80">
+                                    <span aria-hidden="true">⚙️</span> Configuration Notice
+                                </p>
+                            )}
                             <p className="whitespace-pre-wrap">{msg.content}</p>
                             {msg.sources && (msg.sources.demographics || msg.sources.amenities) && (
                                 <p className="mt-2 text-xs opacity-70">

@@ -240,17 +240,45 @@ export default function DashboardPage() {
 
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Quick Actions</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <span aria-hidden="true">⚡</span>
+                                        Quick Actions
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Frequently used shortcuts
+                                    </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-2">
-                                    <Button variant="outline" className="w-full justify-start" asChild>
-                                        <Link href="/local-music-network">Local Music Network</Link>
+                                    {/* CommunityOS shortcut - shown first when user has tenant access */}
+                                    {tenantMemberships.length > 0 && (() => {
+                                        // Sanitize tenant code to prevent path traversal
+                                        const sanitizedCode = encodeURIComponent(tenantMemberships[0].tenant.code || '');
+                                        return (
+                                            <Button variant="default" className="w-full justify-start gap-2" asChild>
+                                                <Link href={`/communityos/${sanitizedCode}/dashboard`}>
+                                                    <Building2 className="h-4 w-4" />
+                                                    CommunityOS Dashboard
+                                                </Link>
+                                            </Button>
+                                        );
+                                    })()}
+                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                                        <Link href="/local-music-network">
+                                            <span aria-hidden="true">🎵</span>
+                                            Local Music Network
+                                        </Link>
                                     </Button>
-                                    <Button variant="outline" className="w-full justify-start" asChild>
-                                        <Link href="/volunteer-passport">Volunteer Passport</Link>
+                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                                        <Link href="/volunteer-passport">
+                                            <span aria-hidden="true">🤝</span>
+                                            Volunteer Passport
+                                        </Link>
                                     </Button>
-                                    <Button variant="outline" className="w-full justify-start" asChild>
-                                        <Link href="/settings">Account Settings</Link>
+                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                                        <Link href="/settings">
+                                            <User className="h-4 w-4" />
+                                            Account Settings
+                                        </Link>
                                     </Button>
                                 </CardContent>
                             </Card>
