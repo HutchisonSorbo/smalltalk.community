@@ -250,14 +250,18 @@ export default function DashboardPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-2">
                                     {/* CommunityOS shortcut - shown first when user has tenant access */}
-                                    {tenantMemberships.length > 0 && (
-                                        <Button variant="default" className="w-full justify-start gap-2" asChild>
-                                            <Link href={`/communityos/${tenantMemberships[0].tenant.code}/dashboard`}>
-                                                <Building2 className="h-4 w-4" />
-                                                CommunityOS Dashboard
-                                            </Link>
-                                        </Button>
-                                    )}
+                                    {tenantMemberships.length > 0 && (() => {
+                                        // Sanitize tenant code to prevent path traversal
+                                        const sanitizedCode = encodeURIComponent(tenantMemberships[0].tenant.code || '');
+                                        return (
+                                            <Button variant="default" className="w-full justify-start gap-2" asChild>
+                                                <Link href={`/communityos/${sanitizedCode}/dashboard`}>
+                                                    <Building2 className="h-4 w-4" />
+                                                    CommunityOS Dashboard
+                                                </Link>
+                                            </Button>
+                                        );
+                                    })()}
                                     <Button variant="outline" className="w-full justify-start gap-2" asChild>
                                         <Link href="/local-music-network">
                                             <span aria-hidden="true">🎵</span>

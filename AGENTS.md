@@ -2,7 +2,7 @@
 
 **Project:** smalltalk.community
 **Type:** Multi-Age Community Platform
-**Last Updated:** 2 January 2026
+**Last Updated:** 18 January 2026
 
 > **⚠️ MANDATORY**: Read [DEVELOPMENT_STANDARDS.md](./DEVELOPMENT_STANDARDS.md) before ANY code changes.
 
