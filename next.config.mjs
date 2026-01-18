@@ -2,8 +2,34 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Use standalone output for optimized Vercel deployment
+    output: 'standalone',
 
-    serverExternalPackages: ['mysql2', 'drizzle-kit', '@dittolive/ditto'],
+    // External packages excluded from serverless function bundling to stay under 250MB limit
+    // These packages are large and/or contain native binaries that shouldn't be bundled
+    serverExternalPackages: [
+        // Database and ORM
+        'mysql2',
+        'drizzle-kit',
+        'postgres',
+        'pg',
+
+        // P2P/Native packages
+        '@dittolive/ditto',
+
+        // Payload CMS and dependencies (188MB combined)
+        'payload',
+        '@payloadcms/db-postgres',
+        '@payloadcms/richtext-lexical',
+        '@payloadcms/next',
+        '@payloadcms/drizzle',
+        '@payloadcms/graphql',
+        '@payloadcms/ui',
+        '@payloadcms/translations',
+
+        // Image processing
+        'sharp',
+    ],
     typescript: {
         ignoreBuildErrors: false, // Ensure we still catch TS errors
     },
