@@ -116,53 +116,30 @@ smalltalk.community/
 
 ## Key Files and Their Purposes
 
-### Security and Standards
+### Security and Technical Standards
 
-**SECURITY_SAFETY_STANDARDS.md**
+**DEVELOPMENT_STANDARDS.md** (Primary Reference)
 
 - Victorian Child Safe Standards compliance requirements
-- Age verification and parental consent implementation
+- Required SDK versions and imports (`@google/genai`)
+- Vercel Serverless Functions structure
+- Supabase client configuration and RLS policies
 - Multi-layered content moderation system
-- Reporting and incident response procedures
-- Parent/guardian control features
 - Authentication and session security
 - Rate limiting implementation
-- Data privacy and protection (GDPR compliance)
 - Input validation and sanitisation
-- Performance optimization guidelines
-- Monitoring and alerting requirements
-
-**Key takeaways:**
-
-- Children under 13 require verified parental consent
-- Content moderation has three layers: keywords, PII, AI safety
-- Different age groups have different content visibility rules
-- Reports are prioritized: critical (1hr), high (4hr), medium (24hr), low (72hr)
-- All security events logged to audit_logs table
-
-### Technical Implementation
-
-**TECH_STACK_RULES.md**
-
-- Required SDK versions and imports
-- Vercel Serverless Functions structure
-- Supabase client configuration
-- Database schema definitions
-- Row Level Security (RLS) policies
-- Code style and naming conventions
 - Error handling patterns
-- File organization standards
-- AI model configuration
-- Testing requirements
-- Deployment procedures
+- Code style and naming conventions
 
 **Key takeaways:**
 
-- Use `@google/genai` (current SDK as of December 2025)
+- Minimum age is 13 years (no parental consent system)
+- Content moderation has three layers: keywords, PII, AI safety
+- Use `@google/genai` SDK only (NOT `@google/generative-ai`)
 - Vercel Functions are stateless, no Express needed
 - Supabase RLS enforces authorization at database level
-- Functions must handle CORS and validate all inputs
 - All async operations use async/await (no callbacks)
+- All security events logged to audit_logs table
 
 ### Database Schema
 
@@ -195,7 +172,7 @@ The platform uses PostgreSQL through Supabase with these core tables:
 - Complete audit trail for compliance
 - Fields: id, event_type, action, user_id, details, severity
 
-**All tables have RLS enabled** - policies in TECH_STACK_RULES.md
+**All tables have RLS enabled** - policies in DEVELOPMENT_STANDARDS.md
 
 ---
 
@@ -257,7 +234,7 @@ export default async function handler(req, res) {
 4. Create RLS policies for SELECT, INSERT, UPDATE, DELETE
 5. Add indexes for frequently queried columns
 6. Test policies with different user roles
-7. Document schema in TECH_STACK_RULES.md
+7. Document schema in DEVELOPMENT_STANDARDS.md
 
 ### Implementing Content Moderation
 
@@ -502,8 +479,8 @@ If a deployment causes issues:
 
 ### Before Starting Work
 
-1. Read SECURITY_SAFETY_STANDARDS.md
-2. Read TECH_STACK_RULES.md
+1. Read DEVELOPMENT_STANDARDS.md
+2. Read CLAUDE.md for quick reference
 3. Review relevant code files
 4. Check for existing similar implementations
 5. Verify all dependencies are current versions
@@ -539,10 +516,10 @@ If a deployment causes issues:
 ### Project Documentation
 
 - **README.md** - Project setup and overview
-- **SECURITY_SAFETY_STANDARDS.md** - Complete security requirements
-- **TECH_STACK_RULES.md** - Technical implementation guide
-- **design_guidelines.md** - UI/UX design standards
-- **VERCEL_DEPLOYMENT.md** - Deployment instructions
+- **DEVELOPMENT_STANDARDS.md** - Complete security and technical standards
+- **CLAUDE.md** - Quick reference for AI agents
+- **INCIDENT_RESPONSE.md** - Incident severity and procedures
+- **SECURITY.md** - Vulnerability reporting policy
 
 ### External Documentation
 
@@ -575,8 +552,8 @@ A multi-age community platform with strict safety requirements for protecting ch
 
 **Before any code changes:**
 
-- Read SECURITY_SAFETY_STANDARDS.md
-- Read TECH_STACK_RULES.md
+- Read DEVELOPMENT_STANDARDS.md
+- Read CLAUDE.md for quick reference
 - Review relevant existing code
 - Verify file paths and dependencies
 
@@ -597,6 +574,6 @@ A multi-age community platform with strict safety requirements for protecting ch
 
 ---
 
-**Last Updated:** 1 January 2026
+**Last Updated:** 18 January 2026
 **Maintained by:** Ryan Hutchison
 **Contact:** via GitHub issues in this repository
