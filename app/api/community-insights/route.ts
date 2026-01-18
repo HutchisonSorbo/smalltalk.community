@@ -99,12 +99,21 @@ export async function POST(request: NextRequest) {
         // Check for Gemini API key
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            // Return context without AI response if no API key
+            // Return helpful message with context data if available
+            const contextSummary = demographics
+                ? `Based on available data for ${demographics.locality} (${demographics.postcode}): Population: ${demographics.population.toLocaleString()}, Median Age: ${demographics.medianAge}`
+                : "No location data available.";
+
             return NextResponse.json({
                 query,
-                insights: "AI insights unavailable. Configure GEMINI_API_KEY.",
+                insights: `🔧 AI-powered analysis is currently being configured. ${contextSummary}\n\nPlease try again later for comprehensive AI insights, or check with your administrator about API configuration.`,
                 demographics: demographics ? formatDemographicsForResponse(demographics) : null,
                 amenities: amenities ? formatAmenitiesForResponse(amenities) : null,
+                sources: {
+                    demographics: demographics ? "ABS Census 2021" : null,
+                    amenities: amenities ? "OpenStreetMap" : null,
+                },
+                isAIUnavailable: true,
             });
         }
 

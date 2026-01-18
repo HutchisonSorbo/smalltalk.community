@@ -36,12 +36,9 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 </p>
             </section>
 
-            {/* App Launcher Grid */}
+            {/* Information Hub - Condensed with expand buttons at top */}
             <section>
-                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                    Apps
-                </h2>
-                <AppLauncher tenantCode={tenantId} searchable={false} grouped={false} />
+                <InformationHub tenantCode={tenantId} condensed={true} />
             </section>
 
             {/* Community Insights AI */}
@@ -52,9 +49,12 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 <CommunityInsightsAI />
             </section>
 
-            {/* Information Hub */}
+            {/* App Launcher Grid */}
             <section>
-                <InformationHub tenantCode={tenantId} />
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                    Apps
+                </h2>
+                <AppLauncher tenantCode={tenantId} searchable={false} grouped={false} />
             </section>
         </div>
     );

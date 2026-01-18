@@ -15,6 +15,7 @@ interface Message {
     demographics?: Record<string, unknown>;
     amenities?: Record<string, unknown>;
     sources?: { demographics: string | null; amenities: string | null };
+    isAIUnavailable?: boolean;
 }
 
 interface CommunityInsightsAIProps {
@@ -26,7 +27,7 @@ export function CommunityInsightsAI({
     defaultPostcode,
     defaultLocation,
 }: CommunityInsightsAIProps) {
-    const { tenant } = useTenant();
+    const { tenant, isLoading: tenantLoading } = useTenant();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +39,27 @@ export function CommunityInsightsAI({
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    // Handle missing tenant context
+    if (tenantLoading) {
+        return (
+            <div className="flex h-[300px] flex-col rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                <p className="mt-2 text-sm text-gray-500">Loading AI assistant...</p>
+            </div>
+        );
+    }
+
+    if (!tenant) {
+        return (
+            <div className="rounded-lg border bg-yellow-50 p-6 text-center dark:border-yellow-900/50 dark:bg-yellow-900/20">
+                <span className="text-2xl" aria-hidden="true">🤖</span>
+                <p className="mt-2 text-yellow-800 dark:text-yellow-200">
+                    Community Insights AI requires organisation context. Please access this from a CommunityOS dashboard.
+                </p>
+            </div>
+        );
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,6 +76,10 @@ export function CommunityInsightsAI({
         setIsLoading(true);
         setError(null);
 
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
         try {
             const response = await fetch("/api/community-insights", {
                 method: "POST",
@@ -64,11 +90,23 @@ export function CommunityInsightsAI({
                     postcode: postcode || undefined,
                     location: defaultLocation || undefined,
                 }),
+                signal: controller.signal,
             });
 
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error("Please log in to use Community Insights AI.");
+                }
+                if (response.status === 403) {
+                    throw new Error("You don't have permission to access this feature.");
+                }
                 if (response.status === 429) {
                     throw new Error("Rate limit exceeded. Please wait a moment and try again.");
+                }
+                if (response.status >= 500) {
+                    throw new Error("Service temporarily unavailable. Please try again later.");
                 }
                 throw new Error("Failed to get insights. Please try again.");
             }
@@ -82,11 +120,16 @@ export function CommunityInsightsAI({
                 demographics: data.demographics,
                 amenities: data.amenities,
                 sources: data.sources,
+                isAIUnavailable: data.isAIUnavailable || false,
             };
 
             setMessages((prev) => [...prev, assistantMessage]);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "An error occurred");
+            if (err instanceof Error && err.name === 'AbortError') {
+                setError("Request timed out. The AI service is taking too long to respond. Please try again.");
+            } else {
+                setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -100,7 +143,7 @@ export function CommunityInsightsAI({
     ];
 
     return (
-        <div className="flex h-[600px] flex-col rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex h-[400px] max-h-[60vh] flex-col rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
             {/* Header */}
             <div className="flex items-center gap-3 border-b p-4 dark:border-gray-700">
                 <span className="text-2xl">🤖</span>
@@ -145,6 +188,7 @@ export function CommunityInsightsAI({
                             {suggestedQuestions.map((q, i) => (
                                 <button
                                     key={i}
+                                    type="button"
                                     onClick={() => setInput(q)}
                                     className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                                 >
@@ -162,8 +206,8 @@ export function CommunityInsightsAI({
                     >
                         <div
                             className={`max-w-[80%] rounded-lg px-4 py-2 ${msg.role === "user"
-                                    ? "bg-primary text-white"
-                                    : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
+                                ? "bg-primary text-white"
+                                : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
                                 }`}
                         >
                             <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -190,7 +234,14 @@ export function CommunityInsightsAI({
 
                 {error && (
                     <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
-                        {error}
+                        <p>{error}</p>
+                        <button
+                            type="button"
+                            onClick={() => setError(null)}
+                            className="mt-2 text-xs underline hover:no-underline"
+                        >
+                            Dismiss
+                        </button>
                     </div>
                 )}
 

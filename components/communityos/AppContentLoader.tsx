@@ -7,6 +7,8 @@
  */
 
 import dynamic from "next/dynamic";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ErrorBoundary } from "react-error-boundary";
 import { communityOSApps } from "./AppLauncher";
 
@@ -33,12 +35,44 @@ function AppLoadingSkeleton() {
     );
 }
 
-// Error Fallback Component
-function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErrorBoundary: () => void }) {
-    // Log the error securely (dev only)
-    if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
-        console.error("AppContentLoader Error:", error);
-    }
+// Error Fallback Component with enhanced logging
+function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) {
+    const router = useRouter();
+    // Use a stable error code for the lifetime of this component instance
+    const errorCodeRef = useRef(`ERR-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
+    const errorCode = errorCodeRef.current;
+
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    // Log the error (securely in production with Sentry) via useEffect
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            if (process.env.NODE_ENV === "development") {
+                console.error("[AppContentLoader] Error:", error);
+                console.error("[AppContentLoader] Stack:", errorStack);
+            } else {
+                // Log to Sentry in production
+                const logToSentry = async () => {
+                    try {
+                        const Sentry = await import("@sentry/nextjs");
+                        Sentry.captureException(error, {
+                            tags: {
+                                component: "AppContentLoader",
+                                errorCode,
+                            },
+                            extra: {
+                                errorMessage,
+                            },
+                        });
+                    } catch (err) {
+                        // Silent fallback - avoid leaking internals to console
+                    }
+                };
+                logToSentry();
+            }
+        }
+    }, [error, errorMessage, errorStack, errorCode]);
 
     return (
         <div className="flex h-full min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/50 dark:bg-red-900/20">
@@ -47,14 +81,24 @@ function AppErrorFallback({ error, resetErrorBoundary }: { error: any; resetErro
             </h3>
             <p className="mb-4 max-w-md text-sm text-red-600 dark:text-red-300">
                 An unexpected error occurred. Please try refreshing the page.
+                If this problem persists, contact support with error code: <code className="font-mono text-xs">{errorCode}</code>
             </p>
-            <button
-                type="button"
-                onClick={resetErrorBoundary}
-                className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
-            >
-                Try again
-            </button>
+            <div className="flex gap-3">
+                <button
+                    type="button"
+                    onClick={resetErrorBoundary}
+                    className="rounded bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 transition-all dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
+                >
+                    Try again
+                </button>
+                <button
+                    type="button"
+                    onClick={() => router.push("/dashboard")}
+                    className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-all dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                >
+                    Go to Dashboard
+                </button>
+            </div>
         </div>
     );
 }

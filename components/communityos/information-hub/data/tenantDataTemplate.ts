@@ -138,3 +138,61 @@ export const defaultTenantData: TenantData = {
         },
     ],
 };
+
+/**
+ * Helper to check if a string is placeholder template data (e.g., "[Your Name]")
+ */
+export function isTemplateData(value: string | undefined | null): boolean {
+    if (!value) return false;
+    return value.trim().startsWith("[") && value.trim().endsWith("]");
+}
+
+/**
+ * Returns a list of section IDs that contain unconfigured template data
+ */
+export function getUnconfiguredSections(data: TenantData): string[] {
+    const unconfigured: Set<string> = new Set();
+
+    // Check Organisation
+    if (isTemplateData(data.organisation.name) ||
+        isTemplateData(data.organisation.vision) ||
+        isTemplateData(data.organisation.mission)) {
+        unconfigured.add("overview");
+    }
+
+    // Check Constitution
+    const firstClause = data.constitution.clauses[1];
+    if (firstClause && isTemplateData(firstClause.content)) {
+        unconfigured.add("constitution");
+    }
+
+    // Check Strategic Plan
+    if (data.strategicPlan.pillars.length === 1 && isTemplateData(data.strategicPlan.pillars[0].title)) {
+        unconfigured.add("strategy");
+    }
+
+    if (data.strategicPlan.boardRoles.length === 1 && isTemplateData(data.strategicPlan.boardRoles[0].title)) {
+        unconfigured.add("board-roles");
+    }
+
+    if (data.strategicPlan.risks.length === 1 && isTemplateData(data.strategicPlan.risks[0].name)) {
+        unconfigured.add("risks");
+    }
+
+    // Check Operations
+    if (isTemplateData(data.operationalFramework.geographicalFirewall.primaryFocus)) {
+        unconfigured.add("operations");
+    }
+
+    // Check Safeguarding
+    if (isTemplateData(data.safeguarding.headline)) {
+        unconfigured.add("safeguarding");
+    }
+
+    // Check Involved
+    if (data.getInvolved.length === 1 && isTemplateData(data.getInvolved[0].title)) {
+        unconfigured.add("involved");
+    }
+
+    return Array.from(unconfigured);
+}

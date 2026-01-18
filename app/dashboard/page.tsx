@@ -5,9 +5,11 @@ import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, User, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import type { TenantWithMembership } from "@/shared/schema";
+import { CommunityOsWorkspaces } from "@/components/communityos/CommunityOsWorkspaces";
 
 interface UserProfile {
     firstName?: string;
@@ -20,6 +22,7 @@ interface UserProfile {
     accountType?: string;
     dateOfBirth?: string;
 }
+
 
 function calculateProfileCompletion(user: UserProfile | null): { percentage: number; missing: string[] } {
     if (!user) return { percentage: 0, missing: ["Sign in to view your profile"] };
@@ -40,9 +43,11 @@ function calculateProfileCompletion(user: UserProfile | null): { percentage: num
     return { percentage, missing };
 }
 
+
 export default function DashboardPage() {
     const [apps, setApps] = useState<AppData[]>([]);
     const [user, setUser] = useState<UserProfile | null>(null);
+    const [tenantMemberships, setTenantMemberships] = useState<TenantWithMembership[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
@@ -61,6 +66,23 @@ export default function DashboardPage() {
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     setUser(userData.user || userData);
+                }
+
+                // Fetch CommunityOS tenant memberships
+                const tenantsRes = await fetch("/api/user/tenants");
+                if (tenantsRes.ok) {
+                    const tenantsData = await tenantsRes.json();
+                    if (Array.isArray(tenantsData.tenants)) {
+                        setTenantMemberships(tenantsData.tenants);
+                    }
+                } else {
+                    // Log failure details for debugging
+                    const errorText = await tenantsRes.text().catch(() => "Unable to read response");
+                    console.error(
+                        `[Dashboard] Failed to fetch tenants: status=${tenantsRes.status}, body=${errorText}`
+                    );
+                    // Set empty array as fallback to avoid silent failures
+                    setTenantMemberships([]);
                 }
             } catch (error) {
                 console.error(error);
@@ -197,6 +219,24 @@ export default function DashboardPage() {
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* CommunityOS Workspaces - shown if user has tenant memberships */}
+                            {tenantMemberships.length > 0 && (
+                                <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Building2 className="h-5 w-5 text-primary" />
+                                            CommunityOS
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Access your organisation workspaces
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <CommunityOsWorkspaces memberships={tenantMemberships} />
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             <Card>
                                 <CardHeader>
