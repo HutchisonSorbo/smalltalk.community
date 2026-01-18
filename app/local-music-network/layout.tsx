@@ -4,6 +4,9 @@ import { PlatformHeader } from "@/components/platform/PlatformHeader";
 export const metadata: Metadata = {
     title: "Local Music Network",
     description: "Connect with Victorian musicians and buy/sell gear",
+    icons: {
+        icon: "/icons/local-music-network.svg",
+    },
 };
 
 export default function LocalMusicNetworkLayout({

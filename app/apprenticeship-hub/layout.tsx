@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
     title: "Apprenticeship & Traineeship Hub | smalltalk.community",
     description: "Discover apprenticeships, traineeships, and career pathways across Victoria",
+    icons: {
+        icon: "/icons/apprenticeship-hub.svg",
+    },
 };
 
 export default function ApprenticeshipHubLayout({

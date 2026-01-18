@@ -13,7 +13,7 @@ async function seedApps() {
         {
             name: "Local Music Network",
             description: "Connect with musicians, find gigs, and join bands in your local area.",
-            iconUrl: "/local-music-network/icon.svg",
+            iconUrl: "/icons/local-music-network.svg",
             route: "/local-music-network",
             category: "Music",
             isBeta: false,
@@ -22,7 +22,7 @@ async function seedApps() {
         {
             name: "Volunteer Passport",
             description: "Track your volunteering hours, find opportunities, and manage your impact.",
-            iconUrl: "/volunteer-passport/icon.svg",
+            iconUrl: "/icons/volunteer-passport.svg",
             route: "/volunteer-passport",
             category: "Community",
             isBeta: true,
@@ -31,7 +31,7 @@ async function seedApps() {
         {
             name: "Youth Service Navigator",
             description: "Find mental health and wellbeing support services for young people aged 12-25.",
-            iconUrl: "/youth-service-navigator/icon.svg",
+            iconUrl: "/icons/youth-service-navigator.svg",
             route: "/youth-service-navigator",
             category: "Health & Wellbeing",
             isBeta: true,
@@ -40,7 +40,7 @@ async function seedApps() {
         {
             name: "Local Apprenticeship & Traineeship Hub",
             description: "Discover apprenticeships, traineeships, and career pathways across Victoria.",
-            iconUrl: "/apprenticeship-hub/icon.svg",
+            iconUrl: "/icons/apprenticeship-hub.svg",
             route: "/apprenticeship-hub",
             category: "Education & Careers",
             isBeta: true,
@@ -49,7 +49,7 @@ async function seedApps() {
         {
             name: "Peer Support Group Finder",
             description: "Find peer-led mental health support groups in your area or online.",
-            iconUrl: "/peer-support-finder/icon.svg",
+            iconUrl: "/icons/peer-support-finder.svg",
             route: "/peer-support-finder",
             category: "Health & Wellbeing",
             isBeta: true,
@@ -58,7 +58,7 @@ async function seedApps() {
         {
             name: "Work Experience Hub",
             description: "Find work experience placements, internships, and career opportunities for young Victorians.",
-            iconUrl: "/work-experience-hub/icon.svg",
+            iconUrl: "/icons/work-experience-hub.svg",
             route: "/work-experience-hub",
             category: "Education & Careers",
             isBeta: true,

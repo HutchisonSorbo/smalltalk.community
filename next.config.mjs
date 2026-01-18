@@ -109,6 +109,24 @@ const nextConfig = {
             },
         ]
     },
+    experimental: {
+        optimizePackageImports: ['lucide-react', 'react-icons'],
+    },
+    outputFileTracingExcludes: {
+        '*': [
+            'node_modules/@dittolive/ditto/node/ditto.linux-arm64.node',
+            'node_modules/@dittolive/ditto/node/ditto.darwin-x64.node',
+            'node_modules/@dittolive/ditto/node/ditto.darwin-arm64.node',
+            'node_modules/@dittolive/ditto/node/ditto.win32-x64.node',
+            'node_modules/@next/swc-linux-arm64-gnu/**',
+            'node_modules/@next/swc-linux-arm64-musl/**',
+            'node_modules/@next/swc-darwin-x64/**',
+            'node_modules/@next/swc-darwin-arm64/**',
+            'node_modules/@next/swc-win32-x64-msvc/**',
+            'node_modules/@next/swc-win32-ia32-msvc/**',
+            'node_modules/@next/swc-win32-arm64-msvc/**',
+        ],
+    },
 };
 
 /**
@@ -160,4 +178,7 @@ export default withSentryConfig(nextConfig, {
     // Suppress verbose debug logging during source map upload
     // This reduces noise from client-reference-manifest.js warnings
     debug: false,
+
+    // Eliminate source map reference warnings for internal Next.js artifacts
+    ignore: ["**/_client-reference-manifest.js"],
 });
