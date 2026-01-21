@@ -33,6 +33,7 @@ export async function GET() {
                 profileImageUrl: dbUser.profileImageUrl,
                 dateOfBirth: dbUser.dateOfBirth,
                 accountType: dbUser.accountType,
+                userType: dbUser.userType,
                 onboardingCompleted: dbUser.onboardingCompleted,
                 onboardingStep: dbUser.onboardingStep,
                 profileCompletionPercentage: dbUser.profileCompletionPercentage,
