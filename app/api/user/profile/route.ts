@@ -19,10 +19,18 @@ const corsHeaders = {
  * @returns {Promise<NextResponse>} 204 response with CORS headers
  */
 export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 204,
-        headers: corsHeaders,
-    });
+    try {
+        return new NextResponse(null, {
+            status: 204,
+            headers: corsHeaders,
+        });
+    } catch (error) {
+        console.error("[API] OPTIONS handler failed:", error);
+        return new NextResponse(null, {
+            status: 500,
+            headers: corsHeaders,
+        });
+    }
 }
 
 /**
