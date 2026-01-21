@@ -5,7 +5,7 @@ import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2 } from "lucide-react";
+import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2, Bell, Shield, Settings } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { TenantWithMembership } from "@/shared/schema";
@@ -20,6 +20,7 @@ interface UserProfile {
     onboardingStep?: number;
     profileCompletionPercentage?: number;
     accountType?: string;
+    userType?: string;
     dateOfBirth?: string;
 }
 
@@ -263,21 +264,27 @@ export default function DashboardPage() {
                                         );
                                     })()}
                                     <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                                        <Link href="/local-music-network">
-                                            <span aria-hidden="true">🎵</span>
-                                            Local Music Network
-                                        </Link>
-                                    </Button>
-                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                                        <Link href="/volunteer-passport">
-                                            <span aria-hidden="true">🤝</span>
-                                            Volunteer Passport
-                                        </Link>
-                                    </Button>
-                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
                                         <Link href="/settings">
                                             <User className="h-4 w-4" />
-                                            Account Settings
+                                            Profile
+                                        </Link>
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                                        <Link href="/settings#notifications">
+                                            <Bell className="h-4 w-4" />
+                                            Notifications
+                                        </Link>
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                                        <Link href="/settings#security">
+                                            <Shield className="h-4 w-4" />
+                                            Security
+                                        </Link>
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                                        <Link href="/settings#preferences">
+                                            <Settings className="h-4 w-4" />
+                                            Preferences
                                         </Link>
                                     </Button>
                                 </CardContent>

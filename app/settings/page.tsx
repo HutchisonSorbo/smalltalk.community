@@ -27,7 +27,7 @@ export default async function SettingsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                <Card className="hover:border-primary/50 transition-colors">
+                <Card id="profile" className="hover:border-primary/50 transition-colors scroll-mt-24">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3">
                             <User className="h-5 w-5 text-primary" />
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="hover:border-primary/50 transition-colors">
+                <Card id="notifications" className="hover:border-primary/50 transition-colors scroll-mt-24">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3">
                             <Bell className="h-5 w-5 text-primary" />
@@ -59,7 +59,7 @@ export default async function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="hover:border-primary/50 transition-colors">
+                <Card id="security" className="hover:border-primary/50 transition-colors scroll-mt-24">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3">
                             <Shield className="h-5 w-5 text-primary" />
@@ -76,7 +76,7 @@ export default async function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="hover:border-primary/50 transition-colors">
+                <Card id="preferences" className="hover:border-primary/50 transition-colors scroll-mt-24">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3">
                             <Settings className="h-5 w-5 text-primary" />
