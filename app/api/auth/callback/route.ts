@@ -13,16 +13,21 @@ import { createClient } from '@/lib/supabase-server'
 
 // Handle CORS preflight requests
 export async function OPTIONS(request: Request) {
-    const origin = request.headers.get('origin');
-    return new NextResponse(null, {
-        status: 204,
-        headers: {
-            'Access-Control-Allow-Origin': origin || '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Max-Age': '86400',
-        },
-    });
+    try {
+        const origin = request.headers.get('origin');
+        return new NextResponse(null, {
+            status: 204,
+            headers: {
+                'Access-Control-Allow-Origin': origin || '*',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                'Access-Control-Max-Age': '86400',
+            },
+        });
+    } catch (error) {
+        console.error(`[AUTH_AUDIT] Unexpected error in OPTIONS handler:`, error);
+        return new NextResponse(null, { status: 500 });
+    }
 }
 
 export async function GET(request: Request) {
