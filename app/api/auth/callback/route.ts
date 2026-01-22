@@ -82,9 +82,31 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/auth-code-error`);
     }
 
-    const { code, next: rawNext } = validation.data;
-    // Validate that next is a relative path to prevent open redirects
-    const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
+    const { code, next: rawNextInput } = validation.data;
+
+    // 3. Redirect Validation (Strict)
+    // Normalize and strictly validate the incoming redirect value
+    let next = '/';
+    if (rawNextInput) {
+        // Decode and trim
+        const decodedNext = decodeURIComponent(rawNextInput).trim();
+
+        // Block control characters, embedded nulls, multiple slashes at start, or absolute URLs
+        const hasControlChars = /[\x00-\x1F\x7F]/.test(decodedNext);
+        const isAbsolute = /:\/\/|^\/\/|^\s*javascript:/i.test(decodedNext);
+
+        if (!hasControlChars && !isAbsolute && decodedNext.startsWith('/') && !decodedNext.startsWith('//')) {
+            next = decodedNext;
+        } else {
+            await insertAuditLog({
+                eventType: 'security',
+                severity: 'warn',
+                message: `Potentially malicious 'next' parameter rejected: ${decodedNext}`,
+                ip,
+                safeQueryParams: params
+            });
+        }
+    }
 
     // 3. Authentication Exchange
     try {
@@ -176,6 +198,13 @@ export async function GET(request: Request) {
         return new Response("Internal Server Error", { status: 500 });
     }
 
-    // fallback for unexpected path
+    // fallback for unexpected path (e.g. no session returned)
+    await insertAuditLog({
+        eventType: 'system',
+        severity: 'warn',
+        message: 'Auth callback fallback: no session returned from exchange',
+        ip,
+        safeQueryParams: params
+    });
     return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 }

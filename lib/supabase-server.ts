@@ -4,9 +4,15 @@ import { cookies } from 'next/headers'
 export async function createClient(useServiceRole = false) {
     const cookieStore = await cookies()
 
-    const supabaseKey = useServiceRole
-        ? (process.env.SUPABASE_SERVICE_KEY || '')
-        : (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key');
+    let supabaseKey: string;
+    if (useServiceRole) {
+        if (!process.env.SUPABASE_SERVICE_KEY) {
+            throw new Error('[CRITICAL] SUPABASE_SERVICE_KEY is missing. Audit logging and server-side operations cannot proceed.');
+        }
+        supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+    } else {
+        supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+    }
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co',

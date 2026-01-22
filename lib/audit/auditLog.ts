@@ -2,12 +2,18 @@ import { createClient } from '../supabase-server';
 
 /**
  * Redacts sensitive information from an object (e.g., query parameters).
+ * Matches keys containing common sensitive tokens such as 'code', 'token', 'jwt', 'cookie', etc.
+ * 
  * @param params The object to redact.
- * @returns A new object with sensitive keys redacted.
+ * @returns A new object with sensitive keys replaced with '[REDACTED]'.
  */
 function redactSensitiveData(params: Record<string, any> | null | undefined): Record<string, any> | null {
     if (!params) return null;
-    const sensitiveKeys = ['code', 'token', 'password', 'secret', 'access_token', 'refresh_token'];
+    const sensitiveKeys = [
+        'code', 'token', 'password', 'secret', 'access_token', 'refresh_token',
+        'api_key', 'apikey', 'session', 'session_id', 'sessionid', 'ssn',
+        'auth', 'bearer', 'cookie', 'jwt', 'client_secret', 'private_key'
+    ];
     const redacted = { ...params };
 
     for (const key of Object.keys(redacted)) {
@@ -20,8 +26,23 @@ function redactSensitiveData(params: Record<string, any> | null | undefined): Re
 }
 
 /**
- * Inserts a persistent audit log into the database using the service role to bypass RLS.
+ * Inserts a persistent audit log into the database using the Supabase service role to bypass RLS.
+ * 
+ * This utility ensures that security and system events are recorded even if the current user
+ * lacks permissions, and it automatically redacts sensitive data from query parameters.
+ * 
  * @param event The audit log event details.
+ * @param event.eventType The category of the event: 'auth', 'security', or 'system'.
+ * @param event.severity The importance of the event: 'info', 'warn', 'error', or 'critical'.
+ * @param event.message A descriptive message about the event.
+ * @param event.userId Optional ID of the user associated with the event.
+ * @param event.ip Optional IP address of the requester.
+ * @param event.safeQueryParams Optional object containing query parameters to be logged (will be redacted).
+ * 
+ * @returns {Promise<void>} Resolves when the insert is attempted. Errors are caught and logged to console.
+ * 
+ * @see {@link createClient} for the service role client used for RLS bypass.
+ * @see {@link redactSensitiveData} for the redaction logic applied to safeQueryParams.
  */
 export async function insertAuditLog(event: {
     eventType: 'auth' | 'security' | 'system';
