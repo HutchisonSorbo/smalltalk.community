@@ -1422,6 +1422,20 @@ export const tenants = pgTable("tenants", {
   secondaryColor: varchar("secondary_color", { length: 7 }).default("#818CF8"),
   description: text("description"),
   website: varchar("website", { length: 255 }),
+  // Public profile fields
+  heroImageUrl: varchar("hero_image_url", { length: 500 }),
+  missionStatement: text("mission_statement"),
+  socialLinks: jsonb("social_links").$type<{
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    youtube?: string;
+  }>().default({}),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  address: text("address"),
+  isPublic: boolean("is_public").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

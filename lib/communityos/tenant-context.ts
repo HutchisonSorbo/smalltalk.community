@@ -25,6 +25,26 @@ export async function getTenantByCode(code: string): Promise<Tenant | null> {
 }
 
 /**
+ * Fetch a public tenant by its URL code/slug (no auth required)
+ * Used for public profile pages at /org/[code]
+ * @param code - The tenant's URL slug (e.g., 'stc' for smalltalk.community Inc)
+ * @returns The tenant or null if not found or not public
+ */
+export async function getPublicTenantByCode(code: string): Promise<Tenant | null> {
+    // Use service client to bypass any RLS restrictions for public access
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+        .from("tenants")
+        .select("*")
+        .eq("code", code)
+        .eq("is_public", true)
+        .single();
+
+    if (error || !data) return null;
+    return data as Tenant;
+}
+
+/**
  * Fetch a tenant by its ID
  * @param id - The tenant's UUID
  * @returns The tenant or null if not found
