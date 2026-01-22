@@ -36,6 +36,12 @@ export async function getPublicTenantByCode(code: string): Promise<Tenant | null
         return null;
     }
 
+    // Sanitize code for logging (prevent log injection, limit length)
+    const safeCode = code
+        .slice(0, 50)                        // Limit length
+        .replace(/[\r\n\t]/g, "")            // Strip control characters
+        .replace(/[^\w\-_.]/g, "_");         // Replace non-safe chars
+
     try {
         // Use service client to bypass any RLS restrictions for public access
         const supabase = createServiceClient();
@@ -48,14 +54,14 @@ export async function getPublicTenantByCode(code: string): Promise<Tenant | null
 
         if (error) {
             // Log error for debugging but don't expose to client
-            console.error(`[getPublicTenantByCode] Database error for code "${code}":`, error.message);
+            console.error(`[getPublicTenantByCode] Database error for code "${safeCode}":`, error.message);
             return null;
         }
 
         if (!data) return null;
         return data as Tenant;
     } catch (err) {
-        console.error(`[getPublicTenantByCode] Unexpected error for code "${code}":`, err);
+        console.error(`[getPublicTenantByCode] Unexpected error for code "${safeCode}":`, err);
         return null;
     }
 }

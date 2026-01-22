@@ -65,6 +65,22 @@ function validatePhone(phone: string | null | undefined): string | null {
 }
 
 /**
+ * Sanitize address field:
+ * - Trims whitespace
+ * - Strips line breaks and control characters
+ * - Collapses multiple spaces
+ * - Returns null if empty after sanitization
+ */
+function sanitizeAddress(address: string | null | undefined): string | null {
+    if (!address || typeof address !== "string") return null;
+    const sanitized = address
+        .trim()
+        .replace(/[\r\n\t]/g, " ")  // Replace line breaks/tabs with spaces
+        .replace(/\s+/g, " ");       // Collapse multiple spaces
+    return sanitized.length > 0 ? sanitized : null;
+}
+
+/**
  * Generate metadata for SEO
  */
 export async function generateMetadata({ params }: OrgProfilePageProps): Promise<Metadata> {
@@ -255,10 +271,10 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
                                     <span>{validPhone}</span>
                                 </a>
                             )}
-                            {tenant.address && (
+                            {sanitizeAddress(tenant.address) && (
                                 <div className="flex items-start gap-2">
                                     <MapPin className="h-5 w-5 mt-0.5" />
-                                    <span>{tenant.address}</span>
+                                    <span>{sanitizeAddress(tenant.address)}</span>
                                 </div>
                             )}
                         </div>

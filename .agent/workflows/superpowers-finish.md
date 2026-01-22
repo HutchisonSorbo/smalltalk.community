@@ -41,7 +41,7 @@ npm run lint
 
 ## Manual validation steps
 
-(If applicable, how to manually verify the changes work)
+(If applicable, steps to verify the changes manually)
 
 1. Step 1
 2. Step 2

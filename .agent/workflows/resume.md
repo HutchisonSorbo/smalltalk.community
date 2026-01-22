@@ -14,7 +14,7 @@ Read `.gsd/STATE.md` completely.
 
 ### 2. Display Context
 
-```
+```text
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  RESUMING SESSION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -69,7 +69,7 @@ git status --porcelain
 
 **If changes found:**
 
-```
+```text
 ⚠️ UNCOMMITTED CHANGES DETECTED
 
 {list of modified files}
@@ -92,7 +92,7 @@ Mark session as active in `.gsd/STATE.md`:
 
 ### 6. Suggest Action
 
-```
+```text
 ───────────────────────────────────────────────────────
 
 ▶ READY TO CONTINUE

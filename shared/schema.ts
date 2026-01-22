@@ -1435,7 +1435,7 @@ export const tenants = pgTable("tenants", {
   contactEmail: varchar("contact_email", { length: 255 }),
   contactPhone: varchar("contact_phone", { length: 50 }),
   address: text("address"),
-  isPublic: boolean("is_public").default(true),
+  isPublic: boolean("is_public").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

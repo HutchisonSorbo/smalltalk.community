@@ -9,6 +9,11 @@ description: Superpowers brainstorm. Produces goal/constraints/risks/options/rec
 Brainstorm for this task (exactly as provided by the user):
 **{{input}}**
 
+> **Note**: The `{{input}}` token is a runtime placeholder that the calling agent
+> substitutes with the user's actual task description. It is not a code variable.
+> If the token appears empty or unsubstituted at runtime, the workflow will prompt
+> the user to restate their task.
+
 If `{{input}}` is empty or missing, ask the user to restate the task in one sentence and STOP.
 
 ## Output sections (use exactly)
