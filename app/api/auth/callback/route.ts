@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkBotId } from "botid/server";
+import { insertAuditLog } from '@/lib/audit/auditLog';
+import { createClient } from '@/lib/supabase-server';
 
 // Validates the OAuth callback parameters
 const callbackSchema = z.object({
@@ -8,10 +10,9 @@ const callbackSchema = z.object({
     next: z.string().optional().default('/'),
 });
 
-// The client you created from the Server-Side Auth instructions
-import { createClient } from '@/lib/supabase-server'
-
-// Handle CORS preflight requests
+/**
+ * Handles CORS preflight OPTIONS requests for the auth callback route.
+ */
 export async function OPTIONS(request: Request) {
     try {
         const origin = request.headers.get('origin');
@@ -25,25 +26,44 @@ export async function OPTIONS(request: Request) {
             },
         });
     } catch (error) {
-        console.error(`[AUTH_AUDIT] Unexpected error in OPTIONS handler:`, error);
+        await insertAuditLog({
+            eventType: 'system',
+            severity: 'error',
+            message: `Unexpected error in OPTIONS handler: ${error instanceof Error ? error.message : String(error)}`
+        });
         return new NextResponse(null, { status: 500 });
     }
 }
 
+/**
+ * Main GET handler for the auth callback.
+ * Exchanges the OAuth code for a session and redirects the user.
+ */
 export async function GET(request: Request) {
     const requestUrl = new URL(request.url);
     const origin = requestUrl.origin;
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
 
     // 1. Bot Protection
     try {
-        const { isBot } = await checkBotId(request);
+        const { isBot } = await checkBotId();
         if (isBot) {
-            // Redact sensitive query parameters (like OAuth codes) from logs
-            console.warn(`[AUTH_AUDIT] Bot detected on auth callback: ${requestUrl.pathname}`);
+            await insertAuditLog({
+                eventType: 'security',
+                severity: 'warn',
+                message: `Bot detected on auth callback: ${requestUrl.pathname}`,
+                ip,
+                safeQueryParams: Object.fromEntries(requestUrl.searchParams)
+            });
             return new Response("Bot detected", { status: 403 });
         }
     } catch (error) {
-        console.error(`[AUTH_AUDIT] BotId check failed:`, error);
+        await insertAuditLog({
+            eventType: 'security',
+            severity: 'error',
+            message: `BotId check failed: ${error instanceof Error ? error.message : String(error)}`,
+            ip
+        });
         // Fall back to safe default (allow) so the auth callback does not crash
     }
 
@@ -52,7 +72,13 @@ export async function GET(request: Request) {
     const validation = callbackSchema.safeParse(params);
 
     if (!validation.success) {
-        console.warn(`[AUTH_AUDIT] Invalid callback parameters:`, validation.error.format());
+        await insertAuditLog({
+            eventType: 'auth',
+            severity: 'warn',
+            message: `Invalid callback parameters: ${JSON.stringify(validation.error.format())}`,
+            ip,
+            safeQueryParams: params
+        });
         return NextResponse.redirect(`${origin}/auth/auth-code-error`);
     }
 
@@ -66,12 +92,25 @@ export async function GET(request: Request) {
         const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
         if (exchangeError) {
-            console.error(`[AUTH_AUDIT] Failed code exchange: ${exchangeError.message}`);
+            await insertAuditLog({
+                eventType: 'auth',
+                severity: 'error',
+                message: `Failed code exchange: ${exchangeError.message}`,
+                ip,
+                safeQueryParams: params
+            });
             return NextResponse.redirect(`${origin}/auth/auth-code-error`);
         }
 
         if (data.session) {
-            console.log(`[AUTH_AUDIT] Successful authentication for user: ${data.session.user.id}`);
+            const userId = data.session.user.id;
+            await insertAuditLog({
+                eventType: 'auth',
+                severity: 'info',
+                message: `Successful authentication for user: ${userId}`,
+                userId,
+                ip
+            });
 
             let finalRedirect = next;
 
@@ -80,11 +119,17 @@ export async function GET(request: Request) {
                 const { data: profile, error: profileError } = await supabase
                     .from("users")
                     .select("onboarding_completed")
-                    .eq("id", data.session.user.id)
+                    .eq("id", userId)
                     .single();
 
                 if (profileError) {
-                    console.error(`[AUTH_AUDIT] Error fetching user profile:`, profileError);
+                    await insertAuditLog({
+                        eventType: 'system',
+                        severity: 'error',
+                        message: `Error fetching user profile during callback: ${profileError.message}`,
+                        userId,
+                        ip
+                    });
                 }
 
                 if (profile?.onboarding_completed) {
@@ -92,9 +137,22 @@ export async function GET(request: Request) {
                 } else {
                     finalRedirect = "/onboarding";
                 }
-                console.log(`[AUTH_AUDIT] Redirecting user ${data.session.user.id} to ${finalRedirect} (Onboarding completed: ${profile?.onboarding_completed})`);
+
+                await insertAuditLog({
+                    eventType: 'auth',
+                    severity: 'info',
+                    message: `Redirecting user ${userId} to ${finalRedirect} (Onboarding completed: ${profile?.onboarding_completed})`,
+                    userId,
+                    ip
+                });
             } else {
-                console.log(`[AUTH_AUDIT] Redirecting user ${data.session.user.id} to explicit next: ${finalRedirect}`);
+                await insertAuditLog({
+                    eventType: 'auth',
+                    severity: 'info',
+                    message: `Redirecting user ${userId} to explicit next: ${finalRedirect}`,
+                    userId,
+                    ip
+                });
             }
 
             const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
@@ -109,7 +167,12 @@ export async function GET(request: Request) {
             }
         }
     } catch (error) {
-        console.error(`[AUTH_AUDIT] Unexpected error in auth callback:`, error);
+        await insertAuditLog({
+            eventType: 'system',
+            severity: 'error',
+            message: `Unexpected error in auth callback exchange: ${error instanceof Error ? error.message : String(error)}`,
+            ip
+        });
         return new Response("Internal Server Error", { status: 500 });
     }
 

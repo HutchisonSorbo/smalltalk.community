@@ -1345,6 +1345,37 @@ export const adminActivityLogRelations = relations(adminActivityLog, ({ one }) =
   }),
 }));
 
+// Audit Logs - Persistent storage for security and system events
+// Used for auth callbacks, bot detection, and server-side security events
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventType: varchar("event_type", { length: 50 }).notNull(), // 'auth', 'security', 'system'
+  severity: varchar("severity", { length: 20 }).notNull(), // 'info', 'warn', 'error', 'critical'
+  message: text("message").notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  ip: varchar("ip", { length: 45 }),
+  safeQueryParams: jsonb("safe_query_params"), // Redacted/sanitized parameters
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("audit_logs_service_all", { for: "all", to: "service_role", using: sql`true` }),
+  pgPolicy("audit_logs_admin_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`( (select auth.uid()) )::text IN (SELECT id FROM users WHERE is_admin = true)`
+  }),
+  index("audit_logs_event_type_idx").on(table.eventType),
+  index("audit_logs_severity_idx").on(table.severity),
+  index("audit_logs_user_idx").on(table.userId),
+  index("audit_logs_created_at_idx").on(table.createdAt),
+]);
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
 export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLog).omit({
   id: true,
   createdAt: true,
@@ -1352,6 +1383,14 @@ export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLog)
 
 export type AdminActivityLog = typeof adminActivityLog.$inferSelect;
 export type InsertAdminActivityLog = z.infer<typeof insertAdminActivityLogSchema>;
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true,
+}) as any;
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 // Site Settings - Key-value store for platform configuration
 export const siteSettings = pgTable("site_settings", {

@@ -3,10 +3,14 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
-import { initBotId } from "botid";
+import { initBotId } from "botid/client/core";
 
 initBotId({
-  protectedPaths: ["/api/auth/callback", "/login", "/forgot-password"],
+  protect: [
+    { path: "/api/auth/callback", method: "GET" },
+    { path: "/login", method: "POST" },
+    { path: "/forgot-password", method: "POST" }
+  ],
 });
 
 Sentry.init({
