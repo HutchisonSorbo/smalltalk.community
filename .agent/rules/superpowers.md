@@ -219,7 +219,8 @@ All organisation features must verify multi-tenant isolation.
 ### Requirements
 
 - RLS enabled on all tenant-scoped tables
-- Test with admin account: `smalltalkcommunity.backup@gmail.com`
+- Test with admin account: `<ADMIN_TEST_EMAIL>`
+    > **Note**: Refer to `.env.example` or internal secrets manager for the actual admin credential. Do not commit real emails.
 - Test with non-admin organisation accounts
 - Verify no cross-tenant data leakage
 - Tenant context preserved across navigation

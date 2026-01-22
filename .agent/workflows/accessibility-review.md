@@ -33,10 +33,14 @@ npx playwright test --grep @accessibility
 Or use browser-based scan:
 
 ```javascript
-// In browser console or Playwright
-const axe = require('axe-core');
-const results = await axe.run();
-console.log(results.violations);
+```typescript
+// In Playwright test
+import { AxeBuilder } from '@axe-core/playwright';
+
+test('accessibility check', async ({ page }) => {
+  const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+  expect(accessibilityScanResults.violations).toEqual([]);
+});
 ```
 
 ### 3. Gate: Check Results

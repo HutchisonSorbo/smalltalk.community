@@ -18,9 +18,7 @@ export async function proxy(request: NextRequest) {
     });
 
     // Security Headers (Redundancy for defense-in-depth)
-    response.headers.set("X-Frame-Options", "DENY");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    applySecurityHeaders(response);
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -50,6 +48,7 @@ export async function proxy(request: NextRequest) {
                             headers: request.headers,
                         },
                     });
+                    applySecurityHeaders(response);
                     cookiesToSet.forEach(({ name, value, options }) =>
                         response.cookies.set(name, value, options)
                     );
@@ -193,4 +192,11 @@ function rewriteRootToHub(request: NextRequest, response: NextResponse) {
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
     return rewriteResponse;
+}
+
+function applySecurityHeaders(response: NextResponse) {
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    return response;
 }

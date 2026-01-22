@@ -115,14 +115,21 @@ import { test, expect } from '@playwright/test';
 
 test.describe('White-Label Isolation', () => {
   test('user cannot access other tenant data', async ({ page }) => {
+    // Expected env vars: TEST_USER_EMAIL, TEST_USER_PASSWORD, TEST_TENANT_B
+    const email = process.env.TEST_USER_EMAIL;
+    const password = process.env.TEST_USER_PASSWORD;
+    const targetTenant = process.env.TEST_TENANT_B || 'tenantB';
+
+    if (!email || !password) throw new Error('Missing test credentials');
+
     // Login as user from tenant A
     await page.goto('/auth/login');
-    await page.fill('[name="email"]', 'user@tenantA.com');
-    await page.fill('[name="password"]', 'password');
+    await page.fill('[name="email"]', email);
+    await page.fill('[name="password"]', password);
     await page.click('button[type="submit"]');
     
     // Attempt to access tenant B
-    await page.goto('/org/tenantB/dashboard');
+    await page.goto(`/org/${targetTenant}/dashboard`);
     
     // Should be denied or redirected
     await expect(page.locator('text=access denied')).toBeVisible();

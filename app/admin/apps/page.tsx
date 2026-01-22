@@ -14,6 +14,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { FlaskConical } from "lucide-react";
+import { safeUrl } from "@/lib/utils";
 
 async function getApps() {
     try {
@@ -103,19 +104,18 @@ export default async function AppsAdminPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
+
                             {allApps.length > 0 ? allApps.map((app: any) => {
-                                const safeIconUrl = app.iconUrl && (app.iconUrl.startsWith('http://') || app.iconUrl.startsWith('https://'))
-                                    ? app.iconUrl
-                                    : null;
+                                const validIconUrl = safeUrl(app.iconUrl);
 
                                 return (
                                     <TableRow key={app.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
-                                                {safeIconUrl ? (
+                                                {validIconUrl ? (
                                                     <img
-                                                        src={safeIconUrl}
-                                                        alt=""
+                                                        src={validIconUrl}
+                                                        alt={`${app.name} icon`}
                                                         className="h-8 w-8 rounded object-cover"
                                                     />
                                                 ) : (

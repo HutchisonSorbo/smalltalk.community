@@ -123,5 +123,5 @@ Navigate between pages and verify:
 
 ## Related Documentation
 
-- [DEVELOPMENT_STANDARDS.md](file:///home/ryan/Documents/Projects/smalltalk.community/DEVELOPMENT_STANDARDS.md) - Section 7.5
-- [white-label-testing-guide.md](file:///home/ryan/Documents/Projects/smalltalk.community/.agent/white-label-testing-guide.md)
+- [DEVELOPMENT_STANDARDS.md](../../DEVELOPMENT_STANDARDS.md) - Section 7.5
+- [white-label-testing-guide.md](../white-label-testing-guide.md)

@@ -93,7 +93,7 @@ Read and apply these skills when relevant:
 
 ### Execution Loop on Failure
 
-```
+```text
 WHILE test fails:
   1. Analyse failure
   2. Implement fix
