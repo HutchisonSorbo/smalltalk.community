@@ -11,13 +11,13 @@ FROM users u
     CROSS JOIN tenants t
 WHERE u.email = 'smalltalkcommunity.backup@gmail.com'
     AND t.code = 'stc' ON CONFLICT (tenant_id, user_id) DO NOTHING;
--- 2. Ensure all users with user_type = 'organisation' are admins of 'stc'
--- This covers any future organization accounts that might have been created without memberships.
+-- 2. Ensure all users with user_type = 'organisation' are added as members of 'stc'
+-- This ensures they see the CommunityOS link on their dashboard without being full admins.
 INSERT INTO tenant_members (id, tenant_id, user_id, role, joined_at)
 SELECT gen_random_uuid()::text,
     t.id,
     u.id,
-    'admin',
+    'member',
     NOW()
 FROM users u
     CROSS JOIN tenants t

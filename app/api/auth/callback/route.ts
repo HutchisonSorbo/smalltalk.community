@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
-import { checkBotId } from "botid";
+import { checkBotId } from "botid/server";
+
 // The client you created from the Server-Side Auth instructions
 import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: Request) {
-    await checkBotId();
+    try {
+        const { isBot } = await checkBotId(request);
+        if (isBot) {
+            console.warn(`[AUTH_AUDIT] Bot detected on auth callback: ${request.url}`);
+            return new Response("Bot detected", { status: 403 });
+        }
+    } catch (error) {
+        console.error(`[AUTH_AUDIT] BotId check failed:`, error);
+        // Fall back to safe default (allow) so the auth callback does not crash
+    }
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
     // if "next" is in param, use it as the redirect URL
