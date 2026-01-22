@@ -11,13 +11,12 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
 import { z } from "zod";
 
-import { Turnstile } from "@marsidev/react-turnstile";
+
 
 const emailSchema = z.string().email("Please enter a valid email address");
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
-    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -35,10 +34,6 @@ export default function ForgotPasswordPage() {
             return;
         }
 
-        if (!isDevelopment && !captchaToken) {
-            setError("Please complete the security check.");
-            return;
-        }
 
         setIsLoading(true);
 
@@ -47,7 +42,6 @@ export default function ForgotPasswordPage() {
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password`,
-                captchaToken: captchaToken || undefined,
             });
 
             if (error) {
@@ -144,31 +138,9 @@ export default function ForgotPasswordPage() {
                                 </p>
                             )}
                         </div>
-                        <div className="flex justify-center">
-                            {!isDevelopment && (
-                                <div className="flex justify-center flex-col items-center gap-2">
-                                    {!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
-                                        <div className="w-full rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-                                            <p className="font-semibold">Configuration Error</p>
-                                            <p>Turnstile site key missing: contact admin / check .env</p>
-                                        </div>
-                                    ) : (
-                                        <Turnstile
-                                            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                                            onSuccess={(token) => setCaptchaToken(token)}
-                                            onError={() => {
-                                                setCaptchaToken(null);
-                                                setError("Captcha verification failed.");
-                                            }}
-                                            onExpire={() => setCaptchaToken(null)}
-                                        />
-                                    )}
-                                </div>
-                            )}
-                        </div>
                     </CardContent>
                     <CardFooter>
-                        <Button className="w-full" type="submit" disabled={isLoading || (!isDevelopment && !captchaToken)}>
+                        <Button className="w-full" type="submit" disabled={isLoading}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Send Reset Link
                         </Button>

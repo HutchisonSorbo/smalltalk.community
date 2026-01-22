@@ -16,7 +16,7 @@ import { AccessibilityPanel } from "@/components/local-music-network/Accessibili
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-import { Turnstile } from "@marsidev/react-turnstile";
+
 import {
     AlertDialog,
     AlertDialogAction,
@@ -39,7 +39,6 @@ function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [dob, setDob] = useState("");
-    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
@@ -52,12 +51,6 @@ function LoginForm() {
     const { toast } = useToast();
     const isDevelopment = process.env.NODE_ENV === 'development';
 
-    // Auto-set captcha token in development mode to allow testing
-    useEffect(() => {
-        if (isDevelopment && !captchaToken) {
-            setCaptchaToken('development-bypass-token');
-        }
-    }, [isDevelopment, captchaToken]);
 
 
     const checkAge = (dateString: string) => {
@@ -116,14 +109,6 @@ function LoginForm() {
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!captchaToken) {
-            toast({
-                title: "Security Check Required",
-                description: "Please complete the captcha verification.",
-                variant: "destructive",
-            });
-            return;
-        }
 
         setIsLoading(true);
 
@@ -150,7 +135,6 @@ function LoginForm() {
                             // Assign 'individual' or 'organisation' based on account type
                             user_type: accountType === "Individual" ? 'individual' : 'organisation',
                         },
-                        captchaToken: captchaToken,
                         emailRedirectTo: `${globalThis.location.origin}/api/auth/callback`,
                     },
                 });
@@ -165,7 +149,6 @@ function LoginForm() {
                     email,
                     password,
                     options: {
-                        captchaToken: captchaToken,
                     },
                 });
                 if (error) throw error;
@@ -362,40 +345,6 @@ function LoginForm() {
                                 </Label>
                             </div>
                         )}
-                        {/* Turnstile captcha - hidden in development mode for testing */}
-                        {!isDevelopment && (
-                            <div className="flex justify-center flex-col items-center gap-2">
-                                {!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
-                                    <div className="w-full rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400">
-                                        <p className="font-semibold">Configuration Error</p>
-                                        <p>Turnstile site key missing: contact admin / check .env</p>
-                                    </div>
-                                ) : (
-                                    <Turnstile
-                                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                                        onSuccess={(token) => setCaptchaToken(token)}
-                                        onError={() => {
-                                            setCaptchaToken(null);
-                                            toast({
-                                                title: "Security Check Failed",
-                                                description: "Please disable adblockers or try a different network.",
-                                                variant: "destructive"
-                                            });
-                                        }}
-                                        onExpire={() => setCaptchaToken(null)}
-                                    />
-                                )}
-                            </div>
-                        )}
-                        {isDevelopment && (
-                            <p className="text-xs text-center text-green-600 dark:text-green-400">
-                                🔓 Development mode: Captcha bypassed
-                            </p>
-                        )}
-                        <p className="text-xs text-center text-muted-foreground mt-2">
-                            Not seeing the security check? <br />
-                            You may need to disable your adblocker.
-                        </p>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">
                         <Button className="w-full" type="submit" disabled={isLoading}>

@@ -3,6 +3,11 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import { initBotId } from "botid";
+
+initBotId({
+  protectedPaths: ["/api/auth/callback", "/login", "/forgot-password"],
+});
 
 Sentry.init({
   dsn: "https://1542caab2225bdce6511f8e92e8a862e@o4510577777770496.ingest.de.sentry.io/4510577786683472",
