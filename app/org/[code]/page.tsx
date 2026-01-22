@@ -21,7 +21,6 @@ import {
     MapPin,
     ExternalLink,
 } from "lucide-react";
-import type { Tenant } from "@/shared/schema";
 
 interface OrgProfilePageProps {
     params: Promise<{ code: string }>;
@@ -44,7 +43,6 @@ function getHostnameFromUrl(url: string): string | null {
 
 /**
  * Validate and sanitize email for mailto: links
- * Returns null if invalid or potentially malicious
  */
 function validateEmail(email: string | null | undefined): string | null {
     if (!email || typeof email !== "string") return null;
@@ -55,7 +53,6 @@ function validateEmail(email: string | null | undefined): string | null {
 
 /**
  * Validate and sanitize phone for tel: links
- * Returns null if invalid or potentially malicious
  */
 function validatePhone(phone: string | null | undefined): string | null {
     if (!phone || typeof phone !== "string") return null;
@@ -65,59 +62,115 @@ function validatePhone(phone: string | null | undefined): string | null {
 }
 
 /**
- * Sanitize address field:
- * - Trims whitespace
- * - Strips line breaks and control characters
- * - Collapses multiple spaces
- * - Returns null if empty after sanitization
+ * Sanitize address field
  */
 function sanitizeAddress(address: string | null | undefined): string | null {
     if (!address || typeof address !== "string") return null;
     const sanitized = address
         .trim()
-        .replace(/[\r\n\t]/g, " ")  // Replace line breaks/tabs with spaces
-        .replace(/\s+/g, " ");       // Collapse multiple spaces
+        .replace(/[\r\n\t]/g, " ")
+        .replace(/\s+/g, " ");
     return sanitized.length > 0 ? sanitized : null;
 }
 
-/**
- * Generate metadata for SEO
- */
-export async function generateMetadata({ params }: OrgProfilePageProps): Promise<Metadata> {
-    const { code } = await params;
-    const tenant = await getPublicTenantByCode(code);
+// ============================================================================
+// Extracted Components
+// ============================================================================
 
-    if (!tenant) {
-        return {
-            title: "Organisation Not Found",
-            description: "This organisation profile could not be found.",
-        };
-    }
-
-    const description = tenant.missionStatement || tenant.description || `${tenant.name} on smalltalk.community`;
-    const safeHeroUrl = safeUrl(tenant.heroImageUrl);
-    const safeLogoUrl = safeUrl(tenant.logoUrl);
-
-    return {
-        title: tenant.name,
-        description,
-        openGraph: {
-            title: `${tenant.name} | smalltalk.community`,
-            description,
-            type: "website",
-            images: safeHeroUrl ? [{ url: safeHeroUrl }] : safeLogoUrl ? [{ url: safeLogoUrl }] : [],
-        },
-        twitter: {
-            card: "summary_large_image",
-            title: `${tenant.name} | smalltalk.community`,
-            description,
-        },
-    };
+interface OrgHeroProps {
+    name: string;
+    primaryColor: string | null | undefined;
+    safeHeroUrl: string | undefined;
+    safeLogoUrl: string | undefined;
 }
 
-/**
- * Social link component with appropriate icon
- */
+/** Hero section with background and logo */
+function OrgHero({ name, primaryColor, safeHeroUrl, safeLogoUrl }: OrgHeroProps) {
+    const bgColor = primaryColor || "#4F46E5";
+    return (
+        <section className="relative">
+            <div
+                className="h-48 md:h-64 w-full bg-cover bg-center"
+                style={{
+                    backgroundColor: bgColor,
+                    backgroundImage: safeHeroUrl ? `url(${safeHeroUrl})` : undefined,
+                }}
+            />
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-16 md:-bottom-20">
+                <div className="h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden dark:border-gray-800 dark:bg-gray-800">
+                    {safeLogoUrl ? (
+                        <Image
+                            src={safeLogoUrl}
+                            alt={`${name} logo`}
+                            width={160}
+                            height={160}
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <div
+                            className="h-full w-full flex items-center justify-center text-4xl font-bold text-white"
+                            style={{ backgroundColor: bgColor }}
+                        >
+                            {name.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+interface OrgHeaderProps {
+    name: string;
+    safeWebsiteUrl: string | undefined;
+    websiteHostname: string | null;
+}
+
+/** Organisation name and website link */
+function OrgHeader({ name, safeWebsiteUrl, websiteHostname }: OrgHeaderProps) {
+    return (
+        <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                {name}
+            </h1>
+            {safeWebsiteUrl && websiteHostname && (
+                <a
+                    href={safeWebsiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-primary hover:underline"
+                >
+                    <Globe className="h-4 w-4" />
+                    <span>{websiteHostname}</span>
+                </a>
+            )}
+        </div>
+    );
+}
+
+interface OrgAboutProps {
+    content: string;
+}
+
+/** About/Mission statement section */
+function OrgAbout({ content }: OrgAboutProps) {
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                About
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                {content}
+            </p>
+        </section>
+    );
+}
+
+interface OrgSocialLinksProps {
+    socialLinks: Record<string, string | undefined>;
+}
+
+/** Social link component with appropriate icon */
 function SocialLink({ platform, url }: { platform: string; url: string }) {
     const icons: Record<string, React.ReactNode> = {
         facebook: <Facebook className="h-5 w-5" />,
@@ -143,165 +196,210 @@ function SocialLink({ platform, url }: { platform: string; url: string }) {
     );
 }
 
+/** Social links section */
+function OrgSocialLinks({ socialLinks }: OrgSocialLinksProps) {
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Connect With Us
+            </h2>
+            <div className="flex flex-wrap gap-3">
+                {Object.entries(socialLinks).map(([platform, url]) =>
+                    url ? <SocialLink key={platform} platform={platform} url={url} /> : null
+                )}
+            </div>
+        </section>
+    );
+}
+
+interface OrgContactProps {
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+}
+
+/** Contact information section */
+function OrgContact({ email, phone, address }: OrgContactProps) {
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Contact
+            </h2>
+            <div className="space-y-3 text-gray-600 dark:text-gray-300">
+                {email && (
+                    <a
+                        href={`mailto:${email}`}
+                        className="flex items-center gap-2 hover:text-primary"
+                    >
+                        <Mail className="h-5 w-5" />
+                        <span>{email}</span>
+                    </a>
+                )}
+                {phone && (
+                    <a
+                        href={`tel:${phone}`}
+                        className="flex items-center gap-2 hover:text-primary"
+                    >
+                        <Phone className="h-5 w-5" />
+                        <span>{phone}</span>
+                    </a>
+                )}
+                {address && (
+                    <div className="flex items-start gap-2">
+                        <MapPin className="h-5 w-5 mt-0.5" />
+                        <span>{address}</span>
+                    </div>
+                )}
+            </div>
+        </section>
+    );
+}
+
+interface OrgFooterProps {
+    tenantName: string;
+}
+
+/** Footer with powered-by and report link */
+function OrgFooter({ tenantName }: OrgFooterProps) {
+    return (
+        <footer className="border-t bg-white py-8 dark:bg-gray-800/50">
+            <div className="max-w-3xl mx-auto px-4 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Powered by{" "}
+                    <Link
+                        href="https://smalltalk.community"
+                        className="font-semibold text-primary hover:underline"
+                    >
+                        smalltalk.community
+                    </Link>
+                </p>
+                <a
+                    href={`mailto:ryanhutchison@outlook.com.au?subject=Report%20Organisation%20Profile%3A%20${encodeURIComponent(tenantName)}`}
+                    className="mt-2 inline-block text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                    Report this profile
+                </a>
+            </div>
+        </footer>
+    );
+}
+
+// ============================================================================
+// Metadata Generation
+// ============================================================================
+
+/**
+ * Generate metadata for SEO with error handling
+ */
+export async function generateMetadata({ params }: OrgProfilePageProps): Promise<Metadata> {
+    const { code } = await params;
+
+    try {
+        const tenant = await getPublicTenantByCode(code);
+
+        if (!tenant) {
+            return {
+                title: "Organisation Not Found",
+                description: "This organisation profile could not be found.",
+            };
+        }
+
+        const description = tenant.missionStatement || tenant.description || `${tenant.name} on smalltalk.community`;
+        const safeHeroUrl = safeUrl(tenant.heroImageUrl);
+        const safeLogoUrl = safeUrl(tenant.logoUrl);
+
+        return {
+            title: tenant.name,
+            description,
+            openGraph: {
+                title: `${tenant.name} | smalltalk.community`,
+                description,
+                type: "website",
+                images: safeHeroUrl ? [{ url: safeHeroUrl }] : safeLogoUrl ? [{ url: safeLogoUrl }] : [],
+            },
+            twitter: {
+                card: "summary_large_image",
+                title: `${tenant.name} | smalltalk.community`,
+                description,
+            },
+        };
+    } catch (error) {
+        console.error(`[generateMetadata] Error fetching tenant "${code}":`, error);
+        return {
+            title: "Organisation Profile",
+            description: "View organisation profile on smalltalk.community",
+        };
+    }
+}
+
+// ============================================================================
+// Page Component
+// ============================================================================
+
 export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
     const { code } = await params;
-    const tenant = await getPublicTenantByCode(code);
+
+    let tenant;
+    try {
+        tenant = await getPublicTenantByCode(code);
+    } catch (error) {
+        console.error(`[OrgProfilePage] Error fetching tenant "${code}":`, error);
+        notFound();
+    }
 
     if (!tenant) {
         notFound();
     }
 
+    // Prepare sanitized data once
     const socialLinks = tenant.socialLinks as Record<string, string | undefined> | null;
     const hasSocialLinks = socialLinks && Object.values(socialLinks).some((url) => url);
 
-    // Sanitize URLs and validate contact info
     const safeHeroUrl = safeUrl(tenant.heroImageUrl);
     const safeLogoUrl = safeUrl(tenant.logoUrl);
     const safeWebsiteUrl = safeUrl(tenant.website);
     const websiteHostname = tenant.website ? getHostnameFromUrl(tenant.website) : null;
+
+    // Sanitize contact info once and reuse
     const validEmail = validateEmail(tenant.contactEmail);
     const validPhone = validatePhone(tenant.contactPhone);
+    const sanitizedAddress = sanitizeAddress(tenant.address);
+    const hasContactInfo = validEmail || validPhone || sanitizedAddress;
 
-    const hasContactInfo = validEmail || validPhone || tenant.address;
+    const aboutContent = tenant.missionStatement || tenant.description;
 
     return (
         <div className="max-w-full overflow-hidden">
-            {/* Hero Section */}
-            <section className="relative">
-                {/* Hero Image / Color Background */}
-                <div
-                    className="h-48 md:h-64 w-full bg-cover bg-center"
-                    style={{
-                        backgroundColor: tenant.primaryColor || "#4F46E5",
-                        backgroundImage: safeHeroUrl ? `url(${safeHeroUrl})` : undefined,
-                    }}
+            <OrgHero
+                name={tenant.name}
+                primaryColor={tenant.primaryColor}
+                safeHeroUrl={safeHeroUrl}
+                safeLogoUrl={safeLogoUrl}
+            />
+
+            <main className="max-w-3xl mx-auto px-4 pt-20 md:pt-24 pb-16">
+                <OrgHeader
+                    name={tenant.name}
+                    safeWebsiteUrl={safeWebsiteUrl}
+                    websiteHostname={websiteHostname}
                 />
 
-                {/* Logo Overlay */}
-                <div className="absolute left-1/2 -translate-x-1/2 -bottom-16 md:-bottom-20">
-                    <div className="h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden dark:border-gray-800 dark:bg-gray-800">
-                        {safeLogoUrl ? (
-                            <Image
-                                src={safeLogoUrl}
-                                alt={`${tenant.name} logo`}
-                                width={160}
-                                height={160}
-                                className="h-full w-full object-cover"
-                            />
-                        ) : (
-                            <div
-                                className="h-full w-full flex items-center justify-center text-4xl font-bold text-white"
-                                style={{ backgroundColor: tenant.primaryColor || "#4F46E5" }}
-                            >
-                                {tenant.name.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </section>
+                {aboutContent && <OrgAbout content={aboutContent} />}
 
-            {/* Main Content */}
-            <main className="max-w-3xl mx-auto px-4 pt-20 md:pt-24 pb-16">
-                {/* Name & Website */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                        {tenant.name}
-                    </h1>
-                    {safeWebsiteUrl && websiteHostname && (
-                        <a
-                            href={safeWebsiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 mt-2 text-primary hover:underline"
-                        >
-                            <Globe className="h-4 w-4" />
-                            <span>{websiteHostname}</span>
-                        </a>
-                    )}
-                </div>
-
-                {/* Mission Statement / About */}
-                {(tenant.missionStatement || tenant.description) && (
-                    <section className="mb-10">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                            About
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                            {tenant.missionStatement || tenant.description}
-                        </p>
-                    </section>
+                {hasSocialLinks && socialLinks && (
+                    <OrgSocialLinks socialLinks={socialLinks} />
                 )}
 
-                {/* Social Links */}
-                {hasSocialLinks && (
-                    <section className="mb-10">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                            Connect With Us
-                        </h2>
-                        <div className="flex flex-wrap gap-3">
-                            {Object.entries(socialLinks || {}).map(([platform, url]) =>
-                                url ? <SocialLink key={platform} platform={platform} url={url} /> : null
-                            )}
-                        </div>
-                    </section>
-                )}
-
-                {/* Contact Info */}
                 {hasContactInfo && (
-                    <section className="mb-10">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                            Contact
-                        </h2>
-                        <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                            {validEmail && (
-                                <a
-                                    href={`mailto:${validEmail}`}
-                                    className="flex items-center gap-2 hover:text-primary"
-                                >
-                                    <Mail className="h-5 w-5" />
-                                    <span>{validEmail}</span>
-                                </a>
-                            )}
-                            {validPhone && (
-                                <a
-                                    href={`tel:${validPhone}`}
-                                    className="flex items-center gap-2 hover:text-primary"
-                                >
-                                    <Phone className="h-5 w-5" />
-                                    <span>{validPhone}</span>
-                                </a>
-                            )}
-                            {sanitizeAddress(tenant.address) && (
-                                <div className="flex items-start gap-2">
-                                    <MapPin className="h-5 w-5 mt-0.5" />
-                                    <span>{sanitizeAddress(tenant.address)}</span>
-                                </div>
-                            )}
-                        </div>
-                    </section>
+                    <OrgContact
+                        email={validEmail}
+                        phone={validPhone}
+                        address={sanitizedAddress}
+                    />
                 )}
             </main>
 
-            {/* Footer */}
-            <footer className="border-t bg-white py-8 dark:bg-gray-800/50">
-                <div className="max-w-3xl mx-auto px-4 text-center">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Powered by{" "}
-                        <Link
-                            href="https://smalltalk.community"
-                            className="font-semibold text-primary hover:underline"
-                        >
-                            smalltalk.community
-                        </Link>
-                    </p>
-                    <a
-                        href={`mailto:ryanhutchison@outlook.com.au?subject=Report%20Organisation%20Profile%3A%20${encodeURIComponent(tenant.name)}`}
-                        className="mt-2 inline-block text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                        Report this profile
-                    </a>
-                </div>
-            </footer>
+            <OrgFooter tenantName={tenant.name} />
         </div>
     );
 }

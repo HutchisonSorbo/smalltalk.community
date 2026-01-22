@@ -1439,7 +1439,7 @@ export const tenants = pgTable("tenants", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("tenants_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("tenants_public_read", { for: "select", to: "public", using: sql`is_public = true` }),
   pgPolicy("tenants_service_write", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
   // Composite index for public profile lookups
   index("tenants_code_is_public_idx").on(table.code, table.isPublic),

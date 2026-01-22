@@ -5,9 +5,9 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the Supabase service client
-vi.mock('@/lib/supabase-service', () => ({
-    createServiceClient: vi.fn(() => ({
+// Mock the Supabase server client (used by createClient)
+vi.mock('@/lib/supabase-server', () => ({
+    createClient: vi.fn(async () => ({
         from: vi.fn(() => ({
             select: vi.fn(() => ({
                 eq: vi.fn(() => ({
@@ -21,7 +21,7 @@ vi.mock('@/lib/supabase-service', () => ({
 }));
 
 import { getPublicTenantByCode } from '@/lib/communityos/tenant-context';
-import { createServiceClient } from '@/lib/supabase-service';
+import { createClient } from '@/lib/supabase-server';
 
 describe('getPublicTenantByCode', () => {
     beforeEach(() => {
@@ -44,7 +44,7 @@ describe('getPublicTenantByCode', () => {
         const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
         const fromMock = vi.fn().mockReturnValue({ select: selectMock });
 
-        vi.mocked(createServiceClient).mockReturnValue({
+        vi.mocked(createClient).mockResolvedValue({
             from: fromMock,
         } as any);
 
@@ -52,7 +52,8 @@ describe('getPublicTenantByCode', () => {
 
         expect(result).toEqual(mockTenant);
         expect(fromMock).toHaveBeenCalledWith('tenants');
-        expect(selectMock).toHaveBeenCalledWith('*');
+        // Check for explicit columns (starting with 'id, code, name')
+        expect(selectMock).toHaveBeenCalledWith(expect.stringContaining('id, code, name'));
         expect(eqCodeMock).toHaveBeenCalledWith('code', 'stc');
         expect(eqPublicMock).toHaveBeenCalledWith('is_public', true);
     });
@@ -64,7 +65,7 @@ describe('getPublicTenantByCode', () => {
         const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
         const fromMock = vi.fn().mockReturnValue({ select: selectMock });
 
-        vi.mocked(createServiceClient).mockReturnValue({
+        vi.mocked(createClient).mockResolvedValue({
             from: fromMock,
         } as any);
 
@@ -81,7 +82,7 @@ describe('getPublicTenantByCode', () => {
         const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
         const fromMock = vi.fn().mockReturnValue({ select: selectMock });
 
-        vi.mocked(createServiceClient).mockReturnValue({
+        vi.mocked(createClient).mockResolvedValue({
             from: fromMock,
         } as any);
 
@@ -95,13 +96,13 @@ describe('getPublicTenantByCode', () => {
             const result = await getPublicTenantByCode('');
             expect(result).toBeNull();
             // Should not call database for invalid input
-            expect(createServiceClient).not.toHaveBeenCalled();
+            expect(createClient).not.toHaveBeenCalled();
         });
 
         it('returns null for whitespace-only string', async () => {
             const result = await getPublicTenantByCode('   ');
             expect(result).toBeNull();
-            expect(createServiceClient).not.toHaveBeenCalled();
+            expect(createClient).not.toHaveBeenCalled();
         });
 
         it('trims whitespace from code before querying', async () => {
@@ -112,7 +113,7 @@ describe('getPublicTenantByCode', () => {
             const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
             const fromMock = vi.fn().mockReturnValue({ select: selectMock });
 
-            vi.mocked(createServiceClient).mockReturnValue({
+            vi.mocked(createClient).mockResolvedValue({
                 from: fromMock,
             } as any);
 
@@ -131,7 +132,7 @@ describe('getPublicTenantByCode', () => {
             const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
             const fromMock = vi.fn().mockReturnValue({ select: selectMock });
 
-            vi.mocked(createServiceClient).mockReturnValue({
+            vi.mocked(createClient).mockResolvedValue({
                 from: fromMock,
             } as any);
 

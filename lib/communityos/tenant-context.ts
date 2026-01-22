@@ -27,6 +27,7 @@ export async function getTenantByCode(code: string): Promise<Tenant | null> {
 /**
  * Fetch a public tenant by its URL code/slug (no auth required)
  * Used for public profile pages at /org/[code]
+ * Uses RLS policy to enforce is_public = true restriction
  * @param code - The tenant's URL slug (e.g., 'stc' for smalltalk.community Inc)
  * @returns The tenant or null if not found, not public, or invalid input
  */
@@ -38,28 +39,45 @@ export async function getPublicTenantByCode(code: string): Promise<Tenant | null
 
     // Sanitize code for logging (prevent log injection, limit length)
     const safeCode = code
-        .slice(0, 50)                        // Limit length
-        .replace(/[\r\n\t]/g, "")            // Strip control characters
-        .replace(/[^\w\-_.]/g, "_");         // Replace non-safe chars
+        .slice(0, 50)
+        .replace(/[\r\n\t]/g, "")
+        .replace(/[^\w\-_.]/g, "_");
+
+    // Explicit list of public profile columns (not select *)
+    const publicColumns = [
+        "id",
+        "code",
+        "name",
+        "logo_url",
+        "primary_color",
+        "description",
+        "website",
+        "hero_image_url",
+        "mission_statement",
+        "social_links",
+        "contact_email",
+        "contact_phone",
+        "address",
+        "is_public",
+    ].join(", ");
 
     try {
-        // Use service client to bypass any RLS restrictions for public access
-        const supabase = createServiceClient();
+        // Use regular client - RLS policy restricts to is_public = true
+        const supabase = await createClient();
         const { data, error } = await supabase
             .from("tenants")
-            .select("*")
+            .select(publicColumns)
             .eq("code", code.trim())
             .eq("is_public", true)
             .single();
 
         if (error) {
-            // Log error for debugging but don't expose to client
             console.error(`[getPublicTenantByCode] Database error for code "${safeCode}":`, error.message);
             return null;
         }
 
         if (!data) return null;
-        return data as Tenant;
+        return data as unknown as Tenant;
     } catch (err) {
         console.error(`[getPublicTenantByCode] Unexpected error for code "${safeCode}":`, err);
         return null;
