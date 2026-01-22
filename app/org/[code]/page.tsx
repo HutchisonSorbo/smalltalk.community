@@ -73,6 +73,17 @@ function sanitizeAddress(address: string | null | undefined): string | null {
     return sanitized.length > 0 ? sanitized : null;
 }
 
+/**
+ * Sanitize user input for safe logging (prevent log injection)
+ */
+function sanitizeLogCode(input: unknown): string {
+    if (typeof input !== "string") return "[invalid]";
+    return input
+        .slice(0, 64)
+        .replace(/[\r\n\t]/g, "")
+        .replace(/[^\w\-_.]/g, "_");
+}
+
 // ============================================================================
 // Extracted Components
 // ============================================================================
@@ -324,7 +335,7 @@ export async function generateMetadata({ params }: OrgProfilePageProps): Promise
             },
         };
     } catch (error) {
-        console.error(`[generateMetadata] Error fetching tenant "${code}":`, error);
+        console.error(`[generateMetadata] Error fetching tenant "${sanitizeLogCode(code)}":`, error);
         return {
             title: "Organisation Profile",
             description: "View organisation profile on smalltalk.community",
@@ -343,7 +354,7 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
     try {
         tenant = await getPublicTenantByCode(code);
     } catch (error) {
-        console.error(`[OrgProfilePage] Error fetching tenant "${code}":`, error);
+        console.error(`[OrgProfilePage] Error fetching tenant "${sanitizeLogCode(code)}":`, error);
         notFound();
     }
 

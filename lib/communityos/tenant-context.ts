@@ -25,13 +25,41 @@ export async function getTenantByCode(code: string): Promise<Tenant | null> {
 }
 
 /**
+ * Public-facing subset of Tenant fields returned by getPublicTenantByCode.
+ * Only includes fields safe and relevant for public profile display.
+ */
+export type PublicTenant = Pick<
+    Tenant,
+    | "id"
+    | "code"
+    | "name"
+    | "logoUrl"
+    | "primaryColor"
+    | "description"
+    | "website"
+    | "heroImageUrl"
+    | "missionStatement"
+    | "socialLinks"
+    | "contactEmail"
+    | "contactPhone"
+    | "address"
+    | "isPublic"
+>;
+
+/**
  * Fetch a public tenant by its URL code/slug (no auth required)
  * Used for public profile pages at /org/[code]
- * Uses RLS policy to enforce is_public = true restriction
+ *
+ * NOTE: This function uses the Supabase client (not Drizzle) intentionally.
+ * The RLS policy "tenants_public_read" restricts SELECTs to rows where
+ * is_public = true, providing defense-in-depth security at the database level.
+ * This ensures that even if the application code has bugs, non-public tenants
+ * cannot be retrieved via this query path.
+ *
  * @param code - The tenant's URL slug (e.g., 'stc' for smalltalk.community Inc)
- * @returns The tenant or null if not found, not public, or invalid input
+ * @returns The public tenant or null if not found, not public, or invalid input
  */
-export async function getPublicTenantByCode(code: string): Promise<Tenant | null> {
+export async function getPublicTenantByCode(code: string): Promise<PublicTenant | null> {
     // Input validation
     if (typeof code !== "string" || code.trim() === "") {
         return null;
@@ -62,7 +90,7 @@ export async function getPublicTenantByCode(code: string): Promise<Tenant | null
     ].join(", ");
 
     try {
-        // Use regular client - RLS policy restricts to is_public = true
+        // Use Supabase client for RLS enforcement (see docstring above)
         const supabase = await createClient();
         const { data, error } = await supabase
             .from("tenants")
@@ -77,7 +105,7 @@ export async function getPublicTenantByCode(code: string): Promise<Tenant | null
         }
 
         if (!data) return null;
-        return data as unknown as Tenant;
+        return data as unknown as PublicTenant;
     } catch (err) {
         console.error(`[getPublicTenantByCode] Unexpected error for code "${safeCode}":`, err);
         return null;
