@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkBotId } from "botid/server";
 
@@ -11,10 +12,12 @@ const callbackSchema = z.object({
 import { createClient } from '@/lib/supabase-server'
 
 // Handle CORS preflight requests
-export async function OPTIONS() {
+export async function OPTIONS(request: Request) {
+    const origin = request.headers.get('origin');
     return new NextResponse(null, {
         status: 204,
         headers: {
+            'Access-Control-Allow-Origin': origin || '*',
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             'Access-Control-Max-Age': '86400',
