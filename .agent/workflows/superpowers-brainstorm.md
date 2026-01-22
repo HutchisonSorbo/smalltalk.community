@@ -16,6 +16,20 @@ Brainstorm for this task (exactly as provided by the user):
 
 If `{{input}}` is empty or missing, ask the user to restate the task in one sentence and STOP.
 
+## Skills Discovery (Checkpoint 1)
+
+Before brainstorming, check for applicable skills:
+
+1. Run `/discover-skills` OR manually check:
+
+   ```bash
+   # turbo
+   git clone --depth 1 https://github.com/rmyndharis/antigravity-skills.git /tmp/antigravity-skills 2>/dev/null || git -C /tmp/antigravity-skills pull --ff-only
+   ```
+
+2. Search catalog for relevant keywords
+3. Note applicable skills for inclusion in output
+
 ## Output sections (use exactly)
 
 ## Goal
@@ -31,6 +45,14 @@ If `{{input}}` is empty or missing, ask the user to restate the task in one sent
 ## Recommendation
 
 ## Acceptance criteria
+
+## Applicable Skills
+
+| Skill | Category | Justification |
+|-------|----------|---------------|
+| (skill-name) | (category) | (why it applies) |
+
+(If no skills apply, state "None identified")
 
 ## Persist (mandatory)
 

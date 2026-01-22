@@ -57,6 +57,21 @@ Update `.gsd/STATE.md`:
 1. {Specific first action for next session}
 2. {Second priority}
 3. {Third priority}
+
+## Skills Utilised
+
+{Skills from antigravity-skills used in this session}
+- skill-name: {how it was applied}
+
+## Accessibility Status
+
+- Last test result: {pass/fail/not run}
+- Outstanding violations: {list or "none"}
+
+## White-Label Testing Status
+
+- Last test result: {pass/fail/not run}
+- Outstanding failures: {list or "none"}
 ```
 
 ---

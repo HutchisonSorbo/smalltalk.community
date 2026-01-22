@@ -35,6 +35,22 @@ If `artifacts/superpowers/plan.md` does not exist:
 - Read `artifacts/superpowers/plan.md`.
 - Restate the plan briefly (1–2 lines) before making changes.
 
+## Skills Discovery (Checkpoint 3 - Final Verification)
+
+Before execution begins:
+
+1. Review skills listed in the approved plan
+2. Run `/discover-skills` one final time
+3. If new applicable skills discovered:
+   - Pause execution
+   - Update the plan
+   - Request re-approval if changes are material
+
+Document in `artifacts/superpowers/execution.md`:
+
+- Skills verified
+- Any new skills discovered
+
 ## Skills to apply as needed
 
 Read and apply these skills when relevant:
@@ -62,6 +78,28 @@ Read and apply these skills when relevant:
 4) Keep changes minimal and scoped to the plan. If the plan is wrong or missing a step:
    - Stop and update the plan (write the updated plan back to `artifacts/superpowers/plan.md`)
    - Ask for approval again if the change is material.
+
+### Stop-on-Failure Gates
+
+1) **Accessibility Gate** (for UI changes):
+   - Run `/accessibility-review` after each UI step
+   - If violations found: **STOP**, fix, re-test
+   - Continue ONLY when zero violations
+
+2) **White-Label Gate** (for organisation features):
+   - Run `/white-label-test` after each org feature step
+   - If failures found: **STOP**, fix, re-test
+   - Continue ONLY when all tests pass
+
+### Execution Loop on Failure
+
+```
+WHILE test fails:
+  1. Analyse failure
+  2. Implement fix
+  3. Re-run same test
+END WHILE
+```
 
 ## Finish (required)
 

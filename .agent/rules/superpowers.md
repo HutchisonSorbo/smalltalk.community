@@ -163,6 +163,73 @@ If you encounter ANY of these, **STOP** and flag the issue:
 
 ---
 
+## 6) Skills Discovery (Three-Checkpoint Enforcement)
+
+Before any non-trivial work, check the [antigravity-skills repository](https://github.com/rmyndharis/antigravity-skills) for applicable skills.
+
+### Mandatory Checkpoints
+
+| Checkpoint | When | Action |
+|------------|------|--------|
+| 1 | Brainstorming | Identify applicable skills |
+| 2 | Planning | Document skills usage in plan |
+| 3 | Pre-execution | Final verification before coding |
+
+### Access Strategy (Hybrid Caching)
+
+1. Clone locally once: `git clone --depth 1 https://github.com/rmyndharis/antigravity-skills.git /tmp/antigravity-skills`
+2. At checkpoints, pull for updates: `git -C /tmp/antigravity-skills pull --ff-only`
+3. Search catalog: `grep -i "<keyword>" /tmp/antigravity-skills/CATALOG.md`
+
+Use `/discover-skills` workflow for guided discovery.
+
+---
+
+## 7) Accessibility Standards (Stop-on-Failure)
+
+All UI changes must meet WCAG 2.2 AA compliance.
+
+> [!CAUTION]
+> Agent MUST STOP if accessibility violations are found.
+> Implement fix, re-test, continue ONLY when passing.
+
+### Requirements
+
+- Semantic HTML with proper heading hierarchy
+- ARIA labels for interactive elements
+- Keyboard navigation (all elements reachable)
+- Colour contrast: 4.5:1 (normal text), 3:1 (large text)
+- Plain language for seniors and low digital literacy users
+- Touch targets: 44×44 CSS pixels minimum
+
+### Testing
+
+Use `/accessibility-review` workflow after any UI changes.
+
+---
+
+## 8) White-Label Testing Requirements (Stop-on-Failure)
+
+All organisation features must verify multi-tenant isolation.
+
+> [!CAUTION]
+> Agent MUST STOP if white-label tests fail.
+> Implement fix, re-test, continue ONLY when passing.
+
+### Requirements
+
+- RLS enabled on all tenant-scoped tables
+- Test with admin account: `smalltalkcommunity.backup@gmail.com`
+- Test with non-admin organisation accounts
+- Verify no cross-tenant data leakage
+- Tenant context preserved across navigation
+
+### Testing
+
+Use `/white-label-test` workflow after any organisation feature changes.
+
+---
+
 ## Session State Integration
 
 For long-running work sessions, use the session state commands:
