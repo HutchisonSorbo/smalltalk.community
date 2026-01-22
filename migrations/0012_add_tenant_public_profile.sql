@@ -18,3 +18,5 @@ COMMENT ON COLUMN tenants.contact_email IS 'Public contact email for the organis
 COMMENT ON COLUMN tenants.contact_phone IS 'Public contact phone number';
 COMMENT ON COLUMN tenants.address IS 'Physical address of the organisation';
 COMMENT ON COLUMN tenants.is_public IS 'Whether the organisation profile is publicly visible';
+-- Add composite index for efficient public profile lookups
+CREATE INDEX IF NOT EXISTS tenants_code_is_public_idx ON tenants (code, is_public);

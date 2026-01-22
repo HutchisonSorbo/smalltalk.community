@@ -4,7 +4,7 @@
 
 export default function OrgProfileLoading() {
     return (
-        <>
+        <div className="max-w-full overflow-hidden">
             {/* Hero Skeleton */}
             <section className="relative">
                 <div className="h-48 md:h-64 w-full bg-gray-200 animate-pulse dark:bg-gray-700" />
@@ -29,6 +29,6 @@ export default function OrgProfileLoading() {
                     </div>
                 </div>
             </main>
-        </>
+        </div>
     );
 }

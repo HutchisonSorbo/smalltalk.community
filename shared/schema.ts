@@ -1441,6 +1441,8 @@ export const tenants = pgTable("tenants", {
 }, (table) => [
   pgPolicy("tenants_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("tenants_service_write", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  // Composite index for public profile lookups
+  index("tenants_code_is_public_idx").on(table.code, table.isPublic),
 ]);
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({

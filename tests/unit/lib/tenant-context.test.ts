@@ -89,4 +89,57 @@ describe('getPublicTenantByCode', () => {
 
         expect(result).toBeNull();
     });
+
+    describe('input validation', () => {
+        it('returns null for empty string', async () => {
+            const result = await getPublicTenantByCode('');
+            expect(result).toBeNull();
+            // Should not call database for invalid input
+            expect(createServiceClient).not.toHaveBeenCalled();
+        });
+
+        it('returns null for whitespace-only string', async () => {
+            const result = await getPublicTenantByCode('   ');
+            expect(result).toBeNull();
+            expect(createServiceClient).not.toHaveBeenCalled();
+        });
+
+        it('trims whitespace from code before querying', async () => {
+            const mockTenant = { id: 'test', code: 'stc', name: 'Test', is_public: true };
+            const singleMock = vi.fn().mockResolvedValue({ data: mockTenant, error: null });
+            const eqPublicMock = vi.fn().mockReturnValue({ single: singleMock });
+            const eqCodeMock = vi.fn().mockReturnValue({ eq: eqPublicMock });
+            const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
+            const fromMock = vi.fn().mockReturnValue({ select: selectMock });
+
+            vi.mocked(createServiceClient).mockReturnValue({
+                from: fromMock,
+            } as any);
+
+            await getPublicTenantByCode('  stc  ');
+
+            expect(eqCodeMock).toHaveBeenCalledWith('code', 'stc');
+        });
+    });
+
+    describe('error handling', () => {
+        it('returns null and logs error on database failure', async () => {
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+            const singleMock = vi.fn().mockRejectedValue(new Error('Connection failed'));
+            const eqPublicMock = vi.fn().mockReturnValue({ single: singleMock });
+            const eqCodeMock = vi.fn().mockReturnValue({ eq: eqPublicMock });
+            const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
+            const fromMock = vi.fn().mockReturnValue({ select: selectMock });
+
+            vi.mocked(createServiceClient).mockReturnValue({
+                from: fromMock,
+            } as any);
+
+            const result = await getPublicTenantByCode('stc');
+
+            expect(result).toBeNull();
+            expect(consoleSpy).toHaveBeenCalled();
+            consoleSpy.mockRestore();
+        });
+    });
 });

@@ -27,6 +27,43 @@ interface OrgProfilePageProps {
     params: Promise<{ code: string }>;
 }
 
+// Regex patterns for contact validation
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[\d\s+\-()]+$/;
+
+/**
+ * Safely extract hostname from a URL without throwing
+ */
+function getHostnameFromUrl(url: string): string | null {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Validate and sanitize email for mailto: links
+ * Returns null if invalid or potentially malicious
+ */
+function validateEmail(email: string | null | undefined): string | null {
+    if (!email || typeof email !== "string") return null;
+    const trimmed = email.trim().replace(/[\r\n]/g, "");
+    if (!EMAIL_REGEX.test(trimmed)) return null;
+    return trimmed;
+}
+
+/**
+ * Validate and sanitize phone for tel: links
+ * Returns null if invalid or potentially malicious
+ */
+function validatePhone(phone: string | null | undefined): string | null {
+    if (!phone || typeof phone !== "string") return null;
+    const trimmed = phone.trim().replace(/[\r\n]/g, "");
+    if (!PHONE_REGEX.test(trimmed)) return null;
+    return trimmed;
+}
+
 /**
  * Generate metadata for SEO
  */
@@ -42,6 +79,8 @@ export async function generateMetadata({ params }: OrgProfilePageProps): Promise
     }
 
     const description = tenant.missionStatement || tenant.description || `${tenant.name} on smalltalk.community`;
+    const safeHeroUrl = safeUrl(tenant.heroImageUrl);
+    const safeLogoUrl = safeUrl(tenant.logoUrl);
 
     return {
         title: tenant.name,
@@ -50,7 +89,7 @@ export async function generateMetadata({ params }: OrgProfilePageProps): Promise
             title: `${tenant.name} | smalltalk.community`,
             description,
             type: "website",
-            images: tenant.heroImageUrl ? [{ url: tenant.heroImageUrl }] : tenant.logoUrl ? [{ url: tenant.logoUrl }] : [],
+            images: safeHeroUrl ? [{ url: safeHeroUrl }] : safeLogoUrl ? [{ url: safeLogoUrl }] : [],
         },
         twitter: {
             card: "summary_large_image",
@@ -98,29 +137,36 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
 
     const socialLinks = tenant.socialLinks as Record<string, string | undefined> | null;
     const hasSocialLinks = socialLinks && Object.values(socialLinks).some((url) => url);
-    const hasContactInfo = tenant.contactEmail || tenant.contactPhone || tenant.address;
+
+    // Sanitize URLs and validate contact info
+    const safeHeroUrl = safeUrl(tenant.heroImageUrl);
+    const safeLogoUrl = safeUrl(tenant.logoUrl);
+    const safeWebsiteUrl = safeUrl(tenant.website);
+    const websiteHostname = tenant.website ? getHostnameFromUrl(tenant.website) : null;
+    const validEmail = validateEmail(tenant.contactEmail);
+    const validPhone = validatePhone(tenant.contactPhone);
+
+    const hasContactInfo = validEmail || validPhone || tenant.address;
 
     return (
-        <>
+        <div className="max-w-full overflow-hidden">
             {/* Hero Section */}
             <section className="relative">
                 {/* Hero Image / Color Background */}
                 <div
-                    className="h-48 md:h-64 w-full"
+                    className="h-48 md:h-64 w-full bg-cover bg-center"
                     style={{
                         backgroundColor: tenant.primaryColor || "#4F46E5",
-                        backgroundImage: tenant.heroImageUrl ? `url(${tenant.heroImageUrl})` : undefined,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
+                        backgroundImage: safeHeroUrl ? `url(${safeHeroUrl})` : undefined,
                     }}
                 />
 
                 {/* Logo Overlay */}
                 <div className="absolute left-1/2 -translate-x-1/2 -bottom-16 md:-bottom-20">
                     <div className="h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden dark:border-gray-800 dark:bg-gray-800">
-                        {tenant.logoUrl ? (
+                        {safeLogoUrl ? (
                             <Image
-                                src={tenant.logoUrl}
+                                src={safeLogoUrl}
                                 alt={`${tenant.name} logo`}
                                 width={160}
                                 height={160}
@@ -145,15 +191,15 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
                         {tenant.name}
                     </h1>
-                    {tenant.website && (
+                    {safeWebsiteUrl && websiteHostname && (
                         <a
-                            href={safeUrl(tenant.website) || "#"}
+                            href={safeWebsiteUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 mt-2 text-primary hover:underline"
                         >
                             <Globe className="h-4 w-4" />
-                            <span>{new URL(tenant.website).hostname}</span>
+                            <span>{websiteHostname}</span>
                         </a>
                     )}
                 </div>
@@ -191,22 +237,22 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
                             Contact
                         </h2>
                         <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                            {tenant.contactEmail && (
+                            {validEmail && (
                                 <a
-                                    href={`mailto:${tenant.contactEmail}`}
+                                    href={`mailto:${validEmail}`}
                                     className="flex items-center gap-2 hover:text-primary"
                                 >
                                     <Mail className="h-5 w-5" />
-                                    <span>{tenant.contactEmail}</span>
+                                    <span>{validEmail}</span>
                                 </a>
                             )}
-                            {tenant.contactPhone && (
+                            {validPhone && (
                                 <a
-                                    href={`tel:${tenant.contactPhone}`}
+                                    href={`tel:${validPhone}`}
                                     className="flex items-center gap-2 hover:text-primary"
                                 >
                                     <Phone className="h-5 w-5" />
-                                    <span>{tenant.contactPhone}</span>
+                                    <span>{validPhone}</span>
                                 </a>
                             )}
                             {tenant.address && (
@@ -240,6 +286,6 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
                     </a>
                 </div>
             </footer>
-        </>
+        </div>
     );
 }
