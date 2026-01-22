@@ -1,4 +1,5 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import { withBotId } from 'botid/next/config';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -142,7 +143,7 @@ const nextConfig = {
  * - @sentry/nextjs >= 10.13.0 (current: 10.32.1 ✓)
  * - next >= 15.4.1 (current: 16.1.2 ✓)
  */
-export default withSentryConfig(nextConfig, {
+export default withBotId(withSentryConfig(nextConfig, {
     // For all available options, see:
     // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
@@ -181,4 +182,4 @@ export default withSentryConfig(nextConfig, {
 
     // Eliminate source map reference warnings for internal Next.js artifacts
     ignore: ["**/_client-reference-manifest.js"],
-});
+}));

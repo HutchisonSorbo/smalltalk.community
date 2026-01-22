@@ -221,23 +221,34 @@ export default function DashboardPage() {
                                 </CardContent>
                             </Card>
 
-                            {/* CommunityOS Workspaces - shown if user has tenant memberships */}
-                            {tenantMemberships.length > 0 && (
-                                <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Building2 className="h-5 w-5 text-primary" />
-                                            CommunityOS
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Access your organisation workspaces
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
+                            {/* CommunityOS Section */}
+                            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Building2 className="h-5 w-5 text-primary" />
+                                        CommunityOS
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Explore and manage your organisation workspaces
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {tenantMemberships.length > 0 ? (
                                         <CommunityOsWorkspaces memberships={tenantMemberships} />
-                                    </CardContent>
-                                </Card>
-                            )}
+                                    ) : (
+                                        <div className="text-center py-4 bg-background/50 rounded-lg border border-dashed border-primary/20">
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Discover and join local communities and organizations.
+                                            </p>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href="/org/stc">
+                                                    Visit CommunityOS Hub
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
 
                             <Card>
                                 <CardHeader>

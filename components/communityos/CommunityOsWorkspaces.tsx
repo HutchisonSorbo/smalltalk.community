@@ -67,12 +67,18 @@ export function CommunityOsWorkspaces({ memberships }: CommunityOsWorkspacesProp
                                 {membership.tenant.description || "CommunityOS Workspace"}
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex flex-col gap-3">
                             <Link
                                 href={`/communityos/${encodeURIComponent(membership.tenant.code)}/dashboard`}
                                 className="inline-flex items-center text-sm font-medium text-primary hover:underline group-hover:translate-x-0.5 transition-transform"
                             >
                                 Enter Workspace <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                            <Link
+                                href={`/org/${encodeURIComponent(membership.tenant.code)}`}
+                                className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground hover:underline"
+                            >
+                                View Public Profile
                             </Link>
                         </CardContent>
                     </Card>
