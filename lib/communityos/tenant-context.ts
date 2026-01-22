@@ -25,6 +25,94 @@ export async function getTenantByCode(code: string): Promise<Tenant | null> {
 }
 
 /**
+ * Public-facing subset of Tenant fields returned by getPublicTenantByCode.
+ * Only includes fields safe and relevant for public profile display.
+ */
+export type PublicTenant = Pick<
+    Tenant,
+    | "id"
+    | "code"
+    | "name"
+    | "logoUrl"
+    | "primaryColor"
+    | "description"
+    | "website"
+    | "heroImageUrl"
+    | "missionStatement"
+    | "socialLinks"
+    | "contactEmail"
+    | "contactPhone"
+    | "address"
+    | "isPublic"
+>;
+
+/**
+ * Fetch a public tenant by its URL code/slug (no auth required)
+ * Used for public profile pages at /org/[code]
+ *
+ * NOTE: This function uses the Supabase client (not Drizzle) intentionally.
+ * The RLS policy "tenants_public_read" restricts SELECTs to rows where
+ * is_public = true, providing defense-in-depth security at the database level.
+ * This ensures that even if the application code has bugs, non-public tenants
+ * cannot be retrieved via this query path.
+ *
+ * @param code - The tenant's URL slug (e.g., 'stc' for smalltalk.community Inc)
+ * @returns The public tenant or null if not found, not public, or invalid input
+ */
+export async function getPublicTenantByCode(code: string): Promise<PublicTenant | null> {
+    // Input validation
+    if (typeof code !== "string" || code.trim() === "") {
+        return null;
+    }
+
+    // Sanitize code for logging (prevent log injection, limit length)
+    const safeCode = code
+        .slice(0, 50)
+        .replace(/[\r\n\t]/g, "")
+        .replace(/[^\w\-_.]/g, "_");
+
+    // Explicit list of public profile columns (not select *)
+    const publicColumns = [
+        "id",
+        "code",
+        "name",
+        "logo_url",
+        "primary_color",
+        "description",
+        "website",
+        "hero_image_url",
+        "mission_statement",
+        "social_links",
+        "contact_email",
+        "contact_phone",
+        "address",
+        "is_public",
+    ].join(", ");
+
+    try {
+        // Use Supabase client for RLS enforcement (see docstring above)
+        const supabase = await createClient();
+        const { data, error } = await supabase
+            .from("tenants")
+            .select(publicColumns)
+            .eq("code", code.trim())
+            .eq("is_public", true)
+            .single();
+
+        if (error) {
+            console.error(`[getPublicTenantByCode] Database error for code "${safeCode}":`, error.message);
+            return null;
+        }
+
+        if (!data) return null;
+        return data as unknown as PublicTenant;
+    } catch (err) {
+        console.error(`[getPublicTenantByCode] Unexpected error for code "${safeCode}":`, err);
+        return null;
+    }
+}
+
+/**
  * Fetch a tenant by its ID
  * @param id - The tenant's UUID
  * @returns The tenant or null if not found

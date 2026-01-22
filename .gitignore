@@ -28,5 +28,6 @@ playwright-report/
 .gemini/
 gha-creds-*.json
 coverage/
-coverage/
-coverage/
+
+# Superpowers artifacts (generated)
+artifacts/superpowers/

@@ -1422,11 +1422,27 @@ export const tenants = pgTable("tenants", {
   secondaryColor: varchar("secondary_color", { length: 7 }).default("#818CF8"),
   description: text("description"),
   website: varchar("website", { length: 255 }),
+  // Public profile fields
+  heroImageUrl: varchar("hero_image_url", { length: 500 }),
+  missionStatement: text("mission_statement"),
+  socialLinks: jsonb("social_links").$type<{
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    youtube?: string;
+  }>().default({}),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  address: text("address"),
+  isPublic: boolean("is_public").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("tenants_public_read", { for: "select", to: "public", using: sql`true` }),
+  pgPolicy("tenants_public_read", { for: "select", to: "public", using: sql`is_public = true` }),
   pgPolicy("tenants_service_write", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  // Composite index for public profile lookups
+  index("tenants_code_is_public_idx").on(table.code, table.isPublic),
 ]);
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
