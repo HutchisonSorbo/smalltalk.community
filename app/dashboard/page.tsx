@@ -25,6 +25,13 @@ interface UserProfile {
 }
 
 
+const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+function isValidHexColor(color: string | null | undefined): boolean {
+    if (!color || typeof color !== "string") return false;
+    return HEX_COLOR_REGEX.test(color);
+}
+
+
 function calculateProfileCompletion(user: UserProfile | null): { percentage: number; missing: string[] } {
     if (!user) return { percentage: 0, missing: ["Sign in to view your profile"] };
 
@@ -237,22 +244,27 @@ export default function DashboardPage() {
                                         <div className="space-y-4">
                                             {tenantMemberships.map((membership) => {
                                                 const sanitizedCode = encodeURIComponent(membership.tenant.code || '');
+                                                const logoUrl = safeUrl(membership.tenant.logoUrl);
+                                                const primaryColor = isValidHexColor(membership.tenant.primaryColor)
+                                                    ? membership.tenant.primaryColor!
+                                                    : '#6366f1';
+
                                                 return (
                                                     <div
                                                         key={membership.tenant.id}
                                                         className="p-4 bg-background/50 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors"
                                                     >
                                                         <div className="flex items-center gap-3 mb-3">
-                                                            {membership.tenant.logoUrl ? (
+                                                            {logoUrl ? (
                                                                 <img
-                                                                    src={safeUrl(membership.tenant.logoUrl) || ''}
+                                                                    src={logoUrl}
                                                                     alt={membership.tenant.name}
                                                                     className="h-8 w-8 rounded object-cover"
                                                                 />
                                                             ) : (
                                                                 <div
                                                                     className="h-8 w-8 rounded flex items-center justify-center text-white text-xs font-bold"
-                                                                    style={{ backgroundColor: membership.tenant.primaryColor || '#6366f1' }}
+                                                                    style={{ backgroundColor: primaryColor }}
                                                                 >
                                                                     {membership.tenant.name.charAt(0).toUpperCase()}
                                                                 </div>
