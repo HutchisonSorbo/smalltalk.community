@@ -19,14 +19,38 @@ export async function updatePreferences(data: Partial<UserPreference>) {
             return { success: false, error: "Unauthorized" };
         }
 
-        // Sanitize payload to only include allowed preference keys
-        const allowlist: (keyof UserPreference)[] = ["theme", "language", "highContrast", "reducedMotion"];
-        const sanitizedData = Object.keys(data).reduce((acc, key) => {
-            if (allowlist.includes(key as keyof UserPreference)) {
-                acc[key as keyof UserPreference] = data[key as keyof UserPreference];
+        // Sanitize and validate payload
+        const ALLOWED_THEMES = ["light", "dark", "system"];
+        const ALLOWED_LANGUAGES = ["en-AU", "en-GB", "en-US"];
+        const sanitizedData: Record<string, any> = {};
+
+        for (const [key, value] of Object.entries(data)) {
+            if (key === "theme") {
+                const val = (value as string)?.trim().toLowerCase();
+                if (ALLOWED_THEMES.includes(val)) {
+                    sanitizedData.theme = val;
+                } else {
+                    console.error("[updatePreferences] Validation Error: Invalid theme", { val });
+                    return { success: false, error: "Invalid preferences" };
+                }
+            } else if (key === "language") {
+                const val = (value as string)?.trim();
+                if (ALLOWED_LANGUAGES.includes(val)) {
+                    sanitizedData.language = val;
+                } else {
+                    console.error("[updatePreferences] Validation Error: Invalid language", { val });
+                    return { success: false, error: "Invalid preferences" };
+                }
+            } else if (key === "highContrast") {
+                sanitizedData.highContrast = Boolean(value);
+            } else if (key === "reducedMotion") {
+                sanitizedData.reducedMotion = Boolean(value);
             }
-            return acc;
-        }, {} as Record<string, any>);
+        }
+
+        if (Object.keys(sanitizedData).length === 0) {
+            return { success: true }; // Nothing to update
+        }
 
         const { error } = await supabase
             .from("user_preferences")
@@ -261,21 +285,26 @@ export async function logActivity(eventType: string, description: string, metada
  * @returns An object indicating success or an error message.
  */
 async function updateUserAccount(userId: string, accountType: string, supabase: any) {
-    const { error } = await supabase
-        .from("users")
-        .update({
-            userType: accountType,
-            onboardingCompleted: true,
-            onboardingCompletedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        })
-        .eq("id", userId);
+    try {
+        const { error } = await supabase
+            .from("users")
+            .update({
+                userType: accountType,
+                onboardingCompleted: true,
+                onboardingCompletedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            })
+            .eq("id", userId);
 
-    if (error) {
-        console.error("[updateUserAccount] User Update Error:", error);
-        return { success: false, error: "Unable to save account details" };
+        if (error) {
+            console.error("[updateUserAccount] User Update Error:", error);
+            return { success: false, error: "Unable to save account details" };
+        }
+        return { success: true };
+    } catch (err) {
+        console.error("[updateUserAccount] Unexpected Error:", err);
+        return { success: false, error: "Unexpected error saving account details" };
     }
-    return { success: true };
 }
 
 /**
@@ -286,22 +315,27 @@ async function updateUserAccount(userId: string, accountType: string, supabase: 
  * @returns An object indicating success or an error message.
  */
 async function upsertUserPreferences(userId: string, notificationPreference: string, supabase: any) {
-    const isStandard = notificationPreference === "standard";
-    const { error } = await supabase
-        .from("user_preferences")
-        .upsert({
-            user_id: userId,
-            email_notifications: true,
-            push_notifications: isStandard,
-            marketing_emails: isStandard,
-            updated_at: new Date().toISOString(),
-        });
+    try {
+        const isStandard = notificationPreference === "standard";
+        const { error } = await supabase
+            .from("user_preferences")
+            .upsert({
+                user_id: userId,
+                email_notifications: true,
+                push_notifications: isStandard,
+                marketing_emails: isStandard,
+                updated_at: new Date().toISOString(),
+            });
 
-    if (error) {
-        console.error("[upsertUserPreferences] Preference Error:", error);
+        if (error) {
+            console.error("[upsertUserPreferences] Preference Error:", error);
+            return { success: false, error: "Unable to save notification preferences" };
+        }
+        return { success: true };
+    } catch (err) {
+        console.error("[upsertUserPreferences] Unexpected Error:", err);
         return { success: false, error: "Unable to save notification preferences" };
     }
-    return { success: true };
 }
 
 /**
@@ -379,7 +413,7 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
             if (error.code === 'PGRST116') {
                 const { data: newData, error: createError } = await supabase
                     .from("user_preferences")
-                    .insert({ user_id: userId })
+                    .insert({ user_id: trimmedId })
                     .select()
                     .single();
 
