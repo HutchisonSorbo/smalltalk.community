@@ -7,6 +7,46 @@ import { UserPreference } from "@/shared/schema";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 /**
+ * Validates and sanitizes user preferences payload.
+ * @param data - The partial preference data to validate.
+ * @returns A result object with sanitized data or an error message.
+ */
+function validateAndSanitizePreferences(data: Partial<UserPreference>): { success: true; data: Record<string, any> } | { success: false; error: string } {
+    const ALLOWED_THEMES = ["light", "dark", "system"];
+    const ALLOWED_LANGUAGES = ["en-AU", "en-GB", "en-US"];
+    const sanitizedData: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(data)) {
+        if (key === "theme") {
+            const val = (value as string)?.trim().toLowerCase();
+            if (ALLOWED_THEMES.includes(val)) {
+                sanitizedData.theme = val;
+            } else {
+                console.error("[validateAndSanitizePreferences] Validation Error: Invalid theme", { val });
+                return { success: false, error: "Invalid preferences" };
+            }
+        } else if (key === "language") {
+            const val = (value as string)?.trim();
+            if (ALLOWED_LANGUAGES.includes(val)) {
+                sanitizedData.language = val;
+            } else {
+                console.error("[validateAndSanitizePreferences] Validation Error: Invalid language", { val });
+                return { success: false, error: "Invalid preferences" };
+            }
+        } else if (key === "highContrast" || key === "reducedMotion") {
+            if (typeof value === "boolean") {
+                sanitizedData[key] = value;
+            } else {
+                console.error(`[validateAndSanitizePreferences] Validation Error: ${key} must be a boolean`, { value });
+                return { success: false, error: "Invalid preferences" };
+            }
+        }
+    }
+
+    return { success: true, data: sanitizedData };
+}
+
+/**
  * Updates the current user's preferences.
  * @param data - Partial preferences data to update (theme, language, highContrast, reducedMotion).
  * @returns An object indicating success or an error message.
@@ -20,43 +60,19 @@ export async function updatePreferences(data: Partial<UserPreference>) {
             return { success: false, error: "Unauthorized" };
         }
 
-        // Sanitize and validate payload
-        const ALLOWED_THEMES = ["light", "dark", "system"];
-        const ALLOWED_LANGUAGES = ["en-AU", "en-GB", "en-US"];
-        const sanitizedData: Record<string, any> = {};
-
-        for (const [key, value] of Object.entries(data)) {
-            if (key === "theme") {
-                const val = (value as string)?.trim().toLowerCase();
-                if (ALLOWED_THEMES.includes(val)) {
-                    sanitizedData.theme = val;
-                } else {
-                    console.error("[updatePreferences] Validation Error: Invalid theme", { val });
-                    return { success: false, error: "Invalid preferences" };
-                }
-            } else if (key === "language") {
-                const val = (value as string)?.trim();
-                if (ALLOWED_LANGUAGES.includes(val)) {
-                    sanitizedData.language = val;
-                } else {
-                    console.error("[updatePreferences] Validation Error: Invalid language", { val });
-                    return { success: false, error: "Invalid preferences" };
-                }
-            } else if (key === "highContrast") {
-                sanitizedData.highContrast = Boolean(value);
-            } else if (key === "reducedMotion") {
-                sanitizedData.reducedMotion = Boolean(value);
-            }
+        const validation = validateAndSanitizePreferences(data);
+        if (!validation.success) {
+            return validation;
         }
 
-        if (Object.keys(sanitizedData).length === 0) {
-            return { success: true }; // Nothing to update
+        if (Object.keys(validation.data).length === 0) {
+            return { success: true };
         }
 
         const { error } = await supabase
             .from("user_preferences")
             .upsert({
-                ...sanitizedData,
+                ...validation.data,
                 user_id: user.id,
                 updated_at: new Date().toISOString(),
             });
