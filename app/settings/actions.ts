@@ -218,7 +218,7 @@ export async function logoutAllSessions() {
  * @param description - A human-readable description of the action.
  * @param metadata - Optional additional JSON data related to the event.
  */
-export async function logActivity(eventType: string, description: string, metadata: any = {}) {
+export async function logActivity(eventType: string, description: string, metadata: Record<string, unknown> = {}) {
     try {
         const supabase = await createClient(true); // System access to log
         const { data: { user } } = await supabase.auth.getUser();
@@ -229,7 +229,7 @@ export async function logActivity(eventType: string, description: string, metada
             user_id: user.id,
             event_type: eventType,
             description,
-            metadata,
+            metadata: metadata as any, // Cast to any to satisfy Supabase JSON typing while keeping external type safety
         });
 
         if (error) {
@@ -240,6 +240,69 @@ export async function logActivity(eventType: string, description: string, metada
         }
     } catch (err) {
         console.error("[logActivity] Unexpected Error:", err);
+    }
+}
+
+/**
+ * Persists data collected during the Profile Completion Wizard.
+ * Updates both the user profile and notification preferences.
+ * @param data - The data collected from the wizard steps.
+ * @returns An object indicating success or an error message.
+ */
+export async function completeProfileWizard(data: {
+    notificationPreference: "standard" | "privacy";
+    accountType: "individual" | "organisation";
+}) {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) return { success: false, error: "Unauthorized" };
+
+        // 1. Update account type on the users table
+        const { error: userError } = await supabase
+            .from("users")
+            .update({
+                userType: data.accountType,
+                onboardingCompleted: true,
+                onboardingCompletedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            })
+            .eq("id", user.id);
+
+        if (userError) {
+            console.error("[completeProfileWizard] User Update Error:", userError);
+            return { success: false, error: "Unable to save account details" };
+        }
+
+        // 2. Update notification preferences
+        // Map wizard preferences to schema fields
+        const isStandard = data.notificationPreference === "standard";
+        const { error: prefError } = await supabase
+            .from("user_preferences")
+            .upsert({
+                user_id: user.id,
+                email_notifications: true,
+                push_notifications: isStandard,
+                marketing_emails: isStandard,
+                updated_at: new Date().toISOString(),
+            });
+
+        if (prefError) {
+            console.error("[completeProfileWizard] Preference Error:", prefError);
+            return { success: false, error: "Unable to save notification preferences" };
+        }
+
+        await logActivity("wizard_completed", "Completed the profile completion wizard.", {
+            accountType: data.accountType,
+            preference: data.notificationPreference
+        });
+
+        revalidatePath("/dashboard");
+        return { success: true };
+    } catch (err) {
+        console.error("[completeProfileWizard] Unexpected Error:", err);
+        return { success: false, error: "An unexpected error occurred while saving your profile" };
     }
 }
 

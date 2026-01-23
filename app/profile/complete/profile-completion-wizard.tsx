@@ -4,10 +4,11 @@ import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, User, Shield, Bell, Building2, ArrowRight, ArrowLeft } from "lucide-react";
+import { CheckCircle2, User, Shield, Bell, Building2, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
+import { completeProfileWizard } from "../../settings/actions";
 
 interface WizardUser {
     id: string;
@@ -43,6 +44,8 @@ export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
         done: 100,
     };
 
+    const [isSaving, setIsSaving] = useState(false);
+
     const handleNext = () => {
         const currentIndex = stepOrder.indexOf(currentStep);
         if (currentIndex < stepOrder.length - 1) {
@@ -61,12 +64,37 @@ export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
         }
     };
 
-    const handleFinish = () => {
-        toast({
-            title: "Profile completed!",
-            description: "Redirecting you back to your dashboard.",
-        });
-        router.push("/dashboard");
+    const handleFinish = async () => {
+        setIsSaving(true);
+        try {
+            const result = await completeProfileWizard({
+                notificationPreference,
+                accountType
+            });
+
+            if (result.success) {
+                toast({
+                    title: "Profile completed!",
+                    description: "Your details have been saved successfully.",
+                });
+                router.push("/dashboard");
+            } else {
+                toast({
+                    title: "Error saving profile",
+                    description: result.error || "Please try again or contact support.",
+                    variant: "destructive",
+                });
+            }
+        } catch (err) {
+            console.error("[handleFinish] Unexpected error:", err);
+            toast({
+                title: "Error",
+                description: "An unexpected error occurred. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -211,38 +239,45 @@ export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
                                     Utilise the platform as an individual or part of an organisation.
                                 </p>
                             </div>
-                            <div className="grid gap-4" role="radiogroup" aria-label="Select account type">
+                            <fieldset className="grid gap-4">
+                                <legend className="sr-only">Account Type</legend>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Button
-                                        variant="outline"
+                                    <label
                                         className={cn(
-                                            "flex-col h-auto py-8 gap-4 border-2 transition-all",
-                                            accountType === "individual" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent"
+                                            "flex flex-col items-center justify-center p-8 gap-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-muted/50 text-center",
+                                            accountType === "individual" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent bg-muted/30"
                                         )}
-                                        role="radio"
-                                        aria-checked={accountType === "individual"}
-                                        onClick={() => setAccountType("individual")}
-                                        onKeyDown={(e) => (e.key === " " || e.key === "Enter") && setAccountType("individual")}
                                     >
+                                        <input
+                                            type="radio"
+                                            name="accountType"
+                                            value="individual"
+                                            className="sr-only"
+                                            checked={accountType === "individual"}
+                                            onChange={() => setAccountType("individual")}
+                                        />
                                         <User className={cn("h-10 w-10", accountType === "individual" ? "text-primary" : "text-muted-foreground")} />
                                         <span className="font-semibold text-lg">Individual</span>
-                                    </Button>
-                                    <Button
-                                        variant="outline"
+                                    </label>
+                                    <label
                                         className={cn(
-                                            "flex-col h-auto py-8 gap-4 border-2 transition-all",
-                                            accountType === "organisation" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent"
+                                            "flex flex-col items-center justify-center p-8 gap-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-muted/50 text-center",
+                                            accountType === "organisation" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent bg-muted/30"
                                         )}
-                                        role="radio"
-                                        aria-checked={accountType === "organisation"}
-                                        onClick={() => setAccountType("organisation")}
-                                        onKeyDown={(e) => (e.key === " " || e.key === "Enter") && setAccountType("organisation")}
                                     >
+                                        <input
+                                            type="radio"
+                                            name="accountType"
+                                            value="organisation"
+                                            className="sr-only"
+                                            checked={accountType === "organisation"}
+                                            onChange={() => setAccountType("organisation")}
+                                        />
                                         <Building2 className={cn("h-10 w-10", accountType === "organisation" ? "text-primary" : "text-muted-foreground")} />
                                         <span className="font-semibold text-lg">Organisation</span>
-                                    </Button>
+                                    </label>
                                 </div>
-                            </div>
+                            </fieldset>
                         </div>
                     )}
 
@@ -256,12 +291,12 @@ export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-bold">All Set!</h2>
                                 <p className="text-muted-foreground max-w-sm mx-auto">
-                                    Your profile is now complete and your account is fully verified.
+                                    Your profile is now complete and your account is ready.
                                 </p>
                             </div>
-                            <Button onClick={handleFinish} size="lg" className="px-8 gap-2">
-                                Finish & Go to Dashboard
-                                <ArrowRight className="h-4 w-4" />
+                            <Button onClick={handleFinish} size="lg" className="px-8 gap-2" disabled={isSaving}>
+                                {isSaving ? "Saving..." : "Finish & Go to Dashboard"}
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
                             </Button>
                         </div>
                     )}
