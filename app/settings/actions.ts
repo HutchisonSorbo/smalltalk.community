@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { UserPreference } from "@/shared/schema";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Updates the current user's preferences.
@@ -226,6 +227,7 @@ export async function logoutOtherSessions() {
  * @returns An object indicating success or an error message (if it fails before redirect).
  */
 export async function logoutAllSessions() {
+    let shouldRedirect = false;
     try {
         const supabase = await createClient();
 
@@ -238,11 +240,14 @@ export async function logoutAllSessions() {
             console.error("[logoutAllSessions] SignOut Error:", error);
             return { success: false, error: "Unable to sign out globally" };
         }
-
-        redirect("/login");
+        shouldRedirect = true;
     } catch (err) {
         console.error("[logoutAllSessions] Unexpected Error:", err);
         return { success: false, error: "An unexpected error occurred" };
+    }
+
+    if (shouldRedirect) {
+        redirect("/login");
     }
 }
 
@@ -284,7 +289,7 @@ export async function logActivity(eventType: string, description: string, metada
  * @param supabase - The Supabase client to use.
  * @returns An object indicating success or an error message.
  */
-async function updateUserAccount(userId: string, accountType: string, supabase: any) {
+async function updateUserAccount(userId: string, accountType: string, supabase: SupabaseClient) {
     try {
         const { error } = await supabase
             .from("users")
@@ -314,7 +319,7 @@ async function updateUserAccount(userId: string, accountType: string, supabase: 
  * @param supabase - The Supabase client to use.
  * @returns An object indicating success or an error message.
  */
-async function upsertUserPreferences(userId: string, notificationPreference: string, supabase: any) {
+async function upsertUserPreferences(userId: string, notificationPreference: string, supabase: SupabaseClient) {
     try {
         const isStandard = notificationPreference === "standard";
         const { error } = await supabase
