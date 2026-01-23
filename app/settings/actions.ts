@@ -12,6 +12,11 @@ import { SupabaseClient } from "@supabase/supabase-js";
  * @returns A result object with sanitized data or an error message.
  */
 function validateAndSanitizePreferences(data: Partial<UserPreference>): { success: true; data: Record<string, any> } | { success: false; error: string } {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+        console.error("[validateAndSanitizePreferences] Validation Error: Invalid preference payload", { data });
+        return { success: false, error: "Invalid preference payload" };
+    }
+
     const ALLOWED_THEMES = ["light", "dark", "system"];
     const ALLOWED_LANGUAGES = ["en-AU", "en-GB", "en-US"];
     const sanitizedData: Record<string, any> = {};
@@ -45,7 +50,8 @@ function validateAndSanitizePreferences(data: Partial<UserPreference>): { succes
             }
         } else if (key === "highContrast" || key === "reducedMotion") {
             if (typeof value === "boolean") {
-                sanitizedData[key] = value;
+                const dbKey = key === "highContrast" ? "high_contrast" : "reduced_motion";
+                sanitizedData[dbKey] = value;
             } else {
                 console.error(`[validateAndSanitizePreferences] Validation Error: ${key} must be a boolean`, { value });
                 return { success: false, error: "Invalid preferences" };
@@ -380,8 +386,16 @@ export async function completeProfileWizard(data: {
     accountType: "individual" | "organisation";
 }) {
     // 0. Validate and normalize inputs
-    const accountType = data.accountType?.trim().toLowerCase();
-    const notificationPreference = data.notificationPreference?.trim().toLowerCase();
+    if (typeof data.accountType !== "string" || typeof data.notificationPreference !== "string") {
+        console.error("[completeProfileWizard] Validation Error: Inputs must be strings", {
+            accountType: typeof data.accountType,
+            notificationPreference: typeof data.notificationPreference
+        });
+        return { success: false, error: "Invalid profile data provided" };
+    }
+
+    const accountType = data.accountType.trim().toLowerCase();
+    const notificationPreference = data.notificationPreference.trim().toLowerCase();
 
     if (!["individual", "organisation"].includes(accountType)) {
         console.error("[completeProfileWizard] Validation Error: Invalid accountType", { accountType });
