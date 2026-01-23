@@ -254,6 +254,57 @@ export async function logActivity(eventType: string, description: string, metada
 }
 
 /**
+ * Internal helper to update user account details.
+ * @param userId - The ID of the user to update.
+ * @param accountType - The type of account ("individual" | "organisation").
+ * @param supabase - The Supabase client to use.
+ * @returns An object indicating success or an error message.
+ */
+async function updateUserAccount(userId: string, accountType: string, supabase: any) {
+    const { error } = await supabase
+        .from("users")
+        .update({
+            userType: accountType,
+            onboardingCompleted: true,
+            onboardingCompletedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        })
+        .eq("id", userId);
+
+    if (error) {
+        console.error("[updateUserAccount] User Update Error:", error);
+        return { success: false, error: "Unable to save account details" };
+    }
+    return { success: true };
+}
+
+/**
+ * Internal helper to upsert user notification preferences.
+ * @param userId - The ID of the user to update.
+ * @param notificationPreference - The preference type ("standard" | "privacy").
+ * @param supabase - The Supabase client to use.
+ * @returns An object indicating success or an error message.
+ */
+async function upsertUserPreferences(userId: string, notificationPreference: string, supabase: any) {
+    const isStandard = notificationPreference === "standard";
+    const { error } = await supabase
+        .from("user_preferences")
+        .upsert({
+            user_id: userId,
+            email_notifications: true,
+            push_notifications: isStandard,
+            marketing_emails: isStandard,
+            updated_at: new Date().toISOString(),
+        });
+
+    if (error) {
+        console.error("[upsertUserPreferences] Preference Error:", error);
+        return { success: false, error: "Unable to save notification preferences" };
+    }
+    return { success: true };
+}
+
+/**
  * Persists data collected during the Profile Completion Wizard.
  * Updates both the user profile and notification preferences.
  * @param data - The data collected from the wizard steps.
@@ -263,6 +314,20 @@ export async function completeProfileWizard(data: {
     notificationPreference: "standard" | "privacy";
     accountType: "individual" | "organisation";
 }) {
+    // 0. Validate and normalize inputs
+    const accountType = data.accountType?.trim().toLowerCase();
+    const notificationPreference = data.notificationPreference?.trim().toLowerCase();
+
+    if (!["individual", "organisation"].includes(accountType)) {
+        console.error("[completeProfileWizard] Validation Error: Invalid accountType", { accountType });
+        return { success: false, error: "Invalid account type provided" };
+    }
+
+    if (!["standard", "privacy"].includes(notificationPreference)) {
+        console.error("[completeProfileWizard] Validation Error: Invalid notificationPreference", { notificationPreference });
+        return { success: false, error: "Invalid notification preference provided" };
+    }
+
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -270,42 +335,16 @@ export async function completeProfileWizard(data: {
         if (!user) return { success: false, error: "Unauthorized" };
 
         // 1. Update account type on the users table
-        const { error: userError } = await supabase
-            .from("users")
-            .update({
-                userType: data.accountType,
-                onboardingCompleted: true,
-                onboardingCompletedAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            })
-            .eq("id", user.id);
-
-        if (userError) {
-            console.error("[completeProfileWizard] User Update Error:", userError);
-            return { success: false, error: "Unable to save account details" };
-        }
+        const userResult = await updateUserAccount(user.id, accountType, supabase);
+        if (!userResult.success) return userResult;
 
         // 2. Update notification preferences
-        // Map wizard preferences to schema fields
-        const isStandard = data.notificationPreference === "standard";
-        const { error: prefError } = await supabase
-            .from("user_preferences")
-            .upsert({
-                user_id: user.id,
-                email_notifications: true,
-                push_notifications: isStandard,
-                marketing_emails: isStandard,
-                updated_at: new Date().toISOString(),
-            });
-
-        if (prefError) {
-            console.error("[completeProfileWizard] Preference Error:", prefError);
-            return { success: false, error: "Unable to save notification preferences" };
-        }
+        const prefResult = await upsertUserPreferences(user.id, notificationPreference, supabase);
+        if (!prefResult.success) return prefResult;
 
         await logActivity("wizard_completed", "Completed the profile completion wizard.", {
-            accountType: data.accountType,
-            preference: data.notificationPreference
+            accountType,
+            preference: notificationPreference
         });
 
         revalidatePath("/dashboard");
@@ -322,12 +361,17 @@ export async function completeProfileWizard(data: {
  * @returns The user's preferences object or null if retrieval fails.
  */
 export async function getUserPreferences(userId: string): Promise<UserPreference | null> {
+    const trimmedId = userId?.trim();
+    if (!trimmedId) {
+        return null;
+    }
+
     try {
         const supabase = await createClient();
         const { data, error } = await supabase
             .from("user_preferences")
             .select("*")
-            .eq("user_id", userId)
+            .eq("user_id", trimmedId)
             .single();
 
         if (error) {
