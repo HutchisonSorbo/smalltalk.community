@@ -17,6 +17,9 @@ export async function proxy(request: NextRequest) {
         },
     });
 
+    // Security Headers (Redundancy for defense-in-depth)
+    applySecurityHeaders(response);
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -45,6 +48,7 @@ export async function proxy(request: NextRequest) {
                             headers: request.headers,
                         },
                     });
+                    applySecurityHeaders(response);
                     cookiesToSet.forEach(({ name, value, options }) =>
                         response.cookies.set(name, value, options)
                     );
@@ -102,6 +106,7 @@ export async function proxy(request: NextRequest) {
         const rewriteResponse = NextResponse.rewrite(newUrl);
         response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
         response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+        applySecurityHeaders(rewriteResponse);
         return rewriteResponse;
     }
 
@@ -171,6 +176,7 @@ export async function proxy(request: NextRequest) {
 
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    applySecurityHeaders(rewriteResponse);
     return rewriteResponse;
 
 }
@@ -187,5 +193,13 @@ function rewriteRootToHub(request: NextRequest, response: NextResponse) {
     rewriteResponse.headers.set("x-url", request.url);
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    applySecurityHeaders(rewriteResponse);
     return rewriteResponse;
+}
+
+function applySecurityHeaders(response: NextResponse) {
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    return response;
 }

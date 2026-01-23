@@ -121,7 +121,7 @@ When implementing features, structure your response as:
 - **Incident Commander**: Ryan Hutchison
 - **Child Safety Officer**: Ryan Hutchison  
 - **Email**: <ryanhutchison@outlook.com.au>
-- **Backup**: <smalltalkcommunity.backup@gmail.com>
+- **Backup**: `<ADMIN_TEST_EMAIL>`
 
 ---
 

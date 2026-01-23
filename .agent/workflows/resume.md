@@ -124,3 +124,12 @@ A resumed session has advantages:
 2. **Documented failures** — You know what NOT to try
 3. **Hypothesis preserved** — Pick up where logic left off
 4. **Full context budget** — Fresh token capacity
+
+## Resumption Checklist
+
+Before continuing work, verify:
+
+- [ ] Review skills used from previous session
+- [ ] Run `/discover-skills` to check for repository updates
+- [ ] Review accessibility status — re-run `/accessibility-review` if needed
+- [ ] Review white-label status — re-run `/white-label-test` if needed

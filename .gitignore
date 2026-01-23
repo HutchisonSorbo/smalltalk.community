@@ -31,3 +31,6 @@ coverage/
 
 # Superpowers artifacts (generated)
 artifacts/superpowers/
+
+# Generated types
+next-env.d.ts

@@ -11,11 +11,23 @@ Plan for this task (exactly as provided by the user):
 
 If `{{input}}` is empty or missing, ask the user to restate the task in one sentence and STOP.
 
+## Skills Discovery (Checkpoint 2)
+
+Before planning, verify skills from brainstorm and check for additional skills:
+
+1. Review skills identified in brainstorm
+2. Run `/discover-skills` or check catalog for additional matches
+3. Document confirmed skills in plan output
+
 ## Rules
 
 - DO NOT edit code.
 - You may read files to understand context, but produce the plan and then stop.
 - Plan steps must be small (2–10 minutes each) and include verification commands.
+- **CHECKPOINT 2**: Verify skills from brainstorm, check for additional skills
+- **MANDATORY**: Include accessibility considerations for all UI changes
+- **MANDATORY**: Include white-label testing for organisation features
+- **STOP-ON-FAILURE**: Plan must include accessibility/white-label gates where applicable
 
 ## Output format (use exactly)
 
@@ -23,9 +35,30 @@ If `{{input}}` is empty or missing, ask the user to restate the task in one sent
 
 ## Assumptions
 
+## Skills Utilised
+
+| Skill | Usage |
+|-------|-------|
+| (skill-name) | (how it will be applied) |
+
+(Confirmed list from brainstorm + any new skills discovered)
+
 ## Plan
 
 (Each step must include: Files, Change, Verify)
+
+## Accessibility Considerations
+
+(For UI changes: WCAG 2.2 AA compliance approach, senior/low digital literacy accommodations, screen reader compatibility)
+
+## White-Label Testing Approach
+
+(For org features: RLS verification, admin vs non-admin test accounts, tenant isolation verification)
+
+## Stop-on-Failure Gates
+
+- [ ] Accessibility gate (after UI changes) - run `/accessibility-review`
+- [ ] White-label gate (after org features) - run `/white-label-test`
 
 ## Risks & mitigations
 
