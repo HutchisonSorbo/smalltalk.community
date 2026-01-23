@@ -38,3 +38,4 @@ CREATE POLICY "activity_logs_service_all" ON activity_logs FOR ALL TO service_ro
 CREATE INDEX IF NOT EXISTS identities_user_id_idx ON identity_verifications(user_id);
 CREATE INDEX IF NOT EXISTS activity_logs_user_id_idx ON activity_logs(user_id);
 CREATE INDEX IF NOT EXISTS activity_logs_event_type_idx ON activity_logs(event_type);
+CREATE INDEX IF NOT EXISTS activity_logs_user_created_at_idx ON activity_logs(user_id, created_at);

@@ -23,6 +23,8 @@ type Step = "personal" | "identity" | "preferences" | "account" | "done";
 export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
     const [currentStep, setCurrentStep] = useState<Step>("personal");
     const [progress, setProgress] = useState(20);
+    const [notificationPreference, setNotificationPreference] = useState<"standard" | "privacy">("standard");
+    const [accountType, setAccountType] = useState<"individual" | "organisation">("individual");
     const router = useRouter();
 
     const steps = [
@@ -155,32 +157,49 @@ export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
                                     How should we notify you about community events?
                                 </p>
                             </div>
-                            <div className="grid gap-4" role="radiogroup" aria-label="Notification Preferences">
-                                <Button
-                                    variant="outline"
-                                    className={cn("justify-start h-auto py-4 px-6 border-2", /* Add state logic if shared state exists */)}
-                                    role="radio"
-                                    aria-checked="true" // Placeholder for actual state
+                            <fieldset className="grid gap-4">
+                                <legend className="sr-only">Notification Preferences</legend>
+                                <label
+                                    className={cn(
+                                        "flex items-center justify-start h-auto py-4 px-6 border-2 rounded-lg cursor-pointer transition-all hover:bg-muted/50",
+                                        notificationPreference === "standard" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent bg-muted/30"
+                                    )}
                                 >
-                                    <Bell className="mr-4 h-6 w-6 text-primary" />
+                                    <input
+                                        type="radio"
+                                        name="notification-preference"
+                                        value="standard"
+                                        className="sr-only"
+                                        checked={notificationPreference === "standard"}
+                                        onChange={() => setNotificationPreference("standard")}
+                                    />
+                                    <Bell className={cn("mr-4 h-6 w-6", notificationPreference === "standard" ? "text-primary" : "text-muted-foreground")} />
                                     <div className="text-left">
                                         <p className="font-semibold text-base">Standard Notifications</p>
                                         <p className="text-sm text-muted-foreground">Receive updates via email and push.</p>
                                     </div>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="justify-start h-auto py-4 px-6"
-                                    role="radio"
-                                    aria-checked="false" // Placeholder for actual state
+                                </label>
+                                <label
+                                    className={cn(
+                                        "flex items-center justify-start h-auto py-4 px-6 border-2 rounded-lg cursor-pointer transition-all hover:bg-muted/50",
+                                        notificationPreference === "privacy" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent bg-muted/30"
+                                    )}
                                 >
-                                    <Shield className="mr-4 h-6 w-6 text-muted-foreground" />
+                                    <input
+                                        type="radio"
+                                        name="notification-preference"
+                                        value="privacy"
+                                        className="sr-only"
+                                        checked={notificationPreference === "privacy"}
+                                        onChange={() => setNotificationPreference("privacy")}
+                                    />
+                                    <Shield className={cn("mr-4 h-6 w-6", notificationPreference === "privacy" ? "text-primary" : "text-muted-foreground")} />
                                     <div className="text-left">
                                         <p className="font-semibold text-base">Privacy Focused</p>
                                         <p className="text-sm text-muted-foreground">Minimal notifications, only critical alerts.</p>
                                     </div>
-                                </Button>
-                            </div>
+                                </label>
+                            </fieldset>
                         </div>
                     )}
 
@@ -192,14 +211,34 @@ export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
                                     Utilise the platform as an individual or part of an organisation.
                                 </p>
                             </div>
-                            <div className="grid gap-4">
+                            <div className="grid gap-4" role="radiogroup" aria-label="Select account type">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Button variant="outline" className="flex-col h-auto py-8 gap-4 border-2 border-primary bg-primary/5">
-                                        <User className="h-10 w-10" />
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "flex-col h-auto py-8 gap-4 border-2 transition-all",
+                                            accountType === "individual" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent"
+                                        )}
+                                        role="radio"
+                                        aria-checked={accountType === "individual"}
+                                        onClick={() => setAccountType("individual")}
+                                        onKeyDown={(e) => (e.key === " " || e.key === "Enter") && setAccountType("individual")}
+                                    >
+                                        <User className={cn("h-10 w-10", accountType === "individual" ? "text-primary" : "text-muted-foreground")} />
                                         <span className="font-semibold text-lg">Individual</span>
                                     </Button>
-                                    <Button variant="outline" className="flex-col h-auto py-8 gap-4">
-                                        <Building2 className="h-10 w-10" />
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "flex-col h-auto py-8 gap-4 border-2 transition-all",
+                                            accountType === "organisation" ? "border-primary bg-primary/5 shadow-sm" : "border-transparent"
+                                        )}
+                                        role="radio"
+                                        aria-checked={accountType === "organisation"}
+                                        onClick={() => setAccountType("organisation")}
+                                        onKeyDown={(e) => (e.key === " " || e.key === "Enter") && setAccountType("organisation")}
+                                    >
+                                        <Building2 className={cn("h-10 w-10", accountType === "organisation" ? "text-primary" : "text-muted-foreground")} />
                                         <span className="font-semibold text-lg">Organisation</span>
                                     </Button>
                                 </div>

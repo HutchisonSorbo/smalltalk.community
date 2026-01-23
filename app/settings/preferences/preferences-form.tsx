@@ -84,7 +84,7 @@ export function PreferencesForm({ initialData }: PreferencesFormProps) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-full">
                 <div className="grid gap-6 md:grid-cols-2">
                     <FormField
                         control={form.control}

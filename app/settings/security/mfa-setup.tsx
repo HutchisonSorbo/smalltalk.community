@@ -72,9 +72,10 @@ export function MFASetup({ initialFactors }: MFASetupProps) {
                 setEnrollData(result.data as EnrollData);
                 setStep("verify");
             } else {
+                console.error("[handleEnroll] Enrollment error:", result.error);
                 toast({
-                    title: "Error",
-                    description: result.error || "Failed to start MFA enrollment.",
+                    title: "Security Error",
+                    description: "Unable to start MFA enrollment at this time.",
                     variant: "destructive",
                 });
             }
@@ -116,9 +117,10 @@ export function MFASetup({ initialFactors }: MFASetupProps) {
                 setStep("enroll");
                 setOtpCode("");
             } else {
+                console.error("[handleVerify] Verification error:", result.error);
                 toast({
                     title: "Verification Failed",
-                    description: result.error || "The code you entered is invalid.",
+                    description: "The code you entered is invalid or has expired.",
                     variant: "destructive",
                 });
             }
@@ -148,9 +150,10 @@ export function MFASetup({ initialFactors }: MFASetupProps) {
                 setFactors([]);
                 setIsUnenrollOpen(false);
             } else {
+                console.error("[handleUnenroll] Unenroll error:", result.error);
                 toast({
                     title: "Error",
-                    description: result.error || "Failed to disable 2FA.",
+                    description: "Unable to disable two-factor authentication.",
                     variant: "destructive",
                 });
             }
