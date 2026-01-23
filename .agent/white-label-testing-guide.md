@@ -122,6 +122,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('White-Label Isolation', () => {
   test('user cannot access other tenant data', async ({ page }) => {
+    const email = process.env.TEST_USER_EMAIL;
+    const password = process.env.TEST_USER_PASSWORD;
     const targetTenant = process.env.TEST_TENANT_B || 'tenantB';
 
     if (!email || !password) throw new Error('Missing test credentials');
