@@ -18,19 +18,29 @@ function validateAndSanitizePreferences(data: Partial<UserPreference>): { succes
 
     for (const [key, value] of Object.entries(data)) {
         if (key === "theme") {
-            const val = (value as string)?.trim().toLowerCase();
-            if (ALLOWED_THEMES.includes(val)) {
-                sanitizedData.theme = val;
+            if (typeof value === "string") {
+                const val = value.trim().toLowerCase();
+                if (ALLOWED_THEMES.includes(val)) {
+                    sanitizedData.theme = val;
+                } else {
+                    console.error("[validateAndSanitizePreferences] Validation Error: Invalid theme", { val });
+                    return { success: false, error: "Invalid preferences" };
+                }
             } else {
-                console.error("[validateAndSanitizePreferences] Validation Error: Invalid theme", { val });
+                console.error("[validateAndSanitizePreferences] Validation Error: theme must be a string", { value });
                 return { success: false, error: "Invalid preferences" };
             }
         } else if (key === "language") {
-            const val = (value as string)?.trim();
-            if (ALLOWED_LANGUAGES.includes(val)) {
-                sanitizedData.language = val;
+            if (typeof value === "string") {
+                const val = value.trim();
+                if (ALLOWED_LANGUAGES.includes(val)) {
+                    sanitizedData.language = val;
+                } else {
+                    console.error("[validateAndSanitizePreferences] Validation Error: Invalid language", { val });
+                    return { success: false, error: "Invalid preferences" };
+                }
             } else {
-                console.error("[validateAndSanitizePreferences] Validation Error: Invalid language", { val });
+                console.error("[validateAndSanitizePreferences] Validation Error: language must be a string", { value });
                 return { success: false, error: "Invalid preferences" };
             }
         } else if (key === "highContrast" || key === "reducedMotion") {
@@ -310,10 +320,10 @@ async function updateUserAccount(userId: string, accountType: string, supabase: 
         const { error } = await supabase
             .from("users")
             .update({
-                userType: accountType,
-                onboardingCompleted: true,
-                onboardingCompletedAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                user_type: accountType,
+                onboarding_completed: true,
+                onboarding_completed_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
             })
             .eq("id", userId);
 
