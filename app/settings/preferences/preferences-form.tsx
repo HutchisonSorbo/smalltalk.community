@@ -27,12 +27,10 @@ import { updatePreferences } from "../actions";
 import { useTheme } from "next-themes";
 
 const preferencesFormSchema = z.object({
-    theme: z.string(),
-    language: z.string(),
-    timezone: z.string(),
+    theme: z.enum(["light", "dark", "system"]),
+    language: z.enum(["en-AU", "en-GB", "en-US"]),
     highContrast: z.boolean(),
     reducedMotion: z.boolean(),
-    fontSize: z.string(),
 });
 
 type PreferencesFormValues = z.infer<typeof preferencesFormSchema>;
@@ -48,12 +46,10 @@ export function PreferencesForm({ initialData }: PreferencesFormProps) {
     const form = useForm<PreferencesFormValues>({
         resolver: zodResolver(preferencesFormSchema),
         defaultValues: {
-            theme: initialData.theme ?? "system",
-            language: initialData.language ?? "en-AU",
-            timezone: initialData.timezone ?? "Australia/Melbourne",
+            theme: (initialData.theme as any) ?? "system",
+            language: (initialData.language as any) ?? "en-AU",
             highContrast: initialData.highContrast ?? false,
             reducedMotion: initialData.reducedMotion ?? false,
-            fontSize: initialData.fontSize ?? "medium",
         },
     });
 
@@ -75,9 +71,10 @@ export function PreferencesForm({ initialData }: PreferencesFormProps) {
                 });
             }
         } catch (error) {
+            console.error("[PreferencesForm] Unexpected error saving preferences:", error);
             toast({
                 title: "Error",
-                description: "An unexpected error occurred.",
+                description: "An unexpected error occurred while saving your preferences.",
                 variant: "destructive",
             });
         } finally {

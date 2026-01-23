@@ -1083,7 +1083,7 @@ export type InsertOrganisation = z.infer<typeof insertOrganisationSchema>;
 export type Organisation = typeof organisations.$inferSelect;
 
 // Organisation Members
-export const orgRoleEnum = pgTable("organisation_members", {
+export const organisationMembers = pgTable("organisation_members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -1095,7 +1095,6 @@ export const orgRoleEnum = pgTable("organisation_members", {
   index("org_members_user_idx").on(table.userId),
 ]);
 // Alias for cleaner export
-export const organisationMembers = orgRoleEnum;
 
 export const organisationMembersRelations = relations(organisationMembers, ({ one }) => ({
   organisation: one(organisations, {
@@ -1625,7 +1624,7 @@ export const tenantInvitesRelations = relations(tenantInvites, ({ one }) => ({
 // Identity Verification - For community safety and trust
 export const identityVerifications = pgTable("identity_verifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
   status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'verified', 'rejected'
   documentType: varchar("document_type", { length: 50 }),
   idNumber: varchar("id_number", { length: 100 }), // Encrypted in real app

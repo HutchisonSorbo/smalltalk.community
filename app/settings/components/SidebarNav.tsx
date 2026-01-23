@@ -9,7 +9,8 @@ import {
     Shield,
     Settings,
     History,
-    LayoutDashboard
+    LayoutDashboard,
+    UserCheck,
 } from "lucide-react";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> { }
@@ -21,7 +22,7 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
         {
             title: "Identity Verification",
             href: "/settings/identity",
-            icon: Shield,
+            icon: UserCheck,
         },
         {
             title: "Settings Overview",
@@ -58,22 +59,29 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
             )}
             {...props}
         >
-            {items.map((item) => (
-                <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                        buttonVariants({ variant: "ghost" }),
-                        pathname === item.href
-                            ? "bg-muted hover:bg-muted"
-                            : "hover:bg-transparent hover:underline",
-                        "justify-start"
-                    )}
-                >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.title}
-                </Link>
-            ))}
+            {items.map((item) => {
+                const isActive = item.href === "/settings"
+                    ? pathname === "/settings"
+                    : pathname.startsWith(item.href);
+
+                return (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        aria-current={isActive ? "page" : undefined}
+                        className={cn(
+                            buttonVariants({ variant: "ghost" }),
+                            isActive
+                                ? "bg-muted hover:bg-muted"
+                                : "hover:bg-transparent hover:underline",
+                            "justify-start"
+                        )}
+                    >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.title}
+                    </Link>
+                );
+            })}
         </nav>
     );
 }

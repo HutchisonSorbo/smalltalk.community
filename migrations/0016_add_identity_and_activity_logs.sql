@@ -1,7 +1,7 @@
 -- Create identity_verifications table
 CREATE TABLE IF NOT EXISTS identity_verifications (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id VARCHAR NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     STATUS VARCHAR(20) NOT NULL DEFAULT 'pending',
     document_type VARCHAR(50),
     id_number VARCHAR(100),

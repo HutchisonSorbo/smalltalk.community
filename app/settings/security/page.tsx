@@ -20,7 +20,7 @@ export default async function SecuritySettingsPage() {
     const { factors } = await getMFAFactors();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-full">
             <div>
                 <h3 className="text-lg font-medium">Security</h3>
                 <p className="text-sm text-muted-foreground">

@@ -16,19 +16,49 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from "@/components/ui/input-otp";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { Smartphone, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { enrollMFA, verifyMFAEnrollment, unenrollMFA } from "../actions";
 
+interface MFAFactor {
+    id: string;
+    status: "verified" | "unverified";
+    friendly_name?: string;
+    factor_type: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface EnrollData {
+    id: string;
+    type: "totp";
+    totp: {
+        qr_code: string;
+        secret: string;
+        uri: string;
+    };
+}
+
 interface MFASetupProps {
-    initialFactors: any[];
+    initialFactors: MFAFactor[];
 }
 
 export function MFASetup({ initialFactors }: MFASetupProps) {
-    const [factors, setFactors] = useState(initialFactors);
+    const [factors, setFactors] = useState<MFAFactor[]>(initialFactors);
     const [isOpen, setIsOpen] = useState(false);
+    const [isUnenrollOpen, setIsUnenrollOpen] = useState(false);
     const [step, setStep] = useState<"enroll" | "verify">("enroll");
-    const [enrollData, setEnrollData] = useState<any>(null);
+    const [enrollData, setEnrollData] = useState<EnrollData | null>(null);
     const [otpCode, setOtpCode] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -36,74 +66,134 @@ export function MFASetup({ initialFactors }: MFASetupProps) {
 
     const handleEnroll = async () => {
         setIsLoading(true);
-        const result = await enrollMFA();
-        setIsLoading(false);
-
-        if (result.success) {
-            setEnrollData(result.data);
-            setStep("verify");
-        } else {
+        try {
+            const result = await enrollMFA();
+            if (result.success) {
+                setEnrollData(result.data as EnrollData);
+                setStep("verify");
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.error || "Failed to start MFA enrollment.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("[handleEnroll] Unexpected error:", error);
             toast({
                 title: "Error",
-                description: result.error || "Failed to start MFA enrollment.",
+                description: "An unexpected error occurred. Please try again.",
                 variant: "destructive",
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleVerify = async () => {
-        if (otpCode.length !== 6) return;
-
-        setIsLoading(true);
-        const result = await verifyMFAEnrollment(enrollData.id, otpCode);
-        setIsLoading(false);
-
-        if (result.success) {
+        const sanitizedOtp = otpCode.replace(/\D/g, "");
+        if (sanitizedOtp.length !== 6) {
             toast({
-                title: "2FA Enabled",
-                description: "Your account is now protected with two-factor authentication.",
-            });
-            setIsOpen(false);
-            setFactors([{ ...enrollData, status: "verified" }]);
-            setStep("enroll");
-            setOtpCode("");
-        } else {
-            toast({
-                title: "Verification Failed",
-                description: result.error || "The code you entered is invalid.",
+                title: "Invalid Code",
+                description: "Please enter a 6-digit verification code.",
                 variant: "destructive",
             });
+            return;
+        }
+
+        if (!enrollData) return;
+
+        setIsLoading(true);
+        try {
+            const result = await verifyMFAEnrollment(enrollData.id, sanitizedOtp);
+            if (result.success) {
+                toast({
+                    title: "2FA Enabled",
+                    description: "Your account is now protected with two-factor authentication.",
+                });
+                setIsOpen(false);
+                setFactors([{ ...enrollData, status: "verified", factor_type: 'totp', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }]);
+                setStep("enroll");
+                setOtpCode("");
+            } else {
+                toast({
+                    title: "Verification Failed",
+                    description: result.error || "The code you entered is invalid.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("[handleVerify] Unexpected error:", error);
+            toast({
+                title: "Error",
+                description: "Failed to verify code. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleUnenroll = async () => {
         if (!activeFactor) return;
 
-        if (!confirm("Are you sure you want to disable 2FA? This will make your account less secure.")) {
-            return;
-        }
-
         setIsLoading(true);
-        const result = await unenrollMFA(activeFactor.id);
-        setIsLoading(false);
-
-        if (result.success) {
-            toast({
-                title: "2FA Disabled",
-                description: "Two-factor authentication has been removed from your account.",
-            });
-            setFactors([]);
-        } else {
+        try {
+            const result = await unenrollMFA(activeFactor.id);
+            if (result.success) {
+                toast({
+                    title: "2FA Disabled",
+                    description: "Two-factor authentication has been removed from your account.",
+                });
+                setFactors([]);
+                setIsUnenrollOpen(false);
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.error || "Failed to disable 2FA.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error: any) {
+            console.error("[handleUnenroll] Unexpected error:", error);
             toast({
                 title: "Error",
-                description: result.error || "Failed to disable 2FA.",
+                description: "An unexpected error occurred while disabling 2FA.",
                 variant: "destructive",
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    // In handleUnenroll component JSX, search for the button:
+
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-full">
+            <AlertDialog open={isUnenrollOpen} onOpenChange={setIsUnenrollOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will make your account less secure. You will no longer be prompted for a verification code when signing in.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleUnenroll();
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={isLoading}
+                        >
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Disable 2FA
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     {activeFactor ? (
@@ -116,8 +206,7 @@ export function MFASetup({ initialFactors }: MFASetupProps) {
                     </span>
                 </div>
                 {activeFactor ? (
-                    <Button variant="outline" size="sm" onClick={handleUnenroll} disabled={isLoading}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button variant="outline" size="sm" onClick={() => setIsUnenrollOpen(true)} disabled={isLoading}>
                         Disable 2FA
                     </Button>
                 ) : (
@@ -163,10 +252,17 @@ export function MFASetup({ initialFactors }: MFASetupProps) {
                                                 maxLength={6}
                                                 value={otpCode}
                                                 onChange={setOtpCode}
+                                                id="mfa-otp-input"
                                                 render={({ slots }) => (
                                                     <InputOTPGroup>
                                                         {slots.map((slot, index) => (
-                                                            <InputOTPSlot key={index} {...slot} index={index} />
+                                                            <InputOTPSlot
+                                                                key={index}
+                                                                {...slot}
+                                                                index={index}
+                                                                aria-label={`Digit ${index + 1}`}
+                                                                inputMode="numeric"
+                                                            />
                                                         ))}
                                                     </InputOTPGroup>
                                                 )}

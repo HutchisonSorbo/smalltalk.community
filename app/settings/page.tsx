@@ -5,10 +5,6 @@ import { Settings, User, Bell, Shield } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 
-export const metadata = {
-    title: "Settings",
-    description: "Manage your account settings and preferences.",
-};
 
 export default async function SettingsPage() {
     return (

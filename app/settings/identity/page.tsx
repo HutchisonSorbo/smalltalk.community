@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase-server";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, ArrowRight, AlertTriangle, FileText } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default async function IdentitySettingsPage() {
     const supabase = await createClient();
@@ -43,9 +44,11 @@ export default async function IdentitySettingsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button className="bg-yellow-600 hover:bg-yellow-700 text-white border-none shadow-sm">
-                                Start Verification Flow
-                            </Button>
+                            <Link href="/settings/identity/verify">
+                                <Button className="bg-yellow-600 hover:bg-yellow-700 text-white border-none shadow-sm">
+                                    Start Verification Flow
+                                </Button>
+                            </Link>
                         </CardContent>
                     </Card>
                 ) : verification.status === "verified" ? (
@@ -60,9 +63,11 @@ export default async function IdentitySettingsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-sm text-green-700">
-                                Verified on: {new Date(verification.verifiedAt).toLocaleDateString()}
-                            </div>
+                            {verification.verifiedAt && (
+                                <div className="text-sm text-green-700">
+                                    Verified on: {new Date(verification.verifiedAt).toLocaleDateString()}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 ) : (
@@ -104,7 +109,3 @@ export default async function IdentitySettingsPage() {
     );
 }
 
-// Simple Loader2 fallback if not imported
-function Loader2({ className }: { className?: string }) {
-    return <div className={className}>...</div>;
-}

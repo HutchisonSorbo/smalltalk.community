@@ -19,8 +19,7 @@ export async function updatePreferences(data: Partial<UserPreference>) {
             user_id: user.id,
             ...data,
             updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
+        });
 
     if (error) {
         console.error("[updatePreferences] Error:", error);
@@ -119,13 +118,15 @@ export async function logoutOtherSessions() {
 
 export async function logoutAllSessions() {
     const supabase = await createClient();
+
+    // Log activity BEFORE signing out to ensure current user context is available
+    await logActivity("logout_global", "Global logout initiated from security settings.");
+
     const { error } = await supabase.auth.signOut({ scope: 'global' });
 
     if (error) {
         return { success: false, error: error.message };
     }
-
-    await logActivity("logout_global", "Global logout initiated from security settings.");
 
     redirect("/login");
 }
@@ -136,14 +137,19 @@ export async function logActivity(eventType: string, description: string, metada
 
     if (!user) return;
 
-    // In a real app, you'd get IP/UA from headers
-    // For this POC, we'll store placeholder or metadata
-    await supabase.from("activity_logs").insert({
+    const { error } = await supabase.from("activity_logs").insert({
         user_id: user.id,
         event_type: eventType,
         description,
         metadata,
     });
+
+    if (error) {
+        console.error(`[logActivity] Failed to insert log for user ${user.id} (${eventType}):`, error.message, {
+            description,
+            metadata
+        });
+    }
 }
 
 export async function getUserPreferences(userId: string): Promise<UserPreference | null> {
@@ -154,17 +160,26 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
         .eq("user_id", userId)
         .single();
 
-    if (error || !data) {
-        // If not found, try to create default preferences
-        const { data: newData, error: createError } = await supabase
-            .from("user_preferences")
-            .insert({ user_id: userId })
-            .select()
-            .single();
+    if (error) {
+        // Only attempt to insert defaults if the error is "not found" (PGRST116)
+        if (error.code === 'PGRST116') {
+            const { data: newData, error: createError } = await supabase
+                .from("user_preferences")
+                .insert({ user_id: userId })
+                .select()
+                .single();
 
-        if (createError) return null;
-        return newData as UserPreference;
+            if (createError) {
+                console.error("[getUserPreferences] Create error:", createError);
+                return null;
+            }
+            return newData as UserPreference;
+        }
+
+        console.error("[getUserPreferences] Query error:", error);
+        return null;
     }
 
+    if (!data) return null;
     return data as UserPreference;
 }

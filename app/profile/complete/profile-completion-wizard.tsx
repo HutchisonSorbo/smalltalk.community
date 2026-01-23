@@ -9,9 +9,18 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 
+interface WizardUser {
+    id: string;
+    email?: string;
+    user_metadata?: {
+        full_name?: string;
+        [key: string]: any;
+    };
+}
+
 type Step = "personal" | "identity" | "preferences" | "account" | "done";
 
-export function ProfileCompletionWizard({ user }: { user: any }) {
+export function ProfileCompletionWizard({ user }: { user: WizardUser }) {
     const [currentStep, setCurrentStep] = useState<Step>("personal");
     const [progress, setProgress] = useState(20);
     const router = useRouter();
@@ -23,32 +32,30 @@ export function ProfileCompletionWizard({ user }: { user: any }) {
         { id: "account", title: "Account Type", icon: Building2 },
     ];
 
+    const stepOrder: Step[] = ["personal", "identity", "preferences", "account", "done"];
+    const progressMap: Record<Step, number> = {
+        personal: 20,
+        identity: 40,
+        preferences: 60,
+        account: 80,
+        done: 100,
+    };
+
     const handleNext = () => {
-        if (currentStep === "personal") {
-            setCurrentStep("identity");
-            setProgress(40);
-        } else if (currentStep === "identity") {
-            setCurrentStep("preferences");
-            setProgress(60);
-        } else if (currentStep === "preferences") {
-            setCurrentStep("account");
-            setProgress(80);
-        } else if (currentStep === "account") {
-            setCurrentStep("done");
-            setProgress(100);
+        const currentIndex = stepOrder.indexOf(currentStep);
+        if (currentIndex < stepOrder.length - 1) {
+            const nextStep = stepOrder[currentIndex + 1];
+            setCurrentStep(nextStep);
+            setProgress(progressMap[nextStep]);
         }
     };
 
     const handleBack = () => {
-        if (currentStep === "identity") {
-            setCurrentStep("personal");
-            setProgress(20);
-        } else if (currentStep === "preferences") {
-            setCurrentStep("identity");
-            setProgress(40);
-        } else if (currentStep === "account") {
-            setCurrentStep("preferences");
-            setProgress(60);
+        const currentIndex = stepOrder.indexOf(currentStep);
+        if (currentIndex > 0) {
+            const prevStep = stepOrder[currentIndex - 1];
+            setCurrentStep(prevStep);
+            setProgress(progressMap[prevStep]);
         }
     };
 
@@ -65,31 +72,39 @@ export function ProfileCompletionWizard({ user }: { user: any }) {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold tracking-tight">Complete Your Profile</h1>
-                    <span className="text-sm font-medium text-muted-foreground">
-                        Step {steps.findIndex(s => s.id === currentStep) + 1} of 4
-                    </span>
+                    {currentStep !== "done" && (
+                        <span className="text-sm font-medium text-muted-foreground" aria-live="polite">
+                            Step {steps.findIndex(s => s.id === currentStep) + 1} of {steps.length}
+                        </span>
+                    )}
                 </div>
                 <Progress value={progress} className="h-2" />
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
-                {steps.map((step, index) => (
-                    <div
-                        key={step.id}
-                        className={cn(
-                            "flex flex-col items-center gap-2",
-                            currentStep === step.id ? "text-primary" : "text-muted-foreground"
-                        )}
-                    >
-                        <div className={cn(
-                            "h-10 w-10 rounded-full border-2 flex items-center justify-center transition-colors",
-                            currentStep === step.id ? "border-primary bg-primary/10" : "border-muted"
-                        )}>
-                            <step.icon className="h-5 w-5" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {steps.map((step, index) => {
+                    const isActive = currentStep === step.id;
+                    const isCompleted = stepOrder.indexOf(currentStep) > stepOrder.indexOf(step.id as Step);
+
+                    return (
+                        <div
+                            key={step.id}
+                            className={cn(
+                                "flex flex-col items-center gap-2",
+                                isActive ? "text-primary" : "text-muted-foreground"
+                            )}
+                            aria-current={isActive ? "step" : undefined}
+                        >
+                            <div className={cn(
+                                "h-10 w-10 rounded-full border-2 flex items-center justify-center transition-colors",
+                                isActive ? "border-primary bg-primary/10" : isCompleted ? "border-primary bg-primary text-primary-foreground" : "border-muted"
+                            )}>
+                                {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <step.icon className="h-5 w-5" />}
+                            </div>
+                            <span className="text-xs font-medium hidden sm:inline-block">{step.title}</span>
                         </div>
-                        <span className="text-xs font-medium hidden sm:inline-block">{step.title}</span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <Card className="min-h-[400px] flex flex-col">
@@ -140,15 +155,25 @@ export function ProfileCompletionWizard({ user }: { user: any }) {
                                     How should we notify you about community events?
                                 </p>
                             </div>
-                            <div className="grid gap-4">
-                                <Button variant="outline" className="justify-start h-auto py-4 px-6 border-2">
+                            <div className="grid gap-4" role="radiogroup" aria-label="Notification Preferences">
+                                <Button
+                                    variant="outline"
+                                    className={cn("justify-start h-auto py-4 px-6 border-2", /* Add state logic if shared state exists */)}
+                                    role="radio"
+                                    aria-checked="true" // Placeholder for actual state
+                                >
                                     <Bell className="mr-4 h-6 w-6 text-primary" />
                                     <div className="text-left">
                                         <p className="font-semibold text-base">Standard Notifications</p>
                                         <p className="text-sm text-muted-foreground">Receive updates via email and push.</p>
                                     </div>
                                 </Button>
-                                <Button variant="outline" className="justify-start h-auto py-4 px-6">
+                                <Button
+                                    variant="outline"
+                                    className="justify-start h-auto py-4 px-6"
+                                    role="radio"
+                                    aria-checked="false" // Placeholder for actual state
+                                >
                                     <Shield className="mr-4 h-6 w-6 text-muted-foreground" />
                                     <div className="text-left">
                                         <p className="font-semibold text-base">Privacy Focused</p>

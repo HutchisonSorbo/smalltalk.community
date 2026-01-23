@@ -59,6 +59,7 @@ export function NotificationsForm({ initialData }: NotificationsFormProps) {
                 });
             }
         } catch (error) {
+            console.error("[NotificationsForm] Error saving notification settings:", error);
             toast({
                 title: "Error",
                 description: "An unexpected error occurred.",

@@ -4,10 +4,9 @@ INSERT INTO tenant_members (tenant_id, user_id, role)
 SELECT t.id,
     u.id,
     'admin'
-FROM tenants t,
-    users u
-WHERE u.email = 'ryanhutchison@outlook.com.au'
-    AND t.code = 'stc' ON CONFLICT (tenant_id, user_id) DO
+FROM tenants t
+    JOIN users u ON u.email = 'ryanhutchison@outlook.com.au'
+WHERE t.code = 'stc' ON CONFLICT (tenant_id, user_id) DO
 UPDATE
 SET role = 'admin'
 WHERE tenant_members.role != 'admin';
@@ -16,7 +15,6 @@ INSERT INTO tenant_members (tenant_id, user_id, role)
 SELECT t.id,
     u.id,
     'member'
-FROM tenants t,
-    users u
-WHERE u.user_type = 'organisation'
-    AND t.code = 'stc' ON CONFLICT (tenant_id, user_id) DO NOTHING;
+FROM tenants t
+    JOIN users u ON u.user_type = 'organisation'
+WHERE t.code = 'stc' ON CONFLICT (tenant_id, user_id) DO NOTHING;

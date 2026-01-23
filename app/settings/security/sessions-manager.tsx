@@ -26,9 +26,10 @@ export function SessionsManager() {
                 });
             }
         } catch (error) {
+            console.error("[SessionsManager] Logout others failed:", error);
             toast({
                 title: "Error",
-                description: "An unexpected error occurred.",
+                description: "An unexpected error occurred while logging out of other devices.",
                 variant: "destructive",
             });
         } finally {
@@ -43,7 +44,7 @@ export function SessionsManager() {
                     <p className="font-medium">Current Session</p>
                     <p className="text-muted-foreground">This device</p>
                 </div>
-                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-1 bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
                     Active
                 </span>
             </div>

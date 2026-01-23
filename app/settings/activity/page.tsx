@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogIn, Key, Shield, User, Globe, MousePointer2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default async function ActivitySettingsPage() {
     const supabase = await createClient();
@@ -56,7 +54,7 @@ export default async function ActivitySettingsPage() {
                                     </div>
                                     <div className="flex-1 space-y-1 py-1">
                                         <div className="flex items-center justify-between">
-                                            <p className="text-sm font-semibold capitalize">{log.eventType.replace("_", " ")}</p>
+                                            <p className="text-sm font-semibold capitalize">{log.eventType.replace(/_/g, " ")}</p>
                                             <time className="text-[10px] text-muted-foreground font-medium uppercase">
                                                 {new Date(log.createdAt).toLocaleDateString()} at {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </time>
