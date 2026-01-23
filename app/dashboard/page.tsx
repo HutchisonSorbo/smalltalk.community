@@ -45,59 +45,61 @@ function CommunityOSMembershipList({ memberships }: { memberships: TenantWithMem
 
     return (
         <div className="space-y-4">
-            {memberships.map((membership) => {
-                const sanitizedCode = encodeURIComponent(membership.tenant.code || '');
-                const logoUrl = safeUrl(membership.tenant.logoUrl);
-                const primaryColor = isValidHexColor(membership.tenant.primaryColor)
-                    ? membership.tenant.primaryColor!
-                    : '#6366f1';
+            {memberships
+                .filter(m => m.tenant.code && m.tenant.code.trim() !== "")
+                .map((membership) => {
+                    const sanitizedCode = encodeURIComponent(membership.tenant.code || '');
+                    const logoUrl = safeUrl(membership.tenant.logoUrl);
+                    const primaryColor = isValidHexColor(membership.tenant.primaryColor)
+                        ? membership.tenant.primaryColor!
+                        : '#6366f1';
 
-                return (
-                    <div
-                        key={membership.tenant.id}
-                        className="p-4 bg-background/50 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors"
-                    >
-                        <div className="flex items-center gap-3 mb-3">
-                            {logoUrl ? (
-                                <img
-                                    src={logoUrl}
-                                    alt={membership.tenant.name}
-                                    className="h-8 w-8 rounded object-cover"
-                                />
-                            ) : (
-                                <div
-                                    className="h-8 w-8 rounded flex items-center justify-center text-white text-xs font-bold"
-                                    style={{ backgroundColor: primaryColor }}
-                                >
-                                    {membership.tenant.name.charAt(0).toUpperCase()}
+                    return (
+                        <div
+                            key={membership.tenant.id}
+                            className="p-4 bg-background/50 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors"
+                        >
+                            <div className="flex items-center gap-3 mb-3">
+                                {logoUrl ? (
+                                    <img
+                                        src={logoUrl}
+                                        alt={membership.tenant.name}
+                                        className="h-8 w-8 rounded object-cover"
+                                    />
+                                ) : (
+                                    <div
+                                        className="h-8 w-8 rounded flex items-center justify-center text-white text-xs font-bold"
+                                        style={{ backgroundColor: primaryColor }}
+                                    >
+                                        {membership.tenant.name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                <div>
+                                    <h4 className="font-semibold text-sm line-clamp-1">{membership.tenant.name}</h4>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                                        {membership.role}
+                                    </p>
                                 </div>
-                            )}
-                            <div>
-                                <h4 className="font-semibold text-sm line-clamp-1">{membership.tenant.name}</h4>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-                                    {membership.role}
-                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Button variant="default" size="sm" className="w-full justify-start gap-2 h-8" asChild>
+                                    <Link href={`/communityos/${sanitizedCode}/dashboard`}>
+                                        <Building2 className="h-3.5 w-3.5" />
+                                        Visit Dashboard
+                                    </Link>
+                                </Button>
+                                <Link
+                                    href={`/org/${sanitizedCode}`}
+                                    className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground hover:underline px-1"
+                                >
+                                    View Public Profile
+                                    <ArrowRight className="ml-1 h-3 w-3" />
+                                </Link>
                             </div>
                         </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Button variant="default" size="sm" className="w-full justify-start gap-2 h-8" asChild>
-                                <Link href={`/communityos/${sanitizedCode}/dashboard`}>
-                                    <Building2 className="h-3.5 w-3.5" />
-                                    Visit Dashboard
-                                </Link>
-                            </Button>
-                            <Link
-                                href={`/org/${sanitizedCode}`}
-                                className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground hover:underline px-1"
-                            >
-                                View Public Profile
-                                <ArrowRight className="ml-1 h-3 w-3" />
-                            </Link>
-                        </div>
-                    </div>
-                );
-            })}
+                    );
+                })}
         </div>
     );
 }
