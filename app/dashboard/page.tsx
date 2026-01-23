@@ -5,11 +5,11 @@ import { AppCard, AppData } from "@/components/platform/AppCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2, Bell, Shield, Settings } from "lucide-react";
+import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2, Bell, Shield, Settings, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import type { TenantWithMembership } from "@/shared/schema";
-import { CommunityOsWorkspaces } from "@/components/communityos/CommunityOsWorkspaces";
+import { safeUrl } from "@/lib/utils";
 
 interface UserProfile {
     firstName?: string;
@@ -22,6 +22,97 @@ interface UserProfile {
     accountType?: string;
     userType?: string;
     dateOfBirth?: string;
+}
+
+
+const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+function isValidHexColor(color: string | null | undefined): boolean {
+    if (!color || typeof color !== "string") return false;
+    return HEX_COLOR_REGEX.test(color);
+}
+
+
+function CommunityOSMembershipCard({ membership }: { membership: TenantWithMembership }) {
+    const trimmedCode = (membership.tenant.code || '').trim();
+    const sanitizedCode = encodeURIComponent(trimmedCode);
+    const logoUrl = safeUrl(membership.tenant.logoUrl);
+    const primaryColor = isValidHexColor(membership.tenant.primaryColor)
+        ? membership.tenant.primaryColor!
+        : '#6366f1';
+
+    return (
+        <div
+            className="p-4 bg-background/50 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors"
+        >
+            <div className="flex items-center gap-3 mb-3">
+                {logoUrl ? (
+                    <img
+                        src={logoUrl}
+                        alt={membership.tenant.name}
+                        className="h-8 w-8 rounded object-cover"
+                    />
+                ) : (
+                    <div
+                        className="h-8 w-8 rounded flex items-center justify-center text-white text-xs font-bold"
+                        style={{ backgroundColor: primaryColor }}
+                    >
+                        {membership.tenant.name.charAt(0).toUpperCase()}
+                    </div>
+                )}
+                <div>
+                    <h4 className="font-semibold text-sm line-clamp-1">{membership.tenant.name}</h4>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                        {membership.role}
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <Button variant="default" size="sm" className="w-full justify-start gap-2 h-8" asChild>
+                    <Link href={`/communityos/${sanitizedCode}/dashboard`}>
+                        <Building2 className="h-3.5 w-3.5" />
+                        Visit Dashboard
+                    </Link>
+                </Button>
+                <Link
+                    href={`/org/${sanitizedCode}`}
+                    className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground hover:underline px-1"
+                >
+                    View Public Profile
+                    <ArrowRight className="ml-1 h-3 w-3" />
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+
+function CommunityOSMembershipList({ memberships }: { memberships: TenantWithMembership[] }) {
+    const filteredMemberships = memberships.filter(m => {
+        const code = (m.tenant.code || '').trim();
+        return code !== "";
+    });
+
+    if (filteredMemberships.length === 0) {
+        return (
+            <div className="text-center py-6 bg-background/50 rounded-lg border border-dashed border-primary/20">
+                <p className="text-sm text-muted-foreground">
+                    You are not currently a member of any organisations.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {filteredMemberships.map((membership) => (
+                <CommunityOSMembershipCard
+                    key={membership.tenant.id}
+                    membership={membership}
+                />
+            ))}
+        </div>
+    );
 }
 
 
@@ -233,20 +324,7 @@ export default function DashboardPage() {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    {tenantMemberships.length > 0 ? (
-                                        <CommunityOsWorkspaces memberships={tenantMemberships} />
-                                    ) : (
-                                        <div className="text-center py-4 bg-background/50 rounded-lg border border-dashed border-primary/20">
-                                            <p className="text-sm text-muted-foreground mb-4">
-                                                Discover and join local communities and organizations.
-                                            </p>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link href="/org/stc">
-                                                    Visit CommunityOS Hub
-                                                </Link>
-                                            </Button>
-                                        </div>
-                                    )}
+                                    <CommunityOSMembershipList memberships={tenantMemberships} />
                                 </CardContent>
                             </Card>
 
