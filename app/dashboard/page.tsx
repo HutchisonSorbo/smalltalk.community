@@ -300,7 +300,7 @@ export default function DashboardPage() {
                                                 ))}
                                             </ul>
                                             <Button variant="outline" className="w-full mt-4" asChild>
-                                                <Link href="/settings">Complete Profile</Link>
+                                                <Link href="/profile/complete">Complete Profile</Link>
                                             </Button>
                                         </div>
                                     ) : (
@@ -353,25 +353,19 @@ export default function DashboardPage() {
                                         );
                                     })()}
                                     <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                                        <Link href="/settings">
-                                            <User className="h-4 w-4" />
-                                            Profile
-                                        </Link>
-                                    </Button>
-                                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                                        <Link href="/settings#notifications">
+                                        <Link href="/settings/notifications">
                                             <Bell className="h-4 w-4" />
                                             Notifications
                                         </Link>
                                     </Button>
                                     <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                                        <Link href="/settings#security">
+                                        <Link href="/settings/security">
                                             <Shield className="h-4 w-4" />
                                             Security
                                         </Link>
                                     </Button>
                                     <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                                        <Link href="/settings#preferences">
+                                        <Link href="/settings/preferences">
                                             <Settings className="h-4 w-4" />
                                             Preferences
                                         </Link>
