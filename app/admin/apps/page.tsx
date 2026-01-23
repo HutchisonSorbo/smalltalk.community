@@ -115,7 +115,7 @@ export default async function AppsAdminPage() {
                                                 {validIconUrl ? (
                                                     <img
                                                         src={validIconUrl}
-                                                        alt={`${app.name} icon`}
+                                                        alt={app.name ? `${app.name} icon` : "App icon"}
                                                         className="h-8 w-8 rounded object-cover"
                                                     />
                                                 ) : (

@@ -11,7 +11,7 @@ Verify organisation isolation and white-label features work correctly. Agent STO
 
 ## Prerequisites
 
-- Access to admin account: `smalltalkcommunity.backup@gmail.com`
+- Access to admin account: `<ADMIN_TEST_EMAIL>`
 - Access to at least one non-admin organisation account
 - Database access for RLS verification
 - Dev server running
@@ -45,7 +45,7 @@ WHERE schemaname = 'public';
 > [!CAUTION]
 > **STOP-ON-FAILURE**: If ANY feature fails, stop, fix, and re-test.
 
-1. Login as admin: `smalltalkcommunity.backup@gmail.com`
+1. Login as admin: `<ADMIN_TEST_EMAIL>`
 2. Navigate to organisation features:
    - [ ] Dashboard loads correctly
    - [ ] CommunityOS apps accessible

@@ -106,6 +106,7 @@ export async function proxy(request: NextRequest) {
         const rewriteResponse = NextResponse.rewrite(newUrl);
         response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
         response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+        applySecurityHeaders(rewriteResponse);
         return rewriteResponse;
     }
 
@@ -175,6 +176,7 @@ export async function proxy(request: NextRequest) {
 
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    applySecurityHeaders(rewriteResponse);
     return rewriteResponse;
 
 }
@@ -191,6 +193,7 @@ function rewriteRootToHub(request: NextRequest, response: NextResponse) {
     rewriteResponse.headers.set("x-url", request.url);
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    applySecurityHeaders(rewriteResponse);
     return rewriteResponse;
 }
 

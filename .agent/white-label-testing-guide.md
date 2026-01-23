@@ -2,6 +2,13 @@
 
 Comprehensive guide for testing multi-tenant/white-label functionality.
 
+> [!IMPORTANT]
+> These tests expect environment variables to be set in `.env` or the test configuration:
+>
+> - `TEST_USER_EMAIL`: Login email for the test user.
+> - `TEST_USER_PASSWORD`: Login password for the test user.
+> - `TEST_TENANT_B`: Code for the target tenant (e.g., `org2`).
+
 ## Architecture Overview
 
 ```
@@ -22,7 +29,7 @@ Comprehensive guide for testing multi-tenant/white-label functionality.
 
 ## Prerequisites
 
-- **Admin account**: `smalltalkcommunity.backup@gmail.com`
+- **Admin account**: `<ADMIN_TEST_EMAIL>`
 - **Non-admin org account**: At least one organisation member without admin role
 - **Database access**: Supabase dashboard or CLI
 
@@ -69,7 +76,7 @@ ORDER BY tablename;
 
 ### Scenario 1: Admin Access
 
-1. Login as `smalltalkcommunity.backup@gmail.com`
+1. Login as `<ADMIN_TEST_EMAIL>`
 2. Navigate to `/org/stc/dashboard`
 3. Verify:
    - [ ] Dashboard loads correctly
@@ -115,9 +122,6 @@ import { test, expect } from '@playwright/test';
 
 test.describe('White-Label Isolation', () => {
   test('user cannot access other tenant data', async ({ page }) => {
-    // Expected env vars: TEST_USER_EMAIL, TEST_USER_PASSWORD, TEST_TENANT_B
-    const email = process.env.TEST_USER_EMAIL;
-    const password = process.env.TEST_USER_PASSWORD;
     const targetTenant = process.env.TEST_TENANT_B || 'tenantB';
 
     if (!email || !password) throw new Error('Missing test credentials');

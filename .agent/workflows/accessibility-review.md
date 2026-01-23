@@ -30,11 +30,26 @@ List all pages/components changed in current task:
 npx playwright test --grep @accessibility
 ```
 
-Or use browser-based scan:
+Or run directly in browser console (using script injection):
 
 ```javascript
+// Paste this in the browser console
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.8.2/axe.min.js';
+  s.onload = function() {
+    axe.run(function(err, results) {
+      if (err) throw err;
+      console.log(results);
+    });
+  };
+  document.head.appendChild(s);
+})();
+```
+
+Or in a Playwright test:
+
 ```typescript
-// In Playwright test
 import { AxeBuilder } from '@axe-core/playwright';
 
 test('accessibility check', async ({ page }) => {
