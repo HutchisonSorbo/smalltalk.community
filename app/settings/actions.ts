@@ -101,6 +101,11 @@ export async function enrollMFA() {
  * @returns An object indicating success and verification data or an error message.
  */
 export async function verifyMFAEnrollment(factorId: string, code: string) {
+    if (!factorId?.trim() || !code?.trim()) {
+        console.warn("[verifyMFAEnrollment] Missing or invalid factorId or code");
+        return { success: false, error: "Missing or invalid factorId/code" };
+    }
+
     try {
         const supabase = await createClient();
 
@@ -142,6 +147,11 @@ export async function verifyMFAEnrollment(factorId: string, code: string) {
  * @returns An object indicating success and data or an error message.
  */
 export async function unenrollMFA(factorId: string) {
+    if (!factorId?.trim()) {
+        console.error("[unenrollMFA] Missing factorId");
+        return { success: false, error: "Missing or invalid factorId" };
+    }
+
     try {
         const supabase = await createClient();
         const { data, error } = await supabase.auth.mfa.unenroll({
