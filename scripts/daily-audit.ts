@@ -295,10 +295,22 @@ async function checkResilience(): Promise<AuditResult> {
         let details = '\n**Resilience Metrics:**\n';
         
         // 1. Count Error Boundaries
-        const errorFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "error.tsx" | wc -l`).trim(), 10) || 0;
+        let errorFiles = 0;
+        try {
+            errorFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "error.tsx" | wc -l`).trim(), 10) || 0;
+        } catch (e: any) {
+            console.error('Error finding error.tsx:', e);
+            details += `- ⚠️ Error counting Error Boundaries\n`;
+        }
         
         // 2. Count Loading States
-        const loadingFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "loading.tsx" | wc -l`).trim(), 10) || 0;
+        let loadingFiles = 0;
+        try {
+            loadingFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "loading.tsx" | wc -l`).trim(), 10) || 0;
+        } catch (e: any) {
+            console.error('Error finding loading.tsx:', e);
+            details += `- ⚠️ Error counting Loading States\n`;
+        }
         
         details += `- **Error Boundaries (error.tsx):** ${errorFiles} (Prevents white screens)\n`;
         details += `- **Loading States (loading.tsx):** ${loadingFiles} (Improves perceived performance)\n`;
@@ -314,19 +326,27 @@ async function checkResilience(): Promise<AuditResult> {
         
         if (fs.existsSync(apiDir)) {
             const scanApiRoutes = (dir: string) => {
-                const files = fs.readdirSync(dir);
-                files.forEach(file => {
-                    const filePath = path.join(dir, file);
-                    const stat = fs.statSync(filePath);
-                    if (stat.isDirectory()) {
-                        scanApiRoutes(filePath);
-                    } else if (file === 'route.ts') {
-                        const content = fs.readFileSync(filePath, 'utf8');
-                        if ((content.includes('export async function GET') || content.includes('export async function POST')) && !content.includes('try {')) {
-                            riskyRoutes.push(path.relative(ROOT_DIR, filePath));
+                try {
+                    const files = fs.readdirSync(dir);
+                    files.forEach(file => {
+                        const filePath = path.join(dir, file);
+                        try {
+                            const stat = fs.statSync(filePath);
+                            if (stat.isDirectory()) {
+                                scanApiRoutes(filePath);
+                            } else if (file === 'route.ts') {
+                                const content = fs.readFileSync(filePath, 'utf8');
+                                if ((content.includes('export async function GET') || content.includes('export async function POST')) && !content.includes('try {')) {
+                                    riskyRoutes.push(path.relative(ROOT_DIR, filePath));
+                                }
+                            }
+                        } catch (innerError: any) {
+                            console.error(`Error scanning path ${filePath}:`, innerError);
                         }
-                    }
-                });
+                    });
+                } catch (dirError: any) {
+                    console.error(`Error scanning directory ${dir}:`, dirError);
+                }
             };
             scanApiRoutes(apiDir);
         }
@@ -342,7 +362,11 @@ async function checkResilience(): Promise<AuditResult> {
         return { status, summary: `Resilience: ${status}`, details };
     } catch (e: any) {
         console.error('Error running checkResilience:', e);
-        return { status: 'FAIL', summary: 'Error running resilience check', details: 'Internal error.' };
+        return { 
+            status: 'FAIL', 
+            summary: 'Resilience: ERROR', 
+            details: `Internal error running resilience check: ${e.message || String(e)}` 
+        };
     }
 }
 
@@ -352,11 +376,21 @@ async function checkLegal(): Promise<AuditResult> {
         let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
         let details = '\n**Legal Compliance:**\n';
         
-        const hasPrivacy = fs.existsSync(path.join(ROOT_DIR, 'app', 'privacy', 'page.tsx')) || 
-                           fs.existsSync(path.join(ROOT_DIR, 'privacy.md'));
+        let hasPrivacy = false;
+        try {
+            hasPrivacy = fs.existsSync(path.join(ROOT_DIR, 'app', 'privacy', 'page.tsx')) || 
+                         fs.existsSync(path.join(ROOT_DIR, 'privacy.md'));
+        } catch (e) {
+            console.error('Error checking for Privacy Policy:', e);
+        }
                            
-        const hasTerms = fs.existsSync(path.join(ROOT_DIR, 'app', 'terms', 'page.tsx')) ||
-                         fs.existsSync(path.join(ROOT_DIR, 'terms.md'));
+        let hasTerms = false;
+        try {
+            hasTerms = fs.existsSync(path.join(ROOT_DIR, 'app', 'terms', 'page.tsx')) ||
+                       fs.existsSync(path.join(ROOT_DIR, 'terms.md'));
+        } catch (e) {
+            console.error('Error checking for Terms of Service:', e);
+        }
                          
         if (hasPrivacy) details += `- ✅ Privacy Policy found.\n`;
         else {
@@ -373,7 +407,11 @@ async function checkLegal(): Promise<AuditResult> {
         return { status, summary: `Legal: ${status}`, details };
     } catch (e: any) {
         console.error('Error running checkLegal:', e);
-        return { status: 'FAIL', summary: 'Error running legal check', details: 'Internal error.' };
+        return { 
+            status: 'FAIL', 
+            summary: 'Legal: ERROR', 
+            details: `Internal error running legal check: ${e.message || String(e)}` 
+        };
     }
 }
 
