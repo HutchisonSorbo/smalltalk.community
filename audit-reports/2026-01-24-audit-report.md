@@ -1,7 +1,7 @@
 
 # Security & Performance Audit Report
 **Date:** 2026-01-24
-**Time:** 24/01/2026, 09:42:18 pm AEDT
+**Time:** 24/01/2026, 09:55:34 pm AEDT
 **Repository:** smalltalk.community
 
 ---
@@ -81,6 +81,9 @@ Total: 5 (Critical: 0, High: 0, Moderate: 5, Low: 0)
 **Input Validation (Zod):**
 
 **Potential Unvalidated API Routes:**
+- app/api/admin/revalidate/route.ts (Missing 'zod' or 'schema' keyword)
+- app/api/onboarding/complete/route.ts (Missing 'zod' or 'schema' keyword)
+- app/api/onboarding/start/route.ts (Missing 'zod' or 'schema' keyword)
 - app/api/payload/pages/route.ts (Missing 'zod' or 'schema' keyword)
 
 ### 5. Age Gate (13+)
@@ -105,9 +108,9 @@ Total: 5 (Critical: 0, High: 0, Moderate: 5, Low: 0)
 **Issues Found:**
 - Large Asset: public/icon_backup.png (660.94 KB)
 - Found 22 standard `<img>` tags (Use \`<Image />\' for bandwidth optimization)
-- - /home/ryan/smalltalk.community/app/admin/apps/page.tsx:...
-- - /home/ryan/smalltalk.community/app/admin/content/media/page.tsx:...
-- - /home/ryan/smalltalk.community/app/admin/users/[id]/page.tsx:...
+- - app/admin/apps/page.tsx: <img...
+- - app/admin/content/media/page.tsx: <img...
+- - app/admin/users/[id]/page.tsx: <img src={app.appIcon} alt="" cl...
 - Found 34 console.log statements (Remove for production performance)
 
 ### 2. Caching Strategy
@@ -152,4 +155,4 @@ Total: 5 (Critical: 0, High: 0, Moderate: 5, Low: 0)
 ## Audit Performed By
 
 - Tool: Automated Script (Gemini Agent)
-- Date: 2026-01-24T10:42:21.911Z
+- Date: 2026-01-24T10:55:39.043Z

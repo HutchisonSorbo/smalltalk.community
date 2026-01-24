@@ -241,7 +241,19 @@ async function checkPerformance(): Promise<AuditResult> {
             if (imgLines.length > 0) {
                 status = 'WARNING';
                 issues.push(`Found ${imgLines.length} standard \`<img>\` tags (Use \\\`<Image />\\\' for bandwidth optimization)`);
-                imgLines.slice(0, 3).forEach(l => issues.push(`- ${l.substring(0, 100).trim()}...`));
+                // Fix: Ensure paths are relative and clean up output
+                imgLines.slice(0, 3).forEach(l => {
+                    // split on first colon to separate filename from content
+                    const firstColon = l.indexOf(':');
+                    if (firstColon > -1) {
+                         const rawPath = l.substring(0, firstColon);
+                         const content = l.substring(firstColon + 1);
+                         const relativePath = path.relative(ROOT_DIR, rawPath);
+                         issues.push(`- ${relativePath}: ${content.substring(0, 80).trim()}...`);
+                    } else {
+                         issues.push(`- ${l.substring(0, 100).trim()}...`);
+                    }
+                });
             }
         } catch (e: any) {
             console.error('Error scanning for <img> tags:', e);
@@ -434,10 +446,20 @@ async function checkSanitization(): Promise<AuditResult> {
                         scanApiRoutes(filePath);
                     } else if (file === 'route.ts') {
                         const content = fs.readFileSync(filePath, 'utf8');
-                        // Check if file uses Zod or an existing schema
-                        if (!content.includes('zod') && !content.includes('schema') && !content.includes('validate')) {
-                             // Only flag if it handles POST/PUT/PATCH (where input matters)
-                             if (content.includes('POST') || content.includes('PUT') || content.includes('PATCH')) {
+                        
+                        // 1. Strip comments (basic)
+                        const cleanContent = content.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '');
+                        
+                        // 2. Check for exported mutating handlers
+                        const hasMutatingHandler = /export\s+(async\s+)?(function\s+(POST|PUT|PATCH)|const\s+(POST|PUT|PATCH)\s*=)/.test(cleanContent);
+                        
+                        if (hasMutatingHandler) {
+                             // 3. Check for validation usage
+                             // Looks for: "zod", ".parse(", ".safeParse(", "schema.parse", "validate("
+                             // Also check imports for "zod" or validation libs
+                             const hasValidation = /zod|schema\.parse|\.parse\(|\.safeParse\(|validate\(|validator\(/i.test(cleanContent);
+                             
+                             if (!hasValidation) {
                                 riskyRoutes.push(path.relative(ROOT_DIR, filePath));
                              }
                         }
@@ -519,7 +541,11 @@ async function checkCacheHeaders(): Promise<AuditResult> {
                         scanApiRoutes(filePath);
                     } else if (file === 'route.ts') {
                         const content = fs.readFileSync(filePath, 'utf8');
-                        if (content.includes('GET')) {
+                        
+                        // Check for exported GET handler
+                        const hasGetHandler = /export\s+(async\s+)?(function\s+GET|const\s+GET\s*=)/.test(content);
+                        
+                        if (hasGetHandler) {
                             routeCount++;
                             if (content.includes('Cache-Control') || content.includes('revalidate')) {
                                 cacheControlCount++;
@@ -690,7 +716,7 @@ ${cache.details}
 
 ## Resilience, Legal & Docs
 
-**Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' && docs.status !== 'FAIL' ? 'PASS' : 'WARNING'}
+**Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' && docs.status === 'PASS' ? 'PASS' : 'WARNING'}
 
 ### 1. Resilience (White Screen Check)
 ${resilience.details}
