@@ -16,11 +16,15 @@ const createPageSchema = z.object({
     metaDescription: z.string().optional(),
 })
 
-export async function OPTIONS() {
+export async function OPTIONS(req: NextRequest) {
+    const origin = req.headers.get('origin');
+    const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
+    const isAllowed = origin && allowedOrigin && origin === allowedOrigin;
+
     return new NextResponse(null, {
         status: 204,
         headers: {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": isAllowed ? origin : "",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
         },

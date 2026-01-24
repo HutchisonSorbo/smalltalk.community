@@ -21,22 +21,19 @@ export async function OPTIONS() {
 // Called when user clicks "Get Started" on welcome screen
 export async function POST(req: Request) {
     try {
-        // Validate that no unexpected body content is sent
         const schema = z.object({}).strict();
         
-        let body;
-        try {
-            body = await req.json();
-        } catch {
-             // Handle empty body case or actual parse error? 
-             // req.json() throws on empty body? Usually unexpected token or end of input.
-             // If we want to strictly enforce JSON, we should catch syntax errors.
-             // However, often "no body" is valid but req.json() fails. 
-             // The requirement is: "change parsing to await req.json() and catch parse errors to return NextResponse.json({ error: "Malformed JSON" }, { status: 400 })"
-             return NextResponse.json({ error: "Malformed JSON" }, { status: 400 });
+        let body = {};
+        const contentLength = req.headers.get("content-length");
+
+        if (contentLength && parseInt(contentLength) > 0) {
+            try {
+                body = await req.json();
+            } catch {
+                return NextResponse.json({ error: "Malformed JSON" }, { status: 400 });
+            }
         }
 
-        // If body is provided, it must be empty object {}
         const result = schema.safeParse(body);
         if (!result.success) {
             return NextResponse.json({ error: "Unexpected request body" }, { status: 400 });
