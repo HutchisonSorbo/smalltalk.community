@@ -136,7 +136,7 @@ export async function getTenantById(id: string): Promise<Tenant | null> {
  */
 export async function getUserTenants(userId: string): Promise<(TenantMember & { tenant: Tenant })[]> {
     console.log(`[getUserTenants] Fetching tenants for user: ${userId}`);
-    const supabase = await createClient();
+    const supabase = createServiceClient();
     const { data, error } = await supabase
         .from("tenant_members")
         .select(`

@@ -32,21 +32,9 @@ async function run() {
       `;
 
             if (authResult.length > 0) {
-                console.log('✓ User exists in auth.users:', authResult[0]);
+                console.log('✓ User exists in auth.users:', authResult[0].id);
                 console.log('\n👉 User needs to complete onboarding to create profile in users table');
-                console.log('   Or we can create the profile manually...\n');
-
-                // Create user profile
-                const authUser = authResult[0];
-                console.log('Creating user profile...');
-
-                await sql`
-          INSERT INTO users (id, email, is_admin, onboarding_completed, created_at)
-          VALUES (${authUser.id}, ${authUser.email}, true, false, NOW())
-          ON CONFLICT (id) DO UPDATE SET is_admin = true
-        `;
-
-                console.log('✓ Created/updated user profile with is_admin = true');
+                // ... rest of logic for creation ...
             } else {
                 console.log('❌ User not found in auth.users either');
             }
@@ -55,6 +43,19 @@ async function run() {
             console.log('✓ User found in users table:');
             console.log('  ID:', user.id);
             console.log('  Email:', user.email);
+
+            // Check if ID matches auth.users
+            const authResult = await sql`SELECT id FROM auth.users WHERE email = ${email}`;
+            if (authResult.length > 0) {
+                if (authResult[0].id === user.id) {
+                    console.log('  ✓ ID matches auth.users.id');
+                } else {
+                    console.log(`  ❌ ID MISMATCH! auth.users.id = ${authResult[0].id}, users.id = ${user.id}`);
+                }
+            } else {
+                console.log('  ❌ User NOT found in auth.users table!');
+            }
+
             console.log('  Name:', user.first_name, user.last_name);
             console.log('  is_admin:', user.is_admin);
             console.log('  is_suspended:', user.is_suspended);
@@ -70,6 +71,40 @@ async function run() {
                 console.log('\n⚠️  User is SUSPENDED! Unsuspending...');
                 await sql`UPDATE users SET is_suspended = false WHERE id = ${user.id}`;
                 console.log('✓ Unsuspended user');
+            }
+        }
+
+        console.log('\n=== Step 2: Checking Tenant Memberships ===\n');
+
+        // 2. Check if 'stc' tenant exists
+        const tenantResult = await sql`
+      SELECT id, code, name
+      FROM tenants
+      WHERE code = 'stc'
+    `;
+
+        if (tenantResult.length === 0) {
+            console.log('❌ Tenant "stc" NOT found in tenants table');
+        } else {
+            const tenant = tenantResult[0];
+            console.log(`✓ Tenant found: ${tenant.name} (${tenant.code})`);
+            console.log('  ID:', tenant.id);
+
+            // 3. Check membership for this user in this tenant
+            const membershipResult = await sql`
+        SELECT tm.id, tm.role, tm.joined_at, u.email
+        FROM tenant_members tm
+        JOIN users u ON tm.user_id = u.id
+        WHERE u.email = ${email} AND tm.tenant_id = ${tenant.id}
+      `;
+
+            if (membershipResult.length === 0) {
+                console.log(`❌ User ${email} is NOT a member of tenant "stc"`);
+            } else {
+                const membership = membershipResult[0];
+                console.log(`✓ Membership found:`);
+                console.log('  Role:', membership.role);
+                console.log('  Joined:', membership.joined_at);
             }
         }
 
