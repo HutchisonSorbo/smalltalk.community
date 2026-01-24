@@ -37,7 +37,7 @@ We use **Row Level Security** at the database layer.
 4.  **Supabase** executes query *scoped to the user's RLS permissions*.
 5.  **Server** returns sanitised JSON.
 
-### 4. Low-Bandwidth Optimisation
+### 4. Low-Bandwidth Optimization
 *   **Server Components:** We fetch data on the server to avoid sending large JSON payloads to the client.
 *   **Image Optimization:** All images are processed via Next.js Image Optimization API.
 *   **Caching:** We aggressively cache public data (e.g., Gig listings) using `revalidate`.

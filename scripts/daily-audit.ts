@@ -448,7 +448,7 @@ async function checkSanitization(): Promise<AuditResult> {
         }
 
         if (riskyRoutes.length > 0) {
-            status = 'WARNING';
+            status = 'FAIL';
             details += `\n**Potential Unvalidated API Routes:**\n`;
             details += riskyRoutes.map(r => `- ${r} (Missing 'zod' or 'schema' keyword)`).join('\n');
         } else {
@@ -568,14 +568,20 @@ async function checkDocumentation(): Promise<AuditResult> {
                         scanFiles(filePath);
                     } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
                         const content = fs.readFileSync(filePath, 'utf8');
-                        // Rough regex to find exported functions
-                        const functionMatches = content.match(/export (async )?function \w+|export const \w+ = \(|export const \w+ = (async )?\(/g);
-                        if (functionMatches) {
-                            totalFunctions += functionMatches.length;
-                            // Count JSDoc blocks /** ... */
-                            const jsDocMatches = content.match(/\/\*\*[\s\S]*?\*\//g);
-                            if (jsDocMatches) {
-                                documentedFunctions += jsDocMatches.length;
+                        
+                        // Regex to find exported functions/consts
+                        // Matches: "export function name", "export async function name", "export const name ="
+                        const exportRegex = /export\s+(async\s+)?(function\s+\w+|const\s+\w+\s*=)/g;
+                        
+                        let match;
+                        while ((match = exportRegex.exec(content)) !== null) {
+                            totalFunctions++;
+                            
+                            // Check if the preceding characters form a JSDoc block ending
+                            // Look backwards from match.index
+                            const precedingContent = content.substring(0, match.index).trim();
+                            if (precedingContent.endsWith('*/')) {
+                                documentedFunctions++;
                             }
                         }
                     }

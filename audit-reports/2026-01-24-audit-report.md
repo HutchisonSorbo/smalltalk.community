@@ -1,7 +1,7 @@
 
 # Security & Performance Audit Report
 **Date:** 2026-01-24
-**Time:** 24/01/2026, 09:23:41 pm AEDT
+**Time:** 24/01/2026, 09:42:18 pm AEDT
 **Repository:** smalltalk.community
 
 ---
@@ -16,7 +16,7 @@ Daily automated audit results.
 - **Performance:** WARNING
 - **Resilience:** PASS
 - **Legal:** PASS
-- **Sanitization:** WARNING
+- **Sanitization:** FAIL
 - **Age Gate:** PASS
 - **Caching:** PASS
 - **Docs:** PASS
@@ -76,7 +76,7 @@ Total: 5 (Critical: 0, High: 0, Moderate: 5, Low: 0)
 
 ### 4. Input Sanitization (Zod)
 
-**Status:** WARNING
+**Status:** FAIL
 
 **Input Validation (Zod):**
 
@@ -143,7 +143,7 @@ Total: 5 (Critical: 0, High: 0, Moderate: 5, Low: 0)
 ### 3. Documentation Coverage
 
 **Code Documentation (JSDoc):**
-- **JSDoc Coverage in /lib:** 120.7% (105/87 functions)
+- **JSDoc Coverage in /lib:** 72.3% (81/112 functions)
 - ✅ Good documentation habits detected.
 
 
@@ -152,4 +152,4 @@ Total: 5 (Critical: 0, High: 0, Moderate: 5, Low: 0)
 ## Audit Performed By
 
 - Tool: Automated Script (Gemini Agent)
-- Date: 2026-01-24T10:23:46.384Z
+- Date: 2026-01-24T10:42:21.911Z
