@@ -462,7 +462,7 @@ async function checkSanitization(): Promise<AuditResult> {
     }
 }
 
-async function checkAgeGate(): Promise<AuditResult> {
+    async function checkAgeGate(): Promise<AuditResult> {
     console.log('Running Age Gate Check...');
     try {
         let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
@@ -474,9 +474,16 @@ async function checkAgeGate(): Promise<AuditResult> {
         }
         
         const content = fs.readFileSync(schemaPath, 'utf8');
-        // Look for 13 year logic. Heuristic: "13" or logic calculating age.
-        // Our fix added: "minAge" and "13"
-        const hasAgeCheck = content.includes('minAge') || (content.includes('13') && content.includes('Date'));
+        
+        // Stricter Regex Check
+        // 1. Must contain a DOB-related field name
+        const hasDobField = /dateOfBirth|dob|birthDate/i.test(content);
+        
+        // 2. Must contain logic for 13 years (calculation or comparison)
+        // Matches: "getFullYear() - 13", "Date.now() - 13 * 365", ">= 13", etc.
+        const has13Logic = /getFullYear\(\)\s*-\s*13|Date\.now\(\)\s*-\s*13\s*\*\s*365|setFullYear\(.*-\s*13\)|>=\s*13/.test(content);
+        
+        const hasAgeCheck = hasDobField && has13Logic;
         
         if (hasAgeCheck) {
             details += `- ✅ Age gate logic found in schemas (13+ enforcement detected).\n`;
