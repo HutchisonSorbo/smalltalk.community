@@ -292,15 +292,18 @@ export default async function UserDetailPage({
                         <CardContent>
                             {userAppsList.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
-                                    {userAppsList.map((app: any) => (
-                                        <Badge key={app.appId} variant="outline" className="gap-2 py-1.5">
-                                            {app.appIcon && (
-                                                <Image src={safeUrl(app.appIcon)!} alt="" width={16} height={16} className="rounded" />
-                                            )}
-                                            {app.appName}
-                                            {app.isPinned && <span className="text-yellow-500">★</span>}
-                                        </Badge>
-                                    ))}
+                                    {userAppsList.map((app: any) => {
+                                        const iconUrl = safeUrl(app.appIcon);
+                                        return (
+                                            <Badge key={app.appId} variant="outline" className="gap-2 py-1.5">
+                                                {iconUrl && (
+                                                    <Image src={iconUrl} alt={`${app.appName || app.appId} icon`} width={16} height={16} className="rounded" />
+                                                )}
+                                                {app.appName}
+                                                {app.isPinned && <span className="text-yellow-500">★</span>}
+                                            </Badge>
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <p className="text-muted-foreground text-center py-4">No apps installed</p>

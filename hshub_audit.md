@@ -137,6 +137,10 @@ fi
 log "Repository updated. Last audit: $LAST_AUDIT"
 
 # Read audit prompt and replace placeholders
+if [ ! -r "$AUDIT_PROMPT" ]; then
+    log "Audit prompt file missing: $AUDIT_PROMPT" >&2
+    exit 1
+fi
 PROMPT=$(cat "$AUDIT_PROMPT" | sed "s/{INSERT_TODAY_DATE}/$DATE/g" | sed "s/{INSERT_LAST_AUDIT_DATE}/$LAST_AUDIT/g")
 
 # Execute audit with Gemini CLI

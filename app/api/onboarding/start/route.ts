@@ -5,20 +5,41 @@ import { db } from "@/server/db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { insertAuditLog } from "@/lib/audit/auditLog";
+
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 204,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+    });
+}
 
 // Called when user clicks "Get Started" on welcome screen
 export async function POST(req: Request) {
     try {
         // Validate that no unexpected body content is sent
         const schema = z.object({}).strict();
+        
+        let body;
         try {
-            const body = await req.json().catch(() => ({}));
-            const result = schema.safeParse(body);
-            if (!result.success) {
-                return NextResponse.json({ error: "Unexpected request body" }, { status: 400 });
-            }
+            body = await req.json();
         } catch {
-            // No body is fine
+             // Handle empty body case or actual parse error? 
+             // req.json() throws on empty body? Usually unexpected token or end of input.
+             // If we want to strictly enforce JSON, we should catch syntax errors.
+             // However, often "no body" is valid but req.json() fails. 
+             // The requirement is: "change parsing to await req.json() and catch parse errors to return NextResponse.json({ error: "Malformed JSON" }, { status: 400 })"
+             return NextResponse.json({ error: "Malformed JSON" }, { status: 400 });
+        }
+
+        // If body is provided, it must be empty object {}
+        const result = schema.safeParse(body);
+        if (!result.success) {
+            return NextResponse.json({ error: "Unexpected request body" }, { status: 400 });
         }
 
         const cookieStore = await cookies();
@@ -56,6 +77,14 @@ export async function POST(req: Request) {
                 updatedAt: new Date()
             })
             .where(eq(users.id, user.id));
+        
+        // Log audit event
+        await insertAuditLog({
+            eventType: 'system',
+            severity: 'info',
+            message: 'User started onboarding',
+            userId: user.id,
+        });
 
         return NextResponse.json({ success: true, step: 1 });
     } catch (error) {

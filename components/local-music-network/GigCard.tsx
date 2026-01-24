@@ -10,15 +10,17 @@ import { ReportDialog } from "@/components/local-music-network/ReportDialog";
 
 export function GigCard({ gig }: { gig: Gig }) {
     const date = new Date(gig.date);
+    const sanitizedImageUrl = safeUrl(gig.imageUrl);
+
     return (
         <div className="flex flex-col h-full border rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow overflow-hidden relative group">
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <ReportDialog targetType="gig" targetId={gig.id} />
             </div>
-            {gig.imageUrl && (
+            {sanitizedImageUrl && (
                 <Link href={`/gigs/${gig.id}`} className="block h-48 w-full bg-muted overflow-hidden relative">
                     <Image 
-                        src={safeUrl(gig.imageUrl)!} 
+                        src={sanitizedImageUrl} 
                         alt={gig.title} 
                         fill
                         className="object-cover hover:scale-105 transition-transform duration-500" 
