@@ -4,7 +4,7 @@ import { eq, inArray, and } from "drizzle-orm";
 
 export async function generateRecommendations(userId: string) {
     // 1. Fetch User Data
-    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1).then(res => res[0]);
+    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1).then((res: any) => res[0]);
     if (!user) return;
 
     // 2. Fetch Onboarding Responses (Profile & Intent)
@@ -109,7 +109,7 @@ export async function generateRecommendations(userId: string) {
 
     if (topRecs.length > 0) {
         await db.insert(userRecommendedApps).values(
-            topRecs.map(r => ({
+            topRecs.map((r: any) => ({
                 userId,
                 appId: r.appId,
                 recommendationScore: r.score,

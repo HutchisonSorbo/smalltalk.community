@@ -25,12 +25,12 @@ export async function GET(request: Request) {
         const parsed = musicianFiltersSchema.safeParse(query);
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid filter parameters", errors: parsed.error.errors },
+                { message: "Invalid filter parameters", errors: parsed.error.issues },
                 { status: 400 }
             );
         }
 
-        const filters: any = {};
+        const filters: Record<string, string | number | boolean | string[] | undefined> = {};
         const qData = parsed.data;
 
         if (qData.location) filters.location = qData.location;
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid data", errors: parsed.error.errors },
+                { message: "Invalid data", errors: parsed.error.issues },
                 { status: 400 }
             );
         }

@@ -19,12 +19,12 @@ export async function GET(request: Request) {
         const parsed = gigFiltersSchema.safeParse(query);
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid filter parameters", errors: parsed.error.errors },
+                { message: "Invalid filter parameters", errors: parsed.error.issues },
                 { status: 400 }
             );
         }
 
-        const filters: any = parsed.data;
+        const filters: Record<string, string | number | undefined> = { ...parsed.data };
 
         // Pagination
         const page = parseInt(query.page as string) || 1;
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid data", errors: parsed.error.errors },
+                { message: "Invalid data", errors: parsed.error.issues },
                 { status: 400 }
             );
         }

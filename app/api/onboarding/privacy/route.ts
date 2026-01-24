@@ -26,10 +26,10 @@ export async function POST(req: Request) {
         const { privacySettings, notificationPreferences } = result.data;
         const userId = user.id;
 
-        await db.transaction(async (tx) => {
+        await db.transaction(async (tx: any) => {
             // Upsert Privacy Settings
             // Check if exists
-            const existingPrivacy = await tx.select().from(userPrivacySettings).where(eq(userPrivacySettings.userId, userId)).limit(1).then(res => res[0]);
+            const existingPrivacy = await tx.select().from(userPrivacySettings).where(eq(userPrivacySettings.userId, userId)).limit(1).then((res: any) => res[0]);
 
             if (existingPrivacy) {
                 await tx.update(userPrivacySettings).set({ ...privacySettings, settingsUpdatedAt: new Date() }).where(eq(userPrivacySettings.userId, userId));
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
             }
 
             // Upsert Notification Preferences
-            const existingNotif = await tx.select().from(userNotificationPreferences).where(eq(userNotificationPreferences.userId, userId)).limit(1).then(res => res[0]);
+            const existingNotif = await tx.select().from(userNotificationPreferences).where(eq(userNotificationPreferences.userId, userId)).limit(1).then((res: any) => res[0]);
 
             if (existingNotif) {
                 await tx.update(userNotificationPreferences).set({ ...notificationPreferences, preferencesUpdatedAt: new Date() }).where(eq(userNotificationPreferences.userId, userId));

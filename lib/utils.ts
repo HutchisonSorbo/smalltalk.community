@@ -14,7 +14,8 @@ export function safeUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
   try {
     const parsed = new URL(url);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+    const allowedProtocols = ["http:", "https:", "mailto:"];
+    if (allowedProtocols.includes(parsed.protocol)) {
       return parsed.toString();
     }
   } catch {

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Management Suite | smalltalk.community Inc</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finance">
+    <link rel="manifest"
+        href="data:application/json;base64,ewogICJuYW1lIjogIkZpbmFuY2lhbCBNYW5hZ2VtZW50IFN1aXRlIiwKICAic2hvcnRfbmFtZSI6ICJGaW5hbmNlIiwKICAiZGVzY3JpcHRpb24iOiAiRmluYW5jaWFsIHRyYWNraW5nIGZvciBzbWFsbHRhbGsuY29tbXVuaXR5IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMDAzYjZmIiwKICAiaWNvbnMiOiBbXQp9">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary: #3b82f6;
+                    --primary-support: #60a5fa;
+                    --accent: #fb923c;
+                    --text-color: #f1f5f9;
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --border-color: #334155;
+                }
+            }
+
+            body {
+                @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6];
+                font-size: 16px;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-['Plus_Jakarta_Sans'] font-bold;
+            }
+        }
+
+        @layer components {
+            .btn-primary { @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .btn-secondary { @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .input-field { @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)]; }
+            .card { @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6; }
+            .nav-link { @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2; }
+            .nav-link.active { @apply bg-white/20 font-bold; }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            .page-break { page-break-before: always; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+            .footer-left { flex: 1; text-align: left; }
+            .footer-center { flex: 1; text-align: center; font-weight: 600; }
+            .footer-right { flex: 1; text-align: right; }
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .nav-link, button, select, input {
+                min-height: 44px !important;
+            }
+            .input-field, input, select, textarea {
+                font-size: 16px !important;
+            }
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: { primary: 'var(--primary)', accent: 'var(--accent)', danger: 'var(--danger)', success: 'var(--success)' }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatCurrency = (val) => new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(val);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+
+        // --- Standard Components ---
+
+        const AppShell = ({ children, title, currentTab, setTab, onSave, onLoad }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2">Skip to content</a>
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl font-bold font-display">smalltalk.community</div>
+                                <h1 className="hidden md:block text-lg opacity-80">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={onSave} className="btn-secondary !px-4 text-sm whitespace-nowrap flex items-center justify-center gap-2">💾 Save</button>
+                                <label className="btn-secondary !px-4 text-sm cursor-pointer whitespace-nowrap flex items-center justify-center gap-2">
+                                    📂 Load <input type="file" className="hidden" onChange={onLoad} accept=".json" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary !px-4 text-sm md:block hidden flex items-center justify-center gap-2">🖨️ Print</button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📈' },
+                                { id: 'policies', label: 'Financial Policies', icon: '📋' },
+                                { id: 'expenses', label: 'Expenses', icon: '💸' },
+                                { id: 'grants', label: 'Grants', icon: '🏆' },
+                                { id: 'statements', label: 'Statements', icon: '📑' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                >
+                                    <span>{item.icon}</span> <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print">
+                    <div className="max-w-7xl mx-auto text-center px-4">
+                        <p className="text-sm">We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands.</p>
+                        <p className="text-xs mt-2 opacity-50">© 2026 smalltalk.community Inc. | Financial Management Suite</p>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "" }) => (
+            <section className={`card ${className}`}>
+                {title && <h2 className="text-xl font-bold text-primary dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">{title}</h2>}
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-green-100 text-green-800 border-green-200',
+                warning: 'bg-amber-100 text-amber-800 border-amber-200',
+                danger: 'bg-red-100 text-red-800 border-red-200',
+                info: 'bg-blue-100 text-blue-800 border-blue-200',
+                default: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+            };
+            return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colors[type]}`}>{status}</span>;
+        };
+
+        const FormInput = ({ label, id, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <input id={id} className="input-field" {...props} />
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <select id={id} className="input-field" {...props}>
+                    <option value="">Select...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-inherit">
+                            <h2 className="text-xl font-bold">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- App Logic ---
+
+        const Dashboard = ({ data }) => {
+            const totalExpenses = data.expenses.filter(e => e.status === 'reimbursed' || e.status === 'approved').reduce((sum, e) => sum + Number(e.amount || 0), 0);
+            const pendingCount = data.expenses.filter(e => e.status === 'pending').length;
+            const grantValue = data.grants.reduce((sum, g) => sum + Number(g.amountAwarded || 0), 0);
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            { label: 'Total Expenses YTD', value: formatCurrency(totalExpenses), color: 'border-l-primary', icon: '💰' },
+                            { label: 'Pending Approvals', value: pendingCount, color: 'border-l-warning', icon: '⏳' },
+                            { label: 'Grant Pipeline Value', value: formatCurrency(grantValue), color: 'border-l-success', icon: '🎉' },
+                            { label: 'Budget Utilisation', value: '12%', color: 'border-l-accent', icon: '📉' }
+                        ].map(stat => (
+                            <div key={stat.label} className={`card border-l-4 ${stat.color} flex justify-between items-center`}>
+                                <div>
+                                    <div className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400">{stat.label}</div>
+                                    <div className="text-2xl font-black mt-1">{stat.value}</div>
+                                </div>
+                                <div className="text-3xl opacity-20">{stat.icon}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Upcoming Grant Deadlines">
+                            <div className="space-y-4">
+                                {data.grants.filter(g => g.acquittalDueDate).map(g => (
+                                    <div key={g.id} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                        <div>
+                                            <div className="font-bold">{g.funder}</div>
+                                            <div className="text-xs opacity-60">{g.program}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-bold text-danger">{formatDate(g.acquittalDueDate)}</div>
+                                            <div className="text-[10px] uppercase font-bold text-danger">Acquittal Due</div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {data.grants.length === 0 && <p className="text-sm text-slate-400 italic">No grants identified.</p>}
+                            </div>
+                        </Card>
+                        <Card title="Quick Approval Matrix">
+                            <div className="text-sm space-y-4">
+                                <p>Standard authorities for procurement:</p>
+                                <ul className="space-y-2">
+                                    <li className="flex justify-between p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                                        <span>&lt;$500</span> <strong>Treasurer</strong>
+                                    </li>
+                                    <li className="flex justify-between p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                                        <span>$500 - $2,000</span> <strong>Committee</strong>
+                                    </li>
+                                    <li className="flex justify-between p-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
+                                        <span>$2,000 - $5,000</span> <strong>Committee + Chair</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const ExpenseManager = ({ data, setData }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({ amount: '', category: '', description: '', status: 'pending' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newExp = { ...formData, id: generateId(), date: new Date().toISOString() };
+                setData(prev => ({ ...prev, expenses: [...prev.expenses, newExp] }));
+                setIsModalOpen(false);
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Expense Management">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold">Transaction History</h3>
+                            <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">+ Request Expense</button>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800 font-bold text-xs uppercase text-slate-500 dark:text-slate-400">
+                                    <tr>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4">Category</th>
+                                        <th className="px-6 py-4">Description</th>
+                                        <th className="px-6 py-4 text-right">Amount</th>
+                                        <th className="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                    {data.expenses.map(e => (
+                                        <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="px-6 py-4">{formatDate(e.date)}</td>
+                                            <td className="px-6 py-4"><span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-[10px]">{e.category}</span></td>
+                                            <td className="px-6 py-4 font-medium">{e.description}</td>
+                                            <td className="px-6 py-4 text-right font-bold">{formatCurrency(e.amount)}</td>
+                                            <td className="px-6 py-4">
+                                                <StatusBadge status={e.status} type={e.status === 'reimbursed' ? 'success' : e.status === 'pending' ? 'warning' : 'info'} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {data.expenses.length === 0 && <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400">No expenses recorded.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Expense Request">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Amount (AUD)" id="exp_amt" type="number" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} required />
+                                <FormSelect
+                                    label="Category" id="exp_cat" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                    options={[
+                                        { value: 'Governance', label: 'Governance' },
+                                        { value: 'Technology', label: 'Technology' },
+                                        { value: 'Marketing', label: 'Marketing' },
+                                        { value: 'Program Delivery', label: 'Program Delivery' },
+                                        { value: 'Insurance', label: 'Insurance' }
+                                    ]}
+                                    required
+                                />
+                            </div>
+                            <FormInput label="Description" id="exp_desc" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} required />
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg text-xs space-y-2 border border-slate-200 dark:border-slate-700">
+                                <p className="font-bold opacity-50">DOCUMENTATION REQUIRED</p>
+                                <p>By submitting this request, you agree to provide an invoice or JPEG/PDF receipt within 7 days of purchase. Unauthorized expenses will not be reimbursed.</p>
+                            </div>
+                            <div className="flex gap-4 justify-end pt-4">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Submit Request</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const GrantManager = ({ data, setData }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({ funder: '', program: '', amountRequested: '', status: 'identified' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newGrant = { ...formData, id: generateId() };
+                setData(prev => ({ ...prev, grants: [...prev.grants, newGrant] }));
+                setIsModalOpen(false);
+            };
+
+            const statuses = ['identified', 'applied', 'awarded', 'acquitted'];
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-bold font-display">Grant Pipeline</h2>
+                        <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">+ Add Opportunity</button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {statuses.map(status => (
+                            <div key={status} className="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl space-y-4">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 pb-2">{status}</h3>
+                                <div className="space-y-3">
+                                    {data.grants.filter(g => g.status === status).map(g => (
+                                        <div key={g.id} className="card !p-3 text-xs shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="font-bold text-sm">{g.funder}</div>
+                                            <div className="opacity-60">{g.program}</div>
+                                            <div className="mt-2 font-black text-primary border-t pt-2">{formatCurrency(g.amountRequested || g.amountAwarded)}</div>
+                                        </div>
+                                    ))}
+                                    {data.grants.filter(g => g.status === status).length === 0 && (
+                                        <div className="text-[10px] text-slate-400 italic text-center py-4">No grants in this stage</div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Grant Record">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormInput label="Funder Name" id="g_funder" value={formData.funder} onChange={e => setFormData({ ...formData, funder: e.target.value })} required />
+                            <FormInput label="Program Name" id="g_prog" value={formData.program} onChange={e => setFormData({ ...formData, program: e.target.value })} required />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Amount Required" id="g_amt" type="number" value={formData.amountRequested} onChange={e => setFormData({ ...formData, amountRequested: e.target.value })} />
+                                <FormSelect label="Initial Status" id="g_stat" options={statuses.map(s => ({ value: s, label: s.toUpperCase() }))} value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} />
+                            </div>
+                            <div className="flex gap-4 justify-end pt-4">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Add Record</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const FinancialPolicies = () => (
+            <div className="space-y-6">
+                <Card title="Core Financial Policies" subtitle="Key governance frameworks for association management.">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border dark:border-slate-700">
+                            <h4 className="font-black text-xs uppercase text-slate-500 mb-2">Reimbursement Policy</h4>
+                            <ul className="text-sm space-y-2 list-disc pl-4 opacity-80">
+                                <li>All expenses must have a valid receipt/invoice.</li>
+                                <li>Pre-approval required for items over $100.</li>
+                                <li>Claims must be submitted within 30 days.</li>
+                                <li>Payments processed on the 1st and 15th of each month.</li>
+                            </ul>
+                        </div>
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border dark:border-slate-700">
+                            <h4 className="font-black text-xs uppercase text-slate-500 mb-2">Procurement Thresholds</h4>
+                            <div className="space-y-1">
+                                <div className="flex justify-between text-sm py-1 border-b dark:border-slate-700">
+                                    <span>Below $500</span> <span className="font-bold">Member discretion</span>
+                                </div>
+                                <div className="flex justify-between text-sm py-1 border-b dark:border-slate-700">
+                                    <span>$500 - $2,000</span> <span className="font-bold">Treasurer approval</span>
+                                </div>
+                                <div className="flex justify-between text-sm py-1">
+                                    <span>Above $2,000</span> <span className="font-bold">Committee vote</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+                <Card title="Asset Register Guide">
+                    <p className="text-sm opacity-70">Significant physical assets (valuing &gt;$500) purchased by the association must be logged in the centralized asset register, which is maintained as a separate record in the <strong>Records & Privacy</strong> application.</p>
+                </Card>
+            </div>
+        );
+
+        const StatementBuilder = ({ data }) => {
+            const [period, setPeriod] = useState({ start: '2026-01-01', end: '2026-12-31' });
+
+            const income = data.grants.filter(g => g.status === 'awarded').reduce((sum, g) => sum + Number(g.amountAwarded || 0), 0);
+            const expenses = data.expenses.filter(e => e.status === 'reimbursed').reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+            const downloadCSV = () => {
+                const rows = [
+                    ['Report Type', 'Statement of Financial Performance'],
+                    ['Period', `${period.start} to ${period.end}`],
+                    [''],
+                    ['Category', 'Account', 'Amount'],
+                    ['REVENUE', 'Grants Awarded', income],
+                    ['REVENUE', 'Donations & Fundraising', 0],
+                    ['EXPENSES', 'Operating Expenses', -expenses],
+                    [''],
+                    ['NET RESULT', '', income - expenses]
+                ];
+
+                const csvContent = rows.map(r => r.join(',')).join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `smalltalk-statement-${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            };
+
+            return (
+                <div className="space-y-8 max-w-4xl mx-auto">
+                    <Card title="Statement Performance Builder">
+                        <div className="flex gap-4 mb-8 no-print bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border dark:border-slate-700">
+                            <div className="flex-1 text-primary dark:text-blue-400">
+                                <FormInput label="Reporting Period Start" type="date" value={period.start} onChange={e => setPeriod({ ...period, start: e.target.value })} />
+                            </div>
+                            <div className="flex-1 text-primary dark:text-blue-400">
+                                <FormInput label="Reporting Period End" type="date" value={period.end} onChange={e => setPeriod({ ...period, end: e.target.value })} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-12">
+                            {/* Income Statement */}
+                            <div className="space-y-6">
+                                <div className="border-b-2 border-primary pb-2 flex justify-between items-end">
+                                    <h3 className="text-2xl font-black">Statement of Financial Performance</h3>
+                                    <div className="text-right text-xs uppercase opacity-50">Income Statement</div>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between font-bold text-sm p-1 border-b"><span>REVENUE</span></div>
+                                    <div className="flex justify-between text-sm px-4"><span>Grants Awarded</span> <span>{formatCurrency(income)}</span></div>
+                                    <div className="flex justify-between text-sm px-4"><span>Donations & Fundraising</span> <span>$0.00</span></div>
+                                    <div className="flex justify-between font-black text-sm p-2 bg-slate-50 dark:bg-slate-800 mt-2"><span>Total Revenue</span> <span>{formatCurrency(income)}</span></div>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between font-bold text-sm p-1 border-b"><span>EXPENSES</span></div>
+                                    <div className="flex justify-between text-sm px-4"><span>Total Operating Expenses (per Register)</span> <span>({formatCurrency(expenses)})</span></div>
+                                    <div className="flex justify-between font-black text-sm p-2 bg-slate-50 dark:bg-slate-800 mt-2"><span>Total Expenses</span> <span>({formatCurrency(expenses)})</span></div>
+                                </div>
+                                <div className="flex justify-between font-black text-xl p-4 bg-primary text-white rounded-lg">
+                                    <span>NET SURPLUS / (DEFICIT)</span>
+                                    <span>{formatCurrency(income - expenses)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-8 pt-8 border-t no-print flex gap-4">
+                            <button onClick={() => window.print()} className="btn-primary flex-1">Export Statement (PDF)</button>
+                            <button onClick={downloadCSV} className="btn-secondary flex-1">Download CSV Data</button>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const Settings = ({ data, setData }) => {
+            const [jsonInput, setJsonInput] = useState(JSON.stringify(data, null, 2));
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                setJsonInput(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(jsonInput);
+                    setData(parsed);
+                    setError('');
+                    alert('Data updated successfully!');
+                } catch (e) {
+                    setError('Invalid JSON: ' + e.message);
+                }
+            };
+
+            return (
+                <Card title="Application Settings">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold mb-2">Raw Data Editor</label>
+                            <p className="text-xs text-slate-500 mb-2">Edit the application state directly. Be careful!</p>
+                            <textarea
+                                className="input-field font-mono text-xs h-96"
+                                value={jsonInput}
+                                onChange={e => setJsonInput(e.target.value)}
+                            />
+                        </div>
+                        {error && <div className="text-danger text-sm font-bold">{error}</div>}
+                        <button onClick={handleSave} className="btn-primary">Update Data</button>
+                    </div>
+                </Card>
+            );
+        };
+
+        const App = () => {
+            const [currentTab, setCurrentTab] = useState('dashboard');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState({
+                expenses: [],
+                grants: [],
+                budget: []
+            });
+
+            const saveDraft = () => {
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `smalltalk-finance-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+            };
+
+            const loadDraft = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try { setData(JSON.parse(ev.target.result)); alert('Finance data loaded!'); }
+                    catch (err) { alert('Invalid file format.'); }
+                };
+                reader.readAsText(file);
+            };
+
+            useEffect(() => {
+                const saved = localStorage.getItem('st_finance_data');
+                if (saved) {
+                    try { setData(JSON.parse(saved)); } catch (e) { }
+                }
+                if (isFirstVisit('finance_management')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('st_finance_data', JSON.stringify(data));
+            }, [data]);
+
+            const renderContent = () => {
+                switch (currentTab) {
+                    case 'dashboard': return <Dashboard data={data} />;
+                    case 'policies': return <FinancialPolicies />;
+                    case 'expenses': return <ExpenseManager data={data} setData={setData} />;
+                    case 'grants': return <GrantManager data={data} setData={setData} />;
+                    case 'statements': return <StatementBuilder data={data} />;
+                    case 'settings': return <Settings data={data} setData={setData} />;
+                    default: return <Dashboard data={data} />;
+                }
+            };
+
+            return (
+                <AppShell title="Financial Management Suite" currentTab={currentTab} setTab={setCurrentTab} onSave={saveDraft} onLoad={loadDraft}>
+                    {renderContent()}
+                    <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(true)} appName="Financial Management Suite" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

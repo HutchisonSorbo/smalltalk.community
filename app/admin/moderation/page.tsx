@@ -116,7 +116,7 @@ export default async function ModerationQueuePage() {
                         <CardContent>
                             {pendingReports.length > 0 ? (
                                 <div className="space-y-4">
-                                    {pendingReports.map((report) => (
+                                    {pendingReports.map((report: any) => (
                                         <div
                                             key={report.id}
                                             className="p-4 rounded-lg border border-yellow-500/30 bg-yellow-500/5"

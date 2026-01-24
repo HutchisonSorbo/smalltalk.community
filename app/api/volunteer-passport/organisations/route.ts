@@ -21,14 +21,14 @@ export async function GET(request: NextRequest) {
 
         if (search) {
             const searchLower = search.toLowerCase();
-            filtered = filtered.filter(org =>
+            filtered = filtered.filter((org: any) =>
                 org.name.toLowerCase().includes(searchLower) ||
                 org.description?.toLowerCase().includes(searchLower)
             );
         }
 
         if (verified === "true") {
-            filtered = filtered.filter(org => org.isVerified);
+            filtered = filtered.filter((org: any) => org.isVerified);
         }
 
         return NextResponse.json({ organisations: filtered }, { status: 200 });

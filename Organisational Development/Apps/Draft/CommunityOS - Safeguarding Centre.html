@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safeguarding Centre | smalltalk.community Inc</title>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Safeguarding Centre">
+    <link rel="manifest"
+        href="data:application/json;base64,eyJzaG9ydF9uYW1lIjoiU2FmZWd1YXJkIiwibmFtZSI6InNtYWxsdGFsay5jb21tdW5pdHkgLSBTYWZlZ3VhcmRpbmcgQ2VudHJlIiwiZGVzY3JpcHRpb24iOiJDaGlsZCBzYWZlIHN0YW5kYXJkcyBhbmQgc2FmZWd1YXJkaW5nIGNvbXBsaWFuY2UgZm9yIHNtYWxsdGFsay5jb21tdW5pdHkgSW5jIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDNiNmYiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJyUzRSUzQ3JlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIHJ4PScyNCcgZmlsbD0nJTIzMDAzYjZmJy8lM0UlM0N0ZXh0IHg9JzUwJScgeT0nNTAlJyBkb21pbmFudC1iYXNlbGluZT0nY2VudHJhbCcgdGV4dC1hbmNob3I9J21pZGRsZScgZm9udC1zaXplPSc4MCcgZmlsbD0nd2hpdGUnJTNFU0clM0MvdGV4dCUzRSUzQyUyRnN2ZyUzRSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary: #3b82f6;
+                    --primary-support: #60a5fa;
+                    --accent: #fb923c;
+                    --text-color: #f1f5f9;
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --border-color: #334155;
+                }
+            }
+
+            body { @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6]; font-size: 16px; }
+            h1, h2, h3, h4, h5, h6 { @apply font-['Plus_Jakarta_Sans'] font-bold; }
+        }
+
+        @layer components {
+            .btn-primary { @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .btn-secondary { @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .input-field { @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)]; }
+            .card { @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6; }
+            .nav-link { @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2; }
+            .nav-link.active { @apply bg-white/20 font-bold; }
+            .badge { @apply px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border; }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+            .footer-left { flex: 1; text-align: left; }
+            .footer-center { flex: 1; text-align: center; font-weight: 600; }
+            .footer-right { flex: 1; text-align: right; }
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .nav-link, button, select, input {
+                min-height: 44px !important;
+            }
+            .input-field, input, select, textarea {
+                font-size: 16px !important;
+            }
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: { primary: 'var(--primary)', accent: 'var(--accent)', danger: 'var(--danger)', success: 'var(--success)', warning: 'var(--warning)' }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+
+        // --- Standard Components ---
+
+        const AppShell = ({ children, title, currentTab, setTab, onSave, onLoad }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2 text-center">Skip contents</a>
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl font-bold font-display">smalltalk.community</div>
+                                <h1 className="hidden md:block text-lg opacity-80">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={onSave} className="btn-secondary !px-4 text-sm flex items-center justify-center gap-2">💾 Save</button>
+                                <label className="btn-secondary !px-4 text-sm cursor-pointer whitespace-nowrap flex items-center justify-center gap-2">
+                                    📂 Load <input type="file" className="hidden" onChange={onLoad} accept=".json" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary !px-4 text-sm md:block hidden flex items-center justify-center gap-2">🖨️ Print</button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '🛡️' },
+                                { id: 'standards', label: 'Child Safe Standards', icon: '📚' },
+                                { id: 'registers', label: 'WWCC Register', icon: '✅' },
+                                { id: 'incidents', label: 'Incident Reports', icon: '🚨' },
+                                { id: 'volunteers', label: 'Volunteer Hub', icon: '🤝' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                >
+                                    <span>{item.icon}</span> <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print">
+                    <div className="max-w-7xl mx-auto text-center px-4">
+                        <p className="text-sm">We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands.</p>
+                        <p className="text-xs mt-2 opacity-50">© 2026 smalltalk.community Inc. | Safeguarding Centre v1.0</p>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "", subtitle }) => (
+            <section className={`card ${className}`}>
+                {title && (
+                    <div className="mb-6">
+                        <h2 className="text-xl font-bold text-primary dark:text-white">{title}</h2>
+                        {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+                    </div>
+                )}
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800',
+                warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                danger: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
+                info: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                default: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+            };
+            return <span className={`badge ${colors[type]}`}>{status}</span>;
+        };
+
+        const ProgressBar = ({ current, total, label }) => {
+            const percent = Math.min(100, Math.round((current / total) * 100));
+            return (
+                <div className="w-full">
+                    <div className="flex justify-between text-[10px] uppercase font-bold mb-1 opacity-60">
+                        <span>{label}</span>
+                        <span>{percent}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div className="bg-primary h-full transition-all duration-500" style={{ width: `${percent}%` }}></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const FormInput = ({ label, id, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <input id={id} className="input-field" {...props} />
+            </div>
+        );
+
+        // --- App Logic ---
+
+        const Dashboard = ({ data }) => {
+            const compliantStandards = 7; // Simulated
+            const activeVolunteers = data.volunteers?.filter(v => v.status === 'active').length || 0;
+            const expiringSoon = 2; // Simulated
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card className="!p-4 border-l-4 border-l-success">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl">🛡️</div>
+                                <div>
+                                    <div className="text-[10px] uppercase font-black text-slate-500 dark:text-slate-400">Overall Safety Status</div>
+                                    <div className="text-lg font-bold text-success">Compliant</div>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card className="!p-4 border-l-4 border-l-primary">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl">🤝</div>
+                                <div>
+                                    <div className="text-[10px] uppercase font-black text-slate-500 dark:text-slate-400">Active Volunteers</div>
+                                    <div className="text-2xl font-black">{activeVolunteers}</div>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card className="!p-4 border-l-4 border-l-warning">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl">💳</div>
+                                <div>
+                                    <div className="text-[10px] uppercase font-black text-slate-500 dark:text-slate-400">WWCC Expiries (90d)</div>
+                                    <div className="text-2xl font-black">{expiringSoon}</div>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card className="!p-4 border-l-4 border-l-danger">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl">🚨</div>
+                                <div>
+                                    <div className="text-[10px] uppercase font-black text-slate-500 dark:text-slate-400">Unresolved Incidents</div>
+                                    <div className="text-2xl font-black text-danger">0</div>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <Card title="Victorian Child Safe Standards" className="lg:col-span-2">
+                            <ProgressBar label="Compliance Progress (11 Standards)" current={compliantStandards} total={11} />
+                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {[
+                                    { id: 1, title: 'Culturally safe environments', status: 'Compliant' },
+                                    { id: 2, title: 'Leadership & Governance', status: 'Compliant' },
+                                    { id: 3, title: 'Child & youth empowerment', status: 'In Progress' },
+                                    { id: 4, title: 'Family & community engagement', status: 'Compliant' }
+                                ].map(s => (
+                                    <div key={s.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg flex justify-between items-center text-xs">
+                                        <span className="font-medium">{s.id}. {s.title}</span>
+                                        <StatusBadge status={s.status} type={s.status === 'Compliant' ? 'success' : 'warning'} />
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={() => setTab('standards')} className="mt-6 text-primary dark:text-blue-400 text-xs font-bold hover:underline">View All 11 Standards →</button>
+                        </Card>
+
+                        <div className="space-y-6">
+                            <Card title="Compliance Alerts">
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 rounded-lg">
+                                        <div className="text-warning text-lg pt-1">⚠️</div>
+                                        <div className="text-xs">
+                                            <strong>WWCC Expiry:</strong> Ryan H (Staff)
+                                            <div className="mt-1 opacity-60">Expires in 12 days. Renew immediately.</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 rounded-lg">
+                                        <div className="text-info text-lg pt-1">ℹ️</div>
+                                        <div className="text-xs">
+                                            <strong>Training Required:</strong>
+                                            <div className="mt-1 opacity-60">3 volunteers need Child Safety Induction.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                            <Card title="Quick Actions">
+                                <div className="flex flex-col gap-2">
+                                    <button onClick={() => setTab('incidents')} className="btn-primary w-full text-xs">Report Incident</button>
+                                    <button onClick={() => setTab('registers')} className="btn-secondary w-full text-xs">Add New Volunteer</button>
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StandardsChecklist = () => {
+            const standards = [
+                { id: 1, title: 'Culturally Safe Environments', req: 'Aboriginal and Torres Strait Islander children and young people are safe and their culture is celebrated.', status: 'Compliant' },
+                { id: 2, title: 'Leadership, Governance and Culture', req: 'Child safety and wellbeing is embedded in organisational leadership, governance and culture.', status: 'Compliant' },
+                { id: 3, title: 'Child and Student Empowerment', req: 'Children and young people are empowered about their rights, participate in decisions affecting them and are taken seriously.', status: 'In Progress' },
+                { id: 4, title: 'Family and Community Involvement', req: 'Families and communities are informed and involved in promoting child safety and wellbeing.', status: 'Compliant' },
+                { id: 5, title: 'Equity and Diverse Needs', req: 'Equity is upheld and diverse needs respected in policy and practice.', status: 'In Progress' },
+                { id: 6, title: 'Suitable Staff and Volunteers', req: 'People working with children and young people are suitable and supported to reflect child safety and wellbeing values.', status: 'Compliant' },
+                { id: 7, title: 'Complaints Processes', req: 'Processes for complaints and concerns are child-focused.', status: 'Compliant' },
+                { id: 8, title: 'Knowledge, Skills and Awareness', req: 'Staff and volunteers are equipped with the knowledge, skills and awareness to keep children and young people safe through ongoing education and training.', status: 'Compliant' },
+                { id: 9, title: 'Physical and Online Environments', req: 'Physical and online environments promote safety and wellbeing while minimising the opportunity for children and young people to be harmed.', status: 'In Progress' },
+                { id: 10, title: 'Review of Child Safety Practices', req: 'Implementation of the Child Safe Standards is regularly reviewed and improved.', status: 'Non-compliant' },
+                { id: 11, title: 'Implementation of Child Safety Policies', req: 'Policies and procedures document how the organisation is safe for children and young people.', status: 'Compliant' }
+            ];
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Victorian Child Safe Standards Audit" subtitle="All organisations working with children in Victoria must comply with these 11 standards.">
+                        <div className="space-y-4">
+                            {standards.map(s => (
+                                <details key={s.id} className="group border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800/50">
+                                    <summary className="flex justify-between items-center p-4 cursor-pointer list-none hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${s.status === 'Compliant' ? 'bg-success/10 text-success' : s.status === 'Non-compliant' ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'}`}>
+                                                {s.id}
+                                            </div>
+                                            <span className="font-bold text-sm">{s.title}</span>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <StatusBadge status={s.status} type={s.status === 'Compliant' ? 'success' : s.status === 'Non-compliant' ? 'danger' : 'warning'} />
+                                            <span className="group-open:rotate-180 transition-transform">▼</span>
+                                        </div>
+                                    </summary>
+                                    <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-700 text-sm space-y-4">
+                                        <p className="opacity-70 mt-4 italic">{s.req}</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <h4 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400">Evidence Collected</h4>
+                                                <ul className="text-xs space-y-1 list-disc pl-4 opacity-80">
+                                                    <li>Policy document V1.0 signed</li>
+                                                    <li>Staff induction logs</li>
+                                                </ul>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <h4 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400">Gaps Identifed</h4>
+                                                <p className="text-xs opacity-80">No current youth advisory committee review.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const WWCCRegister = ({ data, setData }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({ name: '', role: '', num: '', exp: '' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newV = { id: generateId(), name: formData.name, role: formData.role, wwcc: formData.num, expiry: formData.exp, status: 'active' };
+                setData(prev => ({ ...prev, volunteers: [...(prev.volunteers || []), newV] }));
+                setIsModalOpen(false);
+                setFormData({ name: '', role: '', num: '', exp: '' });
+            };
+
+            const removeVolunteer = (id) => {
+                if (confirm('Are you sure you want to remove this record?')) {
+                    setData(prev => ({ ...prev, volunteers: prev.volunteers.filter(v => v.id !== id) }));
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="WWCC & Police Check Register">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold">Staff & Volunteer Checks</h3>
+                            <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">+ Add New</button>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800 text-[10px] uppercase font-black text-slate-500 dark:text-slate-400">
+                                    <tr>
+                                        <th className="px-6 py-4">Name</th>
+                                        <th className="px-6 py-4">Role</th>
+                                        <th className="px-6 py-4">Check Number</th>
+                                        <th className="px-6 py-4">Expiry Date</th>
+                                        <th className="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-sm divide-y divide-slate-100 dark:divide-slate-800">
+                                    {(data.volunteers || []).map(v => (
+                                        <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                            <td className="px-6 py-4 font-bold">{v.name}</td>
+                                            <td className="px-6 py-4 opacity-70">{v.role}</td>
+                                            <td className="px-6 py-4 font-mono text-xs">{v.wwcc}</td>
+                                            <td className="px-6 py-4 font-medium">{formatDate(v.expiry)}</td>
+                                            <td className="px-6 py-4 flex items-center justify-between">
+                                                <StatusBadge status={v.status} type="success" />
+                                                <button onClick={() => removeVolunteer(v.id)} className="text-danger opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-all">✕</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {(!data.volunteers || data.volunteers.length === 0) && (
+                                        <tr><td colSpan="5" className="p-12 text-center text-slate-400 italic">No records found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    {isModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                            <Card className="max-w-md w-full" title="Register New Check">
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <FormInput label="Full Name" id="vname" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                                    <FormInput label="Role" id="vrole" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} required />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormInput label="WWCC Number" id="vnum" value={formData.num} onChange={e => setFormData({ ...formData, num: e.target.value })} />
+                                        <FormInput label="Expiry Date" id="vexp" type="date" value={formData.exp} onChange={e => setFormData({ ...formData, exp: e.target.value })} />
+                                    </div>
+                                    <div className="flex gap-4 pt-4">
+                                        <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary flex-1">Cancel</button>
+                                        <button type="submit" className="btn-primary flex-1">Save Entry</button>
+                                    </div>
+                                </form>
+                            </Card>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const IncidentReporter = ({ data, setData }) => {
+            const [isFormOpen, setIsFormOpen] = useState(false);
+            const [formData, setFormData] = useState({ date: '', time: '', category: 'Child Safety', description: '', mandatory: 'Unsure' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newIncident = { ...formData, id: generateId(), submittedAt: new Date().toISOString(), status: 'open' };
+                setData(prev => ({ ...prev, incidents: [...(prev.incidents || []), newIncident] }));
+                setIsFormOpen(false);
+                alert('Incident reported successfully. A notification has been sent to the Designated Safeguarding Lead.');
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-8">
+                    {!isFormOpen ? (
+                        <div className="space-y-6">
+                            <Card title="Incident Reporting & Mandatory Actions" className="bg-danger text-white border-none">
+                                <div className="flex flex-col md:flex-row gap-8 items-center">
+                                    <div className="flex-1 space-y-4">
+                                        <h3 className="text-3xl font-black">Emergency? Call 000</h3>
+                                        <p className="opacity-90">If a child, young person or any individual is in immediate danger, contact emergency services immediately.</p>
+                                        <div className="flex gap-4">
+                                            <button onClick={() => setIsFormOpen(true)} className="bg-white text-danger px-6 py-3 rounded-full font-black text-sm uppercase">Report Incident Now</button>
+                                            <button onClick={() => alert('Safeguarding Policy V1.0 - PDF Download simulation')} className="border-2 border-white px-6 py-3 rounded-full font-black text-sm uppercase">Policy Guide</button>
+                                        </div>
+                                    </div>
+                                    <div className="bg-black/20 p-6 rounded-2xl space-y-3 text-xs md:w-72">
+                                        <div className="font-black uppercase tracking-widest text-[10px] opacity-60">Mandatory Reporting Steps</div>
+                                        <div className="flex gap-2"><span>1.</span> <span>Ensure immediate safety</span></div>
+                                        <div className="flex gap-2"><span>2.</span> <span>Log incident details here</span></div>
+                                        <div className="flex gap-2"><span>3.</span> <span>Assess reporting obligations</span></div>
+                                        <div className="flex gap-2"><span>4.</span> <span>Notify Child Protection (if req)</span></div>
+                                    </div>
+                                </div>
+                            </Card>
+
+                            <Card title="Active Incident Hub" subtitle="Ongoing investigations and reported concerns.">
+                                <div className="space-y-4">
+                                    {(data.incidents || []).map(inc => (
+                                        <div key={inc.id} className="p-4 border dark:border-slate-800 rounded-xl flex justify-between items-center group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <StatusBadge status={inc.category} type="danger" />
+                                                    <span className="text-xs font-bold opacity-60">{formatDate(inc.date)}</span>
+                                                </div>
+                                                <p className="text-sm font-bold truncate max-w-md">{inc.description}</p>
+                                            </div>
+                                            <StatusBadge status={inc.status} type="warning" />
+                                        </div>
+                                    ))}
+                                    {(!data.incidents || data.incidents.length === 0) && (
+                                        <div className="p-8 text-center text-slate-400 italic">No active incidents recorded.</div>
+                                    )}
+                                </div>
+                            </Card>
+                        </div>
+                    ) : (
+                        <Card title="Report New Incident" subtitle="Confidential report for internal investigation.">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormInput label="Date of Incident" type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
+                                    <FormInput label="Approx Time" type="time" value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })} required />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-semibold mb-2">Category of Incident</label>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        {['Child Safety', 'Misconduct', 'Accident', 'Workplace'].map(c => (
+                                            <label key={c} className="flex items-center gap-2 p-3 border dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-colors has-[:checked]:bg-primary/5 has-[:checked]:border-primary">
+                                                <input
+                                                    type="radio" name="cat" checked={formData.category === c}
+                                                    onChange={() => setFormData({ ...formData, category: c })}
+                                                /> {c}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-semibold mb-2">Description of Events</label>
+                                    <textarea
+                                        className="w-full input-field h-32"
+                                        value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                        required
+                                        placeholder="Please provide as much detail as possible..."
+                                    ></textarea>
+                                </div>
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4 border dark:border-slate-700">
+                                    <div className="text-sm font-bold">Does this require Mandatory Reporting to DFFH?</div>
+                                    <div className="flex gap-2">
+                                        {['No', 'Yes', 'Unsure'].map(val => (
+                                            <button
+                                                key={val} type="button"
+                                                onClick={() => setFormData({ ...formData, mandatory: val })}
+                                                className={`px-4 py-2 rounded border text-xs font-bold transition-all ${formData.mandatory === val ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-slate-700'}`}
+                                            >
+                                                {val}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button type="button" onClick={() => setIsFormOpen(false)} className="btn-secondary flex-1">Cancel</button>
+                                    <button type="submit" className="btn-primary flex-[2] shadow-lg shadow-primary/20">Finalise & Submit Incident Report</button>
+                                </div>
+                            </form>
+                        </Card>
+                    )}
+                </div>
+            );
+        };
+
+        const SettingsView = ({ data, setData }) => {
+            const [localData, setLocalData] = useState(() => JSON.stringify(data, null, 2));
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(false);
+
+            useEffect(() => {
+                setLocalData(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(localData);
+                    setData(parsed);
+                    setSuccess(true);
+                    setError(null);
+                    setTimeout(() => setSuccess(false), 3000);
+                } catch (err) {
+                    setError(err.message);
+                    setSuccess(false);
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <Card title="Application Settings" subtitle="Manage application data and preferences">
+                        <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold mb-2">Raw Data Editor</h3>
+                                <p className="text-sm text-slate-500 mb-4">
+                                    Below is the raw JSON data for this application. You can edit it directly to fix issues or batch update records.
+                                    <br />
+                                    <span className="text-red-500 font-bold">Warning:</span> Invalid JSON will prevent saving. Back up your data first.
+                                </p>
+                                <textarea
+                                    value={localData}
+                                    onChange={(e) => setLocalData(e.target.value)}
+                                    className="w-full h-96 font-mono text-xs p-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                                />
+                                {error && (
+                                    <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold border border-red-200">
+                                        Error: {error}
+                                    </div>
+                                )}
+                                {success && (
+                                    <div className="mt-2 p-3 bg-green-50 text-green-700 rounded-lg text-sm font-bold border border-green-200">
+                                        Data successfully saved!
+                                    </div>
+                                )}
+                                <div className="mt-4 flex justify-end">
+                                    <button onClick={handleSave} className="btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentTab, setTab] = useState('dashboard');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem('stSafeguardingData');
+                return saved ? JSON.parse(saved) : { volunteers: [], incidents: [] };
+            });
+
+            useEffect(() => {
+                if (isFirstVisit('safeguarding')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('stSafeguardingData', JSON.stringify(data));
+            }, [data]);
+
+            const saveDraft = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `safeguarding-data.json`; a.click();
+            };
+
+            const loadDraft = (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => { setData(JSON.parse(ev.target.result)); alert('Data Loaded'); };
+                reader.readAsText(file);
+            };
+
+            const renderContent = () => {
+                switch (currentTab) {
+                    case 'dashboard': return <Dashboard data={data} />;
+                    case 'standards': return <StandardsChecklist />;
+                    case 'registers': return <WWCCRegister data={data} setData={setData} />;
+                    case 'incidents': return <IncidentReporter data={data} setData={setData} />;
+                    case 'volunteers':
+                        return (
+                            <Card title="Volunteer Hub" subtitle="Active personnel and recruitment status.">
+                                <div className="space-y-4">
+                                    {(data.volunteers || []).map(v => (
+                                        <div key={v.id} className="p-4 border dark:border-slate-800 rounded-xl flex justify-between items-center">
+                                            <div>
+                                                <div className="font-bold">{v.name}</div>
+                                                <div className="text-xs opacity-60">{v.role}</div>
+                                            </div>
+                                            <StatusBadge status={v.status} type="success" />
+                                        </div>
+                                    ))}
+                                    {(!data.volunteers || data.volunteers.length === 0) && (
+                                        <p className="text-slate-400 italic text-sm">No active volunteers tracked yet.</p>
+                                    )}
+                                </div>
+                            </Card>
+                        );
+                    case 'settings': return <SettingsView data={data} setData={setData} />;
+                    default: return <Dashboard data={data} />;
+                }
+            };
+
+            return (
+                <AppShell title="Safeguarding Centre" currentTab={currentTab} setTab={setTab} onSave={saveDraft} onLoad={loadDraft}>
+                    {renderContent()}
+                    <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} appName="Safeguarding Centre" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

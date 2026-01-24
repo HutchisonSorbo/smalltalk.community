@@ -23,6 +23,15 @@ import {
     Calendar,
     BarChart3,
 } from "lucide-react";
+import { unstable_cache } from "next/cache";
+
+const getCachedMetrics = unstable_cache(
+    async () => {
+        return await getMetrics();
+    },
+    ['admin-metrics'],
+    { revalidate: 60, tags: ['metrics'] }
+);
 
 async function getMetrics() {
     const now = new Date();
@@ -30,84 +39,103 @@ async function getMetrics() {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    // User growth over time periods
-    const [
-        totalUsers,
-        usersLast30Days,
-        usersLast7Days,
-        usersToday,
-        completedOnboarding,
-        totalMusicians,
-        totalBands,
-        totalGigs,
-        totalVolunteers,
-        totalOrgs,
-        totalApps,
-        appInstalls,
-        onboardingResponses,
-        pendingReports,
-    ] = await Promise.all([
-        db.select({ count: count() }).from(users),
-        db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
-        db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)),
-        db.select({ count: count() }).from(users).where(gte(users.createdAt, yesterday)),
-        db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
-        db.select({ count: count() }).from(musicianProfiles),
-        db.select({ count: count() }).from(bands),
-        db.select({ count: count() }).from(gigs),
-        db.select({ count: count() }).from(volunteerProfiles),
-        db.select({ count: count() }).from(organisations),
-        db.select({ count: count() }).from(apps),
-        db.select({ count: count() }).from(userApps),
-        db.select({ count: count() }).from(userOnboardingResponses),
-        db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")),
-    ]);
-
-    return {
-        users: {
-            total: totalUsers[0]?.count ?? 0,
-            last30Days: usersLast30Days[0]?.count ?? 0,
-            last7Days: usersLast7Days[0]?.count ?? 0,
-            today: usersToday[0]?.count ?? 0,
-        },
-        onboarding: {
-            completed: completedOnboarding[0]?.count ?? 0,
-            responses: onboardingResponses[0]?.count ?? 0,
-        },
-        content: {
-            musicians: totalMusicians[0]?.count ?? 0,
-            bands: totalBands[0]?.count ?? 0,
-            gigs: totalGigs[0]?.count ?? 0,
-            volunteers: totalVolunteers[0]?.count ?? 0,
-            organisations: totalOrgs[0]?.count ?? 0,
-        },
-        apps: {
-            total: totalApps[0]?.count ?? 0,
-            installs: appInstalls[0]?.count ?? 0,
-        },
-        reports: {
-            pending: pendingReports[0]?.count ?? 0,
-        },
+    const defaultMetrics = {
+        users: { total: 0, last30Days: 0, last7Days: 0, today: 0 },
+        onboarding: { completed: 0, responses: 0 },
+        content: { musicians: 0, bands: 0, gigs: 0, volunteers: 0, organisations: 0 },
+        apps: { total: 0, installs: 0 },
+        reports: { pending: 0 },
     };
+
+    try {
+        // User growth over time periods
+        const [
+            totalUsers,
+            usersLast30Days,
+            usersLast7Days,
+            usersToday,
+            completedOnboarding,
+            totalMusicians,
+            totalBands,
+            totalGigs,
+            totalVolunteers,
+            totalOrgs,
+            totalApps,
+            appInstalls,
+            onboardingResponses,
+            pendingReports,
+        ] = await Promise.all([
+            db.select({ count: count() }).from(users).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo)).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(users).where(gte(users.createdAt, yesterday)).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(musicianProfiles).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(bands).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(gigs).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(volunteerProfiles).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(organisations).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(apps).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(userApps).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(userOnboardingResponses).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(reports).where(eq(reports.status, "pending")).catch(() => [{ count: 0 }]),
+        ]);
+
+        return {
+            users: {
+                total: totalUsers[0]?.count ?? 0,
+                last30Days: usersLast30Days[0]?.count ?? 0,
+                last7Days: usersLast7Days[0]?.count ?? 0,
+                today: usersToday[0]?.count ?? 0,
+            },
+            onboarding: {
+                completed: completedOnboarding[0]?.count ?? 0,
+                responses: onboardingResponses[0]?.count ?? 0,
+            },
+            content: {
+                musicians: totalMusicians[0]?.count ?? 0,
+                bands: totalBands[0]?.count ?? 0,
+                gigs: totalGigs[0]?.count ?? 0,
+                volunteers: totalVolunteers[0]?.count ?? 0,
+                organisations: totalOrgs[0]?.count ?? 0,
+            },
+            apps: {
+                total: totalApps[0]?.count ?? 0,
+                installs: appInstalls[0]?.count ?? 0,
+            },
+            reports: {
+                pending: pendingReports[0]?.count ?? 0,
+            },
+        };
+    } catch (error) {
+        console.error("[Admin Metrics] Error fetching metrics:", error);
+        return defaultMetrics;
+    }
 }
 
 async function getAppUsageStats() {
-    const appUsage = await db
-        .select({
-            appId: userApps.appId,
-            appName: apps.name,
-            installs: count(),
-        })
-        .from(userApps)
-        .innerJoin(apps, eq(userApps.appId, apps.id))
-        .groupBy(userApps.appId, apps.name)
-        .orderBy(desc(count()));
+    try {
+        const appUsage = await db
+            .select({
+                appId: userApps.appId,
+                appName: apps.name,
+                installs: count(),
+            })
+            .from(userApps)
+            .innerJoin(apps, eq(userApps.appId, apps.id))
+            .groupBy(userApps.appId, apps.name)
+            .orderBy(desc(count()));
 
-    return appUsage;
+        return appUsage;
+    } catch (error) {
+        console.error("[Admin Metrics] Error fetching app usage stats:", error);
+        return [];
+    }
 }
 
+
 export default async function MetricsPage() {
-    const metrics = await getMetrics();
+    const metrics = await getCachedMetrics();
     const appUsage = await getAppUsageStats();
 
     const onboardingRate = metrics.users.total > 0
@@ -255,7 +283,7 @@ export default async function MetricsPage() {
                 <CardContent>
                     {appUsage.length > 0 ? (
                         <div className="space-y-3">
-                            {appUsage.map((app, index) => {
+                            {appUsage.map((app: any, index: number) => {
                                 const maxInstalls = appUsage[0]?.installs || 1;
                                 const percentage = (app.installs / maxInstalls) * 100;
 

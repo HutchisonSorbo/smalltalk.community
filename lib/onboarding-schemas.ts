@@ -4,15 +4,9 @@ import { users, userOnboardingResponses, userPrivacySettings, userNotificationPr
 
 // --- Registration Schema ---
 // Used for step 1 account creation
-export const registerSchema = createInsertSchema(users).pick({
-    firstName: true,
-    lastName: true,
-    dateOfBirth: true, // We will validate age in the handler but basic schema is date
-    userType: true,
-    accountType: true,
-    accountTypeSpecification: true,
-    organisationName: true,
-}).extend({
+export const registerSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email address"),
     password: z.string()
         .min(12, "Password must be at least 12 characters")
@@ -22,9 +16,11 @@ export const registerSchema = createInsertSchema(users).pick({
         .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character")
         .regex(/^\S*$/, "Password must not contain spaces"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    // Additional validations
+    userType: z.enum(["individual", "organisation"]).default("individual"),
+    accountType: z.enum(["Individual", "Business", "Government Organisation", "Charity", "Other"]).default("Individual"),
+    accountTypeSpecification: z.string().optional(),
+    organisationName: z.string().optional(),
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
-        // Validate logical date if provided
         if (!val) return true;
         const date = new Date(val);
         return !isNaN(date.getTime()) && date < new Date();
@@ -32,6 +28,14 @@ export const registerSchema = createInsertSchema(users).pick({
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
+}).refine((data) => {
+    if (data.userType === "organisation" && (!data.organisationName || data.organisationName.trim() === "")) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Organisation name is required for organisation accounts",
+    path: ["organisationName"],
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
@@ -73,11 +77,11 @@ export type IntentInput = z.infer<typeof intentSchema>;
 // Used for step 4
 // We can combine privacy and notifications update in one schema for the frontend form
 export const privacyDetailsSchema = z.object({
-    privacySettings: createInsertSchema(userPrivacySettings).omit({
+    privacySettings: (createInsertSchema(userPrivacySettings) as any).omit({
         id: true, userId: true, createdAt: true, settingsUpdatedAt: true
     }).partial(),
 
-    notificationPreferences: createInsertSchema(userNotificationPreferences).omit({
+    notificationPreferences: (createInsertSchema(userNotificationPreferences) as any).omit({
         id: true, userId: true, createdAt: true, preferencesUpdatedAt: true
     }).partial(),
 });

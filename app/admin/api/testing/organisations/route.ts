@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid input", errors: parsed.error.errors },
+                { message: "Invalid input", errors: parsed.error.issues },
                 { status: 400 }
             );
         }

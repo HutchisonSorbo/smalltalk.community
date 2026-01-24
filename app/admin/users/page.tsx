@@ -1,6 +1,6 @@
 import { db } from "@/server/db";
 import { users, musicianProfiles, volunteerProfiles, professionalProfiles, sysUserRoles, sysRoles } from "@shared/schema";
-import { desc, like, or, eq, and, gte, lte, sql, count } from "drizzle-orm";
+import { desc, like, or, eq, and, gte, lte, sql, count, inArray } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Users, Search, Filter, ChevronLeft, ChevronRight, Eye, Music, Heart, Briefcase } from "lucide-react";
+import { Users, Search, Filter, ChevronLeft, ChevronRight, Music, Heart, Briefcase } from "lucide-react";
+import { UserActionsInline } from "./user-actions-inline";
+import { CreateUserModal } from "./create-user-modal";
 
 interface SearchParams {
     page?: string;
@@ -33,94 +35,134 @@ interface SearchParams {
 }
 
 async function getUsers(searchParams: SearchParams) {
-    const page = parseInt(searchParams.page || "1", 10);
-    const pageSize = 25;
-    const offset = (page - 1) * pageSize;
-    const search = searchParams.search?.trim();
-    const accountType = searchParams.accountType;
-    const onboarding = searchParams.onboarding;
+    try {
+        const page = parseInt(searchParams.page || "1", 10);
+        const pageSize = 25;
+        const offset = (page - 1) * pageSize;
+        const search = searchParams.search?.trim();
+        const accountType = searchParams.accountType;
+        const onboarding = searchParams.onboarding;
 
-    // Build conditions
-    const conditions = [];
+        // Build conditions
+        const conditions = [];
 
-    if (search) {
-        conditions.push(
-            or(
-                like(users.email, `%${search}%`),
-                like(users.firstName, `%${search}%`),
-                like(users.lastName, `%${search}%`)
-            )
-        );
+        if (search) {
+            conditions.push(
+                or(
+                    like(users.email, `%${search}%`),
+                    like(users.firstName, `%${search}%`),
+                    like(users.lastName, `%${search}%`)
+                )
+            );
+        }
+
+        if (accountType && accountType !== "all") {
+            conditions.push(eq(users.accountType, accountType));
+        }
+
+        if (onboarding === "completed") {
+            conditions.push(eq(users.onboardingCompleted, true));
+        } else if (onboarding === "incomplete") {
+            conditions.push(eq(users.onboardingCompleted, false));
+        }
+
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+        const [allUsers, totalCount] = await Promise.all([
+            db
+                .select()
+                .from(users)
+                .where(whereClause)
+                .orderBy(desc(users.createdAt))
+                .limit(pageSize)
+                .offset(offset),
+            db
+                .select({ count: count() })
+                .from(users)
+                .where(whereClause),
+        ]);
+
+        return {
+            users: allUsers,
+            total: totalCount[0]?.count ?? 0,
+            page,
+            pageSize,
+            totalPages: Math.ceil((totalCount[0]?.count ?? 0) / pageSize),
+            error: null,
+        };
+    } catch (error) {
+        console.error("[Admin Users] Error fetching users:", error);
+        return {
+            users: [],
+            total: 0,
+            page: 1,
+            pageSize: 25,
+            totalPages: 0,
+            error: error instanceof Error ? error.message : "Failed to load users",
+        };
     }
-
-    if (accountType && accountType !== "all") {
-        conditions.push(eq(users.accountType, accountType));
-    }
-
-    if (onboarding === "completed") {
-        conditions.push(eq(users.onboardingCompleted, true));
-    } else if (onboarding === "incomplete") {
-        conditions.push(eq(users.onboardingCompleted, false));
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    const [allUsers, totalCount] = await Promise.all([
-        db
-            .select()
-            .from(users)
-            .where(whereClause)
-            .orderBy(desc(users.createdAt))
-            .limit(pageSize)
-            .offset(offset),
-        db
-            .select({ count: count() })
-            .from(users)
-            .where(whereClause),
-    ]);
-
-    return {
-        users: allUsers,
-        total: totalCount[0]?.count ?? 0,
-        page,
-        pageSize,
-        totalPages: Math.ceil((totalCount[0]?.count ?? 0) / pageSize),
-    };
 }
 
 async function getUserStats() {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    try {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [totalUsers, adminCount, newUsers, completedOnboarding] = await Promise.all([
-        db.select({ count: count() }).from(users),
-        db.select({ count: count() }).from(users).where(eq(users.isAdmin, true)),
-        db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo)),
-        db.select({ count: count() }).from(users).where(eq(users.onboardingCompleted, true)),
-    ]);
+        const [stats] = await db
+            .select({
+                total: count(),
+                admins: count(sql`CASE WHEN ${users.isAdmin} = true THEN 1 END`),
+                newThisMonth: count(sql`CASE WHEN ${users.createdAt} >= ${thirtyDaysAgo} THEN 1 END`),
+                completedOnboarding: count(sql`CASE WHEN ${users.onboardingCompleted} = true THEN 1 END`),
+            })
+            .from(users);
 
-    return {
-        total: totalUsers[0]?.count ?? 0,
-        admins: adminCount[0]?.count ?? 0,
-        newThisMonth: newUsers[0]?.count ?? 0,
-        completedOnboarding: completedOnboarding[0]?.count ?? 0,
-    };
+        return {
+            total: stats.total,
+            admins: stats.admins,
+            newThisMonth: stats.newThisMonth,
+            completedOnboarding: stats.completedOnboarding,
+        };
+    } catch (error) {
+        console.error("[Admin Users] Error fetching user stats:", error);
+        return {
+            total: 0,
+            admins: 0,
+            newThisMonth: 0,
+            completedOnboarding: 0,
+        };
+    }
 }
 
 async function getUserProfiles(userIds: string[]) {
-    if (userIds.length === 0) return { musicians: [], volunteers: [], professionals: [] };
+    if (userIds.length === 0) {
+        return {
+            musicians: new Set<string>(),
+            volunteers: new Set<string>(),
+            professionals: new Set<string>(),
+        };
+    }
 
-    const [musicians, volunteers, professionals] = await Promise.all([
-        db.select({ userId: musicianProfiles.userId }).from(musicianProfiles).where(sql`${musicianProfiles.userId} = ANY(${userIds})`),
-        db.select({ userId: volunteerProfiles.userId }).from(volunteerProfiles).where(sql`${volunteerProfiles.userId} = ANY(${userIds})`),
-        db.select({ userId: professionalProfiles.userId }).from(professionalProfiles).where(sql`${professionalProfiles.userId} = ANY(${userIds})`),
-    ]);
+    try {
+        const [musicians, volunteers, professionals] = await Promise.all([
+            db.select({ userId: musicianProfiles.userId }).from(musicianProfiles).where(inArray(musicianProfiles.userId, userIds)),
+            db.select({ userId: volunteerProfiles.userId }).from(volunteerProfiles).where(inArray(volunteerProfiles.userId, userIds)),
+            db.select({ userId: professionalProfiles.userId }).from(professionalProfiles).where(inArray(professionalProfiles.userId, userIds)),
+        ]);
 
-    return {
-        musicians: musicians.map(m => m.userId),
-        volunteers: volunteers.map(v => v.userId),
-        professionals: professionals.map(p => p.userId),
-    };
+        return {
+            musicians: new Set(musicians.map((m: any) => m.userId)),
+            volunteers: new Set(volunteers.map((v: any) => v.userId)),
+            professionals: new Set(professionals.map((p: any) => p.userId)),
+        };
+    } catch (error) {
+        console.error("[Admin Users] Error fetching user profiles:", error);
+        return {
+            musicians: new Set<string>(),
+            volunteers: new Set<string>(),
+            professionals: new Set<string>(),
+        };
+    }
 }
 
 export default async function UsersAdminPage({
@@ -129,21 +171,36 @@ export default async function UsersAdminPage({
     searchParams: Promise<SearchParams>;
 }) {
     const params = await searchParams;
-    const { users: allUsers, total, page, pageSize, totalPages } = await getUsers(params);
+    const { users: allUsers, total, page, pageSize, totalPages, error } = await getUsers(params);
     const stats = await getUserStats();
-    const userIds = allUsers.map(u => u.id);
+    const userIds = allUsers.map((u: any) => u.id);
     const profiles = await getUserProfiles(userIds);
 
     const accountTypes = ["Individual", "Business", "Government Organisation", "Charity", "Other"];
 
     return (
         <div className="space-y-6">
+            {/* Error Alert */}
+            {error && (
+                <Card className="border-red-500/50 bg-red-500/10">
+                    <CardContent className="flex items-center gap-3 py-4">
+                        <Users className="h-5 w-5 text-red-600" />
+                        <div>
+                            <p className="font-medium text-red-700">Failed to load users</p>
+                            <p className="text-sm text-red-600">{error}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
                     <p className="text-muted-foreground">View and manage platform users</p>
                 </div>
+                <CreateUserModal />
             </div>
+
 
             {/* Stats */}
             <div className="grid gap-4 md:grid-cols-4">
@@ -249,7 +306,7 @@ export default async function UsersAdminPage({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {allUsers.map((user) => (
+                            {allUsers.map((user: any) => (
                                 <TableRow key={user.id}>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
@@ -287,19 +344,19 @@ export default async function UsersAdminPage({
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex gap-1">
-                                            {profiles.musicians.includes(user.id) && (
+                                            {profiles.musicians.has(user.id) && (
                                                 <Badge variant="outline" className="gap-1">
                                                     <Music className="h-3 w-3" />
                                                     <span className="sr-only sm:not-sr-only">Musician</span>
                                                 </Badge>
                                             )}
-                                            {profiles.volunteers.includes(user.id) && (
+                                            {profiles.volunteers.has(user.id) && (
                                                 <Badge variant="outline" className="gap-1">
                                                     <Heart className="h-3 w-3" />
                                                     <span className="sr-only sm:not-sr-only">Volunteer</span>
                                                 </Badge>
                                             )}
-                                            {profiles.professionals.includes(user.id) && (
+                                            {profiles.professionals.has(user.id) && (
                                                 <Badge variant="outline" className="gap-1">
                                                     <Briefcase className="h-3 w-3" />
                                                     <span className="sr-only sm:not-sr-only">Pro</span>
@@ -320,12 +377,12 @@ export default async function UsersAdminPage({
                                         {user.createdAt?.toLocaleDateString()}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button asChild variant="ghost" size="sm">
-                                            <Link href={`/admin/users/${user.id}`}>
-                                                <Eye className="h-4 w-4 mr-1" />
-                                                View
-                                            </Link>
-                                        </Button>
+                                        <UserActionsInline
+                                            userId={user.id}
+                                            userName={`${user.firstName || ''} ${user.lastName || ''}`.trim()}
+                                            userEmail={user.email || ''}
+                                            isAdmin={user.isAdmin || false}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))}

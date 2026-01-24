@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
     title: "Peer Support Group Finder | smalltalk.community",
     description: "Find peer-led mental health support groups in your area or online",
+    icons: {
+        icon: "/icons/peer-support-finder.svg",
+    },
 };
 
 export default function PeerSupportFinderLayout({

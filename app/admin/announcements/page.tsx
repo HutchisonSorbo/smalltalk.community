@@ -16,25 +16,36 @@ import { Megaphone, Plus, Eye, EyeOff, Edit } from "lucide-react";
 import { AnnouncementActionsClient } from "./announcement-actions-client";
 
 async function getAnnouncements() {
-    const allAnnouncements = await db
-        .select()
-        .from(announcements)
-        .orderBy(desc(announcements.createdAt));
+    try {
+        const allAnnouncements = await db
+            .select()
+            .from(announcements)
+            .orderBy(desc(announcements.createdAt));
 
-    return allAnnouncements;
+        return allAnnouncements;
+    } catch (error) {
+        console.error("[Admin Announcements] Error fetching announcements:", error);
+        return [];
+    }
 }
 
 async function getAnnouncementStats() {
-    const [total, active] = await Promise.all([
-        db.select({ count: count() }).from(announcements),
-        db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),
-    ]);
+    try {
+        const [total, active] = await Promise.all([
+            db.select({ count: count() }).from(announcements).catch(() => [{ count: 0 }]),
+            db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)).catch(() => [{ count: 0 }]),
+        ]);
 
-    return {
-        total: total[0]?.count ?? 0,
-        active: active[0]?.count ?? 0,
-    };
+        return {
+            total: total[0]?.count ?? 0,
+            active: active[0]?.count ?? 0,
+        };
+    } catch (error) {
+        console.error("[Admin Announcements] Error fetching announcement stats:", error);
+        return { total: 0, active: 0 };
+    }
 }
+
 
 function getVisibilityBadge(visibility: string | null) {
     switch (visibility) {
@@ -114,7 +125,7 @@ export default async function AnnouncementsAdminPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {allAnnouncements.map((announcement) => (
+                                {allAnnouncements.map((announcement: any) => (
                                     <TableRow key={announcement.id}>
                                         <TableCell>
                                             <div>

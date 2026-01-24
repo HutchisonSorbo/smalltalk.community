@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>smalltalk.community Inc | Strategic Plan 2026-2030 & Board Prospectus</title>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#003b6f', // Royal Navy
+                        secondary: '#f1f5f9', // Sky White background
+                        accent: '#c2410c', // Cinnabar Action
+                        support: '#1e40af', // Deep Blue hover
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        background: '#ffffff',
+                        surface: '#ffffff',
+                        charcoal: '#0f172a',
+                        'light-gray': '#f8fafc'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    },
+                    boxShadow: {
+                        'soft': '0 1px 3px rgba(0,0,0,0.04)',
+                        'hover': '0 4px 6px rgba(0,0,0,0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Recharts -->
+    <!-- Recharts Dependencies -->
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.min.js"></script>
+    <script>
+        // Recharts loaded via CDN with prop-types dependency
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .font-display {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @media print {
+            @page {
+                margin: 0;
+            }
+
+            body {
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important;
+                background: white !important;
+                color: black !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .no-print-on-screen {
+                display: flex !important;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+
+            .footer-left {
+                flex: 1;
+                text-align: left;
+            }
+
+            .footer-center {
+                flex: 1;
+                text-align: center;
+                font-weight: 600;
+            }
+
+            .footer-right {
+                flex: 1;
+                text-align: right;
+            }
+
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen {
+                display: none !important;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 20px, 0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const {
+            LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+        } = Recharts;
+
+        // --- STRATEGIC PLAN DATA ---
+        const strategicPlanData = {
+            organisation: {
+                name: "smalltalk.community Inc",
+                status: "Strategic Plan 2026-2027",
+                date: "January 2026",
+                region: "Seymour & Mitchell Shire, Victoria",
+                planPeriod: "2026-2027",
+                vision: "A region where people of all ages find connection and belonging, young people thrive, working adults contribute meaningfully, seniors share wisdom, and organisations strengthen community bonds.",
+                mission: "To provide the digital infrastructure, governance frameworks, and systems advocacy necessary for universal, non-tokenistic community collaboration across Mitchell and Murrindindi Shires.",
+                values: [
+                    { title: "Belonging", icon: "🏠", description: "Everyone deserves a space to be heard. We build for inclusion first across every generation." },
+                    { title: "Intergenerational", icon: "🤝", description: "Value is created when we connect different ages, wisdom meets energy." },
+                    { title: "Transparency", icon: "🔍", description: "We're honest about constraints, challenges, and decisions." },
+                    { title: "Safety-first", icon: "🛡️", description: "Rigorous protection for the vulnerable and dignity for all is non-negotiable." },
+                    { title: "Sustainability", icon: "🌱", description: "Building a model that doesn't depend on extractive volunteer labour." }
+                ],
+                context: {
+                    problem: "Regional communities face a governance paradox: top-down policy struggles to respond, while volunteer action is authentic but unsustainable.",
+                    stats: [
+                        { value: "35%", label: "Regional youth report isolation", source: "Mission Australia 2024" },
+                        { value: "54%", label: "Adults feel socially disconnected", source: "VicHealth 2024" },
+                        { value: "62%", label: "Seniors seeking more purpose", source: "Council Aging Report" }
+                    ],
+                    marketGap: "Existing social media is extractive/un-moderated. Physical centres have limited hours. Silence between generations is the norm.",
+                    opportunity: "A digital-first, professionally moderated community platform offers 24/7 connection with low overheads."
+                },
+                theoryOfChange: {
+                    opportunity: "When young people have (1) safe digital spaces, (2) genuine voice in design, and (3) local support networks, they build the resilience to overcome regional isolation."
+                }
+            },
+
+            timeline: [
+                {
+                    phase: 1,
+                    name: "Foundation Phase",
+                    period: "Months 1-4 (EXTENDED)",
+                    icon: "🏗️",
+                    status: "current",
+                    focus: "Governance, Legal Compliance, Technology Validation, Community Listening",
+                    description: "Establishing legal structures while validating both technology and community demand. Extended to accommodate government processing delays.",
+                    milestones: [
+                        { category: "Tech Validation", item: "Mighty Networks Validation Sprint (age-gating, accessibility, data export)", status: "pending" },
+                        { category: "Research", item: "20 Community Interviews → Needs Validation Report (6-8 pages)", status: "pending" },
+                        { category: "Governance", item: "Draft Constitution + Board Charter + Director Duties Explainer", status: "pending" },
+                        { category: "Legal", item: "Incorporate Association (6-12 weeks) + ACNC Registration (4-8 weeks)", status: "pending" },
+                        { category: "Safety", item: "Commission Professional Safeguarding Policy ($2-3k consultant)", status: "pending" },
+                        { category: "Funding", item: "Secure 3 Letters of Support from local orgs + Draft 4 grant applications", status: "pending" },
+                        { category: "Advisory", item: "Form Multi-Age Advisory Groups (Youth, Adult, Senior)", status: "pending" }
+                    ]
+                },
+                {
+                    phase: 2,
+                    name: "Build & Beta Phase",
+                    period: "Months 5-8",
+                    icon: "🛠️",
+                    status: "upcoming",
+                    focus: "Platform Setup, Closed Beta Testing, Real Behavior Observation",
+                    description: "Building platform with validated technology. Beta testing with 20-30 real users BEFORE moderator recruitment.",
+                    milestones: [
+                        { category: "Platform", item: "Setup Multi-Persona Onboarding + Accessibility Features (informed by Month 1-3 co-design)", status: "pending" },
+                        { category: "Beta", item: "Closed Beta: 20-30 users (10 youth, 10 adults, 10 seniors) for 4-6 weeks", status: "pending" },
+                        { category: "Observation", item: "Document real moderation needs from beta (not hypothetical scenarios)", status: "pending" },
+                        { category: "Recruitment", item: "Recruit 3-5 volunteer moderators based on observed beta patterns", status: "pending" }
+                    ]
+                },
+                {
+                    phase: 3,
+                    name: "Soft Launch",
+                    period: "Months 9-10",
+                    icon: "🚀",
+                    status: "upcoming",
+                    focus: "Controlled Public Launch with Trained Moderators",
+                    description: "Public launch AFTER moderators trained on real beta behavior. Controlled growth to test systems at scale.",
+                    milestones: [
+                        { category: "Training", item: "Moderator Training (based on beta learnings) + Safeguarding Induction", status: "pending" },
+                        { category: "Launch", item: "Public Launch Campaign (social, local media, partner orgs)", status: "pending" },
+                        { category: "Events", item: "First In-Person Intergenerational Event (validate online/offline blend)", status: "pending" },
+                        { category: "Monitoring", item: "Daily moderation checks + Weekly founder-moderator sync", status: "pending" }
+                    ]
+                },
+                {
+                    phase: 4,
+                    name: "Stabilization & Scale",
+                    period: "Months 11-12",
+                    icon: "📈",
+                    status: "upcoming",
+                    focus: "User Growth, Year 2 Funding, System Refinement",
+                    description: "Growing user base while securing Year 2 sustainability. Feedback loops and continuous improvement.",
+                    milestones: [
+                        { category: "Growth", item: "Target: 75-100 Active Users (realistic for Year 1 regional platform)", status: "pending" },
+                        { category: "Feedback", item: "User Satisfaction Survey + Advisory Group Debrief", status: "pending" },
+                        { category: "Funding", item: "Submit 3-4 Year 2 Grant Applications (with Year 1 evidence/testimonials)", status: "pending" },
+                        { category: "Governance", item: "Board Annual Review + Treasurer Financial Statement", status: "pending" }
+                    ]
+                }
+            ],
+
+            pillars: [
+                {
+                    id: 1,
+                    title: "Digital-First Engagement (All Ages)",
+                    subtitle: "Safe Online Hub for Every Generation",
+                    icon: "🌐",
+                    status: "in-progress",
+                    description: "A moderated community platform that prioritise accessibility for youth and seniors alike.",
+                    priorities: [
+                        { name: "Persona Profiles", desc: "Custom paths for youth, adults, and seniors", phase: "MVP" },
+                        { name: "Inclusive Channels", desc: "Mixed and age-specific discussion spaces", phase: "MVP" },
+                        { name: "Event Hub", desc: "Multi-generational event listings", phase: "MVP" }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Multi-Generational Co-Design",
+                    subtitle: "All-Age Participation",
+                    icon: "🤝",
+                    status: "planned",
+                    description: "Built with the people who use it. Regular co-design sessions with all audience segments.",
+                    priorities: [
+                        { name: "Representative Interviews", desc: "Validating needs across the lifespan", phase: "Phase 1" },
+                        { name: "Multi-Age Advisory Council", desc: "Diverse residents steering the ship", phase: "Phase 1" }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Safety, Inclusion & Dignity",
+                    subtitle: "Protection and Respect for All",
+                    icon: "🛡️",
+                    status: "planned",
+                    description: "Expanding from child safety to include elder protection and professional boundaries.",
+                    priorities: [
+                        { name: "Universal Safeguarding", desc: "Covers youth, seniors, and professionals", phase: "Foundations" },
+                        { name: "Respect Standards", desc: "Protocols for intergenerational interaction", phase: "Foundations" }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "Intergenerational Exchange",
+                    subtitle: "The Value Connective Layer",
+                    icon: "🔄",
+                    status: "planned",
+                    description: "Explicit programmes where youth, adults, and seniors exchange wisdom, skills, and energy.",
+                    priorities: [
+                        { name: "Mentoring Framework", desc: "Consensual, safe mentorships", phase: "Year 2" },
+                        { name: "Skills Marketplace", desc: "Local service and knowledge exchange", phase: "Year 2" }
+                    ]
+                }
+            ],
+
+            boardRoles: [
+                {
+                    id: "chair",
+                    title: "Chair / President (REQUIRED)",
+                    icon: "⚖️",
+                    purpose: "Legal officer, board leadership, governance oversight. Legally required for Victorian incorporated associations.",
+                    timeCommitment: "6-8 hours/month Year 1 (setup heavy), 4-5 hours/month ongoing",
+                    responsibilities: [
+                        "Chair board meetings (6-10 per year)",
+                        "Legally responsible officer (sign incorporation documents, contracts)",
+                        "Strategic oversight and founder accountability",
+                        "Liaison with regulators (Consumer Affairs Vic, ACNC)"
+                    ],
+                    idealBackground: "Nonprofit governance experience, regional leadership background, understanding of incorporated associations.",
+                    isNot: "You are NOT managing day-to-day operations. Ryan executes; you govern. But you ARE legally liable for organisational compliance."
+                },
+                {
+                    id: "secretary",
+                    title: "Secretary (REQUIRED)",
+                    icon: "📋",
+                    purpose: "Record-keeping, compliance, official correspondence. Legally required for Victorian incorporated associations.",
+                    timeCommitment: "4-6 hours/month Year 1 (document setup), 2-3 hours/month ongoing",
+                    responsibilities: [
+                        "Maintain member register and governance documents",
+                        "Prepare and distribute board meeting agendas/minutes",
+                        "Lodge ACNC Annual Information Statement",
+                        "Manage official correspondence and document retention"
+                    ],
+                    idealBackground: "Strong administration skills, nonprofit experience helpful but not required. Detail-oriented, organised.",
+                    isNot: "You are NOT Ryan's executive assistant. This is governance administration (board minutes, regulatory filings), not operational admin (booking venues, emailing volunteers)."
+                },
+                {
+                    id: "treasurer",
+                    title: "Treasurer (REQUIRED)",
+                    icon: "💰",
+                    purpose: "Financial stewardship, reporting, grant compliance. Legally required for Victorian incorporated associations.",
+                    timeCommitment: "8-10 hours/month Year 1 (system setup heavy), 5-6 hours/month ongoing",
+                    responsibilities: [
+                        "Set up and maintain Xero accounting system",
+                        "Monthly financial reports for board",
+                        "Grant acquittal preparation (3-4 grants = 12-16 hours/year)",
+                        "Annual financial statement preparation and ACNC reporting"
+                    ],
+                    idealBackground: "Finance/accounting background, nonprofit grant experience strongly preferred. CPA or similar qualification ideal but not required.",
+                    isNot: "This is NOT full-time CFO work, but Year 1 IS heavier than steady-state. Ryan makes operational spending decisions within approved budget; you provide financial oversight and ensure compliance."
+                },
+                {
+                    id: "advisor-youth",
+                    title: "Community Advisor (Youth Services)",
+                    icon: "🎓",
+                    purpose: "Ensure programme design reflects youth development best practices",
+                    timeCommitment: "2-3 hours/month",
+                    responsibilities: [
+                        "Advise on programme content & engagement",
+                        "Review safeguarding practices",
+                        "Connect with local youth services"
+                    ],
+                    idealBackground: "Youth worker, counselor, educator with regional experience.",
+                    isNot: "You are NOT running programmes daily. Ryan and volunteers deliver content."
+                },
+                {
+                    id: "advisor-community",
+                    title: "Community Advisor (Business)",
+                    icon: "🏢",
+                    purpose: "Drive partnerships, sponsorships, community connectivity",
+                    timeCommitment: "2-3 hours/month",
+                    responsibilities: [
+                        "Identify partnership opportunities",
+                        "Support volunteer recruitment",
+                        "Build community relationships"
+                    ],
+                    idealBackground: "Local business owner, community connector, nonprofit leader.",
+                    isNot: "You are NOT a salesperson. This is about authentic relationship building."
+                },
+                {
+                    id: "comms-lead",
+                    title: "Communications Lead (Optional)",
+                    icon: "📢",
+                    purpose: "Social media, storytelling, volunteer/community engagement",
+                    timeCommitment: "3-4 hours/month",
+                    responsibilities: [
+                        "Social media strategy & oversight",
+                        "Monthly newsletter content",
+                        "Community storytelling"
+                    ],
+                    idealBackground: "Marketing/comms background, youth-focused content experience.",
+                    isNot: "You are NOT a full-time marketing agency. This is volunteer-led storytelling."
+                }
+            ],
+
+            financials: {
+                scenarios: {
+                    conservative: {
+                        label: "Conservative (Most Likely)",
+                        description: "2-3 small community grants only. Baseline scenario for startup nonprofit.",
+                        revenueBreakdown: [
+                            { name: "Community Grants", value: 5000, color: "#208091" }
+                        ],
+                        totalRevenue: 5000,
+                        revenue: [
+                            { year: "2026", grants: 5000, consulting: 0, sponsorship: 0 },
+                            { year: "2027", grants: 8000, consulting: 0, sponsorship: 0 }
+                        ],
+                        notes: "Industry reality: First-year regional grants typically $2-3k each at 25-30% success rate. Covers incorporation, insurance, basic hosting only.",
+                        grantExamples: "Bendigo Bank Seymour ($2-3k), Lord Mayor's Foundation ($2-3k)"
+                    },
+                    realistic: {
+                        label: "Realistic",
+                        description: "4-5 grants + initial consulting contracts (with validated pipeline).",
+                        revenueBreakdown: [
+                            { name: "Community Grants", value: 8000, color: "#208091" },
+                            { name: "Consulting (Speculative)*", value: 2500, color: "#5E5240" },
+                            { name: "Donations", value: 2000, color: "#F59e0b" }
+                        ],
+                        totalRevenue: 12500,
+                        revenue: [
+                            { year: "2026", grants: 8000, consulting: 2500, sponsorship: 0 },
+                            { year: "2027", grants: 12000, consulting: 8000, sponsorship: 3000 }
+                        ],
+                        notes: "*Consulting revenue pending: Need 2-3 Letters of Intent from local orgs (schools, youth services, councils) for youth engagement workshops at $500-800/day. Without pipeline validation, revert to Conservative scenario.",
+                        grantExamples: "+ Mitchell Shire Community Grant ($2-5k), Equity Trustees ($2-5k)"
+                    },
+                    optimistic: {
+                        label: "Optimistic",
+                        description: "Successful grant applications + established consulting pipeline + early partnerships.",
+                        revenueBreakdown: [
+                            { name: "Community Grants", value: 12000, color: "#208091" },
+                            { name: "Consulting Contracts", value: 5000, color: "#5E5240" },
+                            { name: "Donations", value: 3000, color: "#F59e0b" }
+                        ],
+                        totalRevenue: 20000,
+                        revenue: [
+                            { year: "2026", grants: 12000, consulting: 5000, sponsorship: 0 },
+                            { year: "2027", grants: 18000, consulting: 15000, sponsorship: 8000 }
+                        ],
+                        notes: "Requires 60%+ grant success rate (above industry average) + active consulting pipeline with 5-7 clients. Year 2-3 target, not Year 1 expectation.",
+                        grantExamples: "+ Foundation for Rural & Regional Renewal consideration ($5-10k, competitive)"
+                    }
+                },
+                timelineData: [
+                    { name: "Month 1", funds: 2500, source: "Bootstrap" },
+                    { name: "Month 2", funds: 2300, source: "Bootstrap" },
+                    { name: "Month 3", funds: 2100, source: "Bootstrap" },
+                    { name: "Month 4", funds: 1900, source: "Bootstrap" },
+                    { name: "Month 5", funds: 1700, source: "Bootstrap" },
+                    { name: "Month 6", funds: 1500, source: "Bootstrap" },
+                    { name: "Month 7", funds: 1300, source: "Bootstrap" },
+                    { name: "Month 8", funds: 4300, source: "Grant Round 1 (Delayed)" },
+                    { name: "Month 9", funds: 4100, source: "Grant Round 1" },
+                    { name: "Month 10", funds: 7100, source: "Grant Round 2" },
+                    { name: "Month 11", funds: 6900, source: "Grant Round 2" },
+                    { name: "Month 12", funds: 6700, source: "Grant Round 2" }
+                ],
+                year1Budget: [
+                    { name: "Incorporation & Compliance", value: 500 },
+                    { name: "Insurance (Prof. Indemnity)", value: 1000 },
+                    { name: "Safeguarding Policy Development", value: 2500 },
+                    { name: "Accounting Software (Xero)", value: 420 },
+                    { name: "WWCC & Police Checks (10 people)", value: 520 },
+                    { name: "Technology (Hosting, Subscriptions)", value: 800 },
+                    { name: "Technology Contingency", value: 2000 },
+                    { name: "Programs & Community Events", value: 1500 },
+                    { name: "Marketing & Recruitment", value: 500 },
+                    { name: "Contingency", value: 1000 }
+                ],
+                detailedCosts: {
+                    incorporation: "Consumer Affairs Victoria incorporation: $200-300",
+                    insurance: "Professional indemnity insurance (advice-giving org): $800-1,200/year",
+                    safeguarding: "Professional consultant (Child Wise, Berry Street) for 12-15 page multi-age policy: $2,000-3,000",
+                    accounting: "Xero Starter plan: $35/month = $420/year (Wave free but unsuitable for grant acquittals)",
+                    checks: "WWCC $17.30 x 10 people = $173, Police Checks $42.60 x 8 = $341, renewals = $520 total",
+                    technology: "Mighty Networks ~$40/month, Webflow ~$15/month, Airtable free tier = $660/year + contingency for platform migration if needed"
+                }
+            },
+
+            risks: [
+                { id: 1, name: "Capacity Risk", cat: "Operational", risk: "Founder burnout / Council work spikes", impact: 5, likelihood: 4, mitigation: "Strict 15h cap. 'Scope Reduction Menu'. Decision gate Month 4: pause if overwhelmed. No Council work conflict via recusal protocol." },
+                { id: 2, name: "Financial Risk", cat: "Financial", risk: "Grants delayed or denied (70-75% of applications fail)", impact: 5, likelihood: 4, mitigation: "Conservative budget assumes $3-5k only. Bootstrap first 6-8 months. Crowdfunding Plan B. Decision gate Month 6: pivot if <$3k secured." },
+                { id: 3, name: "Technology Risk", cat: "Technical", risk: "Mighty Networks can't deliver age-gating, senior accessibility, or data export", impact: 5, likelihood: 3, mitigation: "Month 1 validation sprint testing 5 personas. Platform alternatives researched (Circle, Discourse). $2k contingency budgeted for migration." },
+                { id: 4, name: "Incorporation Delays", cat: "Legal", risk: "Consumer Affairs + ACNC processing exceeds 4 months, blocking grant eligibility", impact: 4, likelihood: 4, mitigation: "Submit incorporation Week 2-3 (not Month 3). Weekly follow-ups. Operate as unincorporated group if needed (riskier but legal). Decision gate Month 4." },
+                { id: 5, name: "Safeguarding Incident", cat: "Legal", risk: "Harmful content or disclosure before policy finalised", impact: 5, likelihood: 2, mitigation: "DO NOT LAUNCH beta or public platform until professional safeguarding policy complete (Month 3-4). WWCC mandatory. 24-48hr moderation SLA (honest)." },
+                { id: 6, name: "Board Recruitment", cat: "Governance", risk: "Cannot recruit Chair, Secretary, or Treasurer (legally required roles)", impact: 5, likelihood: 3, mitigation: "Start recruitment Month 2 with honest prospectus. Founder can hold Secretary role temporarily if needed. Delay incorporation if no Treasurer by Month 3." },
+                { id: 7, name: "Community Demand", cat: "Market", risk: "Community interviews reveal low demand or preference for offline-only model", impact: 4, likelihood: 3, mitigation: "20 interviews in Month 2-3. Decision gate: If <50% say 'yes, I'd join digital platform,' pivot to Option 2 (offline events Year 1, digital Year 2)." }
+            ],
+
+            safeguarding: {
+                headline: "Everyone deserves to feel safe, valued, and respected.",
+                status: "IN DEVELOPMENT",
+                statusNote: "Professional safeguarding policy is being commissioned in Phase 1 (Month 1-3). Budget allocated: $2,000-3,000 for consultant review (ActForKids, Berry Street, Child Wise). Policy will be complete BEFORE any beta or public launch. Current commitments below outline our framework approach.",
+                commitments: [
+                    { title: "Youth Safety (Planned)", desc: "Mandatory WWCC for all volunteers working with under-18s. Child protection frameworks aligned with Victorian Child Safe Standards. Mandatory reporting training for moderators." },
+                    { title: "Elder Dignity (Planned)", desc: "Vulnerable adult safeguarding protocols covering financial abuse, coercive control, and dignity violations. Reporting pathways to Seniors Rights Victoria (1300 368 821)." },
+                    { title: "Professional Boundaries (Planned)", desc: "Legal review of intergenerational interaction policies. Clear role boundaries for board members engaging with community members. Supervision protocols." },
+                    { title: "Respect Standards (Planned)", desc: "Explicit codes of conduct for all interactions. Consensual opt-in mentoring only (no matching without written agreement). No private 1:1 messaging in Year 1 MVP." }
+                ],
+                policies: [
+                    { title: "Prevention (To Be Documented)", content: "WWCC screening ($17.30/person), police checks for board ($42.60/person), elder abuse recognition training, platform design features (no private financial transactions, age-appropriate content gating)." },
+                    { title: "Response (To Be Documented)", content: "Moderation SLA: Harmful content reviewed within 24-48 hours (founder availability: 15 hours/week). Escalation to police (immediate danger), Orange Door (family violence), mandatory reporting (child safety). User support protocols TBD." },
+                    { title: "Intergenerational Protocols (To Be Documented)", content: "Mentoring program NOT launching Year 1 (deferred to Year 2 pending 6-8 page framework development). All interactions in public channels or moderated group calls. Exploitation red flags defined with response procedures." },
+                    { title: "Accountability (To Be Documented)", content: "Annual safety review by external advisor. Incident reporting to ACNC if required. Transparency report published Year 2 onwards (Year 1 focused on policy establishment)." }
+                ],
+                realityCheck: "HONESTY NOTE: This section describes our PLANNED framework. Operational safeguarding requires 12-15 pages of detailed policy, incident response flowcharts, and professional legal review. We will NOT launch any platform (beta or public) until this documentation is complete and board-approved. Target completion: Month 3-4."
+            },
+
+            metrics: {
+                year1: {
+                    youth: [
+                        { label: "Registered Youth", value: "150+" },
+                        { label: "Youth Leaders", value: "5-7" },
+                        { label: "Mentoring Pairs", value: "5-7" }
+                    ],
+                    adult: [
+                        { label: "Registered Adults", value: "100+" },
+                        { label: "Volunteer Hours", value: "150+" },
+                        { label: "Active Mentors", value: "5-7" }
+                    ],
+                    senior: [
+                        { label: "Registered Seniors", value: "50+" },
+                        { label: "Digital Confidence", value: "60%+" },
+                        { label: "Wisdom Exchangers", value: "10+" }
+                    ],
+                    org: [
+                        { label: "Partner Orgs", value: "8-12" },
+                        { label: "Work Placements", value: "8-10" },
+                        { label: "Partner Sat.", value: "80%+" }
+                    ]
+                }
+            },
+
+            technology: {
+                stack: [
+                    { name: "Next.js / React", role: "Core Framework", desc: "High-performance frontend with React Server Components.", icon: "⚛️" },
+                    { name: "Supabase", role: "Backend & Auth", desc: "Scalable PostgreSQL database and secure user authentication.", icon: "⚡" },
+                    { name: "Vercel", role: "Cloud Infrastructure", desc: "Global edge network for lightning-fast delivery and scaling.", icon: "▲" }
+                ],
+                ecosystem: [
+                    { name: "Local Music Network", desc: "Connecting musicians, bands, and gigs across the region.", icon: "🎸" },
+                    { name: "Volunteer Passport", desc: "Tracking impact and discovering community service roles.", icon: "📜" },
+                    { name: "Youth Service Navigator", desc: "Navigating mental health and wellbeing support (12-25s).", icon: "🧭" },
+                    { name: "Apprenticeship Hub", desc: "Exploring vocational pathways and traineeships in Victoria.", icon: "🛠️" },
+                    { name: "Peer Support Finder", desc: "Locating local and online peer-led mental health groups.", icon: "🤝" },
+                    { name: "Work Experience Hub", desc: "Connecting youth with placements and early career starts.", icon: "💼" }
+                ],
+                mvp: {
+                    in: ["Unified Multi-App Account", "Persona-Based Onboarding", "Intergenerational Discussion Channels", "Resource Navigation Hub", "Safe Moderation Tools"],
+                    out: ["1:1 Private Messaging (Year 2)", "Native Mobile Apps (Year 2)", "Payment Processing", "Advanced Data Exports"]
+                }
+            },
+
+            faq: {
+                board: [
+                    { q: "How much time will this really take?", a: "Honest answer: Depends on your role. Chair: 6-8 hours/month Year 1 (setup), 4-5 ongoing. Secretary: 4-6 hours/month Year 1, 2-3 ongoing. Treasurer: 8-10 hours/month Year 1 (system setup/grants), 5-6 ongoing. Advisors: 2-3 hours/month. Year 1 is heavier than steady-state." },
+                    { q: "What if the project stalls?", a: "We have clear decision gates: Month 4 (incorporation), Month 6 (funding), Month 10 (users). If we don't hit minimums (incorporated, $3k funding, 50 users), we pause to reassess or close responsibly. Ryan won't let this drag on indefinitely." },
+                    { q: "Will I get paid?", a: "No, these are volunteer roles for at least Year 1-2. If we scale to $40k+ revenue by Year 3, Ryan may transition to part-time paid role, but board remains volunteer. We offer: governance experience, professional development, regional impact, and transparency." },
+                    { q: "Why aren't Chair and Secretary roles in the prospectus yet?", a: "They are now! Initial prospectus was incomplete. Victorian incorporated associations LEGALLY REQUIRE Chair/President and Secretary as office-bearers. We've now added full role descriptions. These are non-negotiable for incorporation." },
+                    { q: "What's Ryan's conflict of interest with Mitchell Shire Council?", a: "I work full time at Mitchell Shire Council. Mitigation: (1) Ryan recuses from board votes on Council partnerships/funding, (2) smalltalk.community Inc operates independently (not a Council program), (3) Annual conflict-of-interest declarations for all board members. This is documented in our governance charter." }
+                ],
+                funder: [
+                    { q: "Is this sustainable?", a: "Year 1: Uncertain. We're a startup nonprofit with $5-20k projected revenue. Break-even is ~$11k/year. Conservative scenario ($5k) covers legal/insurance only, not programmes. Realistic scenario ($12.5k) allows modest activity. We're honest: this is bootstrap mode. Sustainability improves Year 2-3 as consulting revenue and partnerships mature." },
+                    { q: "What is your competitive advantage?", a: "1) ONLY intergenerational platform in Mitchell/Murrindindi (youth, adults, seniors together). 2) Safety-first with professional multi-age safeguarding (not Facebook's self-moderation). 3) Co-designed WITH community, not FOR them. 4) Hyper-local focus (regional trust > metro scale). 5) Volunteer moderators invested in local relationships." },
+                    { q: "What if grants don't come through?", a: "Conservative budget assumes $5k only (2 small grants). If we secure $0 by Month 6, we: (1) Pause platform build, (2) Run crowdfunding campaign ($3-5k target), OR (3) Pivot to consulting-first model (generate revenue via youth engagement workshops, fund platform Year 2). We won't accumulate debt or overcommit volunteers." },
+                    { q: "Why should we fund you over established youth services?", a: "We're not competing with Headspace or Council programmes. We're filling a gap: 24/7 digital connection BETWEEN services. Youth need both professional support (existing orgs) AND peer/community connection (us). We partner with, not replace, existing providers. Our multigenerational angle is novel." }
+                ],
+                community: [
+                    { q: "Is it safe?", a: "Safety framework is IN DEVELOPMENT. We're commissioning a professional safeguarding policy ($2-3k, Month 1-3) covering youth protection, elder dignity, and intergenerational boundaries. We will NOT launch beta or public platform until policy is complete and board-approved (Month 3-4). Mandatory WWCC for volunteers. Moderation SLA: 24-48 hours (honest, given founder's 15hr/week availability)." },
+                    { q: "Will my data be private?", a: "We comply with Australian Privacy Principles. Data stored via Mighty Networks (U.S. company, PENDING verification of Australian data residency compliance - Month 1 validation sprint). We NEVER sell user data. Privacy Policy will be legally reviewed before launch. You'll have right to export or delete your data." },
+                    { q: "How can I get involved?", a: "8 pathways: (1) Youth Member, (2) Adult Mentor, (3) Senior Volunteer, (4) Organisation Partner, (5) Service Provider (skills exchange), (6) Board Member (governance), (7) Community Moderator (safety), (8) Project Sponsor (funding). See 'Get Involved' section. Note: Board and Moderator recruitment starts Month 2, community launch is Month 9-10." },
+                    { q: "What happens if this doesn't work?", a: "We pivot or close responsibly. Decision gates at Month 4, 6, and 10. If community interviews (Month 2-3) show low demand, we pivot to offline events first. If grants fail, we try crowdfunding or consulting model. If we can't recruit board, we delay incorporation. If platform doesn't reach 50 users by Month 10, we assess whether to continue or archive the project. No shame in learning and adapting." }
+                ]
+            },
+
+            getInvolved: [
+                {
+                    id: "youth",
+                    title: "Youth Member",
+                    role: "Participant & Leader",
+                    desc: "Find connection, voice, and opportunities designed for you.",
+                    cta: "Join Now"
+                },
+                {
+                    id: "mentor",
+                    title: "Adult Mentor",
+                    role: "Career & Life Mentor",
+                    desc: "For professionals (25-55). Share your network and empower local youth.",
+                    cta: "Mentor Youth"
+                },
+                {
+                    id: "senior",
+                    title: "Senior Volunteer",
+                    role: "Community Elder",
+                    desc: "Contribute wisdom, share local history, and find new purpose.",
+                    cta: "Share Wisdom"
+                },
+                {
+                    id: "partner",
+                    title: "Organisation Partner",
+                    role: "Institutional Collabourator",
+                    desc: "Host placements, share resources, and strengthen community resilience.",
+                    cta: "Partner With Us"
+                },
+                {
+                    id: "provider",
+                    title: "Service Provider",
+                    role: "Trades & Educators",
+                    desc: "List your services in our local skills exchange marketplace.",
+                    cta: "List Service"
+                },
+                {
+                    id: "board",
+                    title: "Join the Board",
+                    role: "Founding Director",
+                    desc: "Help govern the strategic direction of our intergenerational hub.",
+                    cta: "Apply Now"
+                },
+                {
+                    id: "moderator",
+                    title: "Community Moderator",
+                    role: "Safety & Engagement",
+                    desc: "Moderated discussions and ensure a respectful environment for all ages.",
+                    cta: "Join Team"
+                },
+                {
+                    id: "sponsor",
+                    title: "Project Sponsor",
+                    role: "Impact Funder",
+                    desc: "Support our sustainability through financial or in-kind regional partnerships.",
+                    cta: "Sponsor Us"
+                }
+            ],
+
+            founder: {
+                name: "Ryan Hutchison",
+                role: "Founder & Executive Director",
+                bio: "Youth Development Officer with five years experience working in regional Victoria. At 31, Ryan is a father of two living in Kilmore, deeply committed to building resilient, connected communities that bring all generations together. With hands-on experience in community development and a passion for leveraging technology, he's creating bridges between people of all ages and making genuine connection more accessible in the digital space.",
+                why: "I see it every day, across all ages and backgrounds. Young people, parents, older community members, people living with disabilities, LGBTIQA+ community, First Nations peoples, culturally diverse families, everyone is searching for connection, opportunities, and ways to contribute. But isolation keeps us from collaborating, sharing skills, and building the kind of community we all want to live in. We need a digital space where all members of our community can genuinely connect with each other, share opportunities, and work together, not just exist in separate bubbles.",
+                email: "ryanhutchison@outlook.com.au",
+                linkedin: "HutchisonSorbo"
+            }
+        };
+
+        // --- APPLICATION COMPONENTS ---
+        // Placeholder for the React Application Logic
+
+        // --- ICONS ---
+        const Icons = {
+            Menu: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>,
+            ChevronDown: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>,
+            Check: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>,
+            Download: () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+        };
+
+        // --- COMPONENTS ---
+
+        const Nav = ({ activeSection, scrollToSection, isBoardMode, toggleBoardMode, isDarkMode, toggleTheme }) => {
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const links = [
+                { id: 'vision', label: 'Vision' },
+                { id: 'roadmap', label: 'Plan' },
+                { id: 'board', label: 'Board' },
+                { id: 'financials', label: 'Finance' },
+                { id: 'safeguarding', label: 'Safety' },
+                { id: 'faq', label: 'FAQ' },
+            ];
+
+            return (
+                <nav className={`fixed top-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-soft z-50 transition-all duration-300 ${isBoardMode ? 'hidden print:hidden' : ''}`}>
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div
+                                className="flex-shrink-0 flex items-center cursor-pointer"
+                                onClick={() => scrollToSection('hero')}
+                                role="button"
+                                tabIndex="0"
+                                onKeyDown={(e) => e.key === 'Enter' && scrollToSection('hero')}
+                                aria-label="Go to homepage"
+                            >
+                                <span className="text-xl font-bold text-primary dark:text-blue-400 tracking-tight">smalltalk.community Inc</span>
+                            </div>
+
+                            {/* Desktop Menu */}
+                            <div className="hidden md:flex space-x-1 items-center">
+                                {links.map(link => (
+                                    <button
+                                        key={link.id}
+                                        onClick={() => scrollToSection(link.id)}
+                                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:text-primary hover:bg-gray-50 dark:hover:bg-slate-800 ${activeSection === link.id ? 'text-primary font-bold' : 'text-gray-600 dark:text-gray-300'}`}
+                                    >
+                                        {link.label}
+                                    </button>
+                                ))}
+                                <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+                                <button onClick={toggleBoardMode} className="p-2 text-gray-500 hover:text-primary transition-colors focus:ring-2 focus:ring-primary rounded-md" title="Board View / Print Mode" aria-label="Toggle Board View and Print Mode">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </button>
+                                <button onClick={toggleTheme} className="p-2 text-gray-500 hover:text-primary transition-colors focus:ring-2 focus:ring-primary rounded-md" aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}>
+                                    {isDarkMode ? '☀️' : '🌙'}
+                                </button>
+                                <button
+                                    onClick={() => scrollToSection('get-involved')}
+                                    className="ml-2 px-4 py-2 text-sm font-bold text-white bg-accent rounded-full hover:bg-red-500 transition-colors shadow-sm"
+                                >
+                                    Get Involved
+                                </button>
+                            </div>
+
+                            {/* Mobile Menu Button */}
+                            <div className="md:hidden flex items-center gap-4">
+                                <button
+                                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                    className="text-gray-600 dark:text-gray-300 hover:text-primary p-2 focus:ring-2 focus:ring-primary rounded-md"
+                                    aria-expanded={isMenuOpen}
+                                    aria-label="Toggle mobile menu"
+                                >
+                                    <Icons.Menu />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Menu Dropdown */}
+                    {isMenuOpen && (
+                        <div className="md:hidden bg-white dark:bg-slate-800 border-t border-gray-100 dark:border-gray-700 shadow-lg absolute w-full p-4">
+                            <div className="flex flex-col space-y-2">
+                                {links.map(link => (
+                                    <button
+                                        key={link.id}
+                                        onClick={() => { scrollToSection(link.id); setIsMenuOpen(false); }}
+                                        className="text-left px-4 py-3 rounded-lg text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700"
+                                    >
+                                        {link.label}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => { scrollToSection('get-involved'); setIsMenuOpen(false); }}
+                                    className="text-left px-4 py-3 rounded-lg text-base font-bold text-white bg-accent"
+                                >
+                                    Get Involved
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </nav>
+            );
+        };
+
+        const StatCard = ({ value, label, source }) => (
+            <div className="group relative bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+                <div className="text-3xl font-bold text-primary dark:text-support mb-1">{value}</div>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</div>
+
+                {/* Tooltip */}
+                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap pointer-events-none z-10">
+                    Source: {source}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                </div>
+            </div>
+        );
+
+        const VisionValues = ({ values, mission }) => {
+            const [expandedValue, setExpandedValue] = useState(null);
+
+            return (
+                <section id="vision" className="py-20 bg-white dark:bg-slate-900">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6">
+                        <SectionHeader title="Vision & Values" subtitle="Building with purpose, not just for scale." />
+
+                        <div className="text-center mb-16 max-w-2xl mx-auto">
+                            <p className="text-xl md:text-2xl font-medium text-gray-800 dark:text-gray-200 leading-relaxed">"{mission}"</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {values.map((val, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setExpandedValue(expandedValue === idx ? null : idx)}
+                                    aria-expanded={expandedValue === idx}
+                                    className={`text-left w-full p-6 rounded-xl border transition-all duration-300 ${expandedValue === idx ? 'bg-primary text-white border-primary transform scale-105 shadow-lg' : 'bg-gray-50 border-gray-100 hover:border-primary/30 hover:bg-white dark:bg-slate-800 dark:border-slate-700 dark:hover:border-support/50'}`}
+                                >
+                                    <div className="text-3xl mb-3">{val.icon}</div>
+                                    <h3 className={`font-bold mb-2 ${expandedValue === idx ? 'text-white' : 'text-primary'}`}>{val.title}</h3>
+                                    <div className={`text-sm overflow-hidden transition-all duration-500 ${expandedValue === idx ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        <p className="opacity-90">{val.description}</p>
+                                    </div>
+                                    {expandedValue !== idx && <p className="text-xs text-gray-400 mt-2">Click to expand</p>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const Hero = ({ data }) => {
+            return (
+                <section id="hero" className="min-h-screen flex flex-col items-center justify-center pt-24 pb-12 bg-background dark:bg-slate-900 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200 text-sm font-medium text-gray-600 mb-8 animate-fade-in-up">
+                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            {data.organisation.status} • {data.organisation.planPeriod}
+                        </div>
+
+                        <h1 className="text-5xl md:text-7xl font-bold text-primary dark:text-white mb-8 tracking-tight leading-tight animate-fade-in-up font-display" style={{ animationDelay: '100ms' }}>
+                            Where <span className="text-support decoration-accent decoration-4 underline-offset-4">Every Generation</span> Finds Belonging
+                        </h1>
+
+                        <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                            A community platform designed for young people, working adults, seniors, and regional organisations to thrive together.
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto mb-16 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+                            {data.organisation.context.stats.map((stat, i) => (
+                                <StatCard key={i} {...stat} />
+                            ))}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                            <button onClick={() => document.getElementById('vision').scrollIntoView({ behavior: 'smooth' })} className="px-8 py-3 bg-primary text-white font-bold rounded-lg shadow-lg hover:bg-support transition-transform transform hover:scale-105">
+                                Explore the Plan
+                            </button>
+                            <button onClick={() => document.getElementById('board').scrollIntoView({ behavior: 'smooth' })} className="px-8 py-3 bg-white dark:bg-slate-800 text-primary dark:text-blue-400 border-2 border-primary/20 dark:border-support/30 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                                Board Prospectus
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const SectionHeader = ({ title, subtitle, align = 'centre' }) => (
+            <div className={`mb-12 text-${align}`}>
+                <h2 className="text-3xl font-bold text-primary dark:text-gray-100 mb-3">{title}</h2>
+                {subtitle && <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">{subtitle}</p>}
+                <div className={`h-1.5 w-20 bg-accent rounded-full mt-4 ${align === 'centre' ? 'mx-auto' : ''}`}></div>
+            </div>
+        );
+
+        const PillarCard = ({ pillar }) => {
+            const [isExpanded, setIsExpanded] = useState(false);
+
+            return (
+                <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-all duration-300 ${isExpanded ? 'ring-2 ring-primary dark:ring-support ring-offset-2 dark:ring-offset-slate-900 shadow-md' : 'hover:shadow-lg'}`}>
+                    <button
+                        className="w-full text-left p-8 focus:outline-none"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        aria-expanded={isExpanded}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-4xl" aria-hidden="true">{pillar.icon}</span>
+                            <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${pillar.status === 'in-progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                }`}>
+                                {pillar.status}
+                            </span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-primary dark:text-gray-100 mb-1 font-display">{pillar.title}</h3>
+                        <p className="text-support dark:text-blue-400 font-semibold mb-4">{pillar.subtitle}</p>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">{pillar.description}</p>
+
+                        <div className="flex items-center text-sm font-bold text-primary dark:text-support hover:text-accent dark:hover:text-accent transition-colors">
+                            {isExpanded ? 'Show Less' : 'View Initiatives'}
+                            <span className={`ml-1 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true"><Icons.ChevronDown /></span>
+                        </div>
+                    </button>
+
+                    {isExpanded && (
+                        <div className="bg-gray-50 dark:bg-slate-900/50 px-8 py-6 border-t border-gray-100 dark:border-gray-700 animate-fade-in">
+                            <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-4 px-2">Key Initiatives</h4>
+                            <div className="space-y-4">
+                                {(pillar.details || pillar.structure || pillar.priorities).map((item, idx) => (
+                                    <div key={idx} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h5 className="font-semibold text-gray-800 dark:text-gray-200">
+                                                    {typeof item === 'string' ? item : item.name}
+                                                </h5>
+                                                {typeof item !== 'string' && (
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.description || item.desc}</p>
+                                                )}
+                                            </div>
+                                            {item.phase && (
+                                                <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 px-2 py-1 rounded">
+                                                    {item.phase}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {pillar.designPrinciples && (
+                                <div className="mt-6">
+                                    <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-2 px-2">Design Principles</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {pillar.designPrinciples.map((p, i) => (
+                                            <span key={i} className="px-3 py-1 bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 text-xs rounded-full border border-blue-100 dark:border-blue-800">{p}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const InteractiveTimeline = ({ timeline }) => {
+            const [activePhase, setActivePhase] = useState(timeline.find(t => t.status === 'current').phase || 1);
+
+            return (
+                <div className="py-12">
+                    {/* Horizontal Progress Bar (Desktop) */}
+                    <div className="hidden md:flex justify-between items-center relative mb-16 px-12" role="tablist" aria-label="Strategy phases">
+                        <div className="absolute left-0 right-0 top-1/2 h-1 bg-gray-200 dark:bg-gray-700 -z-0"></div>
+                        {timeline.map((phase) => (
+                            <button
+                                key={phase.phase}
+                                onClick={() => setActivePhase(phase.phase)}
+                                role="tab"
+                                aria-selected={activePhase === phase.phase}
+                                aria-controls={`phase-panel-${phase.phase}`}
+                                id={`phase-tab-${phase.phase}`}
+                                className={`relative z-10 cursor-pointer flex flex-col items-center transition-all duration-300 transform ${activePhase === phase.phase ? 'scale-110' : 'hover:scale-105 opacity-70 hover:opacity-100'} focus:outline-none`}
+                            >
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-md border-4 transition-colors ${activePhase === phase.phase ? 'bg-white border-primary text-primary dark:border-support dark:text-support' : 'bg-gray-100 border-gray-300 text-gray-400 dark:bg-slate-700 dark:border-slate-600'}`}>
+                                    <span aria-hidden="true">{phase.icon}</span>
+                                </div>
+                                <div className={`mt-3 text-center transition-colors ${activePhase === phase.phase ? 'font-bold text-primary dark:text-support' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    <div className="text-sm uppercase tracking-wider">{phase.period}</div>
+                                    <div className="text-xs">{phase.name}</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Content Display */}
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700 overflow-hidden relative min-h-[400px]">
+                        {timeline.map((phase) => (
+                            <div
+                                key={phase.phase}
+                                role="tabpanel"
+                                id={`phase-panel-${phase.phase}`}
+                                aria-labelledby={`phase-tab-${phase.phase}`}
+                                className={`absolute inset-0 p-8 transition-all duration-500 transform ${activePhase === phase.phase ? 'opacity-100 translate-x-0 relative' : 'opacity-0 translate-x-8 pointer-events-none absolute'}`}
+                            >
+                                <div className="flex flex-col md:flex-row gap-8 h-full">
+                                    <div className="md:w-1/3 border-r border-gray-100 dark:border-gray-700 pr-8 flex flex-col justify-center">
+                                        <div className="inline-block px-3 py-1 bg-primary/10 text-primary dark:text-support rounded-full text-xs font-bold uppercase mb-4 w-max">
+                                            {phase.status}
+                                        </div>
+                                        <h3 className="text-3xl font-bold text-primary dark:text-gray-100 mb-2 font-display">{phase.name}</h3>
+                                        <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">{phase.description}</p>
+                                        <div className="p-4 bg-gray-50 dark:bg-slate-900/50 rounded-lg border-l-4 border-accent">
+                                            <h4 className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-1">Phase Focus</h4>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">{phase.focus}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4 content-centre">
+                                        {phase.milestones.map((m, i) => (
+                                            <div key={i} className="flex items-start p-3 rounded hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors group">
+                                                <div className={`mt-1 mr-3 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center border ${m.status === 'done' ? 'bg-green-100 border-green-500 text-green-600' : 'border-gray-300 text-gray-300'}`}>
+                                                    {m.status === 'done' ? <Icons.Check /> : <div className="w-2 h-2 rounded-full bg-current" />}
+                                                </div>
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-400 uppercase">{m.category}</span>
+                                                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors">{m.item}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const BoardPositionCard = ({ role, onSelect }) => (
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-300 group flex flex-col h-full">
+                <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-gray-50 dark:bg-slate-700 flex items-center justify-center text-2xl group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                        {role.icon}
+                    </div>
+                    <span className="text-xs font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 px-2 py-1 rounded">
+                        {role.timeCommitment}
+                    </span>
+                </div>
+
+                <h3 className="text-xl font-bold text-primary dark:text-gray-100 mb-2 font-display">{role.title}</h3>
+                <p className="text-sm text-support dark:text-blue-400 font-semibold mb-4 min-h-[40px]">{role.purpose}</p>
+
+                <div className="space-y-3 mb-6 flex-grow">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Key Responsibilities</h4>
+                    <ul className="space-y-1">
+                        {role.responsibilities.slice(0, 3).map((r, i) => (
+                            <li key={i} className="text-sm text-gray-600 dark:text-gray-300 flex items-start">
+                                <span className="mr-2 text-secondary">•</span>
+                                <span className="line-clamp-1">{r}</span>
+                            </li>
+                        ))}
+                        {role.responsibilities.length > 3 && (
+                            <li className="text-xs text-secondary font-medium italic underline mt-1">+ {role.responsibilities.length - 3} more</li>
+                        )}
+                    </ul>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-700 mb-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 italic mb-2">Ideal: {role.idealBackground?.slice(0, 50)}...</p>
+                </div>
+
+                <button
+                    onClick={() => onSelect(role)}
+                    className="w-full py-2.5 bg-white dark:bg-slate-700 border-2 border-primary/20 text-primary dark:text-blue-400 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-all text-sm font-bold shadow-sm"
+                >
+                    View Position Description
+                </button>
+            </div>
+        );
+
+        const BoardRoles = ({ roles, onSelectRole }) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {roles.map((role) => (
+                    <BoardPositionCard key={role.id} role={role} onSelect={onSelectRole} />
+                ))}
+            </div>
+        );
+
+        const Sustainability = ({ data }) => {
+            const [scenario, setScenario] = useState('realistic');
+            const currentData = data.financials.scenarios[scenario];
+
+            return (
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700 p-8">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-10">
+                        <div>
+                            <h3 className="text-2xl font-bold text-primary dark:text-gray-100">Financial Sustainability</h3>
+                            <p className="text-gray-500 dark:text-gray-400">Transparent modeling of our operating costs and revenue.</p>
+                        </div>
+
+                        <div className="flex bg-gray-100 dark:bg-slate-900 p-1 rounded-lg mt-4 md:mt-0">
+                            {Object.keys(data.financials.scenarios).map(key => (
+                                <button
+                                    key={key}
+                                    onClick={() => setScenario(key)}
+                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${scenario === key ? 'bg-white dark:bg-slate-700 shadow text-primary dark:text-support' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800'}`}
+                                >
+                                    {data.financials.scenarios[key].label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        <div className="lg:col-span-1">
+                            <div className="bg-primary/5 dark:bg-slate-700/30 p-6 rounded-xl border border-primary/10 mb-6">
+                                <h4 className="font-bold text-primary dark:text-teal-400 mb-2">{currentData.label} Scenario</h4>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">{currentData.description}</p>
+                                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                                    ${currentData.totalRevenue.toLocaleString()}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">Year 1 Revenue</div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-4 leading-relaxed">{currentData.notes}</p>
+                                {currentData.grantExamples && (
+                                    <div className="mt-4 pt-4 border-t border-primary/10">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 font-semibold mb-1">Grant Examples:</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">{currentData.grantExamples}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+
+                        <div className="lg:col-span-2 h-80">
+                            <h4 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Projected Revenue Breakdown</h4>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={currentData.revenueBreakdown} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                    <XAxis type="number" tickFormatter={(value) => `$${value / 1000}k`} />
+                                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
+                                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} cursor={{ fill: 'transparent' }} />
+                                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                        {currentData.revenueBreakdown.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const RiskMatrix = ({ risks }) => {
+            const getColor = (impact, likelihood) => {
+                const score = impact * likelihood;
+                if (score >= 20) return 'bg-red-500 text-white';
+                if (score >= 12) return 'bg-orange-400 text-white';
+                if (score >= 6) return 'bg-yellow-300 text-gray-800';
+                return 'bg-green-200 text-gray-800';
+            };
+
+            return (
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">Risk Impact Matrix</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            {risks.map(risk => (
+                                <div key={risk.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded font-bold text-sm ${getColor(risk.impact, risk.likelihood)}`}>
+                                        {risk.id}
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-bold text-gray-800 dark:text-gray-200 text-sm">{risk.name}</h4>
+                                            <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-300 rounded">{risk.cat}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{risk.risk}</p>
+                                        <p className="text-xs text-green-700 dark:text-green-400 mt-1">Mitigation: {risk.mitigation}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="relative border-l border-b border-gray-300 dark:border-gray-600 h-64 w-full bg-gray-50 dark:bg-slate-900/50 rounded-tr-lg">
+                            <div className="absolute -left-8 top-1/2 transform -rotate-90 text-xs font-bold text-gray-400">LIKELIHOOD</div>
+                            <div className="absolute bottom-[-25px] left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-400">IMPACT</div>
+
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="absolute w-full border-t border-gray-200 dark:border-slate-700 dashed" style={{ bottom: `${i * 16.6}%` }}></div>
+                            ))}
+
+                            {risks.map(risk => (
+                                <button
+                                    key={risk.id}
+                                    className={`absolute w-8 h-8 flex items-center justify-center rounded-full shadow-md font-bold text-xs transform hover:scale-110 transition-transform focus:ring-2 focus:ring-white ${getColor(risk.impact, risk.likelihood)}`}
+                                    style={{
+                                        left: `${(risk.impact / 6) * 100}%`,
+                                        bottom: `${(risk.likelihood / 6) * 100}%`
+                                    }}
+                                    title={`${risk.name}: Impact ${risk.impact}, Prob ${risk.likelihood}`}
+                                    aria-label={`Risk ${risk.id}: ${risk.name}. Impact ${risk.impact}, Likelihood ${risk.likelihood}`}
+                                >
+                                    {risk.id}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )
+        };
+
+        const InitiativeExplorer = ({ data }) => {
+            const [filterPillar, setFilterPillar] = useState('all');
+            const [filterPhase, setFilterPhase] = useState('all');
+            const [search, setSearch] = useState('');
+
+            // Flatten initiatives
+            const allInitiatives = useMemo(() => {
+                const initiatives = [];
+                data.pillars.forEach(pillar => {
+                    const items = pillar.details || pillar.structure || pillar.priorities;
+                    items.forEach(item => {
+                        const init = typeof item === 'string' ? { name: item } : item;
+                        initiatives.push({
+                            ...init,
+                            pillar: pillar.title,
+                            pillarId: pillar.id,
+                            type: pillar.subtitle
+                        });
+                    });
+                });
+                return initiatives;
+            }, [data]);
+
+            const filtered = allInitiatives.filter(init => {
+                const matchPillar = filterPillar === 'all' || init.pillarId.toString() === filterPillar;
+                const matchPhase = filterPhase === 'all' || (init.phase && init.phase.includes(filterPhase));
+                const matchSearch = !search || init.name.toLowerCase().includes(search.toLowerCase()) || (init.description && init.description.toLowerCase().includes(search.toLowerCase()));
+                return matchPillar && matchPhase && matchSearch;
+            });
+
+            return (
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Search</label>
+                            <input
+                                type="text"
+                                placeholder="Search initiatives..."
+                                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-white dark:bg-slate-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Filter by Pillar</label>
+                            <select
+                                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary outline-none bg-white dark:bg-slate-700 dark:text-gray-100"
+                                value={filterPillar}
+                                onChange={e => setFilterPillar(e.target.value)}
+                            >
+                                <option value="all">All Pillars</option>
+                                {data.pillars.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Filter by Phase</label>
+                            <select
+                                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary outline-none bg-white dark:bg-slate-700 dark:text-gray-100"
+                                value={filterPhase}
+                                onChange={e => setFilterPhase(e.target.value)}
+                            >
+                                <option value="all">All Phases</option>
+                                <option value="Phase 1">Phase 1 (Foundation)</option>
+                                <option value="MVP">MVP / Build</option>
+                                <option value="Year 2">Year 2 (Future)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead className="bg-gray-50 dark:bg-slate-700">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Initiative</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pillar</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phase</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                {filtered.length > 0 ? (
+                                    filtered.map((init, idx) => (
+                                        <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{init.name}</div>
+                                                {init.description && <div className="text-sm text-gray-500 dark:text-gray-400">{init.description}</div>}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                                    {init.pillar}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {init.phase || '-'}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                            No initiatives found matching filters.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        const SafeguardingSection = ({ data }) => (
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 md:p-12 shadow-soft relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-bl-full pointer-events-none"></div>
+
+                <div className="max-w-3xl mx-auto text-center mb-12">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                        <span className="inline-block px-3 py-1 bg-red-100 text-red-600 rounded-full text-xs font-bold uppercase">
+                            Core Value
+                        </span>
+                        {data.status && (
+                            <span className="inline-block px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-xs font-bold uppercase">
+                                {data.status}
+                            </span>
+                        )}
+                    </div>
+                    <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+                        {data.headline}
+                    </h3>
+
+                    {data.statusNote && (
+                        <div className="bg-orange-50 dark:bg-orange-900/10 border-l-4 border-orange-400 p-4 mb-8 text-left">
+                            <p className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed">
+                                <strong className="font-bold">Development Status:</strong> {data.statusNote}
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+                        {data.commitments.map((c, i) => (
+                            <div key={i} className="bg-gray-50 dark:bg-slate-700 p-4 rounded-xl border border-gray-100 dark:border-gray-600">
+                                <h4 className="font-bold text-gray-900 dark:text-white mb-2">{c.title}</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-300">{c.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {data.policies.map((policy, i) => (
+                        <div key={i} className="flex gap-4 p-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold mt-1 shadow-sm">
+                                {i + 1}
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-gray-900 dark:text-white mb-1">{policy.title}</h4>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{policy.content}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {data.realityCheck && (
+                    <div className="mt-8 bg-yellow-50 dark:bg-yellow-900/10 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl p-6">
+                        <p className="text-sm text-yellow-900 dark:text-yellow-200 leading-relaxed font-medium">
+                            {data.realityCheck}
+                        </p>
+                    </div>
+                )}
+            </div>
+        );
+
+        const TechnologySection = ({ data }) => (
+            <div className="space-y-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+                    {/* Tech Stack Card */}
+                    <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-soft flex flex-col">
+                        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                            <span className="text-primary dark:text-support">⚡</span> Modern Tech Stack
+                        </h3>
+                        <p className="text-slate-400 mb-8">We utilize industry-standard, high-performance tools to ensure a secure, scalable, and responsive community experience.</p>
+
+                        <div className="space-y-4 flex-grow">
+                            {data.stack.map((item, i) => (
+                                <div key={i} className="flex items-start p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-primary/50 transition-colors">
+                                    <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center mr-4 text-xl flex-shrink-0">
+                                        {item.icon}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white">{item.name}</h4>
+                                        <div className="text-[10px] text-support uppercase tracking-widest mb-1">{item.role}</div>
+                                        <p className="text-sm text-slate-400">{item.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* App Ecosystem Card */}
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 md:p-12 shadow-soft border border-gray-100 dark:border-gray-700">
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                            <span className="text-support">🚀</span> The App Ecosystem
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-8">Specialized tools designed to meet the unique needs of our intergenerational community.</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {data.ecosystem.map((app, i) => (
+                                <div key={i} className="p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
+                                    <div className="text-2xl mb-2">{app.icon}</div>
+                                    <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-1">{app.name}</h4>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{app.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* MVP Scope Card */}
+                <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 md:p-12 shadow-soft border border-gray-100 dark:border-gray-700">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">MVP Implementation Scope</h3>
+                        <span className="px-4 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-bold uppercase tracking-widest">Target: Launch Year 1</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div>
+                            <h4 className="flex items-center text-green-600 font-bold mb-6">
+                                <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3 text-sm">✓</span>
+                                v1 Core Features
+                            </h4>
+                            <ul className="space-y-4">
+                                {data.mvp.in.map((item, i) => (
+                                    <li key={i} className="flex items-start text-gray-700 dark:text-gray-300">
+                                        <span className="mr-3 text-green-500 mt-1">•</span>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 className="flex items-center text-gray-400 font-bold mb-6">
+                                <span className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center mr-3 text-sm">✕</span>
+                                Future Roadmap
+                            </h4>
+                            <ul className="space-y-4">
+                                {data.mvp.out.map((item, i) => (
+                                    <li key={i} className="flex items-start text-gray-400 dark:text-gray-500">
+                                        <span className="mr-3 text-gray-300 mt-1">•</span>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            useEffect(() => {
+                if (isOpen) document.body.style.overflow = 'hidden';
+                else document.body.style.overflow = 'unset';
+                return () => { document.body.style.overflow = 'unset'; };
+            }, [isOpen]);
+
+            if (!isOpen) return null;
+
+            return (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in shadow-2xl"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="modal-title"
+                >
+                    <div
+                        className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative animate-fade-in-up border border-white/10"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={onClose}
+                            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors z-10 focus:ring-2 focus:ring-primary rounded-md"
+                            aria-label="Close modal"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+
+                        <div className="p-8 md:p-12">
+                            <h3 id="modal-title" className="text-3xl font-bold text-primary dark:text-white mb-6 pr-8">{title}</h3>
+                            <div className="prose dark:prose-invert max-w-none">
+                                {children}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Toast = ({ message, visible }) => (
+            <div
+                className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[200] transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+                role="status"
+                aria-live="polite"
+            >
+                <div className="bg-slate-900 dark:bg-primary text-white px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-3 border border-white/20">
+                    <span className="text-xl">📋</span>
+                    {message}
+                </div>
+            </div>
+        );
+
+        const MetricsDashboard = ({ data }) => {
+            const categories = [
+                { id: 'youth', icon: '👤', title: 'Youth Impact' },
+                { id: 'adult', icon: '💼', title: 'Adult Engagement' },
+                { id: 'senior', icon: '👴', title: 'Senior Connection' },
+                { id: 'org', icon: '🏢', title: 'Org Partnerships' }
+            ];
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {categories.map((cat) => (
+                        <div key={cat.id} className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+                            <div className="w-12 h-12 mx-auto bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl mb-4">{cat.icon}</div>
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-6">{cat.title}</h3>
+                            <div className="space-y-4">
+                                {(data.year1[cat.id] || []).map((m, i) => (
+                                    <div key={i} className="flex justify-between items-center border-b border-gray-50 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">{m.label}</span>
+                                        <span className="font-bold text-primary dark:text-white">{m.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const FAQSection = ({ data }) => {
+            const [filter, setFilter] = useState('board');
+            const [openIndex, setOpenIndex] = useState(null);
+
+            const displayData = data[filter] || [];
+
+            return (
+                <div className="max-w-3xl mx-auto">
+                    <div className="flex justify-center space-x-4 mb-8">
+                        {['board', 'funder', 'community'].map(f => (
+                            <button
+                                key={f}
+                                onClick={() => { setFilter(f); setOpenIndex(null); }}
+                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${filter === f ? 'bg-primary text-white shadow' : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'}`}
+                            >
+                                For {f === 'community' ? 'Community' : f.charAt(0).toUpperCase() + f.slice(1) + 's'}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="space-y-4">
+                        {displayData.map((item, i) => (
+                            <div key={i} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                                <button
+                                    onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                                    className="w-full text-left p-6 flex justify-between items-center focus:outline-none"
+                                >
+                                    <span className="font-bold text-gray-900 dark:text-gray-100">{item.q}</span>
+                                    <span className={`transform transition-transform duration-300 ${openIndex === i ? 'rotate-180' : ''}`}>
+                                        <Icons.ChevronDown />
+                                    </span>
+                                </button>
+                                <div className={`transition-all duration-300 overflow-hidden ${openIndex === i ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                    <div className="p-6 text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-gray-700 bg-gray-50 dark:bg-slate-900/50">
+                                        {item.a}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const FounderSection = ({ founder }) => (
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft p-8 md:p-12 flex flex-col md:flex-row gap-12 items-center">
+                <div className="md:w-1/3 text-center">
+                    <div className="w-32 h-32 mx-auto rounded-full bg-gray-200 mb-6 overflow-hidden shadow-md">
+                        {/* Placeholder for Ryan's headshot */}
+                        <img src="https://ui-avatars.com/api/?name=Ryan+Hutchison&background=208091&color=fff&size=256" alt={founder.name} className="w-full h-full object-cover" />
+                    </div>
+                    <h3 className="font-bold text-xl text-primary dark:text-white mb-1">{founder.name}</h3>
+                    <p className="text-secondary dark:text-teal-400 text-sm font-medium uppercase tracking-wide mb-6">{founder.role}</p>
+                    <a href={`mailto:${founder.email}`} className="text-sm font-bold text-gray-500 hover:text-primary transition-colors">
+                        {founder.email}
+                    </a>
+                </div>
+                <div className="md:w-2/3">
+                    <div className="mb-8">
+                        <cite className="text-2xl font-serif text-gray-800 dark:text-gray-200 leading-relaxed italic block mb-4">
+                            "{founder.why}"
+                        </cite>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 text-sm uppercase tracking-wide">About Ryan</h4>
+                        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                            {founder.bio} With a background in community development and a passion for technology, Ryan is bridging the gap between traditional youth services and the digital world.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const GetInvolvedSection = ({ options, onAction }) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {options.map((opt, i) => (
+                    <div key={i} className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center flex flex-col h-full">
+                        <h3 className="font-bold text-lg text-primary dark:text-white mb-2">{opt.title}</h3>
+                        <p className="text-secondary dark:text-teal-400 text-xs font-bold uppercase tracking-wide mb-4">{opt.role}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 flex-grow">{opt.desc}</p>
+                        <button
+                            onClick={() => onAction('involved', opt)}
+                            className="w-full py-2.5 bg-primary text-white rounded-lg font-bold text-sm transition-all duration-200 hover:bg-teal-700 shadow-sm hover:shadow-md text-center"
+                        >
+                            {opt.cta}
+                        </button>
+                    </div>
+                ))}
+            </div>
+        );
+
+        const Footer = ({ name }) => (
+            <footer className="bg-slate-900 text-slate-400 py-12 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+                        <div className="mb-6 md:mb-0">
+                            <h2 className="text-2xl font-bold text-white mb-2">{name}</h2>
+                            <p className="text-sm opacity-70">Building digital belonging for regional youth.</p>
+                        </div>
+                        <div className="flex gap-6">
+                            <a href="https://www.linkedin.com/in/HutchisonSorbo/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">LinkedIn</a>
+                            <a href="mailto:ryanhutchison@outlook.com.au" className="hover:text-white transition-colors">Contact</a>
+                            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-800 rounded-xl p-8 mb-8 text-center md:text-left grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 className="font-bold text-white mb-2">Acknowledgement of Country</h3>
+                            <p className="text-xs leading-relaxed opacity-80">
+                                We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands on which we operate. We pay our respects to their Elders past, present, and emerging, and extend that respect to all Aboriginal and Torres Strait Islander young people.
+                            </p>
+                        </div>
+                        <div className="text-center md:text-right">
+                            <div className="inline-block p-4 border border-slate-700 rounded-lg">
+                                <p className="text-xs font-bold uppercase tracking-widest text-teal-500 mb-1">Status</p>
+                                <p className="text-white font-bold">Incorporated Association (Pending)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="text-center text-xs opacity-50 border-t border-slate-800 pt-8">
+                        &copy; 2026 {name}. All rights reserved. | Safeguarding Policy available on request.
+                    </div>
+                </div>
+            </footer>
+        );
+
+        const BoardView = ({ data }) => (
+            <div className="max-w-4xl mx-auto p-8 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 print:max-w-none print:bg-white print:text-black">
+                <div className="mb-8 border-b border-gray-900 dark:border-gray-600 pb-4 print:border-gray-900">
+                    <h1 className="text-3xl font-bold uppercase tracking-wide mb-2">{data.organisation.name}</h1>
+                    <div className="flex justify-between items-end">
+                        <div>
+                            <h2 className="text-xl font-semibold">Strategic Plan Executive Summary</h2>
+                            <p className="text-gray-600 dark:text-gray-400 font-mono text-sm print:text-gray-600">{data.organisation.planPeriod}</p>
+                        </div>
+                        <div className="text-right text-sm text-gray-500 dark:text-gray-400 print:text-gray-500">
+                            Generated: {new Date().toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                    <div className="col-span-2 bg-gray-50 dark:bg-slate-800 p-4 rounded border border-gray-200 dark:border-gray-700">
+                        <h3 className="font-bold uppercase text-sm text-gray-500 dark:text-gray-400 mb-2">Operational Context</h3>
+                        <p className="text-sm"><strong>Problem:</strong> {data.organisation.context.problem}</p>
+                        <p className="text-sm mt-1"><strong>Opportunity:</strong> {data.organisation.context.opportunity}</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-slate-700 p-6 rounded border border-gray-200 dark:border-gray-600 break-inside-avoid print:bg-gray-50 print:border-gray-200">
+                        <h3 className="font-bold uppercase text-sm text-gray-500 dark:text-gray-300 mb-2 print:text-gray-500">Vision</h3>
+                        <p className="text-lg font-serif italic leading-relaxed">"{data.organisation.vision}"</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-slate-700 p-6 rounded border border-gray-200 dark:border-gray-600 break-inside-avoid print:bg-gray-50 print:border-gray-200">
+                        <h3 className="font-bold uppercase text-sm text-gray-500 dark:text-gray-300 mb-2 print:text-gray-500">Theory of Change</h3>
+                        <p className="text-sm leading-relaxed">{data.organisation.theoryOfChange.opportunity}</p>
+                    </div>
+                </div>
+
+                <div className="mb-8 break-inside-avoid">
+                    <h3 className="font-bold text-xl border-b border-gray-200 dark:border-gray-600 pb-2 mb-4 print:border-gray-200">Strategic Pillars</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                        {data.pillars.map(p => (
+                            <div key={p.id} className="border border-gray-200 dark:border-gray-600 p-4 rounded print:border-gray-200">
+                                <h4 className="font-bold text-primary dark:text-gray-200 mb-1 print:text-primary">{p.title}</h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 uppercase print:text-gray-500">{p.status}</p>
+                                <p className="text-sm">{p.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mb-8 break-inside-avoid">
+                    <h3 className="font-bold text-xl border-b border-gray-200 dark:border-gray-600 pb-2 mb-4 print:border-gray-200">Financial Projections (Conservative Scenario)</h3>
+                    <table className="min-w-full text-sm">
+                        <thead>
+                            <tr className="border-b border-gray-400 dark:border-gray-500 print:border-gray-400">
+                                <th className="text-left py-2">Year</th>
+                                <th className="text-right py-2">Grants</th>
+                                <th className="text-right py-2">Consulting</th>
+                                <th className="text-right py-2">Total Rev</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.financials.scenarios.conservative.revenue.map((row, i) => (
+                                <tr key={i} className="border-b border-gray-100 dark:border-gray-700 print:border-gray-100">
+                                    <td className="py-2 font-mono text-gray-700 dark:text-gray-300 print:text-gray-700">{row.year}</td>
+                                    <td className="text-right py-2 text-gray-700 dark:text-gray-300 print:text-gray-700">${(row.grants / 1000).toFixed(0)}k</td>
+                                    <td className="text-right py-2 text-gray-700 dark:text-gray-300 print:text-gray-700">${(row.consulting / 1000).toFixed(0)}k</td>
+                                    <td className="text-right py-2 font-bold text-gray-900 dark:text-gray-100 print:text-gray-900">${((row.grants + row.consulting + row.sponsorship) / 1000).toFixed(0)}k</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">{data.financials.scenarios.conservative.notes}</p>
+                </div>
+
+                <div className="mb-8 break-inside-avoid">
+                    <h3 className="font-bold text-xl border-b border-gray-200 dark:border-gray-600 pb-2 mb-4 print:border-gray-200">Key Risks</h3>
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700 dark:text-gray-300 print:text-gray-700">
+                        {data.risks.slice(0, 5).map(r => (
+                            <li key={r.id}><span className="font-semibold text-gray-900 dark:text-gray-100 print:text-gray-900">{r.name}:</span> {r.risk} (Mitigation: {r.mitigation})</li>
+                        ))}
+                    </ul>
+                </div>
+
+                <div className="text-center text-xs text-gray-400 mt-12 pt-8 border-t border-gray-100 dark:border-gray-700 print:border-gray-100">
+                    Confidential Board Document &bull; {data.organisation.name}
+                </div>
+            </div>
+        );
+
+        const App = () => {
+            const [activeSection, setActiveSection] = useState('hero');
+            const [isBoardMode, setIsBoardMode] = useState(false);
+            const [isDarkMode, setIsDarkMode] = useState(false);
+            const [selectedRole, setSelectedRole] = useState(null);
+            const [toast, setToast] = useState({ visible: false, message: '' });
+
+            const showToast = (message) => {
+                setToast({ visible: true, message });
+                setTimeout(() => setToast({ visible: false, message: '' }), 3000);
+            };
+
+            const handleAction = (type, data) => {
+                const email = "ryanhutchison@outlook.com.au";
+                let subject = "";
+
+                if (type === 'board') {
+                    subject = `Board Application: ${data.title}`;
+                } else if (type === 'involved') {
+                    subject = `Application: ${data.title}`;
+                } else {
+                    subject = "Inquiry from smalltalk.community Inc";
+                }
+
+                const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+
+                // Try to open mailto
+                window.location.href = mailtoUrl;
+
+                // Clipboard fallback
+                navigator.clipboard.writeText(email).then(() => {
+                    showToast("Email address copied to clipboard!");
+                });
+            };
+
+            useEffect(() => {
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                    document.body.classList.add('bg-slate-900');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.body.classList.remove('bg-slate-900');
+                }
+            }, [isDarkMode]);
+
+            const scrollToSection = (id) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                    setActiveSection(id);
+                }
+            };
+
+            const toggleTheme = () => setIsDarkMode(!isDarkMode);
+
+            const toggleBoardMode = () => {
+                setIsBoardMode(!isBoardMode);
+                window.scrollTo(0, 0);
+            };
+
+            // Scroll spy
+            useEffect(() => {
+                if (isBoardMode) return;
+                const handleScroll = () => {
+                    const sections = ['hero', 'vision', 'roadmap', 'pillars', 'financials', 'board', 'faq'];
+                    const current = sections.find(section => {
+                        const element = document.getElementById(section);
+                        if (element) {
+                            const rect = element.getBoundingClientRect();
+                            return rect.top >= -100 && rect.top <= 300;
+                        }
+                        return false;
+                    });
+                    if (current) setActiveSection(current);
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, [isBoardMode]);
+
+            if (isBoardMode) {
+                return (
+                    <div className="bg-white min-h-screen">
+                        <div className="fixed top-4 right-4 z-50 print:hidden">
+                            <button
+                                onClick={toggleBoardMode}
+                                className="px-4 py-2 bg-gray-800 text-white rounded-full shadow-lg text-sm font-semibold hover:bg-gray-700 transition-colors flex items-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                Exit Board View
+                            </button>
+                        </div>
+                        <BoardView data={strategicPlanData} />
+                    </div>
+                );
+            }
+
+            return (
+                <div className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
+                    <Nav activeSection={activeSection} scrollToSection={scrollToSection} isBoardMode={isBoardMode} toggleBoardMode={toggleBoardMode} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+
+                    <main>
+                        <Hero data={strategicPlanData} />
+
+                        <VisionValues values={strategicPlanData.organisation.values} mission={strategicPlanData.organisation.vision} />
+
+                        {/* Interactive Timeline */}
+                        <section id="roadmap" className="py-20 bg-gray-50 dark:bg-slate-900 border-t border-gray-100 dark:border-gray-800">
+                            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                <SectionHeader title="The Plan At A Glance" subtitle="Phased execution over 12 months." />
+                                <InteractiveTimeline timeline={strategicPlanData.timeline} />
+                            </div>
+                        </section>
+
+                        {/* Pillars Section */}
+                        <section id="pillars" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <SectionHeader
+                                title="Strategic Pillars"
+                                subtitle="Three interconnected systems to drive community autonomy."
+                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+                                {strategicPlanData.pillars.map(pillar => (
+                                    <PillarCard key={pillar.id} pillar={pillar} />
+                                ))}
+                            </div>
+
+                            <div className="mt-12">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
+                                    <span className="w-8 h-1 bg-secondary rounded-full"></span>
+                                    Explore Initiatives
+                                </h3>
+                                <InitiativeExplorer data={strategicPlanData} />
+                            </div>
+                        </section>
+
+                        {/* Safeguarding */}
+                        <section id="safeguarding" className="py-20 bg-white dark:bg-slate-900">
+                            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+                                <SectionHeader title="Safeguarding First" subtitle="Our commitment to safety is non-negotiable." />
+                                <SafeguardingSection data={strategicPlanData.safeguarding} />
+                            </div>
+                        </section>
+
+                        {/* Board Recruitment */}
+                        <section id="board" className="py-24 bg-primary text-white relative overflow-hidden">
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                                <div className="text-center mb-16">
+                                    <h2 className="text-3xl md:text-5xl font-bold mb-6">Join the Board</h2>
+                                    <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+                                        We are looking for three founding directors to help govern a new model of community infrastructure.
+                                    </p>
+                                </div>
+
+                                <BoardRoles roles={strategicPlanData.boardRoles} onSelectRole={setSelectedRole} />
+                            </div>
+                        </section>
+
+                        <Modal
+                            isOpen={!!selectedRole}
+                            onClose={() => setSelectedRole(null)}
+                            title={selectedRole?.title}
+                        >
+                            {selectedRole && (
+                                <div className="space-y-8">
+                                    <div>
+                                        <h4 className="text-sm font-bold border-b border-gray-100 dark:border-gray-700 pb-2 mb-4 text-gray-400 uppercase tracking-widest">Role Purpose</h4>
+                                        <p className="text-lg text-gray-700 dark:text-gray-200 leading-relaxed font-medium">{selectedRole.purpose}</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div>
+                                            <h4 className="text-sm font-bold border-b border-gray-100 dark:border-gray-700 pb-2 mb-4 text-gray-400 uppercase tracking-widest">Key Responsibilities</h4>
+                                            <ul className="space-y-3">
+                                                {selectedRole.responsibilities.map((r, i) => (
+                                                    <li key={i} className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                                                        <span className="text-primary mr-3 text-lg">•</span>
+                                                        {r}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold border-b border-gray-100 dark:border-gray-700 pb-2 mb-4 text-gray-400 uppercase tracking-widest">Ideal Experience</h4>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-600 italic">
+                                                {selectedRole.idealBackground}
+                                            </p>
+
+                                            <div className="mt-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30">
+                                                <h5 className="text-[10px] font-bold text-red-500 uppercase tracking-tighter mb-1">Important Note</h5>
+                                                <p className="text-[11px] text-red-700 dark:text-red-400 leading-tight"><strong>This is NOT:</strong> {selectedRole.isNot}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-8 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl">
+                                                ⏱️
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Commitment</div>
+                                                <div className="font-bold text-gray-900 dark:text-white">{selectedRole.timeCommitment}</div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleAction('board', selectedRole)}
+                                            className="w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-teal-700 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-center"
+                                        >
+                                            Apply for this Position
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </Modal>
+
+                        {/* Financials & Risks */}
+                        <section id="financials" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <SectionHeader
+                                title="Sustainability & Metrics"
+                                subtitle="Built to last. Financed to scale."
+                            />
+                            <Sustainability data={strategicPlanData} />
+
+                            <div className="mt-16 text-center mb-12">
+                                <h3 className="text-2xl font-bold mb-4 text-primary dark:text-white">Success Metrics (Year 1)</h3>
+                            </div>
+                            <MetricsDashboard data={strategicPlanData.metrics} />
+
+                            <div className="mt-16">
+                                <RiskMatrix risks={strategicPlanData.risks} />
+                            </div>
+                        </section>
+
+                        {/* Tech Stack */}
+                        <section id="tech" className="py-20 bg-slate-50 dark:bg-slate-800/50">
+                            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+                                <SectionHeader title="Technology Approach" subtitle="Lean, scalable, and community-owned." />
+                                <TechnologySection data={strategicPlanData.technology} />
+                            </div>
+                        </section>
+
+                        {/* FAQ */}
+                        <section id="faq" className="py-20 max-w-4xl mx-auto px-4 sm:px-6">
+                            <SectionHeader title="Frequently Asked Questions" subtitle="Clarity for every stakeholder." />
+                            <FAQSection data={strategicPlanData.faq} />
+                        </section>
+
+                        {/* Founder */}
+                        <section className="py-20 bg-white dark:bg-slate-900">
+                            <div className="max-w-5xl mx-auto px-4 sm:px-6">
+                                <FounderSection founder={strategicPlanData.founder} />
+                            </div>
+                        </section>
+
+                        {/* Get Involved */}
+                        <section id="get-involved" className="py-20 bg-gray-50 dark:bg-slate-800/50">
+                            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                                <SectionHeader title="Get Involved" subtitle="There is a role for everyone." />
+                                <GetInvolvedSection options={strategicPlanData.getInvolved} onAction={handleAction} />
+                            </div>
+                        </section>
+
+                        <Footer name={strategicPlanData.organisation.name} />
+
+                        <Toast visible={toast.visible} message={toast.message} />
+                    </main>
+                </div >
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

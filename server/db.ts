@@ -13,10 +13,18 @@ declare global {
   var queryClient: postgres.Sql | undefined;
 }
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  const errorMessage = "DATABASE_URL must be set. Did you forget to provision a database?";
+  if (process.env.NODE_ENV === "production") {
+    // During production builds/static analysis, we log a warning but don't throw
+    // This allows the build to complete if the DB isn't actually queried during build
+    console.warn(`[DB] WARNING: ${errorMessage}`);
+  } else {
+    // In development or test, we still want to throw to catch configuration issues early
+    throw new Error(errorMessage);
+  }
 }
 
 /**
@@ -44,9 +52,10 @@ const dbOptions: postgres.Options<{}> = {
 };
 
 // Use global singleton to prevent connection exhaustion during hot reloads
-export const queryClient = global.queryClient || postgres(process.env.DATABASE_URL, dbOptions);
+const client = global.queryClient || (databaseUrl ? postgres(databaseUrl, dbOptions) : null);
+export const queryClient = client as postgres.Sql;
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && queryClient) {
   global.queryClient = queryClient;
 }
 
@@ -55,4 +64,4 @@ if (process.env.NODE_ENV !== "production") {
  * Usage: Import `db` to execute queries, e.g., `await db.select().from(table)`
  * @constant {ReturnType<typeof drizzle>}
  */
-export const db = drizzle(queryClient, { schema });
+export const db = queryClient ? drizzle(queryClient, { schema }) : ({} as any);

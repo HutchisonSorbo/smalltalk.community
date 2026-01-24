@@ -1,16 +1,13 @@
 {
     "functions": {
         "app/api/**/*": {
-            "maxDuration": 60,
-            "memory": 1024
+            "maxDuration": 60
         },
         "app/admin/**/*": {
-            "maxDuration": 60,
-            "memory": 1024
+            "maxDuration": 60
         },
         "app/local-music-network/api/**/*": {
-            "maxDuration": 60,
-            "memory": 1024
+            "maxDuration": 60
         }
     }
 }

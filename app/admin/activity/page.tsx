@@ -178,7 +178,7 @@ export default async function ActivityLogPage({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs.map((log) => {
+                                {logs.map((log: any) => {
                                     const Icon = getActionIcon(log.action);
                                     return (
                                         <TableRow key={log.id}>

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Library | smalltalk.community Inc</title>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Policy Library">
+    <link rel="manifest"
+        href="data:application/json;base64,eyJzaG9ydF9uYW1lIjoiUG9saWNpZXMiLCJuYW1lIjoic21hbGx0YWxrLmNvbW11bml0eSAtIFBvbGljeSBMaWJyYXJ5IiwiZGVzY3JpcHRpb24iOiJQb2xpY3kgcmVnaXN0cnkgYW5kIGNvbXBsaWFuY2UgbWFuYWdlbWVudCBmb3Igc21hbGx0YWxrLmNvbW11bml0eSBJbmMiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzAwM2I2ZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDE5MiAxOTInJTNFJTNDcmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5Micgcng9JzI0JyBmaWxsPSclMjMwMDNiNmYnLyUzRSUzQ3RleHQgeD0nNTAlJyB5PSc1MCUnIGRvbWluYW50LWJhc2VsaW5lPSdjZW50cmFsJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzgwJyBmaWxsPSd3aGl0ZSclM0VQTCUzQy90ZXh0JTNFJTNDJTJGc3ZnJTNFIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --text-color: #f1f5f9;
+                    --border-color: #334155;
+                }
+            }
+
+            body {
+                @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6];
+                font-size: 16px;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-['Plus_Jakarta_Sans'] font-bold;
+            }
+        }
+
+        @layer components {
+            .btn-primary { @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .btn-secondary { @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .input-field { @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)]; }
+            .card { @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6; }
+            .nav-link { @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2; }
+            .nav-link.active { @apply bg-white/20 font-bold; }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+            }
+            .footer-center::after { content: "Page " counter(page) " of " counter(pages); }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .nav-link, button, select, input {
+                min-height: 44px !important;
+            }
+            .input-field, input, select, textarea {
+                font-size: 16px !important;
+            }
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: { primary: 'var(--primary)', accent: 'var(--accent)', danger: 'var(--danger)', success: 'var(--success)' }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+
+        // --- Standard Components ---
+
+        const AppShell = ({ children, title, currentTab, setTab, onSave, onLoad }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2">Skip to content</a>
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl font-bold font-display">smalltalk.community</div>
+                                <h1 className="hidden md:block text-lg opacity-80">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={onSave} className="btn-secondary !px-4 text-sm whitespace-nowrap flex items-center justify-center gap-2">💾 Save</button>
+                                <label className="btn-secondary !px-4 text-sm cursor-pointer whitespace-nowrap flex items-center justify-center gap-2">
+                                    📂 Load <input type="file" className="hidden" onChange={onLoad} accept=".json" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary !px-4 text-sm md:block hidden flex items-center justify-center gap-2">🖨️ Print</button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'registry', label: 'Policy Registry', icon: '📁' },
+                                { id: 'review', label: 'Review Schedule', icon: '📅' },
+                                { id: 'signoffs', label: 'Sign-offs', icon: '✍️' },
+                                { id: 'about', label: 'About', icon: 'ℹ️' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                >
+                                    <span>{item.icon}</span> <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print">
+                    <div className="max-w-7xl mx-auto text-center px-4">
+                        <p className="text-sm">We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands.</p>
+                        <p className="text-xs mt-2 opacity-50">© 2026 smalltalk.community Inc. | Policy Library v1.0</p>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "" }) => (
+            <section className={`card ${className}`}>
+                {title && <h2 className="text-xl font-bold text-primary dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">{title}</h2>}
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-green-100 text-green-800 border-green-200',
+                warning: 'bg-amber-100 text-amber-800 border-amber-200',
+                danger: 'bg-red-100 text-red-800 border-red-200',
+                info: 'bg-blue-100 text-blue-800 border-blue-200',
+                default: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+            };
+            return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colors[type]}`}>{status}</span>;
+        };
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-inherit">
+                            <h2 className="text-xl font-bold">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const FormInput = ({ label, id, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <input id={id} className="input-field" {...props} />
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <select id={id} className="input-field" {...props}>
+                    <option value="">Select...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            </div>
+        );
+
+        // --- Sample Data ---
+        const initialData = {
+            policies: [
+                { id: 'p1', title: 'Child Safety & Wellbeing Policy', category: 'Compliance', version: '3.1', lastReview: '2025-10-15', nextReview: '2026-10-15', status: 'Published', author: 'Secretary' },
+                { id: 'p2', title: 'Privacy & Data Handling Policy', category: 'Operations', version: '2.0', lastReview: '2025-05-20', nextReview: '2026-05-20', status: 'Published', author: 'Operations Lead' },
+                { id: 'p3', title: 'Code of Conduct (Intergenerational)', category: 'Governance', version: '4.0', lastReview: '2026-01-02', nextReview: '2027-01-02', status: 'Published', author: 'Board' },
+                { id: 'p4', title: 'Financial Internal Controls', category: 'Finance', version: '1.2', lastReview: '2025-11-30', nextReview: '2026-02-28', status: 'In Review', author: 'Treasurer' }
+            ],
+            signoffs: [
+                { id: 's1', user: 'Alice Thompson (Volunteer)', policyId: 'p1', date: '2026-01-05', status: 'Acknowledged' },
+                { id: 's2', user: 'Bob Richards (Volunteer)', policyId: 'p1', date: '2025-12-15', status: 'Acknowledged' },
+                { id: 's3', user: 'Charlie Davis (Staff)', policyId: 'p3', date: '2026-01-08', status: 'Acknowledged' }
+            ]
+        };
+
+        // --- Components ---
+
+        const Dashboard = ({ data }) => {
+            const reviewSoon = data.policies.filter(p => {
+                const daysDiff = (new Date(p.nextReview) - new Date()) / (1000 * 60 * 60 * 24);
+                return daysDiff > 0 && daysDiff < 60;
+            }).length;
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            { label: 'Published Policies', value: data.policies.filter(p => p.status === 'Published').length, color: 'border-l-primary', icon: '📚' },
+                            { label: 'Reviews Due (60d)', value: reviewSoon, color: 'border-l-warning', icon: '🕒' },
+                            { label: 'Induction Completions', value: data.signoffs.length, color: 'border-l-success', icon: '✅' },
+                            { label: 'Categories', value: '6', color: 'border-l-accent', icon: '🏷️' }
+                        ].map(stat => (
+                            <div key={stat.label} className={`card border-l-4 ${stat.color} flex justify-between items-center`}>
+                                <div>
+                                    <div className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400">{stat.label}</div>
+                                    <div className="text-2xl font-black mt-1">{stat.value}</div>
+                                </div>
+                                <div className="text-3xl opacity-20">{stat.icon}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Immediate Review Pipeline">
+                            <div className="space-y-4">
+                                {data.policies.filter(p => p.status === 'In Review').map(p => (
+                                    <div key={p.id} className="p-4 bg-primary/5 dark:bg-white/5 rounded-xl border border-primary/10 flex justify-between items-center">
+                                        <div>
+                                            <div className="font-bold text-sm">{p.title}</div>
+                                            <div className="text-[10px] opacity-50 uppercase font-black">Owner: {p.author}</div>
+                                        </div>
+                                        <StatusBadge status="In Review" type="warning" />
+                                    </div>
+                                ))}
+                                <div className="p-4 bg-orange-50 dark:bg-orange-950/20 rounded-xl border border-orange-100 dark:border-orange-900/30">
+                                    <h3 className="text-sm font-bold text-orange-800 dark:text-orange-400">📅 Financial Controls</h3>
+                                    <p className="text-xs mt-1 opacity-80">Review cycle beginning for Q1 compliance audit. Draft version 1.3 pending Treasurer comments.</p>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card title="Policy Categorization">
+                            <div className="space-y-4">
+                                {['Governance', 'Compliance', 'Operations', 'Finance'].map(cat => {
+                                    const count = data.policies.filter(p => p.category === cat).length;
+                                    const percentage = (count / data.policies.length * 100).toFixed(0);
+                                    return (
+                                        <div key={cat} className="space-y-1">
+                                            <div className="flex justify-between text-xs font-bold">
+                                                <span>{cat}</span>
+                                                <span>{count}</span>
+                                            </div>
+                                            <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div className="h-full bg-primary" style={{ width: `${percentage}%` }}></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const Registry = ({ data, setData }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [newPolicy, setNewPolicy] = useState({ title: '', category: '', version: '1.0', lastReview: '', nextReview: '', status: 'Published', author: '' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setData({
+                    ...data,
+                    policies: [...data.policies, { ...newPolicy, id: generateId() }]
+                });
+                setIsModalOpen(false);
+                setNewPolicy({ title: '', category: '', version: '1.0', lastReview: '', nextReview: '', status: 'Published', author: '' });
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-black text-primary dark:text-white">Policy Registry</h2>
+                        <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm flex items-center gap-2">
+                            <span>+</span> Add Policy
+                        </button>
+                    </div>
+                    <Card title="Organisational Policy Register">
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800 font-bold text-xs uppercase text-slate-500 dark:text-slate-400">
+                                    <tr>
+                                        <th className="px-6 py-4">Policy Title</th>
+                                        <th className="px-6 py-4">Ver</th>
+                                        <th className="px-6 py-4">Category</th>
+                                        <th className="px-6 py-4">Next Review</th>
+                                        <th className="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                    {data.policies.map(p => (
+                                        <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
+                                            <td className="px-6 py-4">
+                                                <div className="font-bold">{p.title}</div>
+                                                <div className="text-[10px] opacity-40 uppercase">Authored by {p.author}</div>
+                                            </td>
+                                            <td className="px-6 py-4 font-mono text-xs">{p.version}</td>
+                                            <td className="px-6 py-4 text-xs opacity-70">{p.category}</td>
+                                            <td className="px-6 py-4">{formatDate(p.nextReview)}</td>
+                                            <td className="px-6 py-4">
+                                                <StatusBadge status={p.status} type={p.status === 'Published' ? 'success' : 'warning'} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Policy">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormInput label="Policy Title" id="pl_title" required placeholder="e.g. Privacy & Data Handling Policy" value={newPolicy.title} onChange={e => setNewPolicy({ ...newPolicy, title: e.target.value })} />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormSelect label="Category" id="pl_cat" required value={newPolicy.category} onChange={e => setNewPolicy({ ...newPolicy, category: e.target.value })} options={[
+                                    { value: 'Governance', label: 'Governance' },
+                                    { value: 'Compliance', label: 'Compliance' },
+                                    { value: 'Operations', label: 'Operations' },
+                                    { value: 'Finance', label: 'Finance' }
+                                ]} />
+                                <FormInput label="Version" id="pl_ver" placeholder="e.g. 1.0" value={newPolicy.version} onChange={e => setNewPolicy({ ...newPolicy, version: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Last Review Date" id="pl_last" type="date" required value={newPolicy.lastReview} onChange={e => setNewPolicy({ ...newPolicy, lastReview: e.target.value })} />
+                                <FormInput label="Next Review Date" id="pl_next" type="date" required value={newPolicy.nextReview} onChange={e => setNewPolicy({ ...newPolicy, nextReview: e.target.value })} />
+                            </div>
+                            <FormInput label="Author / Owner" id="pl_auth" required placeholder="e.g. Secretary" value={newPolicy.author} onChange={e => setNewPolicy({ ...newPolicy, author: e.target.value })} />
+                            <button type="submit" className="btn-primary w-full">Add Policy</button>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const ReviewSchedule = ({ data }) => (
+            <div className="space-y-8">
+                <Card title="Review Timeline 2026">
+                    <div className="space-y-4">
+                        {data.policies.sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview)).map(p => (
+                            <div key={p.id} className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl relative overflow-hidden group">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary group-hover:w-2 transition-all"></div>
+                                <div className="text-xl">📅</div>
+                                <div className="flex-grow">
+                                    <div className="text-sm font-bold">{p.title}</div>
+                                    <div className="text-[10px] opacity-60">Review Cycle: 2 Years | Last Review: {formatDate(p.lastReview)}</div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-xs font-black text-danger uppercase">{formatDate(p.nextReview)}</div>
+                                    <div className="text-[10px] opacity-30 font-bold">DUE DATE</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl text-xs border border-blue-100 dark:border-blue-900/30">
+                    <strong>HINT:</strong> All policy changes must be presented to the Committee for approval and noted in the Meeting Minutes (see Meetings & Reporting app).
+                </div>
+            </div>
+        );
+
+        const Signoffs = ({ data }) => (
+            <div className="space-y-6">
+                <Card title="Acknowledgement Tracking (Induction Compliance)">
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table className="w-full text-left font-sans">
+                            <thead className="bg-slate-50 dark:bg-slate-800 font-bold text-xs uppercase text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th className="px-6 py-4">User</th>
+                                    <th className="px-6 py-4">Policy Acknowledged</th>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                {data.signoffs.map(s => {
+                                    const policy = data.policies.find(p => p.id === s.policyId);
+                                    return (
+                                        <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="px-6 py-4 font-bold">{s.user}</td>
+                                            <td className="px-6 py-4">{policy?.title}</td>
+                                            <td className="px-6 py-4 text-xs opacity-70">{formatDate(s.date)}</td>
+                                            <td className="px-6 py-4">
+                                                <StatusBadge status={s.status} type="success" />
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            </div>
+        );
+
+        const About = () => (
+            <div className="space-y-8 max-w-3xl">
+                <Card title="About Policy Library">
+                    <h3 className="text-lg font-bold mb-4">Central Repository</h3>
+                    <p className="mb-4 text-sm opacity-80">This library contains the "Golden Source" versions of all official smalltalk.community Inc policies. Maintaining a centralised, version-controlled repository ensures all staff and volunteers are acting according to the same approved organisational standards.</p>
+
+                    <h3 className="text-lg font-bold mb-4">Integrations</h3>
+                    <ul className="space-y-2 list-disc pl-5 opacity-80 text-sm">
+                        <li><strong>Governance & Compliance:</strong> Policies are mapped to legal compliance obligations.</li>
+                        <li><strong>SafeGuarding Centre:</strong> Child Safety policies are centrally managed and linked to training modules.</li>
+                        <li><strong>Learning & Development:</strong> Policy sign-offs are a mandatory part of the volunteer onboarding pathway.</li>
+                    </ul>
+                </Card>
+                <div className="p-6 bg-primary text-white rounded-2xl shadow-xl overflow-hidden relative">
+                    <div className="relative z-10">
+                        <h3 className="text-2xl font-black mb-2">Regional Excellence</h3>
+                        <p className="text-sm opacity-80">"Small towns deserve metropolitan standards. Our policies reflect our commitment to best-practice governance in Mitchell Shire."</p>
+                    </div>
+                    <div className="absolute right-0 bottom-0 opacity-10 text-80 font-black scale-150 translate-x-12 translate-y-12 select-none">ST</div>
+                </div>
+            </div>
+        );
+
+        const SettingsView = ({ data, setData }) => {
+            const [localData, setLocalData] = useState(JSON.stringify(data, null, 2));
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(false);
+
+            useEffect(() => {
+                setLocalData(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(localData);
+                    setData(parsed);
+                    setSuccess(true);
+                    setError(null);
+                    setTimeout(() => setSuccess(false), 3000);
+                } catch (err) {
+                    setError(err.message);
+                }
+            };
+
+            return (
+                <div className="space-y-6 max-w-4xl mx-auto">
+                    <Card title="Application Settings" subtitle="manage application data and configuration">
+                        <div className="space-y-4">
+                            <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold text-sm mb-2">Raw Data Editor</h3>
+                                <p className="text-xs text-slate-500 mb-4">
+                                    Directly edit the application state.
+                                    <span className="text-red-500 font-bold ml-1">WARNING: invalid JSON will break the app.</span>
+                                </p>
+                                <textarea
+                                    value={localData}
+                                    onChange={(e) => setLocalData(e.target.value)}
+                                    className="w-full h-96 font-mono text-xs p-4 bg-white dark:bg-black border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                                />
+                                {error && (
+                                    <div className="mt-2 p-2 bg-red-50 text-red-600 text-xs rounded border border-red-100 flex items-center gap-2">
+                                        <span>❌</span> {error}
+                                    </div>
+                                )}
+                                {success && (
+                                    <div className="mt-2 p-2 bg-green-50 text-green-600 text-xs rounded border border-green-100 flex items-center gap-2">
+                                        <span>✅</span> Data updated successfully!
+                                    </div>
+                                )}
+                                <div className="mt-4 flex justify-end">
+                                    <button
+                                        onClick={handleSave}
+                                        className="btn-primary toggle-settings-btn"
+                                    >
+                                        Update Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentTab, setTab] = useState('dashboard');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem('stPolicyLibraryData');
+                return saved ? JSON.parse(saved) : initialData;
+            });
+
+            useEffect(() => {
+                if (isFirstVisit('policy_library')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    localStorage.setItem('stPolicyLibrarydata', JSON.stringify(data));
+                }, 30000);
+                return () => clearInterval(timer);
+            }, [data]);
+
+            const saveDraft = () => {
+                localStorage.setItem('stPolicyLibrarydata', JSON.stringify(data));
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `smalltalk-policies-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+            };
+
+            const loadDraft = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const loaded = JSON.parse(ev.target.result);
+                        setData(loaded);
+                        localStorage.setItem('stPolicyLibrarydata', ev.target.result);
+                        alert('Policy data loaded!');
+                    }
+                    catch (err) { alert('Invalid file format.'); }
+                };
+                reader.readAsText(file);
+            };
+
+            const renderContent = () => {
+                switch (currentTab) {
+                    case 'dashboard': return <Dashboard data={data} />;
+                    case 'registry': return <Registry data={data} setData={setData} />;
+                    case 'review': return <ReviewSchedule data={data} />;
+                    case 'signoffs': return <Signoffs data={data} />;
+                    case 'about': return <About />;
+                    case 'settings': return <SettingsView data={data} setData={setData} />;
+                    default: return <Dashboard data={data} />;
+                }
+            };
+
+            return (
+                <AppShell title="Policy Library" currentTab={currentTab} setTab={setTab} onSave={saveDraft} onLoad={loadDraft}>
+                    {renderContent()}
+                    <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} appName="Policy Library" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

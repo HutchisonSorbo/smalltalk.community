@@ -63,7 +63,7 @@ export async function RecentActivity() {
             <CardContent>
                 {recentActivity.length > 0 ? (
                     <div className="space-y-4">
-                        {recentActivity.map((log) => (
+                        {recentActivity.map((log: any) => (
                             <div key={log.id} className="flex items-start gap-3">
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage src={log.adminImage || undefined} />

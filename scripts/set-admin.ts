@@ -31,7 +31,7 @@ async function setAdmin() {
         } else {
             console.log("ID | Email | Name | isAdmin");
             console.log("-".repeat(80));
-            allUsers.forEach(u => {
+            allUsers.forEach((u: any) => {
                 console.log(`${u.id.slice(0, 8)}... | ${u.email} | ${u.firstName} ${u.lastName} | ${u.isAdmin ? '✅' : '❌'}`);
             });
         }

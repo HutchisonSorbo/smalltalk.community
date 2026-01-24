@@ -45,6 +45,7 @@ export const users = pgTable("users", {
   organisationName: varchar("organisation_name", { length: 255 }),
   isAdmin: boolean("is_admin").default(false),
   isMinor: boolean("is_minor").default(false),
+  isSuspended: boolean("is_suspended").default(false),
   messagePrivacy: varchar("message_privacy", { length: 20 }).default("everyone"), // 'everyone' | 'verified_only' | 'nobody'
   lastActiveAt: timestamp("last_active_at"),
   onboardingStep: integer("onboarding_step").default(0),
@@ -53,14 +54,53 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}` }),
-  pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text::text = ${table.id}`, withCheck: sql`auth.uid()::text::text = ${table.id}` }),
+  // Users can read their own profile
+  pgPolicy("users_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.id}` }),
+  // Users can update their own profile (if not suspended)
+  pgPolicy("users_self_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.id} AND ${table.isSuspended} IS NOT TRUE`, withCheck: sql`( (select auth.uid()) )::text = ${table.id} AND ${table.isSuspended} IS NOT TRUE` }),
+  // Service role can read all users (for server-side admin checks, middleware, etc.)
+  pgPolicy("users_service_read", { for: "select", to: "service_role", using: sql`true` }),
   index("users_created_at_idx").on(table.createdAt),
   index("users_onboarding_completed_idx").on(table.onboardingCompleted),
 ]);
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// User Preferences - Notifications and UI settings
+export const userPreferences = pgTable("user_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  // Notifications
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  marketingEmails: boolean("marketing_emails").default(false),
+  // Preferences
+  theme: varchar("theme", { length: 20 }).default("system"), // 'light' | 'dark' | 'system'
+  language: varchar("language", { length: 10 }).default("en-AU"),
+  timezone: varchar("timezone", { length: 50 }).default("Australia/Melbourne"),
+  // Accessibility
+  highContrast: boolean("high_contrast").default(false),
+  reducedMotion: boolean("reduced_motion").default(false),
+  fontSize: varchar("font_size", { length: 10 }).default("medium"), // 'small' | 'medium' | 'large'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("preferences_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("preferences_self_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("preferences_self_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  index("preferences_user_id_idx").on(table.userId),
+]);
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+export type UserPreference = typeof userPreferences.$inferSelect;
+export type InsertUserPreference = typeof userPreferences.$inferInsert;
 
 // Musician profiles table
 export const musicianProfiles = pgTable("musician_profiles", {
@@ -94,9 +134,9 @@ export const musicianProfiles = pgTable("musician_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("musicians_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("musicians_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("musicians_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("musicians_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("musicians_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("musicians_owner_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("musicians_owner_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("musicians_user_id_idx").on(table.userId),
 ]);
 
@@ -111,7 +151,7 @@ export const insertMusicianProfileSchema = createInsertSchema(musicianProfiles).
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertMusicianProfile = z.infer<typeof insertMusicianProfileSchema>;
 export type MusicianProfile = typeof musicianProfiles.$inferSelect;
@@ -135,9 +175,9 @@ export const marketplaceListings = pgTable("marketplace_listings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("marketplace_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("marketplace_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("marketplace_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("marketplace_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("marketplace_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("marketplace_owner_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("marketplace_owner_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("marketplace_user_id_idx").on(table.userId),
 ]);
 
@@ -152,7 +192,7 @@ export const insertMarketplaceListingSchema = createInsertSchema(marketplaceList
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertMarketplaceListing = z.infer<typeof insertMarketplaceListingSchema>;
 export type MarketplaceListing = typeof marketplaceListings.$inferSelect;
@@ -169,10 +209,10 @@ export const notifications = pgTable("notifications", {
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("notifications_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("notifications_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("notifications_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("notifications_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("notifications_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("notifications_self_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("notifications_self_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("notifications_self_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("notifications_user_id_idx").on(table.userId),
 ]);
 
@@ -186,7 +226,7 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
@@ -199,9 +239,9 @@ export const contactRequests = pgTable("contact_requests", {
   status: varchar("status", { length: 20 }).default("pending"), // pending, accepted, declined
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("contact_requests_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.requesterId} OR auth.uid()::text = ${table.recipientId}` }),
-  pgPolicy("contact_requests_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.requesterId}` }),
-  pgPolicy("contact_requests_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.recipientId} OR auth.uid()::text = ${table.requesterId}` }),
+  pgPolicy("contact_requests_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.requesterId} OR ( (select auth.uid()) )::text = ${table.recipientId}` }),
+  pgPolicy("contact_requests_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.requesterId}` }),
+  pgPolicy("contact_requests_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.recipientId} OR ( (select auth.uid()) )::text = ${table.requesterId}` }),
   index("contact_requests_requester_id_idx").on(table.requesterId),
   index("contact_requests_recipient_id_idx").on(table.recipientId),
 ]);
@@ -222,7 +262,7 @@ export const contactRequestsRelations = relations(contactRequests, ({ one }) => 
 export const insertContactRequestSchema = createInsertSchema(contactRequests).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
 export type ContactRequest = typeof contactRequests.$inferSelect;
@@ -346,8 +386,8 @@ export const messages = pgTable("messages", {
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("messages_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.senderId} OR auth.uid()::text = ${table.receiverId}` }),
-  pgPolicy("messages_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.senderId}` }),
+  pgPolicy("messages_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.senderId} OR ( (select auth.uid()) )::text = ${table.receiverId}` }),
+  pgPolicy("messages_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.senderId}` }),
   index("messages_sender_id_idx").on(table.senderId),
   index("messages_receiver_id_idx").on(table.receiverId),
 ]);
@@ -369,7 +409,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   id: true,
   createdAt: true,
   isRead: true,
-});
+}) as any;
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
@@ -398,9 +438,9 @@ export const reviews = pgTable("reviews", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("reviews_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("reviews_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.reviewerId}` }),
-  pgPolicy("reviews_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.reviewerId}`, withCheck: sql`auth.uid()::text = ${table.reviewerId}` }),
-  pgPolicy("reviews_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.reviewerId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.reviewerId}` }),
+  pgPolicy("reviews_owner_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.reviewerId}` }),
   index("reviews_reviewer_id_idx").on(table.reviewerId),
 ]);
 
@@ -415,7 +455,7 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
@@ -450,9 +490,9 @@ export const bands = pgTable("bands", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("bands_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("bands_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("bands_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("bands_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("bands_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("bands_owner_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("bands_owner_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("bands_user_id_idx").on(table.userId),
 ]);
 
@@ -467,7 +507,7 @@ export const insertBandSchema = createInsertSchema(bands).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertBand = z.infer<typeof insertBandSchema>;
 export type Band = typeof bands.$inferSelect;
@@ -483,6 +523,10 @@ export const rateLimits = pgTable("rate_limits", {
   pgPolicy("rate_limits_service_all", { for: "all", to: "service_role", using: sql`true` }),
   index("rate_limits_user_id_idx").on(table.userId),
   index("rate_limits_identifier_v2_idx").on(table.identifier),
+  // Partial unique indexes for atomic upsert in rate limiter
+  // These enable ON CONFLICT to work correctly for both userId and identifier cases
+  uniqueIndex("rate_limits_user_type_uniq").on(table.userId, table.type).where(sql`user_id IS NOT NULL`),
+  uniqueIndex("rate_limits_identifier_type_uniq").on(table.identifier, table.type).where(sql`identifier IS NOT NULL`),
 ]);
 
 export type RateLimit = typeof rateLimits.$inferSelect;
@@ -497,9 +541,9 @@ export const bandMembers = pgTable("band_members", {
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   pgPolicy("band_members_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("band_members_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("band_members_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("band_members_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("band_members_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("band_members_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("band_members_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("band_members_band_id_idx").on(table.bandId),
   index("band_members_user_id_idx").on(table.userId),
 ]);
@@ -518,7 +562,7 @@ export const bandMembersRelations = relations(bandMembers, ({ one }) => ({
 export const insertBandMemberSchema = createInsertSchema(bandMembers).omit({
   id: true,
   joinedAt: true,
-});
+}) as any;
 
 export type InsertBandMember = z.infer<typeof insertBandMemberSchema>;
 export type BandMember = typeof bandMembers.$inferSelect;
@@ -546,9 +590,9 @@ export const gigs = pgTable("gigs", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("gigs_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("gigs_creator_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.creatorId}` }),
-  pgPolicy("gigs_creator_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.creatorId}`, withCheck: sql`auth.uid()::text = ${table.creatorId}` }),
-  pgPolicy("gigs_creator_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.creatorId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.creatorId}` }),
+  pgPolicy("gigs_creator_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.creatorId}` }),
   index("gigs_creator_id_idx").on(table.creatorId),
   index("gigs_band_id_idx").on(table.bandId),
   index("gigs_musician_id_idx").on(table.musicianId),
@@ -562,9 +606,9 @@ export const gigManagers = pgTable("gig_managers", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   pgPolicy("gig_managers_read", { for: "select", to: "authenticated", using: sql`true` }),
-  pgPolicy("gig_managers_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("gig_managers_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("gig_managers_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("gig_managers_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("gig_managers_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("gig_managers_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("gig_managers_gig_id_idx").on(table.gigId),
   index("gig_managers_user_id_idx").on(table.userId),
 ]);
@@ -585,6 +629,22 @@ export const gigsRelations = relations(gigs, ({ one, many }) => ({
   managers: many(gigManagers),
 }));
 
+// CommunityOS Shared Types
+export type CommunityOsRole = "admin" | "board" | "member";
+
+export interface TenantWithMembership {
+  tenant: {
+    id: string;
+    code: string;
+    name: string;
+    logoUrl: string | null;
+    primaryColor: string | null;
+    description: string | null;
+  };
+  role: CommunityOsRole;
+  joinedAt: string;
+}
+
 export const gigManagersRelations = relations(gigManagers, ({ one }) => ({
   gig: one(gigs, {
     fields: [gigManagers.gigId],
@@ -601,7 +661,7 @@ export const insertGigSchema = createInsertSchema(gigs).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertGig = z.infer<typeof insertGigSchema>;
 export type Gig = typeof gigs.$inferSelect;
@@ -617,7 +677,7 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("reports_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.reporterId}` }),
+  pgPolicy("reports_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.reporterId}` }),
   pgPolicy("reports_admin_read", { for: "select", to: "service_role", using: sql`true` }),
   index("reports_reporter_id_idx").on(table.reporterId),
   index("reports_status_idx").on(table.status),
@@ -635,7 +695,7 @@ export const insertReportSchema = createInsertSchema(reports).omit({
   createdAt: true,
   updatedAt: true,
   status: true,
-});
+}) as any;
 
 export type InsertReport = z.infer<typeof insertReportSchema>;
 export type Report = typeof reports.$inferSelect;
@@ -655,9 +715,9 @@ export const classifieds = pgTable("classifieds", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("classifieds_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("classifieds_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("classifieds_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("classifieds_owner_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("classifieds_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("classifieds_owner_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("classifieds_owner_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("classifieds_user_id_idx").on(table.userId),
   index("classifieds_type_idx").on(table.type),
   index("classifieds_location_idx").on(table.location),
@@ -674,7 +734,7 @@ export const insertClassifiedSchema = createInsertSchema(classifieds).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertClassified = z.infer<typeof insertClassifiedSchema>;
 export type Classified = typeof classifieds.$inferSelect;
@@ -725,8 +785,9 @@ export const professionalProfiles = pgTable("professional_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("pro_profiles_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("pro_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("pro_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("pro_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("pro_profiles_owner_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("pro_profiles_owner_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("pro_role_idx").on(table.role),
   index("pro_location_idx").on(table.location),
 ]);
@@ -743,7 +804,7 @@ export const insertProfessionalProfileSchema = createInsertSchema(professionalPr
   createdAt: true,
   updatedAt: true,
   verified: true
-});
+}) as any;
 
 export type InsertProfessionalProfile = z.infer<typeof insertProfessionalProfileSchema>;
 export type ProfessionalProfile = typeof professionalProfiles.$inferSelect;
@@ -767,7 +828,13 @@ export const announcements = pgTable("announcements", {
     using: sql`exists (
       select 1 from sys_user_roles ur 
       join sys_roles r on ur.role_id = r.id 
-      where ur.user_id = auth.uid()::text 
+      where ur.user_id = ( (select auth.uid()) )::text
+      and r.name in ('super_admin', 'admin')
+    )`,
+    withCheck: sql`exists (
+      select 1 from sys_user_roles ur 
+      join sys_roles r on ur.role_id = r.id 
+      where ur.user_id = ( (select auth.uid()) )::text
       and r.name in ('super_admin', 'admin')
     )`
   }),
@@ -778,7 +845,7 @@ export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type Announcement = typeof announcements.$inferSelect;
@@ -807,6 +874,7 @@ export const sysUserRoles = pgTable("sys_user_roles", {
   pgPolicy("sys_user_roles_read", { for: "select", to: "authenticated", using: sql`true` }),
   pgPolicy("sys_user_roles_admin_write", { for: "all", to: "service_role", using: sql`true` }),
   index("sys_user_roles_user_idx").on(table.userId),
+  index("sys_user_roles_role_idx").on(table.roleId),
 ]);
 
 // ------------------------------------------------------------------
@@ -820,9 +888,9 @@ export const userOnboardingResponses = pgTable("user_onboarding_responses", {
   response: jsonb("response").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("onboarding_responses_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("onboarding_responses_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("onboarding_responses_self_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("onboarding_responses_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("onboarding_responses_self_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("onboarding_responses_self_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("idx_onboarding_user_id").on(table.userId),
 ]);
 
@@ -838,8 +906,8 @@ export const userPrivacySettings = pgTable("user_privacy_settings", {
   settingsUpdatedAt: timestamp("settings_updated_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("privacy_settings_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("privacy_settings_self_modify", { for: "all", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("privacy_settings_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("privacy_settings_self_modify", { for: "all", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   uniqueIndex("uidx_privacy_settings_user").on(table.userId),
 ]);
 
@@ -856,8 +924,8 @@ export const userNotificationPreferences = pgTable("user_notification_preference
   preferencesUpdatedAt: timestamp("preferences_updated_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("notification_prefs_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("notification_prefs_self_modify", { for: "all", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("notification_prefs_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("notification_prefs_self_modify", { for: "all", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   uniqueIndex("uidx_notification_prefs_user").on(table.userId),
 ]);
 
@@ -870,9 +938,10 @@ export const userRecommendedApps = pgTable("user_recommended_apps", {
   accepted: boolean("accepted").default(false),
   acceptedAt: timestamp("accepted_at"),
 }, (table) => [
-  pgPolicy("recommended_apps_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("recommended_apps_self_modify", { for: "all", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("recommended_apps_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("recommended_apps_self_modify", { for: "all", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("idx_recommended_apps_user_id").on(table.userId),
+  index("idx_recommended_apps_app_id").on(table.appId),
 ]);
 
 export const onboardingMetrics = pgTable("onboarding_metrics", {
@@ -955,8 +1024,9 @@ export const volunteerProfiles = pgTable("volunteer_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   pgPolicy("volunteer_profiles_public_read", { for: "select", to: "public", using: sql`true` }),
-  pgPolicy("volunteer_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("volunteer_profiles_owner_update", { for: "update", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}`, withCheck: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("volunteer_profiles_owner_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("volunteer_profiles_owner_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("volunteer_profiles_owner_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("volunteer_profiles_user_id_idx").on(table.userId),
 ]);
 
@@ -975,7 +1045,7 @@ export const insertVolunteerProfileSchema = createInsertSchema(volunteerProfiles
   createdAt: true,
   updatedAt: true,
   isVerified: true
-});
+}) as any;
 
 export type InsertVolunteerProfile = z.infer<typeof insertVolunteerProfileSchema>;
 export type VolunteerProfile = typeof volunteerProfiles.$inferSelect;
@@ -1007,13 +1077,13 @@ export const insertOrganisationSchema = createInsertSchema(organisations).omit({
   createdAt: true,
   updatedAt: true,
   isVerified: true,
-});
+}) as any;
 
 export type InsertOrganisation = z.infer<typeof insertOrganisationSchema>;
 export type Organisation = typeof organisations.$inferSelect;
 
 // Organisation Members
-export const orgRoleEnum = pgTable("organisation_members", {
+export const organisationMembers = pgTable("organisation_members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -1025,7 +1095,6 @@ export const orgRoleEnum = pgTable("organisation_members", {
   index("org_members_user_idx").on(table.userId),
 ]);
 // Alias for cleaner export
-export const organisationMembers = orgRoleEnum;
 
 export const organisationMembersRelations = relations(organisationMembers, ({ one }) => ({
   organisation: one(organisations, {
@@ -1041,7 +1110,7 @@ export const organisationMembersRelations = relations(organisationMembers, ({ on
 export const insertOrganisationMemberSchema = createInsertSchema(organisationMembers).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type InsertOrganisationMember = z.infer<typeof insertOrganisationMemberSchema>;
 export type OrganisationMember = typeof organisationMembers.$inferSelect;
@@ -1103,7 +1172,7 @@ export const credentials = pgTable("credentials", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("credentials_owner_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = (select user_id from volunteer_profiles where id = ${table.profileId})` }),
+  pgPolicy("credentials_owner_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = (select user_id from volunteer_profiles where id = ${table.profileId})` }),
   index("credentials_profile_idx").on(table.profileId),
 ]);
 
@@ -1120,7 +1189,7 @@ export const insertCredentialSchema = createInsertSchema(credentials).omit({
   updatedAt: true,
   status: true,
   verifiedAt: true,
-});
+}) as any;
 
 export type InsertCredential = z.infer<typeof insertCredentialSchema>;
 export type Credential = typeof credentials.$inferSelect;
@@ -1154,7 +1223,7 @@ export const insertVolunteerRoleSchema = createInsertSchema(volunteerRoles).omit
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type InsertVolunteerRole = z.infer<typeof insertVolunteerRoleSchema>;
 export type VolunteerRole = typeof volunteerRoles.$inferSelect;
@@ -1169,7 +1238,7 @@ export const volunteerApplications = pgTable("volunteer_applications", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("applications_applicant_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = (select user_id from volunteer_profiles where id = ${table.applicantId})` }),
+  pgPolicy("applications_applicant_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = (select user_id from volunteer_profiles where id = ${table.applicantId})` }),
   index("applications_role_idx").on(table.roleId),
   index("applications_applicant_idx").on(table.applicantId),
 ]);
@@ -1190,7 +1259,7 @@ export const insertVolunteerApplicationSchema = createInsertSchema(volunteerAppl
   createdAt: true,
   updatedAt: true,
   status: true,
-});
+}) as any;
 
 export type InsertVolunteerApplication = z.infer<typeof insertVolunteerApplicationSchema>;
 export type VolunteerApplication = typeof volunteerApplications.$inferSelect;
@@ -1219,6 +1288,8 @@ export const apps = pgTable("apps", {
 }, (table) => [
   pgPolicy("apps_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("apps_admin_write", { for: "all", to: "service_role", using: sql`true` }),
+  // Indexes for common query patterns
+  index("apps_is_active_idx").on(table.isActive),
 ]);
 
 // User <-> Apps Join Table
@@ -1230,9 +1301,9 @@ export const userApps = pgTable("user_apps", {
   isPinned: boolean("is_pinned").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("user_apps_self_read", { for: "select", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("user_apps_self_insert", { for: "insert", to: "authenticated", withCheck: sql`auth.uid()::text = ${table.userId}` }),
-  pgPolicy("user_apps_self_delete", { for: "delete", to: "authenticated", using: sql`auth.uid()::text = ${table.userId}` }),
+  pgPolicy("user_apps_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("user_apps_self_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("user_apps_self_delete", { for: "delete", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
   index("user_apps_user_idx").on(table.userId),
   index("user_apps_app_idx").on(table.appId),
   uniqueIndex("user_apps_user_app_unique").on(table.userId, table.appId),
@@ -1257,7 +1328,7 @@ export const insertAppSchema = createInsertSchema(apps).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type App = typeof apps.$inferSelect;
 export type InsertApp = z.infer<typeof insertAppSchema>;
@@ -1265,7 +1336,7 @@ export type InsertApp = z.infer<typeof insertAppSchema>;
 export const insertUserAppSchema = createInsertSchema(userApps).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type UserApp = typeof userApps.$inferSelect;
 export type InsertUserApp = z.infer<typeof insertUserAppSchema>;
@@ -1294,12 +1365,11 @@ export const adminActivityLog = pgTable("admin_activity_log", {
   pgPolicy("admin_log_authenticated_read", {
     for: "select",
     to: "authenticated",
-    using: sql`auth.jwt() ->> 'sub' IN (SELECT id FROM users WHERE is_admin = true)`
+    using: sql`(auth.uid())::text IN (SELECT id FROM users WHERE is_admin = true)`
   }),
   // No update/delete policies - logs are immutable
   index("admin_log_admin_idx").on(table.adminId),
   index("admin_log_target_idx").on(table.targetType, table.targetId),
-  index("admin_log_created_idx").on(table.createdAt),
 ]);
 
 export const adminActivityLogRelations = relations(adminActivityLog, ({ one }) => ({
@@ -1309,13 +1379,52 @@ export const adminActivityLogRelations = relations(adminActivityLog, ({ one }) =
   }),
 }));
 
+// Audit Logs - Persistent storage for security and system events
+// Used for auth callbacks, bot detection, and server-side security events
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventType: varchar("event_type", { length: 50 }).notNull(), // 'auth', 'security', 'system'
+  severity: varchar("severity", { length: 20 }).notNull(), // 'info', 'warn', 'error', 'critical'
+  message: text("message").notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  ip: varchar("ip", { length: 45 }),
+  safeQueryParams: jsonb("safe_query_params"), // Redacted/sanitized parameters
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("audit_logs_service_all", { for: "all", to: "service_role", using: sql`true` }),
+  pgPolicy("audit_logs_admin_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`( (select auth.uid()) )::text IN (SELECT id FROM users WHERE is_admin = true)`
+  }),
+  index("audit_logs_event_type_idx").on(table.eventType),
+  index("audit_logs_severity_idx").on(table.severity),
+  index("audit_logs_user_idx").on(table.userId),
+  index("audit_logs_created_at_idx").on(table.createdAt),
+]);
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
 export const insertAdminActivityLogSchema = createInsertSchema(adminActivityLog).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export type AdminActivityLog = typeof adminActivityLog.$inferSelect;
 export type InsertAdminActivityLog = z.infer<typeof insertAdminActivityLogSchema>;
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true,
+}) as any;
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 // Site Settings - Key-value store for platform configuration
 export const siteSettings = pgTable("site_settings", {
@@ -1329,6 +1438,7 @@ export const siteSettings = pgTable("site_settings", {
   pgPolicy("site_settings_public_read", { for: "select", to: "public", using: sql`true` }),
   pgPolicy("site_settings_service_write", { for: "all", to: "service_role", using: sql`true` }),
   uniqueIndex("site_settings_key_idx").on(table.key),
+  index("site_settings_updated_by_idx").on(table.updatedBy),
 ]);
 
 export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
@@ -1341,7 +1451,7 @@ export const siteSettingsRelations = relations(siteSettings, ({ one }) => ({
 export const insertSiteSettingSchema = createInsertSchema(siteSettings).omit({
   id: true,
   updatedAt: true,
-});
+}) as any;
 
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
@@ -1366,7 +1476,207 @@ export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
+
+// ------------------------------------------------------------------
+// COMMUNITYOS MULTI-TENANCY TABLES
+// ------------------------------------------------------------------
+
+// Tenants table: organisations using CommunityOS
+export const tenants = pgTable("tenants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: varchar("code", { length: 50 }).notNull().unique(), // URL slug, e.g. 'stc'
+  name: varchar("name", { length: 255 }).notNull(),
+  logoUrl: varchar("logo_url", { length: 500 }),
+  primaryColor: varchar("primary_color", { length: 7 }).default("#4F46E5"),
+  secondaryColor: varchar("secondary_color", { length: 7 }).default("#818CF8"),
+  description: text("description"),
+  website: varchar("website", { length: 255 }),
+  // Public profile fields
+  heroImageUrl: varchar("hero_image_url", { length: 500 }),
+  missionStatement: text("mission_statement"),
+  socialLinks: jsonb("social_links").$type<{
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    youtube?: string;
+  }>().default({}),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  address: text("address"),
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("tenants_public_read", { for: "select", to: "public", using: sql`is_public = true` }),
+  pgPolicy("tenants_service_write", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  // Composite index for public profile lookups
+  index("tenants_code_is_public_idx").on(table.code, table.isPublic),
+]);
+
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  members: many(tenantMembers),
+  invites: many(tenantInvites),
+}));
+
+export type Tenant = typeof tenants.$inferSelect;
+export type InsertTenant = typeof tenants.$inferInsert;
+
+// Tenant members: users who belong to a tenant with role-based access
+export const tenantMembers = pgTable("tenant_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull().default("member"), // 'admin', 'board', 'member'
+  invitedBy: varchar("invited_by").references(() => users.id, { onDelete: "set null" }),
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => [
+  pgPolicy("tenant_members_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("tenant_members_admin_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = ${table.tenantId}
+        AND tm.user_id = ( (select auth.uid()) )::text
+        AND tm.role = 'admin'
+    )`
+  }),
+  pgPolicy("tenant_members_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  uniqueIndex("tenant_members_tenant_user_idx").on(table.tenantId, table.userId),
+  index("tenant_members_tenant_id_idx").on(table.tenantId),
+  index("tenant_members_user_id_idx").on(table.userId),
+  index("tenant_members_invited_by_idx").on(table.invitedBy),
+]);
+
+export const tenantMembersRelations = relations(tenantMembers, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tenantMembers.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [tenantMembers.userId],
+    references: [users.id],
+  }),
+  inviter: one(users, {
+    fields: [tenantMembers.invitedBy],
+    references: [users.id],
+    relationName: "inviter",
+  }),
+}));
+
+export type TenantMember = typeof tenantMembers.$inferSelect;
+export type InsertTenantMember = typeof tenantMembers.$inferInsert;
+
+// Tenant member roles
+export const tenantRoles = ["admin", "board", "member"] as const;
+export type TenantRole = (typeof tenantRoles)[number];
+
+// Tenant invites: pending invitations to join a tenant
+export const tenantInvites = pgTable("tenant_invites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  email: varchar("email", { length: 255 }).notNull(),
+  role: varchar("role", { length: 20 }).notNull().default("member"),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  invitedBy: varchar("invited_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull().default(sql`NOW() + INTERVAL '7 days'`),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("tenant_invites_admin_all", {
+    for: "all",
+    to: "authenticated",
+    using: sql`EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = ${table.tenantId}
+        AND tm.user_id = ( (select auth.uid()) )::text
+        AND tm.role = 'admin'
+    )`,
+    withCheck: sql`EXISTS (
+      SELECT 1 FROM tenant_members tm
+      WHERE tm.tenant_id = ${table.tenantId}
+        AND tm.user_id = ( (select auth.uid()) )::text
+        AND tm.role = 'admin'
+    )`
+  }),
+  pgPolicy("tenant_invites_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("tenant_invites_email_idx").on(table.email),
+  index("tenant_invites_tenant_id_idx").on(table.tenantId),
+  index("tenant_invites_invited_by_idx").on(table.invitedBy),
+]);
+
+export const tenantInvitesRelations = relations(tenantInvites, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tenantInvites.tenantId],
+    references: [tenants.id],
+  }),
+  inviter: one(users, {
+    fields: [tenantInvites.invitedBy],
+    references: [users.id],
+  }),
+}));
+
+// Identity Verification - For community safety and trust
+export const identityVerifications = pgTable("identity_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'verified', 'rejected'
+  documentType: varchar("document_type", { length: 50 }),
+  idNumber: varchar("id_number", { length: 100 }), // Encrypted in real app
+  verificationMethod: varchar("verification_method", { length: 50 }), // 'digital_id', 'manual_review'
+  rejectionReason: text("rejection_reason"),
+  verifiedAt: timestamp("verified_at"),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("identities_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("identities_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("identities_user_id_idx").on(table.userId),
+]);
+
+export const identityVerificationsRelations = relations(identityVerifications, ({ one }) => ({
+  user: one(users, {
+    fields: [identityVerifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export type IdentityVerification = typeof identityVerifications.$inferSelect;
+export type InsertIdentityVerification = typeof identityVerifications.$inferInsert;
+
+// Activity Logs - Track security events and key actions
+export const activityLogs = pgTable("activity_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  eventType: varchar("event_type", { length: 100 }).notNull(), // 'login', 'password_change', 'mfa_enabled', 'profile_update'
+  description: text("description").notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("activity_logs_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("activity_logs_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("activity_logs_user_id_idx").on(table.userId),
+  index("activity_logs_event_type_idx").on(table.eventType),
+]);
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [activityLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = typeof activityLogs.$inferInsert;
+
+export type TenantInvite = typeof tenantInvites.$inferSelect;
+export type InsertTenantInvite = typeof tenantInvites.$inferInsert;
+

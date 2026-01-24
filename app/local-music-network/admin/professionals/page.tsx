@@ -39,7 +39,7 @@ export default async function ProfessionalsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {pros.map((pro) => (
+                        {pros.map((pro: any) => (
                             <TableRow key={pro.id}>
                                 <TableCell>
                                     <Avatar className="h-9 w-9">

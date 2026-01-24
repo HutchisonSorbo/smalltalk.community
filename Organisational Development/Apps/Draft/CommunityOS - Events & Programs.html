@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events & Programs | smalltalk.community Inc</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Events">
+    <link rel="manifest"
+        href="data:application/json;base64,ewogICJuYW1lIjogIkV2ZW50cyAmIFByb2dyYW1zIiwKICAic2hvcnRfbmFtZSI6ICJFdmVudHMiLAogICJkZXNjcmlwdGlvbiI6ICJFdmVudCBtYW5hZ2VtZW50IGZvciBzbWFsbHRhbGsuY29tbXVuaXR5IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMDAzYjZmIiwKICAiaWNvbnMiOiBbXQp9">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --text-color: #f1f5f9;
+                    --border-color: #334155;
+                }
+            }
+
+            body {
+                @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6];
+                font-size: 16px;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-['Plus_Jakarta_Sans'] font-bold;
+            }
+        }
+
+        @layer components {
+            .btn-primary { @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .btn-secondary { @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .input-field { @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)]; }
+            .card { @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6; }
+            .nav-link { @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2; }
+            .nav-link.active { @apply bg-white/20 font-bold; }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+            }
+            .footer-center::after { content: "Page " counter(page) " of " counter(pages); }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .nav-link, button, select, input {
+                min-height: 44px !important;
+            }
+            .input-field, input, select, textarea {
+                font-size: 16px !important;
+            }
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { @apply bg-transparent; }
+        ::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-600 rounded-full; }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: { primary: 'var(--primary)', accent: 'var(--accent)', danger: 'var(--danger)', success: 'var(--success)' }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatCurrency = (val) => new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(val);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+
+        // --- Standard Components ---
+
+        const AppShell = ({ children, title, currentTab, setTab, onSave, onLoad }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2">Skip to content</a>
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl font-bold font-display">smalltalk.community</div>
+                                <h1 className="hidden md:block text-lg opacity-80">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={onSave} className="btn-secondary !px-4 text-sm whitespace-nowrap flex items-center justify-center gap-2">💾 Save</button>
+                                <label className="btn-secondary !px-4 text-sm cursor-pointer whitespace-nowrap flex items-center justify-center gap-2">
+                                    📂 Load <input type="file" className="hidden" onChange={onLoad} accept=".json" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary !px-4 text-sm md:block hidden flex items-center justify-center gap-2">🖨️ Print</button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'events', label: 'Events Registry', icon: '📅' },
+                                { id: 'attendees', label: 'Attendee Growth', icon: '👥' },
+                                { id: 'evaluation', label: 'Impact & Feedback', icon: '📝' },
+                                { id: 'about', label: 'About', icon: 'ℹ️' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                >
+                                    <span>{item.icon}</span> <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print">
+                    <div className="max-w-7xl mx-auto text-center px-4">
+                        <p className="text-sm">We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands.</p>
+                        <p className="text-xs mt-2 opacity-50">© 2026 smalltalk.community Inc. | Events & Programs v1.0</p>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "" }) => (
+            <section className={`card ${className}`}>
+                {title && <h2 className="text-xl font-bold text-primary dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">{title}</h2>}
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-green-100 text-green-800 border-green-200',
+                warning: 'bg-amber-100 text-amber-800 border-amber-200',
+                danger: 'bg-red-100 text-red-800 border-red-200',
+                info: 'bg-blue-100 text-blue-800 border-blue-200',
+                default: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+            };
+            return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colors[type]}`}>{status}</span>;
+        };
+
+        const FormInput = ({ label, id, ...props }) => (
+            <div className="mb-4 text-slate-900 dark:text-slate-100">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <input id={id} className="input-field" {...props} />
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, ...props }) => (
+            <div className="mb-4 text-slate-900 dark:text-slate-100">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <select id={id} className="input-field" {...props}>
+                    <option value="">Select...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-inherit">
+                            <h2 className="text-xl font-bold">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Sample Data ---
+        const initialData = {
+            events: [
+                { id: 'ev1', title: 'Youth Digital Wellbeing Workshop', date: '2026-02-15', location: 'Seymour Community Hub', budget: 500, status: 'upcoming', attendees: 25, feedbackScore: 0 },
+                { id: 'ev2', title: 'Senior Tech Cafe', date: '2026-01-20', location: 'Broadford Library', budget: 200, status: 'completed', attendees: 15, feedbackScore: 4.8 },
+                { id: 'ev3', title: 'Intergenerational Storytelling', date: '2026-03-05', location: 'Kilmore Soldiers Memorial Hall', budget: 750, status: 'upcoming', attendees: 0, feedbackScore: 0 },
+                { id: 'ev4', title: 'Seymour Volunteer Expo', date: '2026-05-12', location: 'VRI Hall Seymour', budget: 1200, status: 'draft', attendees: 0, feedbackScore: 0 }
+            ],
+            attendees: [
+                { id: 'at1', name: 'John Doe', email: 'john@example.com', eventsAttended: ['ev2'], phone: '0412 345 678' },
+                { id: 'at2', name: 'Jane Smith', email: 'jane@example.com', eventsAttended: ['ev2'], phone: '0498 765 432' }
+            ],
+            feedback: [
+                { id: 'f1', eventId: 'ev2', attendeeId: 'at1', score: 5, comment: 'Fantastic session, learned a lot about my iPad!' },
+                { id: 'f2', eventId: 'ev2', attendeeId: 'at2', score: 4.5, comment: 'Very patient instructors.' }
+            ]
+        };
+
+        // --- App Logic ---
+
+        const Dashboard = ({ data }) => {
+            const nextEvent = data.events
+                .filter(e => e.status === 'upcoming')
+                .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+            const totalAttendees = data.attendees.length;
+            const completedEvents = data.events.filter(e => e.status === 'completed').length;
+            const avgFeedback = data.feedback.length > 0
+                ? (data.feedback.reduce((sum, f) => sum + f.score, 0) / data.feedback.length).toFixed(1)
+                : 'N/A';
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            { label: 'Upcoming Events', value: data.events.filter(e => e.status === 'upcoming').length, color: 'border-l-primary', icon: '📅' },
+                            { label: 'Total Attendees', value: totalAttendees, color: 'border-l-success', icon: '👥' },
+                            { label: 'Average Satisfaction', value: avgFeedback, color: 'border-l-warning', icon: '⭐' },
+                            { label: 'Total Program Budget', value: formatCurrency(data.events.reduce((sum, e) => sum + Number(e.budget), 0)), color: 'border-l-accent', icon: '💰' }
+                        ].map(stat => (
+                            <div key={stat.label} className={`card border-l-4 ${stat.color} flex justify-between items-center`}>
+                                <div>
+                                    <div className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400">{stat.label}</div>
+                                    <div className="text-2xl font-black mt-1">{stat.value}</div>
+                                </div>
+                                <div className="text-3xl opacity-20">{stat.icon}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Next Featured Event">
+                            {nextEvent ? (
+                                <div className="p-4 bg-primary/5 dark:bg-white/5 rounded-xl border border-primary/10">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h3 className="text-2xl font-black text-primary dark:text-blue-400">{nextEvent.title}</h3>
+                                            <p className="text-sm opacity-60">📍 {nextEvent.location}</p>
+                                        </div>
+                                        <StatusBadge status={nextEvent.status} type="info" />
+                                    </div>
+                                    <div className="flex gap-6 mt-6">
+                                        <div>
+                                            <div className="text-[10px] uppercase font-bold opacity-50">Date</div>
+                                            <div className="font-bold">{formatDate(nextEvent.date)}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] uppercase font-bold opacity-50">Expected Attendees</div>
+                                            <div className="font-bold">{nextEvent.attendees || 'TBC'}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] uppercase font-bold opacity-50">Budget</div>
+                                            <div className="font-bold">{formatCurrency(nextEvent.budget)}</div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-8">
+                                        <div className="text-xs font-bold mb-2">Integration Links:</div>
+                                        <div className="flex gap-2 flex-wrap text-[10px]">
+                                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Financial Management (Budget)</span>
+                                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Rostering (Volunteer Needs)</span>
+                                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Member CRM (Registry)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-slate-400 italic">No upcoming events scheduled.</p>
+                            )}
+                        </Card>
+                        <Card title="Program Geography">
+                            <div className="space-y-4">
+                                {['Seymour', 'Broadford', 'Kilmore', 'Wallan'].map(town => {
+                                    const count = data.events.filter(e => e.location.includes(town)).length;
+                                    const percentage = (count / data.events.length * 100).toFixed(0);
+                                    return (
+                                        <div key={town} className="space-y-1">
+                                            <div className="flex justify-between text-xs font-bold">
+                                                <span>{town}</span>
+                                                <span>{count} Events</span>
+                                            </div>
+                                            <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div className="h-full bg-accent" style={{ width: `${percentage}%` }}></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const EventsRegistry = ({ data, setData }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({ title: '', date: '', location: '', budget: '', status: 'upcoming' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newEvent = { ...formData, id: generateId() };
+                setData(prev => ({ ...prev, events: [...prev.events, newEvent] }));
+                setIsModalOpen(false);
+            };
+
+            const toggleStatus = (id) => {
+                setData(prev => ({
+                    ...prev,
+                    events: prev.events.map(e => e.id === id ? { ...e, status: e.status === 'upcoming' ? 'completed' : 'upcoming' } : e)
+                }));
+            };
+
+            const deleteEvent = (id) => {
+                if (confirm('Are you sure you want to delete this event?')) {
+                    setData(prev => ({ ...prev, events: prev.events.filter(e => e.id !== id) }));
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Program & Event Registry">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold">Total Operations</h3>
+                            <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">+ Schedule New Event</button>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800 font-bold text-xs uppercase text-slate-500 dark:text-slate-400">
+                                    <tr>
+                                        <th className="px-6 py-4">Event Name</th>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4">Location</th>
+                                        <th className="px-6 py-4 text-right">Budget</th>
+                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                    {data.events.map(e => (
+                                        <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="px-6 py-4 font-bold">{e.title}</td>
+                                            <td className="px-6 py-4">{formatDate(e.date)}</td>
+                                            <td className="px-6 py-4 text-xs opacity-70">{e.location}</td>
+                                            <td className="px-6 py-4 text-right">{formatCurrency(e.budget)}</td>
+                                            <td className="px-6 py-4">
+                                                <StatusBadge status={e.status} type={e.status === 'completed' ? 'success' : e.status === 'upcoming' ? 'info' : 'default'} />
+                                            </td>
+                                            <td className="px-6 py-4 text-right space-x-2">
+                                                <button onClick={() => toggleStatus(e.id)} className="text-xs hover:underline text-primary">Status</button>
+                                                <button onClick={() => deleteEvent(e.id)} className="text-xs hover:underline text-danger">Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Event Blueprint">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormInput label="Event Name" id="ev_title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Date" type="date" id="ev_date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
+                                <FormInput label="Est. Budget" type="number" id="ev_budget" value={formData.budget} onChange={e => setFormData({ ...formData, budget: e.target.value })} required />
+                            </div>
+                            <FormInput label="Venue / Location" id="ev_loc" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} required />
+                            <FormSelect label="Status" id="ev_status" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}
+                                options={[
+                                    { value: 'draft', label: 'DRAFT' },
+                                    { value: 'upcoming', label: 'UPCOMING' },
+                                    { value: 'completed', label: 'COMPLETED' }
+                                ]}
+                            />
+                            <div className="flex gap-4 justify-end pt-4">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Create Event</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const AttendeeGrowth = ({ data, setData }) => (
+            <div className="space-y-6">
+                <Card title="Attendee Management">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold">Community Reach</h3>
+                        <p className="text-xs opacity-60 italic">Links to Smalltalk Member Database CRM</p>
+                    </div>
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table className="w-full text-left font-sans">
+                            <thead className="bg-slate-50 dark:bg-slate-800 font-bold text-xs uppercase text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th className="px-6 py-4">Name</th>
+                                    <th className="px-6 py-4">Contact</th>
+                                    <th className="px-6 py-4">Engagements</th>
+                                    <th className="px-6 py-4">Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                {data.attendees.map(a => (
+                                    <tr key={a.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-6 py-4 font-bold">{a.name}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-xs">{a.email}</div>
+                                            <div className="text-[10px] opacity-50">{a.phone}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full text-xs font-bold">
+                                                {a.eventsAttended.length} Sessions
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-xs opacity-70">Dec 2025</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card title="Registration Form Settings">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                <span className="text-sm">Collect Dietary Requirements</span>
+                                <input type="checkbox" defaultChecked />
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                <span className="text-sm">Accessibility Needs Question</span>
+                                <input type="checkbox" defaultChecked />
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                <span className="text-sm">Photo Release Waiver</span>
+                                <input type="checkbox" defaultChecked />
+                            </div>
+                        </div>
+                    </Card>
+                    <Card title="Communication Summary">
+                        <div className="space-y-4 text-sm opacity-80">
+                            <p><strong>Auto-Reminders:</strong> Enabled (24h before event)</p>
+                            <p><strong>Feedback Loop:</strong> Enabled (2h after event)</p>
+                            <p><strong>Mailing List Sync:</strong> Integrated with Communications Hub</p>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        );
+
+        const EvaluationImpact = ({ data }) => (
+            <div className="space-y-8">
+                <Card title="Program Impact Scorecard">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="text-center">
+                            <div className="text-4xl font-black text-primary mb-2">4.8 / 5</div>
+                            <div className="text-xs uppercase font-bold opacity-50">Average Satisfaction</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-4xl font-black text-success mb-2">92%</div>
+                            <div className="text-xs uppercase font-bold opacity-50">Reporting High Connection</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-4xl font-black text-accent mb-2">10</div>
+                            <div className="text-xs uppercase font-bold opacity-50">Avg Net Promoter Score</div>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card title="Recent Qualitative Feedback">
+                    <div className="space-y-4">
+                        {data.feedback.map(f => {
+                            const event = data.events.find(e => e.id === f.eventId);
+                            const attendee = data.attendees.find(a => a.id === f.attendeeId);
+                            return (
+                                <div key={f.id} className="p-4 border-l-4 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-r-lg italic">
+                                    <p className="mb-2">"{f.comment}"</p>
+                                    <div className="text-xs font-bold opacity-50 not-italic">
+                                        , {attendee?.name} at {event?.title}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </Card>
+            </div>
+        );
+
+        const About = () => (
+            <div className="space-y-8 max-w-3xl">
+                <Card title="About Events & Programs">
+                    <h3 className="text-lg font-bold mb-4">Operational Purpose</h3>
+                    <p className="mb-4">This application manages the lifecycle of smalltalk.community's intergenerational programs, connecting youth (12-24) with seniors (65+) in the Mitchell Shire region.</p>
+
+                    <h3 className="text-lg font-bold mb-4">Data Integrations</h3>
+                    <ul className="space-y-2 list-disc pl-5 opacity-80">
+                        <li><strong>Financial Management:</strong> Event budgets are synced to organisational expenditure reports.</li>
+                        <li><strong>Member CRM:</strong> All attendees are cross-referenced with the central registry for long-term impact tracking.</li>
+                        <li><strong>Rostering:</strong> Volunteer requirements for each event are managed in the Roster app.</li>
+                        <li><strong>Impact Reporting:</strong> Evaluation data feeds into the global organisational dashboard.</li>
+                    </ul>
+                </Card>
+                <Card title="Help & Support">
+                    <p className="text-sm opacity-80">For system updates or technical issues, contact the Operations Lead. This tool is built to work offline; ensure you save your draft before clearing browser history.</p>
+                    <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/20 text-orange-800 dark:text-orange-200 rounded-lg text-xs">
+                        <strong>REGIONAL NOTICE:</strong> Always verify venue accessibility and public transport proximity for Seymour/Broadford events during the planning phase.
+                    </div>
+                </Card>
+            </div>
+        );
+
+        const Settings = ({ data, setData }) => {
+            const [jsonInput, setJsonInput] = useState(JSON.stringify(data, null, 2));
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                setJsonInput(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(jsonInput);
+                    setData(parsed);
+                    setError('');
+                    alert('Data updated successfully!');
+                } catch (e) {
+                    setError('Invalid JSON: ' + e.message);
+                }
+            };
+
+            return (
+                <Card title="Application Settings">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold mb-2">Raw Data Editor</label>
+                            <p className="text-xs text-slate-500 mb-2">Edit the application state directly. Be careful!</p>
+                            <textarea
+                                className="input-field font-mono text-xs h-96"
+                                value={jsonInput}
+                                onChange={e => setJsonInput(e.target.value)}
+                            />
+                        </div>
+                        {error && <div className="text-danger text-sm font-bold">{error}</div>}
+                        <button onClick={handleSave} className="btn-primary">Update Data</button>
+                    </div>
+                </Card>
+            );
+        };
+
+        const App = () => {
+            const [currentTab, setCurrentTab] = useState('dashboard');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem('stEventsProgramsdata');
+                return saved ? JSON.parse(saved) : initialData;
+            });
+
+            useEffect(() => {
+                if (isFirstVisit('events_programs')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            // Auto-save every 30 seconds
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    localStorage.setItem('stEventsProgramsdata', JSON.stringify(data));
+                }, 30000);
+                return () => clearInterval(timer);
+            }, [data]);
+
+            const saveDraft = () => {
+                localStorage.setItem('stEventsProgramsdata', JSON.stringify(data));
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `smalltalk-events-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+            };
+
+            const loadDraft = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const loaded = JSON.parse(ev.target.result);
+                        setData(loaded);
+                        localStorage.setItem('stEventsProgramsdata', ev.target.result);
+                        alert('Events data loaded successfully!');
+                    }
+                    catch (err) { alert('Invalid file format.'); }
+                };
+                reader.readAsText(file);
+            };
+
+            const renderContent = () => {
+                switch (currentTab) {
+                    case 'dashboard': return <Dashboard data={data} />;
+                    case 'events': return <EventsRegistry data={data} setData={setData} />;
+                    case 'attendees': return <AttendeeGrowth data={data} setData={setData} />;
+                    case 'evaluation': return <EvaluationImpact data={data} />;
+                    case 'about': return <About />;
+                    case 'settings': return <Settings data={data} setData={setData} />;
+                    default: return <Dashboard data={data} />;
+                }
+            };
+
+            return (
+                <AppShell title="Events & Programs Management" currentTab={currentTab} setTab={setCurrentTab} onSave={saveDraft} onLoad={loadDraft}>
+                    {renderContent()}
+                    <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} appName="Events & Programs Management" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Operational Record';
+        });
+    </script>
+</body>
+
+</html>

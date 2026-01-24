@@ -77,7 +77,7 @@ export async function POST(request: Request) {
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid input", errors: parsed.error.errors },
+                { message: "Invalid input", errors: parsed.error.issues },
                 { status: 400 }
             );
         }
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
             }
 
             for (let i = 0; i < count; i++) {
-                const org = randomChoice(testOrgs);
+                const org: any = randomChoice(testOrgs);
                 const title = randomChoice(ROLE_TITLES);
                 const location = randomChoice(LOCATIONS);
 
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
             }
 
             for (let i = 0; i < count; i++) {
-                const user = randomChoice(testUsers);
+                const user: any = randomChoice(testUsers);
                 const title = randomChoice(GIG_TITLES);
                 const location = randomChoice(LOCATIONS);
                 const date = randomDate(new Date(), new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)); // Next 90 days

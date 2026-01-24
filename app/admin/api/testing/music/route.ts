@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
         if (!parsed.success) {
             return NextResponse.json(
-                { message: "Invalid input", errors: parsed.error.errors },
+                { message: "Invalid input", errors: parsed.error.issues },
                 { status: 400 }
             );
         }
@@ -75,9 +75,9 @@ export async function POST(request: Request) {
 
             // Get existing musician user Ids
             const existingProfiles = await db.select({ userId: musicianProfiles.userId }).from(musicianProfiles);
-            const existingUserIds = new Set(existingProfiles.map(p => p.userId));
+            const existingUserIds = new Set(existingProfiles.map((p: any) => p.userId));
 
-            const candidates = testUsers.filter(u => !existingUserIds.has(u.id));
+            const candidates = testUsers.filter((u: any) => !existingUserIds.has(u.id));
 
             if (candidates.length === 0) {
                 return NextResponse.json(
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
 
         } else if (type === "band") {
             for (let i = 0; i < count; i++) {
-                const user = randomChoice(testUsers);
+                const user: any = randomChoice(testUsers);
                 const name = `${randomChoice(BAND_NAMES_1)} ${randomChoice(BAND_NAMES_2)} ${Math.floor(Math.random() * 1000)}`;
 
                 try {

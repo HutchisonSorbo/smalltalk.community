@@ -7,7 +7,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         globals: true,
-        setupFiles: [],
+        setupFiles: ['./tests/setup.ts'],
         exclude: ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*', 'tests/e2e/**'],
         coverage: {
             provider: 'istanbul',
@@ -21,7 +21,7 @@ export default defineConfig({
                 'shared/**/*.{ts,tsx}',
                 'hooks/**/*.{ts,tsx}',
                 'scripts/**/*.{ts,tsx}',
-                'middleware.ts',
+                'proxy.ts',
                 'instrumentation.ts',
                 'instrumentation-client.ts'
             ],

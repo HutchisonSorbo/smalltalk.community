@@ -1,4 +1,5 @@
 import { PlatformAdminSidebar } from "@/components/platform/admin/platform-admin-sidebar"
+import { AdminErrorBoundaryWrapper } from "@/components/platform/admin/admin-error-boundary"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -41,7 +42,9 @@ export default async function PlatformAdminLayout({
                     </div>
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
-                    {children}
+                    <AdminErrorBoundaryWrapper fallbackTitle="Failed to load admin content">
+                        {children}
+                    </AdminErrorBoundaryWrapper>
                 </div>
             </SidebarInset>
         </SidebarProvider>

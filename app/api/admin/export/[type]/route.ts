@@ -45,8 +45,8 @@ function objectToCSV(data: Record<string, unknown>[]): string {
     if (data.length === 0) return "";
 
     const headers = Object.keys(data[0]);
-    const rows = data.map(row =>
-        headers.map(header => {
+    const rows = data.map((row: any) =>
+        headers.map((header: string) => {
             const value = row[header];
             if (value === null || value === undefined) return "";
             if (typeof value === "object") return JSON.stringify(value);

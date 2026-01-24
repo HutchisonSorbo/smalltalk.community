@@ -4,6 +4,9 @@ import { VolunteerHeader } from "@/components/volunteer-passport/Header";
 export const metadata: Metadata = {
     title: "Volunteer Passport | Smalltalk Community",
     description: "Your digital passport for volunteering in Victoria",
+    icons: {
+        icon: "/icons/volunteer-passport.svg",
+    },
 };
 
 export default function VolunteerPassportLayout({

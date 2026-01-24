@@ -21,7 +21,7 @@ async function getFeatureFlags() {
 
 export default async function FeatureFlagsPage() {
     const flags = await getFeatureFlags();
-    const enabledCount = flags.filter(f => f.isEnabled).length;
+    const enabledCount = flags.filter((f: any) => f.isEnabled).length;
 
     return (
         <div className="space-y-6">
@@ -83,7 +83,7 @@ export default async function FeatureFlagsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {flags.map((flag) => (
+                                {flags.map((flag: any) => (
                                     <TableRow key={flag.id}>
                                         <TableCell className="font-medium">{flag.name}</TableCell>
                                         <TableCell>
@@ -97,7 +97,7 @@ export default async function FeatureFlagsPage() {
                                         <TableCell>
                                             {flag.enabledForRoles && flag.enabledForRoles.length > 0 ? (
                                                 <div className="flex gap-1 flex-wrap">
-                                                    {flag.enabledForRoles.map(role => (
+                                                    {flag.enabledForRoles.map((role: any) => (
                                                         <Badge key={role} variant="outline" className="text-xs">
                                                             {role}
                                                         </Badge>

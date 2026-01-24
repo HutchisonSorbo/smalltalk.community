@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Middleware updated at: 2025-12-23T10:55:00+11:00 (Fix Login 404 on Hub)
+// Proxy file migrated from middleware.ts for Next.js 16 compatibility
+// Migration date: 2026-01-15
+// Original middleware updated at: 2025-12-23T10:55:00+11:00 (Fix Login 404 on Hub)
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     // CRITICAL: CVE-2025-29927 protection - Block middleware subrequest bypass
     if (request.headers.has('x-middleware-subrequest')) {
         return new NextResponse('Forbidden', { status: 403 });
@@ -15,9 +17,23 @@ export async function middleware(request: NextRequest) {
         },
     });
 
+    // Security Headers (Redundancy for defense-in-depth)
+    applySecurityHeaders(response);
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || supabaseUrl.includes('placeholder') || !supabaseAnonKey || supabaseAnonKey.includes('placeholder')) {
+        console.error("[Proxy] Missing or invalid Supabase configuration");
+        return new NextResponse(
+            JSON.stringify({ error: "Internal Server Error: Missing configuration" }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {
@@ -32,6 +48,7 @@ export async function middleware(request: NextRequest) {
                             headers: request.headers,
                         },
                     });
+                    applySecurityHeaders(response);
                     cookiesToSet.forEach(({ name, value, options }) =>
                         response.cookies.set(name, value, options)
                     );
@@ -41,6 +58,36 @@ export async function middleware(request: NextRequest) {
     );
 
     const { data: { user } } = await supabase.auth.getUser();
+
+    // Check for suspended accounts (non-blocking on errors)
+    // The suspension check is a secondary security measure - failure shouldn't prevent login
+    if (user) {
+        try {
+            const { data: profile, error } = await supabase
+                .from('users')
+                .select('is_suspended')
+                .eq('id', user.id)
+                .single();
+
+            if (error) {
+                // Log the error but allow through - suspension check shouldn't block login
+                // PGRST116 = profile doesn't exist (new user), other errors = DB issues
+                console.warn(`[Proxy] Could not check suspension for user ${user.id}: ${error.code} - ${error.message}`);
+                // Allow through - user might need to complete onboarding, or there's a DB issue
+            } else if (profile?.is_suspended === true) {
+                // Only block if explicitly suspended
+                console.log(`[Proxy] User ${user.id} is suspended - blocking access`);
+                await supabase.auth.signOut();
+                return NextResponse.redirect(new URL(`/login?error=account_suspended`, request.url));
+            }
+            // Profile exists and is not suspended, or check failed - allow through
+        } catch (e) {
+            // Unexpected error - log and allow through
+            console.error("[Proxy] Unexpected error in suspension check:", e);
+        }
+    }
+
+
 
     // --- Domain Routing & Rewrites ---
     const hostname = request.headers.get("host") || "";
@@ -59,6 +106,7 @@ export async function middleware(request: NextRequest) {
         const rewriteResponse = NextResponse.rewrite(newUrl);
         response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
         response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+        applySecurityHeaders(rewriteResponse);
         return rewriteResponse;
     }
 
@@ -79,14 +127,31 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(next || "/dashboard", request.url));
     }
 
-    // Rewrite Logic
+    // --- CommunityOS Route Protection ---
+    // Protect /communityos/* routes - require authentication and tenant membership
+    if (path.startsWith("/communityos")) {
+        // Extract tenant code from path: /communityos/{tenantCode}/...
+        const pathParts = path.split("/");
+        const tenantCode = pathParts[2]; // e.g., 'stc'
+
+        if (!user && !isBypass) {
+            // Not logged in - redirect to login with return URL
+            const returnUrl = encodeURIComponent(path);
+            return NextResponse.redirect(new URL(`/login?next=${returnUrl}`, request.url));
+        }
+
+        // Allow through - tenant membership will be verified at the page level
+        // This avoids additional DB queries in middleware for every request
+        return response;
+    }
 
     // 1. Explicit Routes: Allow app paths to pass through without rewriting
     if (path.startsWith("/local-music-network") || path.startsWith("/hub") || path.startsWith("/volunteer-passport") ||
         path.startsWith("/onboarding") || path.startsWith("/dashboard") || path.startsWith("/apps") || path.startsWith("/settings") ||
         path.startsWith("/login") || path.startsWith("/forgot-password") || path.startsWith("/reset-password") ||
         path.startsWith("/youth-service-navigator") || path.startsWith("/apprenticeship-hub") || path.startsWith("/peer-support-finder") ||
-        path.startsWith("/admin") || path.startsWith("/about") || path.startsWith("/accessibility") || path.startsWith("/work-experience-hub")) {
+        path.startsWith("/admin") || path.startsWith("/about") || path.startsWith("/accessibility") || path.startsWith("/work-experience-hub") ||
+        path.startsWith("/org")) {
         return response;
     }
 
@@ -112,6 +177,7 @@ export async function middleware(request: NextRequest) {
 
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    applySecurityHeaders(rewriteResponse);
     return rewriteResponse;
 
 }
@@ -128,6 +194,13 @@ function rewriteRootToHub(request: NextRequest, response: NextResponse) {
     rewriteResponse.headers.set("x-url", request.url);
     response.headers.forEach((v, k) => rewriteResponse.headers.set(k, v));
     response.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c));
+    applySecurityHeaders(rewriteResponse);
     return rewriteResponse;
 }
 
+function applySecurityHeaders(response: NextResponse) {
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    return response;
+}

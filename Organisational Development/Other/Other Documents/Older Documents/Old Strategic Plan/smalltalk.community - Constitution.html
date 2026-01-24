@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Constitution of smalltalk.community Inc - A governance document for an inclusive, community-focused organisation serving all ages and backgrounds.">
+    <meta name="language" content="English">
+    <title>Constitution of smalltalk.community Inc</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--body-font);
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+            word-spacing: 0.05em;
+            background-color: var(--bg-color, #ffffff);
+            color: var(--text-color, #1a1a1a);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        :root {
+            --primary-color: #003b6f;
+            --primary-support: #1e40af;
+            --accent-color: #c2410c;
+            --text-color: #1e293b;
+            --bg-color: #ffffff;
+            --secondary-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --link-bg-hover: #f1f5f9;
+            --accent-bg: #fdf2f2;
+            --heading-font: 'Plus Jakarta Sans', sans-serif;
+            --body-font: 'Inter', sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #3b82f6;
+                --primary-support: #60a5fa;
+                --accent-color: #fb923c;
+                --text-color: #f1f5f9;
+                --bg-color: #0f172a;
+                --secondary-bg: #1e293b;
+                --border-color: #334155;
+                --link-bg-hover: #334155;
+                --accent-bg: #1e293b;
+            }
+        }
+
+        /* Ensure text spacing meets WCAG 2.1 AA 1.4.12 */
+        p {
+            margin-bottom: 1.5em;
+            line-height: 1.6;
+            max-width: 80ch;
+        }
+
+        li {
+            margin-bottom: 0.75em;
+            line-height: 1.6;
+        }
+
+        /* Header and Navigation */
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-family: var(--heading-font);
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.75rem;
+            margin-bottom: 0.5em;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background-color: var(--secondary-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+        }
+
+        .toc h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .toc ol {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+
+        .toc li {
+            margin-bottom: 0.5em;
+            line-height: 1.6;
+        }
+
+        .toc a {
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+        }
+
+        .toc a:hover,
+        .toc a:focus {
+            background-color: var(--link-bg-hover);
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Section Headings */
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.3;
+            color: var(--primary-color);
+            padding-top: 1rem;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            page-break-after: avoid;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 1.2rem;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+        }
+
+        /* Contrast Ratios (WCAG AA minimum 4.5:1) */
+        /* #1a1a1a on #ffffff = 20.6:1 ✓ */
+        /* #003b6f on #ffffff = 11.9:1 ✓ */
+
+        /* Lists */
+        ul,
+        ol {
+            padding-left: 1.8rem;
+            margin-bottom: 1.5em;
+        }
+
+        ul li {
+            list-style-type: disc;
+            margin-bottom: 0.75em;
+        }
+
+        ol li {
+            list-style-type: decimal;
+            margin-bottom: 0.75em;
+        }
+
+        /* Nested lists */
+        ul ul,
+        ol ol,
+        ul ol,
+        ol ul {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            padding-left: 1.5rem;
+        }
+
+        /* Emphasis and Strong */
+        strong {
+            font-weight: 700;
+            color: var(--primary-support);
+        }
+
+        em {
+            font-style: italic;
+        }
+
+        /* Blockquotes and callouts */
+        .callout {
+            background-color: var(--secondary-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+
+        .callout strong {
+            color: var(--primary-color);
+        }
+
+        /* Part dividers */
+        .part-divider {
+            display: flex;
+            align-items: center;
+            margin: 3rem 0 2rem;
+            gap: 1rem;
+        }
+
+        .part-divider::before,
+        .part-divider::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background-color: var(--border-color);
+        }
+
+        .part-number {
+            font-size: 0.9rem;
+            color: var(--primary-support);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Clause numbers */
+        .clause-number {
+            display: inline-block;
+            background-color: var(--link-bg-hover);
+            color: var(--primary-color);
+            font-weight: 700;
+            padding: 0.25em 0.5em;
+            border-radius: 3px;
+            margin-right: 0.5em;
+        }
+
+        /* Buttons and links */
+        a {
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+        }
+
+        a:hover,
+        a:focus {
+            background-color: var(--link-bg-hover);
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Skip to content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            z-index: 100;
+            font-weight: 700;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--border-color);
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        footer p {
+            margin-bottom: 1em;
+        }
+
+        /* Print styles */
+        @media print {
+            @page {
+                margin: 0;
+            }
+
+            body {
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important;
+                background-color: white !important;
+                max-width: 100% !important;
+                color: black !important;
+            }
+
+            a {
+                text-decoration: underline;
+            }
+
+            a::after {
+                content: ' (' attr(href) ')';
+                font-size: 0.8em;
+            }
+
+            h1,
+            h2,
+            h3 {
+                page-break-after: avoid;
+            }
+
+            p,
+            li {
+                page-break-inside: avoid;
+            }
+
+            .toc {
+                page-break-after: always;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .no-print-on-screen {
+                display: flex !important;
+            }
+
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+
+            .footer-left {
+                flex: 1;
+                text-align: left;
+            }
+
+            .footer-center {
+                flex: 1;
+                text-align: center;
+                font-weight: 600;
+            }
+
+            .footer-right {
+                flex: 1;
+                text-align: right;
+            }
+
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen {
+                display: none !important;
+            }
+        }
+
+        /* Focus styles for keyboard navigation */
+        *:focus {
+            outline: 3px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: more) {
+            body {
+                color: #000;
+            }
+
+            a {
+                text-decoration-thickness: 3px;
+            }
+
+            h1,
+            h2,
+            h3 {
+                color: #000;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1.5rem 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            h3 {
+                font-size: 1.1rem;
+            }
+
+            .toc {
+                padding: 1rem;
+            }
+
+            table {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background-color: white;
+            border: 1px solid #d0d0d0;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid #d0d0d0;
+            line-height: 1.6;
+        }
+
+        th {
+            background-color: var(--link-bg-hover);
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fbfc;
+        }
+
+        /* Document metadata section */
+        .document-meta {
+            background-color: var(--secondary-bg);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Accessibility Note */
+        .accessibility-note {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem;
+            margin: 2.5rem 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .accessibility-note h3 {
+            color: white;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .accessibility-note p,
+        .accessibility-note li {
+            color: white !important;
+            opacity: 0.95;
+            max-width: none;
+        }
+
+        .accessibility-note strong {
+            color: white !important;
+            text-decoration: underline;
+            text-decoration-color: var(--accent-color);
+            text-underline-offset: 4px;
+        }
+
+        .document-meta p {
+            margin-bottom: 0.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <header>
+        <h1>Constitution of smalltalk.community Inc</h1>
+        <p class="subtitle">A governance document for a community platform built for everyone, written in plain language
+            so all community members can understand it.</p>
+    </header>
+
+    <main id="main-content">
+        <!-- Quick accessibility note -->
+        <aside class="accessibility-note">
+            <h3>About this document</h3>
+            <p><strong>This document is designed to be accessible to everyone.</strong> It uses clear language, large
+                readable fonts, good spacing, and high contrast colours. You can:</p>
+            <ul>
+                <li>Use your browser zoom to enlarge text (Ctrl/Cmd and + or -)</li>
+                <li>Use a screen reader if you need audio support</li>
+                <li>Print this document with your browser (File → Print)</li>
+                <li>Copy text to read in a different format or font</li>
+            </ul>
+            <p><strong>We serve everyone:</strong> children, young people, adults, seniors, LGBTIQA+ people, First
+                Nations peoples, CALD communities, people with disabilities, families, and organisations.</p>
+        </aside>
+
+        <section>
+            <div class="toc">
+                <h2>Table of Contents</h2>
+                <ol>
+                    <li><a href="#part1">Part 1: What smalltalk.community Inc Is and What We Aim to Achieve</a></li>
+                    <li><a href="#part2">Part 2: Who Can Be Part of smalltalk.community Inc</a></li>
+                    <li><a href="#part3">Part 3: How smalltalk.community Inc Is Led</a></li>
+                    <li><a href="#part4">Part 4: Member Meetings and Having a Say</a></li>
+                    <li><a href="#part5">Part 5: Money and Resources</a></li>
+                    <li><a href="#part6">Part 6: How We Work Together</a></li>
+                    <li><a href="#part7">Part 7: Making Changes</a></li>
+                    <li><a href="#part8">Part 8: What Happens If smalltalk.community Inc Closes Down</a></li>
+                    <li><a href="#part9">Part 9: Following Australian Charity Standards and YACVic Principles</a></li>
+                    <li><a href="#part10">Part 10: Words We Use and Final Notes</a></li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- PART 1 -->
+        <section id="part1">
+            <div class="part-divider">
+                <span class="part-number">Part 1</span>
+            </div>
+            <h2>Part 1: What smalltalk.community Inc Is and What We Aim to Achieve</h2>
+
+            <article>
+                <h3><span class="clause-number">1</span>Our Name</h3>
+                <p>We are called <strong>smalltalk.community Inc</strong>.</p>
+                <p>We are an incorporated association registered in Victoria, Australia. This means we are a legal
+                    organisation that can own property, enter contracts, and be held accountable to our community.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">2</span>What We Do (Our Charitable Purposes)</h3>
+                <p>smalltalk.community Inc exists to strengthen regional communities across Victoria by bringing people
+                    together across
+                    all ages, backgrounds, and identities. We work with regional towns and shires to build connection,
+                    reduce isolation, and create intergenerational opportunities for all community members.
+                    Specifically, we:</p>
+
+                <h4>For children (aged 5-11):</h4>
+                <ul>
+                    <li>Create safe spaces where children can play, learn, and build friendships with peers and trusted
+                        adults</li>
+                    <li>Support healthy development through connection, creativity, and community participation</li>
+                    <li>Help children feel safe, valued, and part of their community</li>
+                    <li>Create pathways for children to have a voice and be heard (age-appropriately)</li>
+                </ul>
+
+                <h4>For young people (aged 12-24):</h4>
+                <ul>
+                    <li>Create safe digital and physical spaces where young people can connect with peers and trusted
+                        adults</li>
+                    <li>Help young people develop skills, confidence, and meaningful relationships</li>
+                    <li>Support young people to have a genuine voice in decisions affecting them</li>
+                    <li>Build leadership capacity and resilience</li>
+                    <li>Ensure young people have agency and are listened to (not just consulted as tokens)</li>
+                </ul>
+
+                <h4>For working adults (aged 25-55):</h4>
+                <ul>
+                    <li>Create opportunities to mentor and support young people</li>
+                    <li>Facilitate meaningful career and life connections</li>
+                    <li>Enable professionals to contribute expertise and mentorship</li>
+                    <li>Build workplace and community networks</li>
+                </ul>
+
+                <h4>For seniors (aged 65+):</h4>
+                <ul>
+                    <li>Provide purpose, connection, and active participation</li>
+                    <li>Create intergenerational mentoring and wisdom-sharing opportunities</li>
+                    <li>Ensure digital accessibility and meaningful engagement</li>
+                    <li>Reduce isolation and enable contribution</li>
+                </ul>
+
+                <h4>For all community members:</h4>
+                <ul>
+                    <li><strong>LGBTIQA+ people:</strong> Safe, affirming spaces where identity is respected and
+                        celebrated</li>
+                    <li><strong>First Nations peoples:</strong> Culturally safe spaces that respect Aboriginality and
+                        self-determination</li>
+                    <li><strong>CALD (Culturally and Linguistically Diverse) communities:</strong> Accessible, inclusive
+                        platforms that respect diverse backgrounds</li>
+                    <li><strong>People with disabilities:</strong> Fully accessible participation with dignity</li>
+                    <li><strong>Families:</strong> Intergenerational support and connection</li>
+                    <li><strong>Community organisations:</strong> Partnership infrastructure and collaboration
+                        opportunities</li>
+                    <li><strong>Professionals and service providers:</strong> Platforms to share expertise and create
+                        connections</li>
+                </ul>
+
+                <h4>For the whole community:</h4>
+                <ul>
+                    <li>Build regional social cohesion and reduce isolation across all demographics</li>
+                    <li>Create safe digital-first infrastructure with professional moderation</li>
+                    <li>Foster intergenerational understanding and mutual respect</li>
+                    <li>Advocate for the needs and voices of all community members in local decision-making</li>
+                    <li>Partner with existing services to strengthen the community ecosystem</li>
+                    <li>Share knowledge about inclusive community engagement and co-design</li>
+                </ul>
+
+                <p>These purposes are charitable under Australian law because they advance the education, social, and
+                    economic wellbeing of the entire community and reduce isolation across all generations.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">3</span>We Are A Not-for-Profit Organisation</h3>
+                <p>This is important: everything <strong>smalltalk.community Inc</strong> does is for community benefit,
+                    not to make private profit for members or owners.</p>
+
+                <p>What this means:</p>
+                <ul>
+                    <li>All money we raise goes back into our programs, community work, and operating costs (including
+                        fair payment for staff)</li>
+                    <li>No member or director receives a share of our profits or owns the organisation</li>
+                    <li>Staff and contractors can be paid fair, reasonable salaries for their work, this is normal and
+                        necessary for sustainability</li>
+                    <li>Committee members volunteer their time and are not paid for governance duties (unless they also
+                        hold a separate staff role with clear boundaries)</li>
+                    <li>If we ever close down, any money left goes to another charity doing similar community work, not
+                        to individual people</li>
+                </ul>
+            </article>
+        </section>
+
+        <!-- PART 2 -->
+        <section id="part2">
+            <div class="part-divider">
+                <span class="part-number">Part 2</span>
+            </div>
+            <h2>Part 2: Who Can Be Part of smalltalk.community Inc</h2>
+
+            <article>
+                <h3><span class="clause-number">4</span>Types of Members</h3>
+                <p>We have four types of members, all essential to our inclusive community:</p>
+
+                <h4>Full Members (aged 18+, all backgrounds and identities)</h4>
+                <ul>
+                    <li>Community members who support what we do and want to help guide the organisation</li>
+                    <li>Can vote on major decisions</li>
+                    <li>Can stand for the Committee if they want to help lead</li>
+                    <li>Have no membership fee, participation is free</li>
+                </ul>
+
+                <h4>Community Members and Participants (all ages, all backgrounds)</h4>
+                <ul>
+                    <li>Children (5-11), young people (12-24), adults, seniors, families, and community members who
+                        engage with our programs and platforms</li>
+                    <li>Have voice and influence through consultation, feedback, and advisory structures</li>
+                    <li>Can participate in decision-making through youth forums, community advisory groups, or co-design
+                        processes</li>
+                    <li>Are central to everything we do</li>
+                    <li>Have no fee, participation is free</li>
+                </ul>
+
+                <h4>Organisational Partners</h4>
+                <ul>
+                    <li>Schools, community organisations, services, businesses, government agencies, and social
+                        enterprises</li>
+                    <li>Help us reach more people and strengthen community connections</li>
+                    <li>Collaborate on programs and share resources</li>
+                    <li>Attend meetings as partners and advisors</li>
+                    <li>Don't have voting rights but have significant influence through partnership</li>
+                </ul>
+
+                <h4>Sustaining Supporters</h4>
+                <ul>
+                    <li>Volunteers, donors, community leaders, and supporters who contribute ongoing time or resources
+                    </li>
+                    <li>Receive updates and recognition for their contribution</li>
+                    <li>Are valued as community connectors</li>
+                    <li>Invited to participate in activities and advisory groups</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">5</span>How to Become A Member or Participant</h3>
+
+                <h4>For Full Members (voting members, aged 18+):</h4>
+                <ul>
+                    <li>Write to us asking to join</li>
+                    <li>Tell us your name, contact details, and why you support our work</li>
+                    <li>The Committee will consider your application</li>
+                    <li>No membership fee</li>
+                    <li>You'll hear back within 2 weeks</li>
+                </ul>
+
+                <h4>For Community Participants:</h4>
+                <ul>
+                    <li>Join our programs and platforms directly</li>
+                    <li>No application needed</li>
+                    <li>No fee</li>
+                    <li>Participate at whatever level feels right for you</li>
+                </ul>
+
+                <h4>For Organisational Partners:</h4>
+                <ul>
+                    <li>Contact us to discuss partnership</li>
+                    <li>Co-create an agreement about how we work together</li>
+                    <li>This might include shared resources, co-delivery of programs, or formal collaboration</li>
+                    <li>No fee (though we may share program costs)</li>
+                </ul>
+
+                <h4>For Sustaining Supporters:</h4>
+                <ul>
+                    <li>Talk to us about how you'd like to contribute</li>
+                    <li>Could be volunteer time, skill sharing, fundraising, or regular donations</li>
+                    <li>We'll work out what role suits you best</li>
+                    <li>No membership fee</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">6</span>Accessibility and Inclusion Standards</h3>
+                <p>All membership and participation pathways are designed to be accessible and inclusive:</p>
+                <ul>
+                    <li><strong>Language:</strong> Information available in plain language and community languages as
+                        needed</li>
+                    <li><strong>Digital accessibility:</strong> Platforms meet WCAG 2.1 AA accessibility standards for
+                        people with disabilities</li>
+                    <li><strong>Cultural safety:</strong> First Nations peoples are supported through culturally
+                        informed practices and consultation</li>
+                    <li><strong>LGBTIQA+ inclusion:</strong> Safe, affirming spaces where all gender identities and
+                        sexualities are respected</li>
+                    <li><strong>Cost-free participation:</strong> No fees for any community member or participant</li>
+                    <li><strong>Multiple entry points:</strong> People can engage however suits them, from casual
+                        participation to formal membership</li>
+                    <li><strong>Physical accessibility:</strong> Meeting spaces are wheelchair accessible with parking,
+                        accessible toilets, and reasonable accommodations</li>
+                    <li><strong>Child safety:</strong> All spaces working with children meet Victorian Child Safe
+                        Standards</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">7</span>What Members and Participants Can Do</h3>
+
+                <h4>Full Members can:</h4>
+                <ul>
+                    <li>Attend all our general meetings</li>
+                    <li>Vote on major decisions (one vote per person)</li>
+                    <li>Stand for and hold positions on the Committee</li>
+                    <li>Ask to see our documents and information</li>
+                    <li>Raise concerns with the Committee</li>
+                    <li>Help shape our direction through consultation</li>
+                </ul>
+
+                <h4>Community Participants can:</h4>
+                <ul>
+                    <li>Come to our programs and use our platforms</li>
+                    <li>Be part of advisory forums (Youth, Community, Senior, or topic-specific)</li>
+                    <li>Be asked for their ideas and feedback</li>
+                    <li>Help co-design new services and programs</li>
+                    <li>Vote on matters directly affecting their cohort (when appropriate forums are established)</li>
+                    <li>Feel safe, heard, and respected</li>
+                </ul>
+
+                <h4>Organisational Partners can:</h4>
+                <ul>
+                    <li>Attend meetings as collaborative partners</li>
+                    <li>Get updates about our work and opportunities</li>
+                    <li>Provide advice and feedback</li>
+                    <li>Co-deliver programs</li>
+                    <li>Help connect their networks with our community</li>
+                </ul>
+
+                <h4>Sustaining Supporters can:</h4>
+                <ul>
+                    <li>Participate in activities and events</li>
+                    <li>Get regular updates about impact</li>
+                    <li>Receive recognition and invitations to community gatherings</li>
+                    <li>Help shape volunteer and fundraising directions</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">8</span>When Participation Ends</h3>
+                <p>Formal membership or participation ends if:</p>
+                <ul>
+                    <li>You tell us you're leaving</li>
+                    <li>You ask us to remove your data</li>
+                    <li>The Committee asks you to leave because your actions seriously harmed others or violated our
+                        safety standards (you get 2 weeks notice and a chance to respond)</li>
+                </ul>
+                <p>If you disagree with being asked to leave, you can appeal to the next general meeting within 2 weeks.
+                </p>
+                <p>We never end someone's participation due to poverty, housing status, family structure, disability,
+                    identity, age, cultural background, or inability to participate regularly.</p>
+            </article>
+        </section>
+
+        <!-- PART 3 -->
+        <section id="part3">
+            <div class="part-divider">
+                <span class="part-number">Part 3</span>
+            </div>
+            <h2>Part 3: How smalltalk.community Inc Is Led</h2>
+
+            <article>
+                <h3><span class="clause-number">9</span>Our Leadership Team (The Committee)</h3>
+                <p>smalltalk.community Inc is led by a Committee made up of volunteers from our community who care about
+                    intergenerational connection and inclusion. The Committee has:</p>
+                <ul>
+                    <li><strong>Chair</strong> (leads meetings and the Committee)</li>
+                    <li><strong>Co-Chair</strong> (supports the Chair and steps in when needed, reflecting shared
+                        leadership)</li>
+                    <li><strong>Secretary</strong> (keeps records and organises meetings)</li>
+                    <li><strong>Treasurer</strong> (manages money)</li>
+                    <li><strong>Up to 5 additional members</strong> (bring different skills, perspectives, and lived
+                        experiences)</li>
+                </ul>
+                <p>That's a maximum of 9 people on the Committee (we think this is a good size for decision-making while
+                    staying connected to community).</p>
+                <p><strong>Diverse representation on the Committee is important.</strong> We actively encourage
+                    Committee composition that reflects the community we serve, including:</p>
+                <ul>
+                    <li>Young people (aged 18-24 minimum for legal reasons)</li>
+                    <li>Seniors with lived experience</li>
+                    <li>LGBTIQA+ identified people</li>
+                    <li>First Nations representation</li>
+                    <li>People from CALD backgrounds</li>
+                    <li>People with disability experience</li>
+                    <li>Parents and family representatives</li>
+                    <li>Professional expertise in community, youth work, or governance</li>
+                </ul>
+                <p>Everyone on the Committee must be at least 18 years old (mainly for legal reasons and liability).</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">10</span>How Committee Members Are Chosen</h3>
+                <h4>Every two years at our Annual General Meeting:</h4>
+                <ul>
+                    <li>The community is asked who they'd like on the Committee</li>
+                    <li>People can nominate someone, and that person has to agree</li>
+                    <li>Everyone votes for their choices</li>
+                    <li>The people with the most votes become Committee members</li>
+                    <li>If a position becomes empty during the year, the Committee can appoint someone to fill it until
+                        the next election</li>
+                </ul>
+                <p>We actively recruit Committee members who reflect our diverse community and provide support so people
+                    from underrepresented groups can participate (accessibility support, training, reimbursement for
+                    costs).</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">11</span>Special Protections for Our Founder</h3>
+                <p>Ryan Hutchison, who founded smalltalk.community Inc, has the right to:</p>
+                <ul>
+                    <li>Be on the Committee for as long as they want (if re-elected or re-appointed)</li>
+                    <li>Be asked about major decisions that affect the organisation's purpose and vision</li>
+                    <li>Raise concerns about whether we're staying true to our founding mission</li>
+                    <li>Have these concerns discussed at the next general meeting</li>
+                </ul>
+                <p><strong>Ryan can only be asked to step down from the Committee if:</strong></p>
+                <ul>
+                    <li>There's a real, documented problem (like a serious breach of our values or repeated policy
+                        violations)</li>
+                    <li>We give them 4 weeks written notice explaining the issue</li>
+                    <li>They get a fair chance to respond</li>
+                    <li>Two-thirds of our Full Members vote to ask them to step down</li>
+                </ul>
+                <p>This is fair both ways: it protects Ryan's ability to shape the organisation they founded, and it
+                    prevents someone being randomly kicked out.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">12</span>What The Committee Does</h3>
+                <p><strong>The Committee shall:</strong></p>
+                <ul>
+                    <li>Manage our money and property responsibly</li>
+                    <li>Make decisions that help us achieve our charitable purposes</li>
+                    <li>Hire and manage staff (if we have them)</li>
+                    <li>Set policies that guide how we work</li>
+                    <li>Make contracts on behalf of the organisation</li>
+                    <li>Ensure we follow all the laws</li>
+                    <li>Consult with community members on big decisions</li>
+                    <li>Keep good records of what we do and decide</li>
+                    <li>Report to community regularly about our progress, finances, and impact</li>
+                    <li>Actively promote and protect the inclusion of all community cohorts</li>
+                    <li>Ensure our platforms and programs are accessible to everyone</li>
+                </ul>
+                <p><strong>The Committee must:</strong></p>
+                <ul>
+                    <li>Meet at least four times a year (roughly every three months)</li>
+                    <li>Give all community members a chance to raise concerns</li>
+                    <li>Act in the best interest of the whole community (not themselves)</li>
+                    <li>Make sure we stay focused on our charitable purpose</li>
+                    <li>Consult with diverse community members before major decisions</li>
+                    <li>Regularly review whether we're truly inclusive and accessible</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">13</span>Responsible Persons and Legal Duties</h3>
+                <p>Committee members are called "Responsible Persons" under Australian law. This sounds formal, but it
+                    just means:</p>
+                <p><strong>Responsible Persons must:</strong></p>
+                <ul>
+                    <li>Do their job carefully and thoughtfully</li>
+                    <li>Act honestly and in the best interests of smalltalk.community Inc</li>
+                    <li>Not use their position for personal benefit</li>
+                    <li>Tell the Committee if they have a personal interest in a decision (and not vote on it)</li>
+                    <li>Follow Australian laws and ACNC requirements</li>
+                    <li>Know what they're responsible for</li>
+                    <li>Work to the YACVic Code of Ethical Practice principles (empowerment, participation, social
+                        justice, respect for diversity, safety, transparency)</li>
+                </ul>
+                <p><strong>The Committee will:</strong></p>
+                <ul>
+                    <li>Train all new members about their legal responsibilities and the YACVic Code of Ethical Practice
+                    </li>
+                    <li>Keep a register of who's on the Committee</li>
+                    <li>Make sure no one holding position has been convicted of serious crimes or banned from being a
+                        director</li>
+                    <li>Conduct checks before appointing new Committee members</li>
+                    <li>Provide ongoing professional development and support</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">14</span>Who Cannot Be On The Committee</h3>
+                <p>Before we appoint someone to the Committee, we check that they're not:</p>
+                <ul>
+                    <li>Disqualified from running a charity or organisation</li>
+                    <li>Banned by the Australian Charities and Not-for-Profits Commission (ACNC)</li>
+                    <li>Subject to a court order banning them from holding office</li>
+                    <li>Convicted of a serious crime involving dishonesty, violence, or child/elder abuse in the past 10
+                        years</li>
+                    <li>Subject to a Domestic Violence Order</li>
+                </ul>
+                <p><strong>We check this by:</strong></p>
+                <ul>
+                    <li>Asking the person to declare they're suitable</li>
+                    <li>Checking official government registers</li>
+                    <li>Doing appropriate background checks (WWC Check if working with young people)</li>
+                    <li>Seeking references</li>
+                </ul>
+                <p>If someone becomes disqualified after being appointed, they must immediately step down.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">15</span>Removing Committee Members</h3>
+                <p>A Committee member steps down if they:</p>
+                <ul>
+                    <li>Resign (tell us in writing)</li>
+                    <li>Become disqualified (can't legally serve)</li>
+                    <li>Are voted out by two-thirds of Full Members (requires 4 weeks notice and a chance to respond
+                        first)</li>
+                </ul>
+                <p><strong>Special rule for our Executive Director (if we have one):</strong> They can only be removed
+                    if there's documented cause (like serious misconduct), they get 4 weeks notice, and two-thirds of
+                    Full Members agree.</p>
+                <p>This keeps things fair.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">16</span>Conflicts of Interest</h3>
+                <p>Sometimes a Committee member might have a personal reason to want a decision to go a certain way
+                    (like if it affects their business, family, or identity). That's called a "conflict of interest."
+                </p>
+                <p><strong>When a Committee member has a conflict of interest, they must:</strong></p>
+                <ul>
+                    <li>Tell everyone about it before it's discussed</li>
+                    <li>Not vote on that decision</li>
+                    <li>Usually step out of the room while it's being discussed (unless everyone agrees they should
+                        stay)</li>
+                </ul>
+                <p>We keep a record of all conflicts of interest.</p>
+                <p><strong>Special note:</strong> We recognise that some Committee members' lived experience or identity
+                    (e.g., being LGBTIQA+, First Nations, disability experience) might feel personally relevant to
+                    certain decisions. That's not a conflict of interest, it's valuable perspective. A conflict is when
+                    someone has a financial or direct personal benefit at stake.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">17</span>How The Committee Makes Decisions</h3>
+                <h4>Meetings:</h4>
+                <ul>
+                    <li>We give at least 7 days notice of Committee meetings</li>
+                    <li>We need at least 50% of Committee members present to make decisions (minimum 3 people)</li>
+                    <li>People can join by video or phone if they can't be there in person</li>
+                    <li>Meetings are held at times accessible to our community (not just business hours)</li>
+                </ul>
+                <h4>Decision-making:</h4>
+                <ul>
+                    <li>We decide by majority vote (more than half voting yes)</li>
+                    <li>If there's a tie, the Chair has a casting vote (unless they have a conflict of interest)</li>
+                    <li>We can also decide by written vote if it's urgent</li>
+                </ul>
+                <h4>Records:</h4>
+                <ul>
+                    <li>We write down what happened at each meeting</li>
+                    <li>We record who was there, what was discussed, and what we decided</li>
+                    <li>Members can ask to see these minutes</li>
+                    <li>We share summaries of key decisions with the broader community</li>
+                </ul>
+            </article>
+        </section>
+
+        <!-- Continuing with Parts 4-10 in next section -->
+        <!-- PART 4 -->
+        <section id="part4">
+            <div class="part-divider">
+                <span class="part-number">Part 4</span>
+            </div>
+            <h2>Part 4: Member Meetings and Having a Say</h2>
+
+            <article>
+                <h3><span class="clause-number">18</span>Annual General Meeting (AGM)</h3>
+                <p>Every year, usually in May-July, we hold an Annual General Meeting where all members can come
+                    together and have a say.</p>
+                <h4>At the AGM, we:</h4>
+                <ul>
+                    <li>Report on what happened this year</li>
+                    <li>Show our financial statements</li>
+                    <li>Elect the Committee for next year</li>
+                    <li>Hear from the Chair and Treasurer</li>
+                    <li>Answer member questions</li>
+                    <li>Vote on any major changes</li>
+                    <li>Celebrate community wins and acknowledge contributions</li>
+                </ul>
+                <h4>We'll tell you about the AGM:</h4>
+                <ul>
+                    <li>At least 3 weeks before it happens</li>
+                    <li>What the meeting is about</li>
+                    <li>When and where it's happening</li>
+                    <li>How to join (in person or online, with accessibility support available)</li>
+                    <li>In plain language and community languages</li>
+                </ul>
+                <h4>The AGM is accessible:</h4>
+                <ul>
+                    <li>Wheelchair accessible venue with accessible parking and toilets</li>
+                    <li>Live captioning or Auslan interpreters</li>
+                    <li>Child care provided</li>
+                    <li>Online option for people who can't attend in person</li>
+                    <li>Snacks and breaks</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">19</span>Special Meetings</h3>
+                <p>If something important comes up and we can't wait for the Annual Meeting, we can call a Special
+                    Meeting.</p>
+                <p>The Committee can call a Special Meeting. Or if at least 25% of Full Members ask for one (in
+                    writing), we have to call one within 3 weeks.</p>
+                <p>We'll give 2 weeks notice of what the meeting is about.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">20</span>How Voting Works</h3>
+                <h4>Who can vote:</h4>
+                <ul>
+                    <li>Full Members aged 18+ can vote (one vote each)</li>
+                    <li>Community participants can be invited to vote on matters directly affecting them (through
+                        advisory forums or specific votes)</li>
+                </ul>
+                <h4>Decision types:</h4>
+                <ul>
+                    <li><strong>Ordinary decisions</strong> (most things) need more than half of voting members to agree
+                    </li>
+                    <li><strong>Big decisions</strong> (changing the Constitution, removing a Committee member, winding
+                        up the organisation) need two-thirds to agree</li>
+                </ul>
+                <h4>How we vote:</h4>
+                <ul>
+                    <li>Usually by a show of hands</li>
+                    <li>Or by secret ballot if someone asks for it</li>
+                    <li>You can't vote if your membership (if applicable) is overdue</li>
+                    <li>We can vote electronically if we set that up</li>
+                    <li>We can vote by proxy if someone can't attend</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">21</span>Quorum (How Many People Need To Be There)</h3>
+                <p>We need at least 10 Full Members at a meeting for it to be official.</p>
+                <p>If we don't have 10 people at the scheduled time, we'll wait 30 minutes then reschedule for another
+                    date. The rescheduled meeting can go ahead with whoever's there (no 10-person rule for rescheduled
+                    meetings).</p>
+            </article>
+        </section>
+
+        <!-- PART 5 -->
+        <section id="part5">
+            <div class="part-divider">
+                <span class="part-number">Part 5</span>
+            </div>
+            <h2>Part 5: Money and Resources</h2>
+
+            <article>
+                <h3><span class="clause-number">22</span>Financial Year</h3>
+                <p>Our financial year runs from 1 July to 30 June.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">23</span>How We Manage Money</h3>
+                <h4>Basic principles:</h4>
+                <ul>
+                    <li>All money goes toward helping our community (not personal profit)</li>
+                    <li>We keep accurate records of all money in and out</li>
+                    <li>We have strong checks to prevent fraud or mistakes</li>
+                    <li>We only spend money the way members and Committee have agreed</li>
+                    <li>Membership and community participation are free (no cost barriers to inclusion)</li>
+                </ul>
+                <h4>Bank accounts:</h4>
+                <ul>
+                    <li>All our money is in an official bank account in the organisation's name</li>
+                    <li>Two people have to approve any withdrawal</li>
+                    <li>We check the bank balance every month</li>
+                </ul>
+                <h4>Spending:</h4>
+                <ul>
+                    <li>Small regular spending is approved by the Treasurer or Committee</li>
+                    <li>Large amounts (over $5,000) or unusual spending needs full Committee approval</li>
+                    <li>No Committee member gets paid for being on the Committee (unless it's a special paid role like
+                        Executive Director, which has to be approved separately)</li>
+                    <li>Any spending on programs prioritises access for people experiencing economic hardship</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">24</span>Annual Financial Report</h3>
+                <p>Within 4 months after the end of our financial year, we prepare a financial report showing:</p>
+                <ul>
+                    <li>All money we received</li>
+                    <li>All money we spent</li>
+                    <li>What we have in the bank</li>
+                    <li>Any money people owe us or we owe them</li>
+                    <li>Impact achieved with the funding</li>
+                </ul>
+                <p>We present this at the Annual General Meeting. Members can ask questions about it.</p>
+                <p>We also follow all the rules set by Consumer Affairs Victoria (for incorporated associations) and the
+                    ACNC (for charities).</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">25</span>Audits and Checks</h3>
+                <p>Depending on how big we grow, we might have an external auditor or do an internal financial check.
+                </p>
+                <p>Any audit is done by someone independent (not on the Committee). We tell all members about the
+                    results.</p>
+            </article>
+        </section>
+
+        <!-- PART 6 -->
+        <section id="part6">
+            <div class="part-divider">
+                <span class="part-number">Part 6</span>
+            </div>
+            <h2>Part 6: How We Work Together</h2>
+
+            <article>
+                <h3><span class="clause-number">26</span>Advisory Forums and Community Voice</h3>
+                <p>We establish multiple advisory forums to ensure all community cohorts have voice and influence:</p>
+
+                <h4>Youth Advisory Forum (young people aged 12-24)</h4>
+                <ul>
+                    <li>Meets at least four times a year</li>
+                    <li>Gives advice and feedback on programs</li>
+                    <li>Has real say in decisions affecting young people</li>
+                    <li>Helps co-design new services</li>
+                    <li>Members don't have formal legal responsibility (not Responsible Persons)</li>
+                    <li>Is supported by Committee members or staff</li>
+                </ul>
+
+                <h4>Children's Advisory Forum (children aged 5-11)</h4>
+                <ul>
+                    <li>Meets quarterly at child-friendly times and locations</li>
+                    <li>Provides age-appropriate input on programs and services</li>
+                    <li>Helps co-design activities and spaces for children</li>
+                    <li>Is led and supported by trained facilitators</li>
+                    <li>Decisions are respectfully considered in Committee planning</li>
+                </ul>
+
+                <h4>Senior Advisory Forum (people aged 65+)</h4>
+                <ul>
+                    <li>Meets quarterly</li>
+                    <li>Advises on accessibility, digital engagement, intergenerational programs</li>
+                    <li>Shares wisdom and lived experience</li>
+                    <li>Helps recruit and mentor senior volunteers</li>
+                    <li>Provides feedback on programs</li>
+                </ul>
+
+                <h4>Community Advisory Group (diverse community representatives)</h4>
+                <ul>
+                    <li>Includes LGBTIQA+ representatives, First Nations members, CALD community members, people with
+                        disabilities, families, professionals</li>
+                    <li>Meets quarterly or as needed</li>
+                    <li>Advises on inclusion, accessibility, cultural safety</li>
+                    <li>Co-designs major programs and policies</li>
+                    <li>Ensures we're serving the whole community authentically</li>
+                </ul>
+
+                <h4>Professional Advisory Panel (as needed)</h4>
+                <ul>
+                    <li>Youth workers, educators, social workers, community leaders</li>
+                    <li>Provides expertise on evidence-based practice</li>
+                    <li>Advises on partnerships and service integration</li>
+                </ul>
+
+                <p>All advisory members receive support (payment for time if needed, accessibility support,
+                    recognition).</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">27</span>Policies We'll Create and Keep Updated</h3>
+                <p>The Committee will create written policies covering:</p>
+                <ul>
+                    <li><strong>Child Safeguarding</strong> - How we keep children safe (Victorian Child Safe Standards
+                        compliance, Working With Children Check requirements)</li>
+                    <li><strong>Youth Safeguarding</strong> - How we keep young people safe (Victorian Child Safe
+                        Standards compliance)</li>
+                    <li><strong>Elder Dignity and Safeguarding</strong> - Protecting seniors from abuse, financial
+                        exploitation, and ensuring respectful engagement</li>
+                    <li><strong>Risk Management</strong> - What problems might happen and how we'll prevent or manage
+                        them</li>
+                    <li><strong>Accessibility and Inclusion</strong> - How we ensure universal access across all
+                        disability types, cultural backgrounds, identities</li>
+                    <li><strong>Cultural Safety</strong> - Specific protocols for First Nations engagement and CALD
+                        community inclusion</li>
+                    <li><strong>LGBTIQA+ Inclusion</strong> - Creating affirming, safe spaces, preventing discrimination
+                    </li>
+                    <li><strong>Conflicts of Interest</strong> - How we handle situations where someone's personal
+                        interest conflicts with the organisation's interest</li>
+                    <li><strong>Complaints and Grievances</strong> - How members can raise concerns or complaints</li>
+                    <li><strong>Privacy</strong> - How we protect people's personal information (Australian Privacy
+                        Principles compliance)</li>
+                    <li><strong>Fundraising</strong> - How we raise money ethically</li>
+                    <li><strong>Whistleblower Protection</strong> - How people can report serious problems safely and
+                        confidentially</li>
+                    <li><strong>Succession Planning</strong> - What happens when key people leave the organisation</li>
+                    <li><strong>Digital Safety and Moderation</strong> - How we keep online spaces safe and respectful
+                    </li>
+                </ul>
+                <p>All policies are co-created with community input and reviewed annually.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">28</span>Records We Keep</h3>
+                <p>smalltalk.community Inc keeps official records including:</p>
+                <ul>
+                    <li>Who our members and participants are</li>
+                    <li>Who's on the Committee and when they were appointed</li>
+                    <li>Minutes of all Committee and member meetings</li>
+                    <li>Our financial records and bank statements</li>
+                    <li>Contracts and agreements</li>
+                    <li>Our policies</li>
+                    <li>Community feedback and evaluation data</li>
+                    <li>Incident reports and how we responded</li>
+                </ul>
+                <p><strong>Members and participants can ask to see these records</strong> (except confidential personal
+                    or legal information) by writing to the Secretary. We'll give you access within 10 working days.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">29</span>Community Partnership</h3>
+                <p>We believe we do better work by partnering with other organisations and community members.</p>
+                <p><strong>We maintain relationships with:</strong></p>
+                <ul>
+                    <li>Local schools and educational services</li>
+                    <li>Health and counselling services</li>
+                    <li>Community organisations and social enterprises</li>
+                    <li>Young people's and children's families and caregivers</li>
+                    <li>Local and state government</li>
+                    <li>First Nations Elders and community leaders</li>
+                    <li>CALD community organisations</li>
+                    <li>LGBTIQA+ support services</li>
+                    <li>Disability support services</li>
+                    <li>Volunteer and employment networks</li>
+                    <li>Aged care and senior support services</li>
+                </ul>
+                <p><strong>We consult with these partners</strong> on major decisions and work together on programs. We
+                    recognise we're part of a wider community ecosystem, not separate from it. We actively avoid
+                    duplicating services, instead we strengthen the connections between existing support.</p>
+            </article>
+        </section>
+
+        <!-- PART 7, 8, 9, 10 condensed for space -->
+        <section id="part7">
+            <div class="part-divider">
+                <span class="part-number">Part 7</span>
+            </div>
+            <h2>Part 7: Making Changes</h2>
+
+            <article>
+                <h3><span class="clause-number">30</span>Changing The Constitution</h3>
+                <p>To change this Constitution, we need:</p>
+                <ul>
+                    <li>3 weeks notice to all members</li>
+                    <li>A two-thirds majority vote at a general meeting</li>
+                    <li>We then notify Consumer Affairs Victoria within 60 days</li>
+                    <li>If we're registered with the ACNC, we notify them too</li>
+                </ul>
+                <p>We can change things if we need to, but we don't change our core purpose or values lightly. Major
+                    changes might include community consultation beyond just formal members.</p>
+            </article>
+        </section>
+
+        <section id="part8">
+            <div class="part-divider">
+                <span class="part-number">Part 8</span>
+            </div>
+            <h2>Part 8: What Happens If smalltalk.community Inc Closes Down</h2>
+
+            <article>
+                <h3><span class="clause-number">31</span>Winding Up</h3>
+                <p>If the organisation ever closes (we hope it doesn't, but we have to plan for it):</p>
+                <p><strong>Two-thirds of Full Members have to agree</strong> it's the right decision.</p>
+                <p>All our money gets used to pay any debts.</p>
+                <p>Any money left over goes to another charity doing similar community work across all ages and cohorts
+                    (members vote on which one). If no charity is chosen, it goes to the ACNC to be used for similar
+                    charitable work.</p>
+                <p>All data about community members is securely deleted or transferred to another trusted service.</p>
+            </article>
+        </section>
+
+        <section id="part9">
+            <div class="part-divider">
+                <span class="part-number">Part 9</span>
+            </div>
+            <h2>Part 9: Following Australian Charity Standards and YACVic Principles</h2>
+
+            <article>
+                <h3><span class="clause-number">32</span>ACNC Governance Standards</h3>
+                <p>If we register as a charity with the Australian Charities and Not-for-Profits Commission (ACNC), we
+                    commit to these standards:</p>
+
+                <h4>Standard 1: Our Purpose</h4>
+                <p>We operate solely to help all community members thrive (not for personal profit).</p>
+
+                <h4>Standard 2: Accountability</h4>
+                <p>We regularly meet with members, share information about what we do, and listen to concerns.</p>
+
+                <h4>Standard 3: Legal Compliance</h4>
+                <p>We follow all relevant laws and tell the ACNC if something serious goes wrong.</p>
+
+                <h4>Standard 4: Suitable People</h4>
+                <p>We check that Committee members aren't disqualified from holding office.</p>
+
+                <h4>Standard 5: Duties of Committee Members</h4>
+                <p>We make sure Committee members understand they must act honestly, carefully, and in the
+                    organisation's best interest.</p>
+
+                <h4>Standard 6: Complaints</h4>
+                <p>We have ways for members and participants to raise complaints and concerns.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">33</span>YACVic Code of Ethical Practice Commitment</h3>
+                <p>smalltalk.community Inc adopts and commits to the YACVic Code of Ethical Practice for the Victorian
+                    Youth
+                    Sector. This guides how we engage with young people and informs our broader community practice.</p>
+                <p><strong>We commit to the following principles:</strong></p>
+                <ul>
+                    <li><strong>Empowerment</strong> - We amplify all community members' voices and agency</li>
+                    <li><strong>Participation</strong> - We create genuine opportunities for all to participate in
+                        decisions affecting them</li>
+                    <li><strong>Social justice</strong> - We advocate for equity, human rights, and justice across all
+                        cohorts</li>
+                    <li><strong>Climate justice</strong> - We care for and connect with our environment</li>
+                    <li><strong>Respect for human dignity and worth</strong> - We respect all community members' dignity
+                    </li>
+                    <li><strong>Respect for diversity</strong> - We actively respect intersecting identities, cultures,
+                        abilities, and backgrounds</li>
+                    <li><strong>Connectedness</strong> - We build intergenerational and community connections</li>
+                    <li><strong>Positive wellbeing</strong> - We support all community members' abilities to thrive</li>
+                    <li><strong>Safety</strong> - We create environments that are physically, psychologically, and
+                        culturally safe</li>
+                    <li><strong>Transparency, honesty, and integrity</strong> - We're clear and consistent in our values
+                    </li>
+                    <li><strong>Social and ecological context</strong> - We understand how overlapping identities shape
+                        people's lives</li>
+                    <li><strong>Knowledge and self-care</strong> - We keep up to date with evidence and prioritise
+                        wellbeing</li>
+                    <li><strong>Strengths-based approach</strong> - We value community knowledge and highlight strengths
+                    </li>
+                </ul>
+                <p>All Committee members receive training on these principles and they guide our decision-making.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">34</span>Regular Review</h3>
+                <p>Every 3 years, we review our governance to check:</p>
+                <ul>
+                    <li>Is the Constitution still working?</li>
+                    <li>Are we meeting ACNC standards?</li>
+                    <li>Are we living out our commitment to inclusion and diversity?</li>
+                    <li>Do we need to make changes?</li>
+                    <li>What do members and community think?</li>
+                </ul>
+                <p>We involve diverse community members in this review and tell everyone about what we find and any
+                    changes needed.</p>
+            </article>
+        </section>
+
+        <section id="part10">
+            <div class="part-divider">
+                <span class="part-number">Part 10</span>
+            </div>
+            <h2>Part 10: Words We Use and Final Notes</h2>
+
+            <article>
+                <h3><span class="clause-number">35</span>Definitions</h3>
+                <ul>
+                    <li><strong>smalltalk.community Inc</strong> = the organisation described in this document</li>
+                    <li><strong>Committee</strong> = the people leading the organisation</li>
+                    <li><strong>Members</strong> = people who are officially part of smalltalk.community Inc (Full
+                        Members)
+                    </li>
+                    <li><strong>Community participants</strong> = people who engage with our programs and platforms at
+                        any level</li>
+                    <li><strong>Responsible Persons</strong> = Committee members who help run the organisation</li>
+                    <li><strong>Special Resolution</strong> = at least two-thirds of voting members agree</li>
+                    <li><strong>Ordinary Resolution</strong> = more than half of voting members agree</li>
+                    <li><strong>In Writing</strong> = could be email or other electronic communication</li>
+                    <li><strong>Community Cohorts</strong> = all the different groups of people we serve (children,
+                        young people, adults, seniors, LGBTIQA+, First Nations, CALD, people with disabilities,
+                        families, organisations, professionals)</li>
+                    <li><strong>Accessible</strong> = able to be used by people with all types of disabilities and
+                        diverse needs</li>
+                    <li><strong>CALD</strong> = Culturally and Linguistically Diverse</li>
+                    <li><strong>LGBTIQA+</strong> = Lesbian, Gay, Bisexual, Transgender, Intersex, Queer, Asexual and
+                        all other diverse gender identities and sexualities</li>
+                </ul>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">36</span>If Part Of This Doesn't Work</h3>
+                <p>If a court decides part of this Constitution breaks the law, we remove that part and keep everything
+                    else.</p>
+            </article>
+
+            <article>
+                <h3><span class="clause-number">37</span>What Law Applies</h3>
+                <p>If this Constitution conflicts with Victorian or Australian law, the law wins.</p>
+            </article>
+        </section>
+
+        <section>
+            <div class="part-divider">
+                <span class="part-number">Part 11</span>
+            </div>
+            <h2>Part 11: Getting Started</h2>
+
+            <div class="document-meta">
+                <p><strong>This Constitution was adopted and accepted by smalltalk.community Inc members on:</strong>
+                </p>
+                <p><strong>Date:</strong> [DATE OF GENERAL MEETING]</p>
+                <p><strong>Approved by:</strong> [NAME, CHAIR] (Signature)</p>
+                <p><strong>Witnessed by:</strong> [NAME, SECRETARY] (Signature)</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Victorian Compliance Checklist</h2>
+            <p>This Constitution addresses all 23 things the Victorian Associations Incorporation Reform Act 2012
+                requires. See the full HTML document for complete details.</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <h3>About This Document</h3>
+        <p><strong>Accessibility Statement:</strong> This Constitution is designed to meet WCAG 2.1 AA accessibility
+            standards. It uses clear fonts, generous spacing, high colour contrast, semantic HTML, and is fully keyboard
+            navigable. You can enlarge text, adjust spacing, use a screen reader, or print it easily.</p>
+        <p><strong>Document Information:</strong> Constitution of smalltalk.community Inc, created January
+            2026. This document reflects smalltalk.community Inc's commitment to universal inclusion, genuine
+            participation,
+            transparency, and community co-leadership across all ages and identities.</p>
+        <p><strong>Before you adopt this,</strong> please have a community lawyer review it (costs $300-800) to ensure
+            it works for your specific situation. Laws change and this document is dated January 2026.</p>
+        <p><strong>Questions?</strong> Contact smalltalk.community Inc for more information about this Constitution and
+            how
+            we govern together.</p>
+    </footer>
+
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

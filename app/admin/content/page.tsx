@@ -1,4 +1,6 @@
 import { db } from "@/server/db";
+import * as Sentry from "@sentry/nextjs";
+
 import {
     users,
     musicianProfiles,
@@ -30,6 +32,58 @@ import {
     Database,
 } from "lucide-react";
 
+/**
+ * Helper to safely execute a count query and return a default value on failure.
+ * @param query A promise representing the database count query
+ * @param context A string describing what is being counted for better error logging
+ * @returns A promise resolving to the query result or a default [{count: 0}]
+ */
+async function safeQueryCount(
+    query: Promise<{ count: number }[]>,
+    context: string
+): Promise<{ count: number }[]> {
+    try {
+        return await query;
+    } catch (err) {
+        const timestamp = new Date().toISOString();
+        console.error(`[${timestamp}] [Admin Content] safeQueryCount failed for: ${context}`, err);
+
+        // Enhance observability with Sentry tags and scope
+        Sentry.withScope((scope) => {
+            scope.setTag("admin_section", "content_overview");
+            scope.setTag("query_context", context);
+            scope.setExtra("timestamp", timestamp);
+            Sentry.captureException(err);
+        });
+
+        // NOTE: Read-only fetch errors in Server Components are tracked via Sentry/console.
+        // We avoid logging to `admin_activity_log` for pure reads to prevent DB noise.
+        return [{ count: 0 }];
+    }
+}
+
+/**
+ * Fetches platform-wide content statistics for the admin dashboard.
+ * 
+ * This function retrieves counts for various content types (musicians, bands, gigs, etc.)
+ * using optimized queries. It handles database failures gracefully by returning
+ * zeroed-out stats instead of throwing.
+ * 
+ * @returns {Promise<{
+ *   musicians: number;
+ *   bands: number;
+ *   gigs: number;
+ *   classifieds: number;
+ *   professionals: number;
+ *   listings: number;
+ *   volunteers: number;
+ *   organisations: number;
+ *   volunteerRoles: number;
+ *   announcements: number;
+ *   activeAnnouncements: number;
+ * }>} An object containing counts for all major platform content types.
+ * @throws {never} This function catches all internal database errors and tracks them via Sentry.
+ */
 async function getContentStats() {
     const [
         musiciansCount,
@@ -44,17 +98,17 @@ async function getContentStats() {
         announcementsCount,
         activeAnnouncementsCount,
     ] = await Promise.all([
-        db.select({ count: count() }).from(musicianProfiles),
-        db.select({ count: count() }).from(bands),
-        db.select({ count: count() }).from(gigs),
-        db.select({ count: count() }).from(classifieds),
-        db.select({ count: count() }).from(professionalProfiles),
-        db.select({ count: count() }).from(marketplaceListings),
-        db.select({ count: count() }).from(volunteerProfiles),
-        db.select({ count: count() }).from(organisations),
-        db.select({ count: count() }).from(volunteerRoles),
-        db.select({ count: count() }).from(announcements),
-        db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)),
+        safeQueryCount(db.select({ count: count() }).from(musicianProfiles), "musician profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(bands), "band profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(gigs), "gig listings count"),
+        safeQueryCount(db.select({ count: count() }).from(classifieds), "classified ads count"),
+        safeQueryCount(db.select({ count: count() }).from(professionalProfiles), "professional profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(marketplaceListings), "marketplace listings count"),
+        safeQueryCount(db.select({ count: count() }).from(volunteerProfiles), "volunteer profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(organisations), "organisation profiles count"),
+        safeQueryCount(db.select({ count: count() }).from(volunteerRoles), "volunteer opportunities count"),
+        safeQueryCount(db.select({ count: count() }).from(announcements), "total announcements count"),
+        safeQueryCount(db.select({ count: count() }).from(announcements).where(eq(announcements.isActive, true)), "active announcements count"),
     ]);
 
     return {
@@ -71,6 +125,9 @@ async function getContentStats() {
         activeAnnouncements: activeAnnouncementsCount[0]?.count ?? 0,
     };
 }
+
+
+
 
 interface ContentCard {
     title: string;
@@ -179,7 +236,7 @@ export default async function ContentOverviewPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {Object.values(stats).reduce((a, b) => a + b, 0) - stats.activeAnnouncements}
+                            {Object.values(stats).reduce((a: number, b: number) => a + b, 0) - stats.activeAnnouncements}
                         </div>
                     </CardContent>
                 </Card>
@@ -226,7 +283,7 @@ export default async function ContentOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {localMusicNetworkContent.map((item) => (
+                        {localMusicNetworkContent.map((item: any) => (
                             <div
                                 key={item.title}
                                 className="flex items-center gap-4 p-4 rounded-lg border bg-card"
@@ -256,7 +313,7 @@ export default async function ContentOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-3">
-                        {volunteerPassportContent.map((item) => (
+                        {volunteerPassportContent.map((item: any) => (
                             <div
                                 key={item.title}
                                 className="flex items-center gap-4 p-4 rounded-lg border bg-card"
@@ -293,7 +350,7 @@ export default async function ContentOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-4 md:grid-cols-2">
-                        {platformContent.map((item) => (
+                        {platformContent.map((item: any) => (
                             <div
                                 key={item.title}
                                 className="flex items-center gap-4 p-4 rounded-lg border bg-card"

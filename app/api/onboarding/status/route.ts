@@ -16,7 +16,7 @@ export async function GET(req: Request) {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const userRec = await db.select().from(users).where(eq(users.id, user.id)).limit(1).then(res => res[0]);
+        const userRec = await db.select().from(users).where(eq(users.id, user.id)).limit(1).then((res: any) => res[0]);
 
         if (!userRec) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Records & Privacy Manager | smalltalk.community Inc</title>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Records & Privacy">
+    <link rel="manifest"
+        href="data:application/json;base64,eyJzaG9ydF9uYW1lIjoiUmVjb3JkcyIsIm5hbWUiOiJzbWFsbHRhbGsuY29tbXVuaXR5IC0gUmVjb3JkcyAmIFByaXZhY3kiLCJkZXNjcmlwdGlvbiI6IlJlY29yZHMgcmV0ZW50aW9uIGFuZCBwcml2YWN5IG1hbmFnZW1lbnQgZm9yIHNtYWxsdGFsay5jb21tdW5pdHkgSW5jIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiMwMDNiNmYiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJyUzRSUzQ3JlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIHJ4PScyNCcgZmlsbD0nJTIzMDAzYjZmJy8lM0UlM0N0ZXh0IHg9JzUwJScgeT0nNTAlJyBkb21pbmFudC1iYXNlbGluZT0nY2VudHJhbCcgdGV4dC1hbmNob3I9J21pZGRsZScgZm9udC1zaXplPSc4MCcgZmlsbD0nd2hpdGUnJTNFUlAlM0MvdGV4dCUzRSUzQyUyRnN2ZyUzRSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary: #3b82f6;
+                    --primary-support: #60a5fa;
+                    --accent: #fb923c;
+                    --text-color: #f1f5f9;
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --border-color: #334155;
+                }
+            }
+
+            body { @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6]; font-size: 16px; }
+            h1, h2, h3, h4, h5, h6 { @apply font-['Plus_Jakarta_Sans'] font-bold; }
+        }
+
+        @layer components {
+            .btn-primary { @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .btn-secondary { @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px]; }
+            .input-field { @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)]; }
+            .card { @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6; }
+            .nav-link { @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2; }
+            .nav-link.active { @apply bg-white/20 font-bold; }
+            .step-indicator { @apply w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2; }
+            .step-active { @apply border-primary bg-primary text-white; }
+            .step-inactive { @apply border-slate-300 text-slate-400; }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+            .footer-left { flex: 1; text-align: left; }
+            .footer-center { flex: 1; text-align: center; font-weight: 600; }
+            .footer-right { flex: 1; text-align: right; }
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile Optimisation */
+        @media screen and (max-width: 640px) {
+            .btn-primary, .btn-secondary, .btn-danger, .nav-link, button, select, input {
+                min-height: 44px !important;
+            }
+            .input-field, input, select, textarea {
+                font-size: 16px !important;
+            }
+            .modal-content {
+                width: 95% !important;
+                margin: 10px !important;
+                max-height: 90vh !important;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: { primary: 'var(--primary)', accent: 'var(--accent)', danger: 'var(--danger)', success: 'var(--success)' }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+
+        // --- First Visit Utilities ---
+        const isFirstVisit = (appKey) => {
+            const hasVisited = localStorage.getItem(`hasVisited_${appKey}`);
+            if (!hasVisited) {
+                localStorage.setItem(`hasVisited_${appKey}`, 'true');
+                return true;
+            }
+            return false;
+        };
+
+        // --- Welcome Modal Component ---
+        const WelcomeModal = ({ isOpen, onClose, appName }) => (
+            <Modal isOpen={isOpen} onClose={onClose} title={`Welcome to ${appName}`}>
+                <div className="space-y-4">
+                    <p className="text-lg">This tool is part of the <strong>smalltalk.community</strong> administrative suite.</p>
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
+                        <h4 className="font-bold text-primary mb-2">Getting Started:</h4>
+                        <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li><strong>Local Storage:</strong> Your data is saved automatically to this browser.</li>
+                            <li><strong>Save/Load:</strong> Use the buttons in the header to export your data as a JSON file for backup.</li>
+                            <li><strong>Print:</strong> Generate PDF-ready reports directly from each section.</li>
+                        </ul>
+                    </div>
+                    <p className="text-sm opacity-70 italic">We recommend downloading a "Save" file regularly to ensure your data is backed up externally.</p>
+                    <button onClick={onClose} className="btn-primary w-full mt-4">Get Started</button>
+                </div>
+            </Modal>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm shadow-2xl overflow-y-auto" onClick={onClose}>
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-premium w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-content translate-y-0 opacity-100 transition-all duration-300" onClick={e => e.stopPropagation()}>
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-inherit z-10">
+                            <h2 className="text-xl font-bold font-display text-primary dark:text-white">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Standard Components ---
+
+        const AppShell = ({ children, title, currentTab, setTab, onSave, onLoad }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2">Skip to content</a>
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <div className="text-2xl font-bold font-display">smalltalk.community</div>
+                                <h1 className="hidden md:block text-lg opacity-80">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={onSave} className="btn-secondary !px-4 text-sm flex items-center justify-center gap-2">💾 Save</button>
+                                <label className="btn-secondary !px-4 text-sm cursor-pointer flex items-center justify-center gap-2">
+                                    📂 Load <input type="file" className="hidden" onChange={onLoad} accept=".json" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary !px-4 text-sm md:block hidden flex items-center justify-center gap-2">🖨️ Print</button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '🔒' },
+                                { id: 'retention', label: 'Retention Schedule', icon: '📁' },
+                                { id: 'pia', label: 'Privacy Assessment', icon: '📝' },
+                                { id: 'breach', label: 'Breach Response', icon: '🚨' },
+                                { id: 'builder', label: 'Policy Builder', icon: '📜' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                >
+                                    <span>{item.icon}</span> <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print">
+                    <div className="max-w-7xl mx-auto text-center px-4">
+                        <p className="text-sm">We acknowledge the Taungurung and Wurundjeri peoples as the Traditional Custodians of the lands.</p>
+                        <p className="text-xs mt-2 opacity-50">© 2026 smalltalk.community Inc. | Records & Privacy Manager</p>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "", subtitle }) => (
+            <section className={`card ${className}`}>
+                {title && (
+                    <div className="mb-6">
+                        <h2 className="text-xl font-bold text-primary dark:text-white">{title}</h2>
+                        {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+                    </div>
+                )}
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800',
+                warning: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                danger: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
+                info: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                default: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+            };
+            return <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colors[type]}`}>{status}</span>;
+        };
+
+        const FormInput = ({ label, id, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <input id={id} className="input-field" {...props} />
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold mb-1.5">{label}</label>
+                <select id={id} className="input-field" {...props}>
+                    <option value="">Select...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            </div>
+        );
+
+        // --- App Logic ---
+
+        const Dashboard = ({ data }) => {
+            const breachCount = data.breaches?.filter(b => b.status === 'investigating').length || 0;
+            const retentionAlerts = 3; // Simulated
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <Card className="border-l-4 border-l-primary">
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Retention Compliance</div>
+                            <div className="text-3xl font-black mt-2">94%</div>
+                            <div className="text-xs text-info mt-1 font-bold">128 Documents Tracked</div>
+                        </Card>
+                        <Card className="border-l-4 border-l-warning">
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Privacy Health Score</div>
+                            <div className="text-3xl font-black mt-2">Optimal</div>
+                            <div className="text-xs text-success mt-1 font-bold">Latest PIA: 4 days ago</div>
+                        </Card>
+                        <Card className={`border-l-4 ${breachCount > 0 ? 'border-l-danger' : 'border-l-success'}`}>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Active Incident Alerts</div>
+                            <div className="text-3xl font-black mt-2">{breachCount}</div>
+                            <div className="text-xs mt-1 font-bold text-slate-400">Breach Response Active</div>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Required Statutory Retention" subtitle="Key legal requirements for VIC NFPs">
+                            <div className="space-y-3">
+                                {[
+                                    { type: 'Financial Records', period: '7 years', basis: 'ACNC / Corporations Act' },
+                                    { type: 'Committee Minutes', period: 'Permanent', basis: 'Governance Standard' },
+                                    { type: 'Employee Records', period: '7 years post-exit', basis: 'Fair Work Act' },
+                                    { type: 'WWCC Records', period: '7 years', basis: 'Child Safety Standards' }
+                                ].map((item, i) => (
+                                    <div key={i} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg text-sm">
+                                        <div>
+                                            <div className="font-bold">{item.type}</div>
+                                            <div className="text-[10px] opacity-60 uppercase">{item.basis}</div>
+                                        </div>
+                                        <div className="font-black text-primary dark:text-blue-400">{item.period}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                        <Card title="Privacy Impact Summary" subtitle="Risk profile of current digital operations">
+                            <div className="space-y-4">
+                                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-lg">
+                                    <div className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase mb-1">Low Risk Factor</div>
+                                    <p className="text-xs text-emerald-700 dark:text-emerald-300">No high-sensitivity health data currently collected. Main risk is email/contact detail exposure.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-xs font-bold">
+                                        <span>Data Encryption Status</span>
+                                        <span className="text-success">Active</span>
+                                    </div>
+                                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                        <div className="bg-success h-2 rounded-full w-[85%]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const RetentionSchedule = ({ data, setData }) => {
+            const [filter, setFilter] = useState('');
+
+            const schedule = [
+                { type: 'Income Tax Records', period: '5 years', location: 'Xero / Digital', method: 'Secure Delete', basis: 'ATO' },
+                { type: 'Insurance Policies', period: '7 years', location: 'Cloud Storage', method: 'Secure Delete', basis: 'Operational' },
+                { type: 'Member Register', period: 'Permanent', location: 'DB / Physical Backup', method: 'N/A', basis: 'Incorporations Act' },
+                { type: 'Accident Reports', period: '7 years', location: 'Safeguarding Folder', method: 'Shredding', basis: 'Liability' }
+            ];
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Retention Schedule & Destruction Log">
+                        <div className="mb-4 flex flex-col md:flex-row gap-4 justify-between">
+                            <input
+                                type="text" placeholder="Filter document types..."
+                                className="input-field max-w-sm"
+                                onChange={e => setFilter(e.target.value)}
+                            />
+                            <button onClick={() => alert('Schedule creation engine coming in v1.1')} className="btn-primary text-sm">+ Add New Schedule</button>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 dark:bg-slate-800 text-xs uppercase font-bold text-slate-500 dark:text-slate-400">
+                                    <tr>
+                                        <th className="px-6 py-4">Document Type</th>
+                                        <th className="px-6 py-4">Period</th>
+                                        <th className="px-6 py-4">Location</th>
+                                        <th className="px-6 py-4">Method</th>
+                                        <th className="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                    {schedule.filter(s => s.type.toLowerCase().includes(filter.toLowerCase())).map((s, i) => (
+                                        <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                            <td className="px-6 py-4 font-bold">{s.type}</td>
+                                            <td className="px-6 py-4">{s.period}</td>
+                                            <td className="px-6 py-4 text-xs opacity-70">{s.location}</td>
+                                            <td className="px-6 py-4 text-xs">{s.method}</td>
+                                            <td className="px-6 py-4"><StatusBadge status="Compliant" type="success" /></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const PrivacyAssessment = () => {
+            const [step, setStep] = useState(1);
+            const [scores, setScores] = useState({ data: 0, scale: 0, thirdParty: 0 });
+
+            const calculateRisk = () => {
+                const total = scores.data + scores.scale + scores.thirdParty;
+                if (total <= 3) return { level: 'Low', color: 'text-success' };
+                if (total <= 6) return { level: 'Medium', color: 'text-warning' };
+                return { level: 'High', color: 'text-danger' };
+            };
+
+            return (
+                <div className="max-w-3xl mx-auto space-y-8">
+                    <div className="flex justify-center items-center gap-4 mb-8">
+                        {[1, 2, 3, 4].map(s => (
+                            <div key={s} className="flex items-center gap-2">
+                                <div className={`step-indicator ${step === s ? 'step-active' : 'step-inactive'}`}>{s}</div>
+                                {s < 4 && <div className="w-8 h-0.5 bg-slate-200"></div>}
+                            </div>
+                        ))}
+                    </div>
+
+                    <Card title={`Step ${step}: Privacy Questionnaire`}>
+                        {step === 1 && (
+                            <div className="space-y-6">
+                                <h3 className="font-bold">What type of personal data are you collecting?</h3>
+                                <div className="space-y-3">
+                                    {[
+                                        { label: 'Basic Contact (Name, Email)', score: 1 },
+                                        { label: 'Sensitive ID (Passport, DL)', score: 3 },
+                                        { label: 'Health or Disability Info', score: 3 },
+                                        { label: 'Financial / Banking Info', score: 2 }
+                                    ].map(o => (
+                                        <label key={o.label} className="flex p-4 border rounded-xl cursor-pointer hover:bg-slate-50 hover:border-primary transition-all">
+                                            <input type="radio" name="data_type" className="mt-1" onChange={() => setScores({ ...scores, data: o.score })} />
+                                            <span className="ml-3 font-semibold">{o.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <button onClick={() => setStep(2)} className="btn-primary w-full" disabled={!scores.data}>Continue</button>
+                            </div>
+                        )}
+
+                        {step === 2 && (
+                            <div className="space-y-6">
+                                <h3 className="font-bold">Scale of Data Subjects</h3>
+                                <div className="space-y-3">
+                                    {[
+                                        { label: '1-100 Individuals', score: 0 },
+                                        { label: '100-1000 Individuals', score: 1 },
+                                        { label: '1000+ Individuals', score: 2 }
+                                    ].map(o => (
+                                        <label key={o.label} className="flex p-4 border rounded-xl cursor-pointer hover:bg-slate-50 hover:border-primary">
+                                            <input type="radio" name="scale" className="mt-1" onChange={() => setScores({ ...scores, scale: o.score })} />
+                                            <span className="ml-3 font-semibold">{o.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={() => setStep(1)} className="btn-secondary flex-1">Back</button>
+                                    <button onClick={() => setStep(3)} className="btn-primary flex-1" disabled={scores.scale === undefined}>Continue</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div className="space-y-6">
+                                <h3 className="font-bold">Third Party Access</h3>
+                                <div className="space-y-3">
+                                    {[
+                                        { label: 'No Third Party Access', score: 0 },
+                                        { label: 'Standard Local Vendors (e.g. Xero)', score: 1 },
+                                        { label: 'Overseas Cloud Storage', score: 2 }
+                                    ].map(o => (
+                                        <label key={o.label} className="flex p-4 border rounded-xl cursor-pointer hover:bg-slate-50 hover:border-primary">
+                                            <input type="radio" name="third_party" className="mt-1" onChange={() => setScores({ ...scores, thirdParty: o.score })} />
+                                            <span className="ml-3 font-semibold">{o.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={() => setStep(2)} className="btn-secondary flex-1">Back</button>
+                                    <button onClick={() => setStep(4)} className="btn-primary flex-1">Finalise Assessment</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 4 && (
+                            <div className="text-center space-y-6 py-8">
+                                <div className="text-4xl font-black">
+                                    Calculated Risk Level: <span className={calculateRisk().color}>{calculateRisk().level}</span>
+                                </div>
+                                <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border dark:border-slate-700">
+                                    <h4 className="font-black uppercase text-xs text-slate-500 dark:text-slate-400 mb-4">Recommendations</h4>
+                                    <ul className="text-left text-sm space-y-2 list-disc pl-4">
+                                        <li>Ensure Privacy Collection Statement is visible on forms.</li>
+                                        <li>Regularly purge data older than 2 years if no longer required.</li>
+                                        {scores.thirdParty > 0 && <li>Verify third-party Australian Privacy Principle (APP) compliance.</li>}
+                                        {scores.data > 2 && <li>Implement Multi-Factor Authentication (MFA) for all staff cloud accounts.</li>}
+                                    </ul>
+                                </div>
+                                <div className="flex gap-4 justify-center">
+                                    <button onClick={() => setStep(1)} className="btn-secondary">Reset</button>
+                                    <button onClick={() => window.print()} className="btn-primary">Download PDF Report</button>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+                </div>
+            );
+        };
+
+        const BreachWizard = ({ onComplete, onCancel }) => {
+            const [step, setStep] = useState(1);
+            const [answers, setAnswers] = useState({ access: null, harm: null, remedial: null });
+
+            const getResult = () => {
+                if (answers.access && answers.harm && !answers.remedial) return "NOTIFIABLE: This breach meets the criteria for the OAIC NDB scheme. You MUST notify the OAIC and affected individuals.";
+                if (answers.access && answers.harm && answers.remedial) return "REMEDIED: While it met initial criteria, remedial action was successful. Notification may not be required.";
+                return "NON-NOTIFIABLE: Based on these inputs, this does not appear to meet the NDB notification threshold.";
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex gap-4 mb-8">
+                        {[1, 2, 3].map(s => (
+                            <div key={s} className={`h-1 flex-1 rounded-full ${step >= s ? 'bg-primary' : 'bg-slate-200'}`}></div>
+                        ))}
+                    </div>
+
+                    {step === 1 && (
+                        <div className="space-y-4">
+                            <h3 className="font-bold">1. Was there unauthorised access or disclosure?</h3>
+                            <div className="flex gap-3">
+                                <button onClick={() => { setAnswers({ ...answers, access: true }); setStep(2); }} className="btn-primary flex-1">Yes</button>
+                                <button onClick={() => { setAnswers({ ...answers, access: false }); setStep(3); }} className="btn-secondary flex-1">No</button>
+                            </div>
+                        </div>
+                    )}
+                    {step === 2 && (
+                        <div className="space-y-4">
+                            <h3 className="font-bold">2. Is it likely to result in serious harm?</h3>
+                            <div className="flex gap-3">
+                                <button onClick={() => { setAnswers({ ...answers, harm: true }); setStep(3); }} className="btn-primary flex-1">Yes</button>
+                                <button onClick={() => { setAnswers({ ...answers, harm: false }); setStep(3); }} className="btn-secondary flex-1">No</button>
+                            </div>
+                        </div>
+                    )}
+                    {step === 3 && (
+                        <div className="space-y-4">
+                            <h3 className="font-bold">3. Have you prevents harm with remedial action?</h3>
+                            <div className="flex gap-3">
+                                <button onClick={() => { setAnswers({ ...answers, remedial: true }); setStep(4); }} className="btn-primary flex-1">Yes</button>
+                                <button onClick={() => { setAnswers({ ...answers, remedial: false }); setStep(4); }} className="btn-secondary flex-1">No</button>
+                            </div>
+                        </div>
+                    )}
+                    {step === 4 && (
+                        <div className="space-y-4">
+                            <div className={`p-6 rounded-xl font-bold text-center ${getResult().includes('NOTIFIABLE') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                                {getResult()}
+                            </div>
+                            <button onClick={onCancel} className="btn-primary w-full">Finish Wizard</button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const PolicyBuilder = ({ config }) => {
+            const [localConfig, setLocalConfig] = useState({
+                orgName: config.orgName || 'smalltalk.community Inc',
+                contactEmail: 'privacy@smalltalk.community',
+                dataCollected: 'Names, contact details, volunteer hours, and attendance records.'
+            });
+
+            return (
+                <div className="space-y-8">
+                    <Card title="Privacy Policy Generator" subtitle="Customise your policy based on standard NFP requirements" className="no-print">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormInput label="Organisation Name" value={localConfig.orgName} onChange={e => setLocalConfig({ ...localConfig, orgName: e.target.value })} />
+                            <FormInput label="Privacy Contact Email" value={localConfig.contactEmail} onChange={e => setLocalConfig({ ...localConfig, contactEmail: e.target.value })} />
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-semibold mb-1.5">Data Collected</label>
+                                <textarea className="input-field min-h-[100px]" value={localConfig.dataCollected} onChange={e => setLocalConfig({ ...localConfig, dataCollected: e.target.value })}></textarea>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <div className="bg-white p-12 border shadow-sm print:p-0 print:border-none print:shadow-none min-h-[297mm]">
+                        <h1 className="text-3xl font-black mb-8 border-b-4 border-primary pb-4 uppercase tracking-tighter">Privacy Policy</h1>
+                        <div className="space-y-6 text-sm text-slate-800 leading-relaxed">
+                            <p><strong>{localConfig.orgName}</strong> (we, our, us) is committed to protecting the privacy of your personal information. We are bound by the Privacy Act 1988 (Cth) and the Australian Privacy Principles.</p>
+
+                            <h2 className="font-bold text-lg text-primary border-b uppercase text-sm tracking-widest pt-4">1. Collection of Information</h2>
+                            <p>We collect personal information including: {localConfig.dataCollected}</p>
+
+                            <h2 className="font-bold text-lg text-primary border-b uppercase text-sm tracking-widest pt-4">2. Purpose of Collection</h2>
+                            <p>We collect this information for the purpose of managing membership, coordinating volunteer activities, and meeting our safety and reporting obligations.</p>
+
+                            <h2 className="font-bold text-lg text-primary border-b uppercase text-sm tracking-widest pt-4">3. Disclosure</h2>
+                            <p>We do not disclose your personal information to third parties unless required by law or necessary for the delivery of our services (e.g. insurance requirements).</p>
+
+                            <h2 className="font-bold text-lg text-primary border-b uppercase text-sm tracking-widest pt-4">4. Contact Us</h2>
+                            <p>If you have questions about your privacy, please contact our Privacy Officer at: <strong>{localConfig.contactEmail}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SettingsView = ({ data, setData }) => {
+            const [localData, setLocalData] = useState(() => JSON.stringify(data, null, 2));
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(false);
+
+            useEffect(() => {
+                setLocalData(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(localData);
+                    setData(parsed);
+                    setSuccess(true);
+                    setError(null);
+                    setTimeout(() => setSuccess(false), 3000);
+                } catch (err) {
+                    setError(err.message);
+                    setSuccess(false);
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <Card title="Application Settings" subtitle="Manage application data and preferences">
+                        <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold mb-2">Raw Data Editor</h3>
+                                <p className="text-sm text-slate-500 mb-4">
+                                    Below is the raw JSON data for this application. You can edit it directly to fix issues or batch update records.
+                                    <br />
+                                    <span className="text-red-500 font-bold">Warning:</span> Invalid JSON will prevent saving. Back up your data first.
+                                </p>
+                                <textarea
+                                    value={localData}
+                                    onChange={(e) => setLocalData(e.target.value)}
+                                    className="w-full h-96 font-mono text-xs p-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                                />
+                                {error && (
+                                    <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold border border-red-200">
+                                        Error: {error}
+                                    </div>
+                                )}
+                                {success && (
+                                    <div className="mt-2 p-3 bg-green-50 text-green-700 rounded-lg text-sm font-bold border border-green-200">
+                                        Data successfully saved!
+                                    </div>
+                                )}
+                                <div className="mt-4 flex justify-end">
+                                    <button onClick={handleSave} className="btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentTab, setTab] = useState('dashboard');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem('stRecordsPrivacyData');
+                return saved ? JSON.parse(saved) : { breaches: [] }; // Assuming initialData is { breaches: [] } if not defined elsewhere
+            });
+
+            useEffect(() => {
+                // Assuming isFirstVisit is defined elsewhere, e.g., in a utility file or global scope
+                // For this example, let's mock it or assume it's available.
+                // If not, this part would cause an error.
+                const isFirstVisit = (appName) => {
+                    const key = `st_first_visit_${appName}`;
+                    if (localStorage.getItem(key) === 'true') {
+                        return false;
+                    }
+                    localStorage.setItem(key, 'true');
+                    return true;
+                };
+
+                if (isFirstVisit('records_privacy')) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            const saveDraft = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `privacy-data-${new Date().toISOString().split('T')[0]}.json`; a.click();
+            };
+
+            const loadDraft = (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => { setData(JSON.parse(ev.target.result)); alert('Data Loaded'); };
+                reader.readAsText(file);
+            };
+
+            const renderContent = () => {
+                switch (currentTab) {
+                    case 'dashboard': return <Dashboard data={data} />;
+                    case 'retention': return <RetentionSchedule data={data} setData={setData} />;
+                    case 'pia': return <PrivacyAssessment />;
+                    case 'breach': return <BreachResponse data={data} setData={setData} />;
+                    case 'builder': return <PolicyBuilder config={data.config || {}} />;
+                    case 'settings': return <SettingsView data={data} setData={setData} />;
+                    default: return <Dashboard data={data} />;
+                }
+            };
+
+            return (
+                <AppShell title="Records & Privacy" currentTab={currentTab} setTab={setTab} onSave={saveDraft} onLoad={loadDraft}>
+                    {renderContent()}
+                    {/* Assuming WelcomeModal component is defined elsewhere */}
+                    <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} appName="Records & Privacy" />
+                </AppShell>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

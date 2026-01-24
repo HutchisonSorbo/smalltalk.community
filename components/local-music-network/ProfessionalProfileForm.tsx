@@ -21,7 +21,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 // Schema for form
-const formSchema = insertProfessionalProfileSchema.pick({
+const formSchema = (insertProfessionalProfileSchema as any).pick({
     role: true,
     businessName: true,
     bio: true,
@@ -41,7 +41,7 @@ const formSchema = insertProfessionalProfileSchema.pick({
     isLocationShared: true,
     latitude: true,
     longitude: true,
-});
+}) as any;
 
 type FormValues = z.infer<typeof formSchema>;
 

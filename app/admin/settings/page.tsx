@@ -16,7 +16,14 @@ import Link from "next/link";
 
 async function getSiteSettings() {
     try {
-        const settings = await db.select().from(siteSettings);
+        // Select only columns we need, avoiding updated_by which may not exist in older databases
+        const settings = await db.select({
+            id: siteSettings.id,
+            key: siteSettings.key,
+            value: siteSettings.value,
+            description: siteSettings.description,
+            updatedAt: siteSettings.updatedAt,
+        }).from(siteSettings);
         return { data: settings, error: null };
     } catch (error) {
         console.error("[Admin Settings] Error fetching site settings:", error);
@@ -40,7 +47,7 @@ export default async function SettingsPage() {
 
     const settings = settingsResult.data;
     const flags = flagsResult.data;
-    const enabledFlags = flags.filter(f => f.isEnabled).length;
+    const enabledFlags = flags.filter((f: any) => f.isEnabled).length;
 
     return (
         <div className="space-y-6">
@@ -116,7 +123,7 @@ export default async function SettingsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {settings.map((setting) => (
+                                {settings.map((setting: any) => (
                                     <TableRow key={setting.id}>
                                         <TableCell>
                                             <code className="text-sm bg-muted px-2 py-1 rounded">

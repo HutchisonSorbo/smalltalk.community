@@ -103,7 +103,7 @@ export default async function AuditLogPage() {
                 <CardContent>
                     {logs.length > 0 ? (
                         <div className="space-y-2">
-                            {logs.map((log) => (
+                            {logs.map((log: any) => (
                                 <div
                                     key={log.id}
                                     className="flex items-start gap-4 p-3 rounded-lg border hover:bg-muted/50"

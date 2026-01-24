@@ -14,7 +14,7 @@ export async function hasRole(userId: string, roleName: string): Promise<boolean
         .innerJoin(sysRoles, eq(sysUserRoles.roleId, sysRoles.id))
         .where(eq(sysUserRoles.userId, userId));
 
-    return result.some((r) => r.sys_roles.name === roleName);
+    return result.some((r: any) => r.sys_roles.name === roleName);
 }
 
 /**
@@ -37,7 +37,7 @@ export async function getUserRoles(userId: string): Promise<string[]> {
         .innerJoin(sysRoles, eq(sysUserRoles.roleId, sysRoles.id))
         .where(eq(sysUserRoles.userId, userId));
 
-    return result.map(r => r.roleName);
+    return result.map((r: any) => r.roleName);
 }
 
 

@@ -11,6 +11,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AccessibilityPanel } from "@/components/local-music-network/AccessibilityPanel";
 import { z } from "zod";
 
+
+
 const emailSchema = z.string().email("Please enter a valid email address");
 
 export default function ForgotPasswordPage() {
@@ -19,6 +21,8 @@ export default function ForgotPasswordPage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const isDevelopment = process.env.NODE_ENV === "development";
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -26,9 +30,10 @@ export default function ForgotPasswordPage() {
         // Validate email
         const result = emailSchema.safeParse(email);
         if (!result.success) {
-            setError(result.error.errors[0].message);
+            setError(result.error.issues[0].message);
             return;
         }
+
 
         setIsLoading(true);
 

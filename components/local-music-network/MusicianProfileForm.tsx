@@ -33,7 +33,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { instruments, genres, experienceLevels, availabilityOptions, insertMusicianProfileSchema } from "@shared/schema";
 import type { MusicianProfile } from "@shared/schema";
 
-const formSchema = insertMusicianProfileSchema.omit({ userId: true }).extend({
+const formSchema = (insertMusicianProfileSchema as any).omit({ userId: true }).extend({
   name: z.string().min(2, "Name must be at least 2 characters"),
   bio: z.string().optional(),
   instruments: z.array(z.string()).min(1, "Select at least one instrument"),
@@ -58,7 +58,7 @@ const formSchema = insertMusicianProfileSchema.omit({ userId: true }).extend({
     website: z.string().optional(),
   }).optional(),
   influences: z.array(z.string()).default([]),
-});
+}) as any;
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -377,7 +377,7 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
                               if (checked) {
                                 field.onChange([...current, instrument]);
                               } else {
-                                field.onChange(current.filter((v) => v !== instrument));
+                                field.onChange(current.filter((v: any) => v !== instrument));
                               }
                             }}
                             data-testid={`checkbox-instrument-${instrument.toLowerCase().replace(/\s+/g, "-")}`}
@@ -418,7 +418,7 @@ export function MusicianProfileForm({ profile, onSuccess, onCancel }: MusicianPr
                               if (checked) {
                                 field.onChange([...current, genre]);
                               } else {
-                                field.onChange(current.filter((v) => v !== genre));
+                                field.onChange(current.filter((v: any) => v !== genre));
                               }
                             }}
                             data-testid={`checkbox-genre-${genre.toLowerCase().replace(/\s+/g, "-")}`}

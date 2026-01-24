@@ -39,7 +39,7 @@ export default async function UsersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {allUsers.map((user) => (
+                        {allUsers.map((user: any) => (
                             <TableRow key={user.id}>
                                 <TableCell>
                                     <Avatar className="h-9 w-9">

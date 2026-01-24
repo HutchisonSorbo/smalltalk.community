@@ -242,7 +242,7 @@ function OpportunitiesContent() {
                                     {/* Tags */}
                                     <div className="flex flex-wrap gap-2">
                                         <Badge variant="secondary">{opportunity.type}</Badge>
-                                        {opportunity.tags.map((tag) => (
+                                        {opportunity.tags.map((tag: string) => (
                                             <Badge key={tag} variant="outline">
                                                 {tag}
                                             </Badge>

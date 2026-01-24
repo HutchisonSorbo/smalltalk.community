@@ -84,7 +84,7 @@ export async function GET(req: Request) {
                     },
                     setAll(cookiesToSet) {
                         try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
+                            cookiesToSet.forEach(({ name, value, options }: any) =>
                                 cookieStore.set(name, value, options)
                             );
                         } catch {
@@ -139,16 +139,16 @@ export async function GET(req: Request) {
         const appScores: Record<string, number> = {};
 
         // Initialize with base scores
-        allApps.forEach(app => {
+        allApps.forEach((app: any) => {
             if (app.route) {
                 appScores[app.route] = 10; // Base score
             }
         });
 
         // Add interest-based scores
-        userInterests.forEach(interest => {
+        userInterests.forEach((interest: any) => {
             const mappings = INTEREST_APP_MAP[interest] || [];
-            mappings.forEach(({ appRoute, score }) => {
+            mappings.forEach(({ appRoute, score }: any) => {
                 if (appScores[appRoute] !== undefined) {
                     appScores[appRoute] += score;
                 }
@@ -157,7 +157,7 @@ export async function GET(req: Request) {
 
         // Add situation-based scores
         if (userSituation && SITUATION_APP_MAP[userSituation]) {
-            SITUATION_APP_MAP[userSituation].forEach(({ appRoute, score }) => {
+            SITUATION_APP_MAP[userSituation].forEach(({ appRoute, score }: any) => {
                 if (appScores[appRoute] !== undefined) {
                     appScores[appRoute] += score;
                 }
@@ -166,8 +166,8 @@ export async function GET(req: Request) {
 
         // Build recommendations list with reasons
         const recommendations = allApps
-            .filter(app => app.route)
-            .map(app => ({
+            .filter((app: any) => app.route)
+            .map((app: any) => ({
                 app: {
                     id: app.id,
                     name: app.name,
@@ -179,7 +179,7 @@ export async function GET(req: Request) {
                 },
                 score: appScores[app.route!] || 10,
             }))
-            .sort((a, b) => b.score - a.score);
+            .sort((a: any, b: any) => b.score - a.score);
 
         return NextResponse.json({ recommendations });
 

@@ -33,13 +33,13 @@ export default function AppsPage() {
                 if (userAppsRes.ok) {
                     const userAppsData = await userAppsRes.json();
                     if (Array.isArray(userAppsData)) {
-                        setUserAppIds(new Set(userAppsData.map((a: any) => a.id)));
+                        setUserAppIds(new Set(userAppsData.map((a: { id: string }) => a.id)));
                     }
                 } else if (userAppsRes.status === 401) {
                     // User not logged in, just ignore user apps
-                    console.log("User not authenticated, skipping user apps");
+                    // User not authenticated, skipping user apps
                 } else {
-                    console.error("Failed to fetch user apps:", await userAppsRes.text());
+                    // Failed to fetch user apps - silent fail for non-critical path
                 }
 
             } catch (error) {

@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Roster & Hours Tracker | smalltalk.community Inc</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#003b6f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Roster">
+    <link rel="manifest"
+        href="data:application/json;base64,ewogICJuYW1lIjogIlZvbHVudGVlciBSb3N0ZXIgJiBIb3VycyBUcmFja2VyIiwKICAic2hvcnRfbmFtZSI6ICJSb3N0ZXIiLAogICJkZXNjcmlwdGlvbiI6ICJWb2x1bnRlZXIgc2NoZWR1bGluZyBmb3Igc21hbGx0YWxrLmNvbW11bml0eSIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzAwM2I2ZiIsCiAgImljb25zIjogW10KfQ==">
+
+    <!--
+    App: Staff Roster & Volunteer Hours Tracker
+    Purpose: Track volunteer shifts, hours, and WWCC compliance.
+    Author: smalltalk.community Inc
+    Version: 1.0 (2026-01-10)
+    -->
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel (for JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --primary: #003b6f;
+                --primary-support: #1e40af;
+                --accent: #c2410c;
+                --text-color: #1e293b;
+                --bg-color: #ffffff;
+                --secondary-bg: #f8fafc;
+                --border-color: #e2e8f0;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary: #3b82f6;
+                    --primary-support: #60a5fa;
+                    --accent: #fb923c;
+                    --text-color: #f1f5f9;
+                    --bg-color: #0f172a;
+                    --secondary-bg: #1e293b;
+                    --border-color: #334155;
+                }
+            }
+
+            body {
+                @apply bg-[var(--bg-color)] text-[var(--text-color)] font-['Inter'] leading-[1.6];
+                font-size: 16px;
+                letter-spacing: -0.01em;
+            }
+
+            h1, h2, h3, h4, h5, h6 {
+                @apply font-['Plus_Jakarta_Sans'] font-bold;
+            }
+        }
+
+        @layer components {
+            .btn-primary {
+                @apply bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--primary-support)] focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none disabled:opacity-50 min-h-[44px];
+            }
+            .btn-secondary {
+                @apply bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none min-h-[44px];
+            }
+            .btn-danger {
+                @apply bg-[var(--danger)] text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-[var(--danger)] outline-none min-h-[44px];
+            }
+            .card {
+                @apply bg-[var(--bg-color)] dark:bg-[var(--secondary-bg)] rounded-xl shadow-sm border border-[var(--border-color)] p-6;
+            }
+            .input-field {
+                @apply w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none bg-[var(--bg-color)] dark:bg-slate-800 border-[var(--border-color)] text-[var(--text-color)] transition-all duration-200;
+            }
+            .focus-ring {
+                @apply focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] outline-none;
+            }
+            .nav-link {
+                @apply px-4 py-2 rounded-lg transition-colors duration-200 hover:bg-white/10 flex items-center gap-2;
+            }
+            .nav-link.active {
+                @apply bg-white/20 font-bold;
+            }
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                padding: 1cm 1.5cm 1.5cm 1.5cm !important; 
+                background: white !important; 
+                color: black !important; 
+            }
+            .no-print { display: none !important; }
+            .no-print-on-screen { display: flex !important; }
+            .page-break { page-break-before: always; }
+            .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+            
+            .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1.5cm;
+                font-size: 8pt;
+                color: #666;
+                border-top: 1px solid #eee;
+                background: white !important;
+                z-index: 9999;
+                font-family: 'Inter', sans-serif;
+            }
+            .footer-left { flex: 1; text-align: left; }
+            .footer-center { flex: 1; text-align: center; font-weight: 600; }
+            .footer-right { flex: 1; text-align: right; }
+            .footer-center::after {
+                content: "Page " counter(page) " of " counter(pages);
+            }
+        }
+
+        @media screen {
+            .no-print-on-screen { display: none !important; }
+        }
+
+        /* Mobile optimisation - WCAG 2.2 touch targets */
+        button, a, [role="button"] {
+            min-height: 44px;
+        }
+
+        /* Prevent iOS zoom on form inputs */
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        input[type="password"],
+        input[type="search"],
+        input[type="date"],
+        input[type="time"],
+        input[type="number"],
+        input[type="tel"],
+        textarea,
+        select {
+            font-size: 16px !important;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--primary)',
+                        'primary-support': 'var(--primary-support)',
+                        accent: 'var(--accent)',
+                        danger: 'var(--danger)',
+                        success: 'var(--success)',
+                        warning: 'var(--warning)',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // --- Utils ---
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const formatDate = (date) => date ? new Date(date).toLocaleDateString('en-AU') : 'N/A';
+        const getDaysRemaining = (expiryDate) => {
+            if (!expiryDate) return Infinity;
+            const diffTime = new Date(expiryDate) - new Date();
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        };
+
+        // --- First Visit & Welcome Modal ---
+        const FIRST_VISIT_KEY = 'sm_roster_first_visit';
+        const isFirstVisit = () => {
+            try {
+                return localStorage.getItem(FIRST_VISIT_KEY) !== 'false';
+            } catch { return true; }
+        };
+        const markFirstVisitComplete = () => {
+            try {
+                localStorage.setItem(FIRST_VISIT_KEY, 'false');
+            } catch { }
+        };
+
+        const WelcomeModal = ({ onClose }) => (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="p-8">
+                        <div className="text-center mb-6">
+                            <div className="text-5xl mb-4">📅</div>
+                            <h2 className="text-2xl font-bold text-primary dark:text-white mb-2">Welcome to Rostering</h2>
+                            <p className="text-slate-500">Volunteer Hours & Shift Tracker</p>
+                        </div>
+                        <div className="space-y-4 mb-8">
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">👥</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Volunteers</div>
+                                    <div className="text-sm text-slate-500">Register volunteers and track WWCC/Police check compliance</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">📅</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Roster</div>
+                                    <div className="text-sm text-slate-500">Build weekly rosters and assign shifts</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">⏱️</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Log Hours</div>
+                                    <div className="text-sm text-slate-500">Record hours for grant acquittal reporting</div>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <span className="text-2xl">💾</span>
+                                <div>
+                                    <div className="font-bold text-slate-800 dark:text-white">Save & Load</div>
+                                    <div className="text-sm text-slate-500">Export data as JSON for backup</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="w-full py-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-support transition-colors">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- Common Components ---
+
+        const AppShell = ({ title, currentTab, setTab, onSave, onLoad, children, lastSaved }) => (
+            <div className="min-h-screen flex flex-col">
+                <a href="#main-content" className="sr-only focus:not-sr-only bg-accent text-white p-2 text-center no-print">
+                    Skip to main content
+                </a>
+
+                <header className="bg-primary text-white shadow-md no-print sticky top-0 z-40">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center gap-4">
+                                <span className="text-2xl font-bold font-display tracking-tight">CommunityOS</span>
+                                <div className="hidden md:block h-6 w-px bg-white/20"></div>
+                                <h1 className="hidden md:block text-lg font-medium opacity-90">{title}</h1>
+                            </div>
+                            <div className="flex gap-2">
+                                {lastSaved && <span className="hidden lg:flex items-center text-xs opacity-70 mr-2">Last save: {lastSaved}</span>}
+                                <button onClick={onSave} className="btn-secondary text-sm !px-4 flex items-center justify-center gap-2" title="Download JSON Draft">
+                                    💾 Save
+                                </button>
+                                <label className="btn-secondary text-sm !px-4 cursor-pointer flex items-center justify-center gap-2" title="Upload JSON Draft">
+                                    📂 Load
+                                    <input type="file" className="hidden" onChange={onLoad} accept=".json" aria-label="Upload JSON Data" />
+                                </label>
+                                <button onClick={() => window.print()} className="btn-secondary text-sm !px-4 flex items-center justify-center gap-2">
+                                    🖨️ Print
+                                </button>
+                            </div>
+                        </div>
+                        <nav aria-label="Primary navigation" className="flex overflow-x-auto pb-2 gap-2">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'volunteers', label: 'Volunteers', icon: '👥' },
+                                { id: 'roster', label: 'Roster', icon: '📅' },
+                                { id: 'hours', label: 'Log Hours', icon: '⏱️' },
+                                { id: 'reports', label: 'Reports', icon: '📈' },
+                                { id: 'about', label: 'About', icon: 'ℹ️' },
+                                { id: 'settings', label: 'Settings', icon: '⚙️' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setTab(item.id)}
+                                    className={`nav-link whitespace-nowrap ${currentTab === item.id ? 'active' : ''}`}
+                                    aria-current={currentTab === item.id ? 'page' : undefined}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
+                </header>
+
+                <main id="main-content" className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                    {children}
+                </main>
+
+                <footer className="bg-slate-900 text-slate-400 py-8 no-print border-t border-slate-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <p className="text-sm mb-4">
+                            <strong>Acknowledgment of Country:</strong> We acknowledge the Taungurung and Wurundjeri peoples
+                            as the Traditional Custodians of the lands on which we operate.
+                        </p>
+                        <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-xs opacity-70">
+                            <span>© 2026 smalltalk.community Inc.</span>
+                            <span>{title} v1.0</span>
+                            <span className="hidden md:inline">|</span>
+                            <span>WCAG 2.1 AA Compliant</span>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        );
+
+        const Card = ({ title, children, className = "", subtitle, action }) => (
+            <section className={`card ${className}`}>
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        {title && <h2 className="text-2xl font-bold text-primary dark:text-white leading-tight">{title}</h2>}
+                        {subtitle && <p className="text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+                    </div>
+                    {action && <div className="no-print">{action}</div>}
+                </div>
+                {children}
+            </section>
+        );
+
+        const StatusBadge = ({ status, type = 'default' }) => {
+            const colors = {
+                success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+                warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+                danger: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+                info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+                default: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600'
+            };
+            return (
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border whitespace-nowrap ${colors[type]}`}>
+                    {status}
+                </span>
+            );
+        };
+
+        const FormInput = ({ label, id, error, required, children, helpText, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                    {label} {required && <span className="text-danger" aria-hidden="true">*</span>}
+                    {helpText && <span className="text-xs text-slate-400 font-normal">({helpText})</span>}
+                </label>
+                <input id={id} className={`input-field ${error ? 'border-danger' : ''}`} {...props} />
+                {error && <p className="text-danger text-xs mt-1" role="alert">{error}</p>}
+            </div>
+        );
+
+        const FormSelect = ({ label, id, options, error, required, children, ...props }) => (
+            <div className="mb-4">
+                <label htmlFor={id} className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {label} {required && <span className="text-danger">*</span>}
+                </label>
+                <select id={id} className={`input-field ${error ? 'border-danger' : ''}`} {...props}>
+                    <option value="">Select option...</option>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                {error && <p className="text-danger text-xs mt-1" role="alert">{error}</p>}
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm no-print" onClick={onClose}>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-inherit sticky top-0 z-10">
+                            <h2 className="text-xl font-bold text-primary dark:text-white">{title}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">✕</button>
+                        </div>
+                        <div className="p-6">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- View Components ---
+
+        const Dashboard = ({ data, setTab }) => {
+            const expiringVolunteers = data.volunteers.filter(v => {
+                const wwccRemaining = getDaysRemaining(v.wwccExpiry);
+                const policeRemaining = getDaysRemaining(v.policeCheckExpiry);
+                return wwccRemaining <= 60 || policeRemaining <= 60;
+            });
+
+            const currentMonthHours = data.hours.reduce((acc, h) => {
+                const hDate = new Date(h.date);
+                const now = new Date();
+                if (hDate.getMonth() === now.getMonth() && hDate.getFullYear() === now.getFullYear()) {
+                    return acc + parseFloat(h.hours);
+                }
+                return acc;
+            }, 0);
+
+            const activeCount = data.volunteers.filter(v => v.status === 'Active').length;
+
+            return (
+                <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card className="!p-4 bg-primary/5 border-primary/20">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Total Hours (Month)</div>
+                            <div className="text-4xl font-black text-primary dark:text-blue-400">{currentMonthHours.toFixed(1)}</div>
+                        </Card>
+                        <Card className="!p-4 border-emerald-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Active Volunteers</div>
+                            <div className="text-4xl font-black text-emerald-600">{activeCount}</div>
+                        </Card>
+                        <Card className="!p-4 border-amber-200">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Expiring Checks</div>
+                            <div className="text-4xl font-black text-amber-600">{expiringVolunteers.length}</div>
+                        </Card>
+                        <Card className="!p-4">
+                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Upcoming Shifts</div>
+                            <div className="text-4xl font-black">{data.shifts.filter(s => new Date(s.date) >= new Date()).length}</div>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card title="Compliance Alerts" subtitle="Action required for these volunteers">
+                            {expiringVolunteers.length > 0 ? (
+                                <ul className="space-y-3">
+                                    {expiringVolunteers.map(v => {
+                                        const wwccRem = getDaysRemaining(v.wwccExpiry);
+                                        const polRem = getDaysRemaining(v.policeCheckExpiry);
+                                        return (
+                                            <li key={v.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                                                <div>
+                                                    <div className="font-bold">{v.name}</div>
+                                                    <div className="text-xs text-slate-500">{v.role}</div>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    {wwccRem <= 60 && <StatusBadge status={`WWCC: ${wwccRem}d`} type={wwccRem <= 30 ? 'danger' : 'warning'} />}
+                                                    {polRem <= 60 && <StatusBadge status={`Police: ${polRem}d`} type={polRem <= 30 ? 'danger' : 'warning'} />}
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            ) : (
+                                <p className="text-slate-400 italic">No urgent compliance alerts.</p>
+                            )}
+                        </Card>
+
+                        <Card title="Quick Log" subtitle="Record hours for a recent activity">
+                            <div className="space-y-4">
+                                <p className="text-sm text-slate-600 dark:text-slate-400">Regularly logging hours is essential for grant reporting and recognizing volunteer contributions.</p>
+                                <button onClick={() => setTab('hours')} className="btn-primary w-full">Open Hours Log</button>
+                                <button onClick={() => setTab('roster')} className="btn-secondary w-full">View Weekly Roster</button>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        const VolunteerRegistry = ({ volunteers, setVolunteers }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [editItem, setEditItem] = useState(null);
+            const [formData, setFormData] = useState({
+                name: '', email: '', phone: '', role: 'General Volunteer',
+                wwccNumber: '', wwccExpiry: '', policeCheckDate: '', policeCheckExpiry: '',
+                onboardingDate: '', status: 'Active', notes: ''
+            });
+
+            const openAdd = () => {
+                setEditItem(null);
+                setFormData({
+                    name: '', email: '', phone: '', role: 'General Volunteer',
+                    wwccNumber: '', wwccExpiry: '', policeCheckDate: '', policeCheckExpiry: '',
+                    onboardingDate: '', status: 'Active', notes: ''
+                });
+                setIsModalOpen(true);
+            };
+
+            const openEdit = (v) => {
+                setEditItem(v);
+                setFormData(v);
+                setIsModalOpen(true);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (editItem) {
+                    setVolunteers(prev => prev.map(v => v.id === editItem.id ? { ...formData, id: v.id } : v));
+                } else {
+                    setVolunteers(prev => [...prev, { ...formData, id: generateId() }]);
+                }
+                setIsModalOpen(false);
+            };
+
+            const deleteVolunteer = (id) => {
+                if (window.confirm("Are you sure you want to archive this volunteer? Their history will be kept but they will not appear in active lists.")) {
+                    setVolunteers(prev => prev.map(v => v.id === id ? { ...v, status: 'Inactive' } : v));
+                }
+            };
+
+            return (
+                <Card title="Volunteer Registry" subtitle="Manage your community team" action={<button onClick={openAdd} className="btn-primary">+ Add Volunteer</button>}>
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-slate-50 dark:bg-slate-800">
+                                <tr>
+                                    <th className="px-6 py-4 text-sm font-semibold">Name</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Role</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Compliance</th>
+                                    <th className="px-6 py-4 text-sm font-semibold">Status</th>
+                                    <th className="px-6 py-4 text-sm font-semibold no-print">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {volunteers.map(v => {
+                                    const wwccRem = getDaysRemaining(v.wwccExpiry);
+                                    const polRem = getDaysRemaining(v.policeCheckExpiry);
+                                    return (
+                                        <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="font-bold text-slate-800 dark:text-slate-200">{v.name}</div>
+                                                <div className="text-xs text-slate-500">{v.email}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm">{v.role}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {wwccRem <= 60 && <StatusBadge status="WWCC" type={wwccRem <= 30 ? 'danger' : 'warning'} />}
+                                                    {polRem <= 60 && <StatusBadge status="Police" type={polRem <= 30 ? 'danger' : 'warning'} />}
+                                                    {wwccRem > 60 && polRem > 60 && <StatusBadge status="Clear" type="success" />}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <StatusBadge status={v.status} type={v.status === 'Active' ? 'success' : v.status === 'On Leave' ? 'warning' : 'default'} />
+                                            </td>
+                                            <td className="px-6 py-4 text-sm no-print">
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => openEdit(v)} className="text-primary hover:underline">Edit</button>
+                                                    <button onClick={() => deleteVolunteer(v.id)} className="text-danger hover:underline">Archive</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {volunteers.length === 0 && (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-12 text-center text-slate-400 italic">No volunteers registered yet.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editItem ? "Edit Volunteer" : "Add New Volunteer"}>
+                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormInput label="Full Name" id="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                            <FormInput label="Email" id="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} required />
+                            <FormInput label="Phone" id="phone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="04XX XXX XXX" />
+                            <FormSelect
+                                label="Role"
+                                id="role"
+                                value={formData.role}
+                                onChange={e => setFormData({ ...formData, role: e.target.value })}
+                                options={[
+                                    { value: 'Moderator', label: 'Moderator' },
+                                    { value: 'Event Support', label: 'Event Support' },
+                                    { value: 'Admin', label: 'Admin' },
+                                    { value: 'Board Member', label: 'Board Member' },
+                                    { value: 'General Volunteer', label: 'General Volunteer' }
+                                ]}
+                                required
+                            />
+                            <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="col-span-full font-bold text-sm uppercase text-slate-500 tracking-wider">Compliance Checks</h3>
+                                <FormInput label="WWCC Number" id="wwcc" value={formData.wwccNumber} onChange={e => setFormData({ ...formData, wwccNumber: e.target.value })} />
+                                <FormInput label="WWCC Expiry" id="wwccexp" type="date" value={formData.wwccExpiry} onChange={e => setFormData({ ...formData, wwccExpiry: e.target.value })} />
+                                <FormInput label="Police Check Date" id="pcdate" type="date" value={formData.policeCheckDate} onChange={e => setFormData({ ...formData, policeCheckDate: e.target.value })} />
+                                <FormInput label="Police Check Expiry" id="pcexp" type="date" value={formData.policeCheckExpiry} onChange={e => setFormData({ ...formData, policeCheckExpiry: e.target.value })} />
+                            </div>
+                            <FormInput label="Onboarding Date" id="onboard" type="date" value={formData.onboardingDate} onChange={e => setFormData({ ...formData, onboardingDate: e.target.value })} />
+                            <FormSelect
+                                label="Status"
+                                id="status"
+                                value={formData.status}
+                                onChange={e => setFormData({ ...formData, status: e.target.value })}
+                                options={[
+                                    { value: 'Active', label: 'Active' },
+                                    { value: 'Inactive', label: 'Inactive' },
+                                    { value: 'On Leave', label: 'On Leave' }
+                                ]}
+                                required
+                            />
+                            <div className="col-span-1 md:col-span-2">
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Notes</label>
+                                <textarea className="input-field" rows="3" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}></textarea>
+                            </div>
+                            <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">{editItem ? 'Save Changes' : 'Register Volunteer'}</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </Card>
+            );
+        };
+
+        const RosterBuilder = ({ shifts, setShifts, volunteers }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({ date: '', startTime: '', endTime: '', role: '', volunteerId: '', location: '', notes: '' });
+            const [filter, setFilter] = useState('');
+            const [weekStart, setWeekStart] = useState(() => {
+                const d = new Date();
+                const day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(d.setDate(diff)).toISOString().split('T')[0];
+            });
+
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const weekDates = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                return d.toISOString().split('T')[0];
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setShifts(prev => [...prev, { ...formData, id: generateId() }]);
+                setIsModalOpen(false);
+            };
+
+            const cloneWeek = () => {
+                if (window.confirm("Clone all shifts from this week to the next?")) {
+                    const newShifts = shifts.filter(s => weekDates.includes(s.date)).map(s => {
+                        const d = new Date(s.date);
+                        d.setDate(d.getDate() + 7);
+                        return { ...s, id: generateId(), date: d.toISOString().split('T')[0] };
+                    });
+                    setShifts(prev => [...prev, ...newShifts]);
+                }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card
+                        title="Weekly Roster"
+                        subtitle={`Week of ${formatDate(weekStart)}`}
+                        action={
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Filter by name..."
+                                    className="input-field text-xs !py-1 max-w-[150px]"
+                                    value={filter}
+                                    onChange={e => setFilter(e.target.value)}
+                                    aria-label="Filter roster by volunteer name"
+                                />
+                                <button onClick={cloneWeek} className="btn-secondary text-sm">Clone Week</button>
+                                <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">+ Add Shift</button>
+                            </div>
+                        }
+                    >
+                        <div className="grid grid-cols-1 lg:grid-cols-7 gap-px bg-slate-200 dark:bg-slate-700 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                            {days.map((day, i) => (
+                                <div key={day} className="bg-white dark:bg-slate-800 min-h-[200px] p-2">
+                                    <div className="text-center pb-2 mb-2 border-b border-slate-100 dark:border-slate-700">
+                                        <div className="text-[10px] uppercase font-bold text-slate-400 leading-none">{day}</div>
+                                        <div className="text-sm font-bold">{formatDate(weekDates[i])}</div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {shifts.filter(s => {
+                                            if (s.date !== weekDates[i]) return false;
+                                            if (filter) {
+                                                const vol = volunteers.find(v => v.id === s.volunteerId);
+                                                return vol?.name.toLowerCase().includes(filter.toLowerCase());
+                                            }
+                                            return true;
+                                        }).map(s => (
+                                            <div key={s.id} className="p-2 rounded bg-primary/5 border-l-4 border-primary text-xs relative group animate-fade-in">
+                                                <button onClick={() => setShifts(prev => prev.filter(x => x.id !== s.id))} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-danger transition-opacity h-6 w-6 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-sm" aria-label="Delete Shift">✕</button>
+                                                <div className="font-bold">{s.startTime} - {s.endTime}</div>
+                                                <div className="text-primary font-bold uppercase tracking-tight">{s.role}</div>
+                                                <div className="text-slate-600 dark:text-slate-400 font-medium">
+                                                    {volunteers.find(v => v.id === s.volunteerId)?.name || 'Unassigned'}
+                                                </div>
+                                                <div className="text-[10px] text-slate-400 mt-1">{s.location}</div>
+                                            </div>
+                                        ))}
+                                        {shifts.filter(s => s.date === weekDates[i]).length === 0 && (
+                                            <div className="py-8 text-center text-[10px] text-slate-300 italic">No shifts</div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Shift">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Date" id="sdate" type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
+                                <FormSelect
+                                    label="Location" id="sloc" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                    options={[{ value: 'Online', label: 'Online' }, { value: 'Seymour Hub', label: 'Seymour Hub' }, { value: 'Wallan Library', label: 'Wallan Library' }, { value: 'Other', label: 'Other' }]}
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Start" id="sstart" type="time" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} required />
+                                <FormInput label="End" id="send" type="time" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} required />
+                            </div>
+                            <FormSelect
+                                label="Role Needed" id="srole" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}
+                                options={[{ value: 'Moderator', label: 'Moderator' }, { value: 'Event Support', label: 'Event Support' }, { value: 'Admin', label: 'Admin' }, { value: 'Board Member', label: 'Board Member' }, { value: 'General Volunteer', label: 'General Volunteer' }]}
+                                required
+                            />
+                            <FormSelect
+                                label="Assign Volunteer" id="svol" value={formData.volunteerId} onChange={e => setFormData({ ...formData, volunteerId: e.target.value })}
+                                options={volunteers.filter(v => v.status === 'Active').map(v => ({ value: v.id, label: v.name }))}
+                            />
+                            <FormInput label="Notes" id="snotes" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} />
+                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Add to Roster</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const HoursLogger = ({ hours, setHours, volunteers }) => {
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [formData, setFormData] = useState({ volunteerId: '', date: new Date().toISOString().split('T')[0], hours: '', activityType: '', notes: '' });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setHours(prev => [{ ...formData, id: generateId() }, ...prev]);
+                setIsModalOpen(false);
+            };
+
+            return (
+                <div className="space-y-6">
+                    <Card title="Hours Logging" subtitle="Record volunteer contributions" action={<button onClick={() => setIsModalOpen(true)} className="btn-primary">+ Log Hours</button>}>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-slate-50 dark:bg-slate-800">
+                                    <tr>
+                                        <th className="px-6 py-4 text-sm font-semibold">Volunteer</th>
+                                        <th className="px-6 py-4 text-sm font-semibold">Date</th>
+                                        <th className="px-6 py-4 text-sm font-semibold">Hours</th>
+                                        <th className="px-6 py-4 text-sm font-semibold">Activity</th>
+                                        <th className="px-6 py-4 text-sm font-semibold no-print">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                    {hours.slice(0, 50).map(h => (
+                                        <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="px-6 py-4 font-bold">{volunteers.find(v => v.id === h.volunteerId)?.name || 'Deleted Vol.'}</td>
+                                            <td className="px-6 py-4 text-sm">{formatDate(h.date)}</td>
+                                            <td className="px-6 py-4 font-black">{h.hours}</td>
+                                            <td className="px-6 py-4"><StatusBadge status={h.activityType} /></td>
+                                            <td className="px-6 py-4 no-print">
+                                                <button onClick={() => setHours(prev => prev.filter(x => x.id !== h.id))} className="text-danger hover:underline">Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {hours.length === 0 && (
+                                        <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400 italic">No hours entries yet.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Log Volunteer Hours">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormSelect
+                                label="Volunteer" id="hvol" value={formData.volunteerId} onChange={e => setFormData({ ...formData, volunteerId: e.target.value })}
+                                options={volunteers.map(v => ({ value: v.id, label: v.name }))} required
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormInput label="Date" id="hdate" type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
+                                <FormInput label="Hours (e.g. 2.5)" id="hqty" type="number" step="0.1" value={formData.hours} onChange={e => setFormData({ ...formData, hours: e.target.value })} required />
+                            </div>
+                            <FormSelect
+                                label="Activity Type" id="htype" value={formData.activityType} onChange={e => setFormData({ ...formData, activityType: e.target.value })}
+                                options={[
+                                    { value: 'Moderation', label: 'Moderation' },
+                                    { value: 'Event Delivery', label: 'Event Delivery' },
+                                    { value: 'Admin', label: 'Admin' },
+                                    { value: 'Board Meeting', label: 'Board Meeting' },
+                                    { value: 'Training', label: 'Training' },
+                                    { value: 'Community Engagement', label: 'Community Engagement' }
+                                ]}
+                                required
+                            />
+                            <FormInput label="Notes" id="hnotes" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} />
+                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Save Entry</button>
+                            </div>
+                        </form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const Reports = ({ data }) => {
+            const currentYear = new Date().getFullYear();
+            const yearTotal = data.hours.reduce((acc, h) => {
+                if (new Date(h.date).getFullYear() === currentYear) return acc + parseFloat(h.hours);
+                return acc;
+            }, 0);
+
+            const byType = data.hours.reduce((acc, h) => {
+                acc[h.activityType] = (acc[h.activityType] || 0) + parseFloat(h.hours);
+                return acc;
+            }, {});
+
+            return (
+                <div className="space-y-8">
+                    <Card title="Grant Acquittal Report" subtitle={`Annual Summary for ${currentYear}`}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div className="p-6 bg-slate-50 rounded-2xl">
+                                <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Total Contributed Hours</div>
+                                <div className="text-6xl font-black text-primary">{yearTotal.toFixed(1)}</div>
+                                <div className="text-xs text-slate-500 mt-2">Calculated from {data.hours.length} entries in {currentYear}</div>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="font-bold text-lg mb-2 border-b pb-2">Hours by Activity Type</div>
+                                {Object.entries(byType).map(([type, total]) => (
+                                    <div key={type} className="flex justify-between items-center text-sm">
+                                        <span className="font-medium text-slate-600">{type}</span>
+                                        <span className="font-bold">{total.toFixed(1)} hrs</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="page-break pt-8">
+                            <h3 className="text-lg font-bold mb-4">Volunteer Contribution Breakdown</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead>
+                                        <tr className="border-b-2 border-slate-200">
+                                            <th className="py-2">Name</th>
+                                            <th className="py-2">Role</th>
+                                            <th className="py-2 text-right">Total Hours</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.volunteers.map(v => {
+                                            const volHours = data.hours.filter(h => h.volunteerId === v.id).reduce((a, b) => a + parseFloat(b.hours), 0);
+                                            return (
+                                                <tr key={v.id} className="border-b border-slate-100">
+                                                    <td className="py-2 font-bold">{v.name}</td>
+                                                    <td className="py-2">{v.role}</td>
+                                                    <td className="py-2 text-right font-black">{volHours.toFixed(1)}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const About = () => (
+            <div className="space-y-8 max-w-4xl mx-auto">
+                <Card title="About this Application" subtitle="Volunteer Roster & Hours Tracker v1.0">
+                    <div className="prose dark:prose-invert max-w-none space-y-4">
+                        <p>
+                            This application is designed for <strong>smalltalk.community Inc</strong> to manage its community-led workforce efficiently and safely.
+                            It provides a centralized hub for tracking volunteer profiles, shift scheduling, and hours logging.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold text-primary dark:text-blue-400 mb-2">Core Features</h3>
+                                <ul className="list-disc list-inside text-sm space-y-1 text-slate-600 dark:text-slate-400">
+                                    <li>Volunteer Registry with compliance tracking</li>
+                                    <li>Weekly Roster Builder with shift cloning</li>
+                                    <li>Interactive Hours Logging for impact reporting</li>
+                                    <li>Automated Annual Reports for grant acquittal</li>
+                                    <li>Dark Mode & Accessibility support</li>
+                                </ul>
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold text-primary dark:text-blue-400 mb-2">Data Privacy</h3>
+                                <ul className="list-disc list-inside text-sm space-y-1 text-slate-600 dark:text-slate-400">
+                                    <li>Data is stored locally in your browser</li>
+                                    <li>Use the <strong>Save</strong> button to download a backup</li>
+                                    <li>Use the <strong>Load</strong> button to restore from a file</li>
+                                    <li>No data is sent to external servers</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-r-xl">
+                            <h3 className="font-bold text-amber-800 dark:text-amber-400 text-sm uppercase tracking-wider mb-2">Legal Disclaimer</h3>
+                            <p className="text-xs text-amber-700 dark:text-amber-300">
+                                This tool is provided for administrative assistance. While it tracks WWCC and Police Check expiry,
+                                it is the responsibility of the Board to verify original documents and ensure legal compliance with
+                                Victorian Child Safe Standards and ACNC requirements.
+                            </p>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card title="Quick Search Guide" subtitle="How to use this app">
+                    <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                        <div className="flex gap-4">
+                            <span className="text-2xl">👥</span>
+                            <div>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 block">Registry:</span>
+                                Add all volunteers here first. Set their roles and input check expiry dates to enable dashboard alerts.
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-2xl">📅</span>
+                            <div>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 block">Roster:</span>
+                                Plan your week. Use "Clone Week" to quickly duplicate recurring shifts from the current view to the next 7 days.
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-2xl">📈</span>
+                            <div>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 block">Reports:</span>
+                                Open this tab during grant season to get exact hour totals by activity type and individual contribution.
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        );
+
+        // --- Main App ---
+
+        const SettingsView = ({ data, setData }) => {
+            const [localData, setLocalData] = useState(() => JSON.stringify(data, null, 2));
+            const [error, setError] = useState(null);
+            const [success, setSuccess] = useState(false);
+
+            useEffect(() => {
+                setLocalData(JSON.stringify(data, null, 2));
+            }, [data]);
+
+            const handleSave = () => {
+                try {
+                    const parsed = JSON.parse(localData);
+                    setData(parsed);
+                    setSuccess(true);
+                    setError(null);
+                    setTimeout(() => setSuccess(false), 3000);
+                } catch (err) {
+                    setError(err.message);
+                    setSuccess(false);
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <Card title="Application Settings" subtitle="Manage application data and preferences">
+                        <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <h3 className="font-bold mb-2">Raw Data Editor</h3>
+                                <p className="text-sm text-slate-500 mb-4">
+                                    Below is the raw JSON data for this application. You can edit it directly to fix issues or batch update records.
+                                    <br />
+                                    <span className="text-red-500 font-bold">Warning:</span> Invalid JSON will prevent saving. Back up your data first.
+                                </p>
+                                <textarea
+                                    value={localData}
+                                    onChange={(e) => setLocalData(e.target.value)}
+                                    className="w-full h-96 font-mono text-xs p-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                                />
+                                {error && (
+                                    <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold border border-red-200">
+                                        Error: {error}
+                                    </div>
+                                )}
+                                {success && (
+                                    <div className="mt-2 p-3 bg-green-50 text-green-700 rounded-lg text-sm font-bold border border-green-200">
+                                        Data successfully saved!
+                                    </div>
+                                )}
+                                <div className="mt-4 flex justify-end">
+                                    <button onClick={handleSave} className="btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const VolunteerApp = () => {
+            const [currentTab, setTab] = useState('dashboard');
+            const [lastSaved, setLastSaved] = useState('');
+            const [showWelcome, setShowWelcome] = useState(false);
+            const [data, setData] = useState({
+                volunteers: [
+                    { id: "v001", name: "Jane Smith", email: "jane@example.com", phone: "0400 123 456", role: "Moderator", wwccNumber: "WWC1234567", wwccExpiry: "2027-03-15", policeCheckDate: "2025-06-10", policeCheckExpiry: "2030-06-10", onboardingDate: "2026-01-05", status: "Active", notes: "Available weekends only" },
+                    { id: "v002", name: "Bob Wilson", email: "bob@example.com", phone: "0411 222 333", role: "Event Support", wwccNumber: "WWC7654321", wwccExpiry: "2026-02-05", policeCheckDate: "2024-01-10", policeCheckExpiry: "2029-01-10", onboardingDate: "2025-08-15", status: "Active", notes: "First aid certificate held" },
+                    { id: "v003", name: "Alice Brown", email: "alice@example.com", phone: "0422 333 444", role: "Admin", wwccNumber: "WWC9876543", wwccExpiry: "2026-04-20", policeCheckDate: "2023-11-20", policeCheckExpiry: "2028-11-20", onboardingDate: "2024-12-01", status: "On Leave", notes: "Overseas until April" },
+                    { id: "v004", name: "Charlie Davis", email: "charlie@example.com", phone: "0433 444 555", role: "General Volunteer", wwccNumber: "WWC4567890", wwccExpiry: "2026-01-25", policeCheckDate: "2025-01-05", policeCheckExpiry: "2030-01-05", onboardingDate: "2026-01-08", status: "Active", notes: "Strong interest in tech validation" },
+                    { id: "v005", name: "Sarah Miller", email: "sarah@example.com", phone: "0444 555 666", role: "Board Member", wwccNumber: "WWC3216549", wwccExpiry: "2028-09-12", policeCheckDate: "2025-10-10", policeCheckExpiry: "2030-10-10", onboardingDate: "2025-12-01", status: "Active", notes: "Assisting with incorporation lobby" }
+                ],
+                shifts: [
+                    { id: "s001", date: "2026-01-13", startTime: "18:00", endTime: "21:00", role: "Moderator", volunteerId: "v001", location: "Online", notes: "Community Listening Session" },
+                    { id: "s002", date: "2026-01-14", startTime: "10:00", endTime: "12:00", role: "Admin", volunteerId: "v002", location: "Seymour Hub", notes: "Documenting co-design results" },
+                    { id: "s003", date: "2026-01-15", startTime: "14:00", endTime: "16:00", role: "Event Support", volunteerId: "v004", location: "Wallan Library", notes: "Board Recruitment Pop-up" }
+                ],
+                hours: [
+                    { id: "h001", volunteerId: "v001", date: "2026-01-10", hours: 3.0, activityType: "Moderation", notes: "Evening shift" },
+                    { id: "h002", volunteerId: "v002", date: "2026-01-09", hours: 2.5, activityType: "Admin", notes: "Drafting constitution notes" },
+                    { id: "h003", volunteerId: "v004", date: "2026-01-11", hours: 4.0, activityType: "Community Engagement", notes: "Assisting with street interviews" },
+                    { id: "h004", volunteerId: "v005", date: "2026-01-05", hours: 2.0, activityType: "Board Meeting", notes: "Governance workshop" }
+                ]
+            });
+
+            // LocalStorage Autosave
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    localStorage.setItem('st_vol_data', JSON.stringify(data));
+                    setLastSaved(new Date().toLocaleTimeString());
+                }, 30000);
+                return () => clearInterval(timer);
+            }, [data]);
+
+            // Initial Load
+            useEffect(() => {
+                const saved = localStorage.getItem('st_vol_data');
+                if (saved) setData(JSON.parse(saved));
+                if (isFirstVisit()) {
+                    setShowWelcome(true);
+                }
+            }, []);
+
+            const saveData = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `smalltalk-volunteers-data-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            };
+
+            const loadData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const imported = JSON.parse(evt.target.result);
+                        setData(imported);
+                        alert("Data loaded successfully!");
+                    } catch (err) {
+                        alert("Error loading file. Please ensure it is a valid JSON export.");
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            return (
+                <>
+                    <AppShell
+                        title="Staff Roster & Volunteer Hours Tracker"
+                        currentTab={currentTab}
+                        setTab={setTab}
+                        onSave={saveData}
+                        onLoad={loadData}
+                        lastSaved={lastSaved}
+                    >
+                        {currentTab === 'dashboard' && <Dashboard data={data} setTab={setTab} />}
+                        {currentTab === 'volunteers' && <VolunteerRegistry volunteers={data.volunteers} setVolunteers={(v) => setData({ ...data, volunteers: typeof v === 'function' ? v(data.volunteers) : v })} />}
+                        {currentTab === 'roster' && <RosterBuilder shifts={data.shifts} setShifts={(s) => setData({ ...data, shifts: typeof s === 'function' ? s(data.shifts) : s })} volunteers={data.volunteers} />}
+                        {currentTab === 'hours' && <HoursLogger hours={data.hours} setHours={(h) => setData({ ...data, hours: typeof h === 'function' ? h(data.hours) : h })} volunteers={data.volunteers} />}
+                        {currentTab === 'reports' && <Reports data={data} />}
+                        {currentTab === 'about' && <About />}
+                        {currentTab === 'settings' && <SettingsView data={data} setData={setData} />}
+                    </AppShell>
+                    {showWelcome && <WelcomeModal onClose={() => { setShowWelcome(false); markFirstVisitComplete(); }} />}
+                </>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<VolunteerApp />);
+    </script>
+
+    <div class="print-footer no-print-on-screen" aria-hidden="true">
+        <div class="footer-left">
+            <span>smalltalk.community Inc</span>
+            <span id="print-doc-title"></span>
+        </div>
+        <div class="footer-center"></div>
+        <div class="footer-right">
+            <span id="print-timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function () {
+            const timestamp = new Date().toLocaleString('en-AU', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            document.getElementById('print-timestamp').textContent = 'Printed: ' + timestamp;
+            const rawTitle = document.title.split('|')[0].trim();
+            document.getElementById('print-doc-title').textContent = ' | ' + rawTitle + ' | Public Document';
+        });
+    </script>
+</body>
+
+</html>

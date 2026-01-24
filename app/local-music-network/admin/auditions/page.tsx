@@ -38,7 +38,7 @@ export default async function AuditionsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {allClassifieds.map((ad) => (
+                        {allClassifieds.map((ad: any) => (
                             <TableRow key={ad.id}>
                                 <TableCell>
                                     <div className="flex flex-col">

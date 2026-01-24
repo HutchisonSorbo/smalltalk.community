@@ -72,7 +72,7 @@ export async function GET() {
                 row.responseDate?.toISOString() || "",
                 row.userCreatedAt?.toISOString() || "",
             ];
-            csvRows.push(values.map(v => `"${v}"`).join(","));
+            csvRows.push(values.map((v: any) => `"${v}"`).join(","));
         }
 
         const csv = csvRows.join("\n");

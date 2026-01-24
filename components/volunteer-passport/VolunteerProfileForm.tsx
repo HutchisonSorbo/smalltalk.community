@@ -11,6 +11,7 @@ import { upsertVolunteerProfile } from "@/app/volunteer-passport/actions/volunte
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { type VolunteerProfile } from "@shared/schema";
 
 const profileSchema = z.object({
     headline: z.string().max(255).optional(),
@@ -22,16 +23,22 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface VolunteerProfileFormProps {
-    initialData?: ProfileFormValues;
+    initialData?: Partial<VolunteerProfile> | null;
 }
 
 export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
-        defaultValues: initialData || {
+        values: {
+            headline: initialData?.headline || "",
+            bio: initialData?.bio || "",
+            locationSuburb: initialData?.locationSuburb || "",
+            locationPostcode: initialData?.locationPostcode || "",
+        },
+        defaultValues: {
             headline: "",
             bio: "",
             locationSuburb: "",
@@ -40,7 +47,7 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
     });
 
     async function onSubmit(data: ProfileFormValues) {
-        setIsSubmitting(true);
+        setIsSaving(true);
         try {
             await upsertVolunteerProfile({
                 headline: data.headline || "",
@@ -59,7 +66,7 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
                 variant: "destructive",
             });
         } finally {
-            setIsSubmitting(false);
+            setIsSaving(false);
         }
     }
 
@@ -120,8 +127,8 @@ export function VolunteerProfileForm({ initialData }: VolunteerProfileFormProps)
                         )}
                     />
                 </div>
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Profile
                 </Button>
             </form>
