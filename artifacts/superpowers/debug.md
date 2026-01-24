@@ -26,6 +26,7 @@ The code in `@app/settings/actions.ts` had several reliability and security issu
 8. `validateAndSanitizePreferences` lacked an early payload shape guard, making it vulnerable to exceptions if the input wasn't an object.
 9. `completeProfileWizard` was susceptible to runtime errors if passed non-string values for `accountType` or `notificationPreference`.
 10. Accessibility settings were being sent to the database with camelCase keys, mismatching the snake_case schema.
+11. Language matching was case-sensitive, causing mismatches if the user provided valid codes with non-canonical casing (e.g., "EN-AU").
 
 ## Fix
 
@@ -40,6 +41,7 @@ The code in `@app/settings/actions.ts` had several reliability and security issu
 9. Added payload shape guard in `validateAndSanitizePreferences`.
 10. Added robust `typeof` string checks in `completeProfileWizard` before normalization.
 11. Mapped `highContrast` -> `high_contrast` and `reducedMotion` -> `reduced_motion` to align with the schema.
+12. Implemented case-insensitive matching for `language` in `validateAndSanitizePreferences()` while preserving canonical mixed-case output.
 
 ## Regression protection
 

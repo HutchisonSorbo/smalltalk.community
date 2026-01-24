@@ -37,11 +37,13 @@ function validateAndSanitizePreferences(data: Partial<UserPreference>): { succes
             }
         } else if (key === "language") {
             if (typeof value === "string") {
-                const val = value.trim();
-                if (ALLOWED_LANGUAGES.includes(val)) {
-                    sanitizedData.language = val;
+                const inputNorm = value.trim().toLowerCase();
+                const canonicalIndex = ALLOWED_LANGUAGES.findIndex(lang => lang.toLowerCase() === inputNorm);
+
+                if (canonicalIndex !== -1) {
+                    sanitizedData.language = ALLOWED_LANGUAGES[canonicalIndex];
                 } else {
-                    console.error("[validateAndSanitizePreferences] Validation Error: Invalid language", { val });
+                    console.error("[validateAndSanitizePreferences] Validation Error: Invalid language", { val: value.trim() });
                     return { success: false, error: "Invalid preferences" };
                 }
             } else {
