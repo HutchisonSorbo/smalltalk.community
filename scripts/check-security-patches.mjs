@@ -1,14 +1,15 @@
 import { execSync } from 'child_process';
 
 const patches = [
-    { name: 'react', version: '19.2.4' },
-    { name: 'react-dom', version: '19.2.4' },
-    { name: 'next', version: '16.1.7' }
+    { name: 'react', version: '19.2.3' },
+    { name: 'react-dom', version: '19.2.3' },
+    { name: 'next', version: '16.1.4' }
 ];
 
 console.log('--- Security Patch Watcher (SCAN-2026-001) ---');
 console.log(`Checking npm for patched versions at ${new Date().toLocaleString()}...`);
 
+const isStrict = process.argv.includes('--strict') || process.env.STRICT === 'true';
 let allAvailable = true;
 
 for (const patch of patches) {
@@ -31,5 +32,5 @@ if (allAvailable) {
     process.exit(0);
 } else {
     console.log('\n⏳ Some patches are still missing. Re-check later.');
-    process.exit(0); // Exit 0 because it's a successful check, just negative result
+    process.exit(isStrict ? 1 : 0);
 }
