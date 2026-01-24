@@ -105,11 +105,36 @@ export async function getPublicTenantByCode(code: string): Promise<PublicTenant 
         }
 
         if (!data) return null;
-        return data as unknown as PublicTenant;
+
+        return mapDbRowToPublicTenant(data);
     } catch (err) {
         console.error(`[getPublicTenantByCode] Unexpected error for code "${safeCode}":`, err);
         return null;
     }
+}
+
+/**
+ * Maps a database row to a PublicTenant object
+ * Ensures all snake_case columns are mapped to camelCase properties
+ * and socialLinks is safely handled as an object.
+ */
+function mapDbRowToPublicTenant(data: any): PublicTenant {
+    return {
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        logoUrl: data.logo_url,
+        primaryColor: data.primary_color,
+        description: data.description,
+        website: data.website,
+        heroImageUrl: data.hero_image_url,
+        missionStatement: data.mission_statement,
+        socialLinks: (data.social_links ?? {}) as Record<string, string | undefined>,
+        contactEmail: data.contact_email,
+        contactPhone: data.contact_phone,
+        address: data.address,
+        isPublic: data.is_public,
+    };
 }
 
 /**

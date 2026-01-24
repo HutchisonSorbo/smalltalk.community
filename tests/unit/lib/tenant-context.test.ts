@@ -29,7 +29,7 @@ describe('getPublicTenantByCode', () => {
     });
 
     it('returns tenant when found and public', async () => {
-        const mockTenant = {
+        const mockTenantRow = {
             id: 'test-id',
             code: 'stc',
             name: 'smalltalk.community Inc',
@@ -37,8 +37,25 @@ describe('getPublicTenantByCode', () => {
             description: 'Test description',
         };
 
+        const expectedTenant: PublicTenant = {
+            id: 'test-id',
+            code: 'stc',
+            name: 'smalltalk.community Inc',
+            isPublic: true,
+            description: 'Test description',
+            logoUrl: undefined,
+            primaryColor: undefined,
+            website: undefined,
+            heroImageUrl: undefined,
+            missionStatement: undefined,
+            socialLinks: {},
+            contactEmail: undefined,
+            contactPhone: undefined,
+            address: undefined,
+        };
+
         // Setup mock chain
-        const singleMock = vi.fn().mockResolvedValue({ data: mockTenant, error: null });
+        const singleMock = vi.fn().mockResolvedValue({ data: mockTenantRow, error: null });
         const eqPublicMock = vi.fn().mockReturnValue({ single: singleMock });
         const eqCodeMock = vi.fn().mockReturnValue({ eq: eqPublicMock });
         const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
@@ -50,7 +67,7 @@ describe('getPublicTenantByCode', () => {
 
         const result = await getPublicTenantByCode('stc');
 
-        expect(result).toEqual(mockTenant);
+        expect(result).toEqual(expectedTenant);
         expect(fromMock).toHaveBeenCalledWith('tenants');
         // Check for explicit columns (starting with 'id, code, name')
         expect(selectMock).toHaveBeenCalledWith(expect.stringContaining('id, code, name'));
@@ -106,8 +123,8 @@ describe('getPublicTenantByCode', () => {
         });
 
         it('trims whitespace from code before querying', async () => {
-            const mockTenant = { id: 'test', code: 'stc', name: 'Test', is_public: true };
-            const singleMock = vi.fn().mockResolvedValue({ data: mockTenant, error: null });
+            const mockTenantRow = { id: 'test', code: 'stc', name: 'Test', is_public: true };
+            const singleMock = vi.fn().mockResolvedValue({ data: mockTenantRow, error: null });
             const eqPublicMock = vi.fn().mockReturnValue({ single: singleMock });
             const eqCodeMock = vi.fn().mockReturnValue({ eq: eqPublicMock });
             const selectMock = vi.fn().mockReturnValue({ eq: eqCodeMock });
