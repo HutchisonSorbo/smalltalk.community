@@ -172,6 +172,10 @@ async function checkSecrets(): Promise<AuditResult> {
              if (content.includes('NEXT_PUBLIC_SUPABASE_ANON_KEY')) return;
              if (content.includes('NEXT_PUBLIC_APP_URL')) return;
              
+             // Extra safety: Don't report on this file if grep missed the exclusion
+             if (file.includes('daily-audit.ts')) return;
+             if (file.includes('audit-reports/')) return;
+
              // Add to suspicious list (File:Line only)
              suspicious.push(`${path.relative(ROOT_DIR, file)}:${lineno}`);
         });
@@ -219,30 +223,51 @@ async function checkPerformance(): Promise<AuditResult> {
                     }
                 });
              };
-             findLargeFiles(publicDir);
+             
+             try {
+                findLargeFiles(publicDir);
+             } catch (e: any) {
+                 console.error('Error scanning public assets:', e);
+                 issues.push('Error scanning public assets');
+             }
         }
 
         // 2. Check for standard <img> tags
-        const grepImg = `grep -r "<img" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" || true`;
-        const imgOutput = runCommand(grepImg);
-        const imgLines = imgOutput.split('\n').filter(l => l.trim() !== '');
-        
-        if (imgLines.length > 0) {
-            status = 'WARNING';
-            issues.push(`Found ${imgLines.length} standard <img></code> tags (Use <code><Image /></code> for bandwidth optimization)`);
-            imgLines.slice(0, 3).forEach(l => issues.push(`- ${l.substring(0, 100).trim()}...`));
+        try {
+            const grepImg = `grep -r "<img" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" || true`;
+            const imgOutput = runCommand(grepImg);
+            const imgLines = imgOutput.split('\n').filter(l => l.trim() !== '');
+            
+            if (imgLines.length > 0) {
+                status = 'WARNING';
+                issues.push(`Found ${imgLines.length} standard \`<img>\` tags (Use \\\`<Image />\\\' for bandwidth optimization)`);
+                imgLines.slice(0, 3).forEach(l => issues.push(`- ${l.substring(0, 100).trim()}...`));
+            }
+        } catch (e: any) {
+            console.error('Error scanning for <img> tags:', e);
+            issues.push('Error scanning for unoptimized images');
         }
 
         // 3. Count 'use client'
         let clientComponents = 0;
-        const grepClient = `grep -r "use client" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" | wc -l`;
-        clientComponents = parseInt(runCommand(grepClient).trim(), 10) || 0;
+        try {
+            const grepClient = `grep -r "use client" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" | wc -l`;
+            clientComponents = parseInt(runCommand(grepClient).trim(), 10) || 0;
+        } catch (e: any) {
+            console.error('Error counting client components:', e);
+            issues.push('Error counting client components');
+        }
 
         // 4. Console.log check
-        const grepConsole = `grep -r "console.log" "${ROOT_DIR}" --include="*.tsx" --include="*.ts" --exclude-dir="node_modules" --exclude-dir=".next" --exclude-dir="scripts" | wc -l`;
-        const consoleCount = parseInt(runCommand(grepConsole).trim(), 10) || 0;
-        if (consoleCount > 0) {
-             issues.push(`Found ${consoleCount} console.log statements (Remove for production performance)`);
+        try {
+            const grepConsole = `grep -r "console.log" "${ROOT_DIR}" --include="*.tsx" --include="*.ts" --exclude-dir="node_modules" --exclude-dir=".next" --exclude-dir="scripts" | wc -l`;
+            const consoleCount = parseInt(runCommand(grepConsole).trim(), 10) || 0;
+            if (consoleCount > 0) {
+                issues.push(`Found ${consoleCount} console.log statements (Remove for production performance)`);
+            }
+        } catch (e: any) {
+            console.error('Error checking console.log:', e);
+            issues.push('Error checking console.log usage');
         }
 
         const summary = `${issues.length} performance warnings. Client Components: ${clientComponents}`;
