@@ -415,6 +415,132 @@ async function checkLegal(): Promise<AuditResult> {
     }
 }
 
+async function checkSanitization(): Promise<AuditResult> {
+    console.log('Running Data Sanitization Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Input Validation (Zod):**\n';
+        
+        const apiDir = path.join(ROOT_DIR, 'app', 'api');
+        const riskyRoutes: string[] = [];
+        
+        if (fs.existsSync(apiDir)) {
+            const scanApiRoutes = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        scanApiRoutes(filePath);
+                    } else if (file === 'route.ts') {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        // Check if file uses Zod or an existing schema
+                        if (!content.includes('zod') && !content.includes('schema') && !content.includes('validate')) {
+                             // Only flag if it handles POST/PUT/PATCH (where input matters)
+                             if (content.includes('POST') || content.includes('PUT') || content.includes('PATCH')) {
+                                riskyRoutes.push(path.relative(ROOT_DIR, filePath));
+                             }
+                        }
+                    }
+                });
+            };
+            scanApiRoutes(apiDir);
+        }
+
+        if (riskyRoutes.length > 0) {
+            status = 'WARNING';
+            details += `\n**Potential Unvalidated API Routes:**\n`;
+            details += riskyRoutes.map(r => `- ${r} (Missing 'zod' or 'schema' keyword)`).join('\n');
+        } else {
+            details += `- ✅ API routes appear to use validation.\n`;
+        }
+        
+        return { status, summary: `Sanitization: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkSanitization:', e);
+        return { status: 'FAIL', summary: 'Sanitization Check Failed', details: 'Internal Error' };
+    }
+}
+
+async function checkAgeGate(): Promise<AuditResult> {
+    console.log('Running Age Gate Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Age Restriction Enforcement:**\n';
+        
+        const schemaPath = path.join(ROOT_DIR, 'lib', 'onboarding-schemas.ts');
+        if (!fs.existsSync(schemaPath)) {
+            return { status: 'FAIL', summary: 'Missing Schema File', details: 'lib/onboarding-schemas.ts not found.' };
+        }
+        
+        const content = fs.readFileSync(schemaPath, 'utf8');
+        // Look for 13 year logic. Heuristic: "13" or logic calculating age.
+        // Our fix added: "minAge" and "13"
+        const hasAgeCheck = content.includes('minAge') || (content.includes('13') && content.includes('Date'));
+        
+        if (hasAgeCheck) {
+            details += `- ✅ Age gate logic found in schemas (13+ enforcement detected).\n`;
+        } else {
+            status = 'FAIL';
+            details += `- ❌ STRICT 13+ Age Gate NOT detected in lib/onboarding-schemas.ts!\n`;
+        }
+        
+        return { status, summary: `Age Gate: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkAgeGate:', e);
+        return { status: 'FAIL', summary: 'Age Gate Check Failed', details: 'Internal Error' };
+    }
+}
+
+async function checkCacheHeaders(): Promise<AuditResult> {
+    console.log('Running Cache Header Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Cache Strategy:**\n';
+        
+        const apiDir = path.join(ROOT_DIR, 'app', 'api');
+        let cacheControlCount = 0;
+        let routeCount = 0;
+        
+        if (fs.existsSync(apiDir)) {
+            const scanApiRoutes = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        scanApiRoutes(filePath);
+                    } else if (file === 'route.ts') {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        if (content.includes('GET')) {
+                            routeCount++;
+                            if (content.includes('Cache-Control') || content.includes('revalidate')) {
+                                cacheControlCount++;
+                            }
+                        }
+                    }
+                });
+            };
+            scanApiRoutes(apiDir);
+        }
+        
+        details += `- **Cached API Routes:** ${cacheControlCount} / ${routeCount}\n`;
+        
+        if (routeCount > 0 && cacheControlCount === 0) {
+            status = 'WARNING';
+            details += `- ⚠️ No API routes seem to use explicit 'Cache-Control' headers. Important for low bandwidth.\n`;
+        } else if (cacheControlCount < routeCount / 2) {
+             // Just an observation, not a fail
+             details += `- ℹ️ Consider adding caching to more GET routes.\n`;
+        }
+        
+        return { status, summary: `Cache: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkCacheHeaders:', e);
+        return { status: 'FAIL', summary: 'Cache Check Failed', details: 'Internal Error' };
+    }
+}
+
 async function generateReport() {
   try {
       const cve = await checkCVEs();
@@ -423,6 +549,9 @@ async function generateReport() {
       const perf = await checkPerformance();
       const resilience = await checkResilience();
       const legal = await checkLegal();
+      const sanitization = await checkSanitization();
+      const ageGate = await checkAgeGate();
+      const cache = await checkCacheHeaders();
       
       const reportContent = `
 # Security & Performance Audit Report
@@ -442,6 +571,9 @@ Daily automated audit results.
 - **Performance:** ${perf.status}
 - **Resilience:** ${resilience.status}
 - **Legal:** ${legal.status}
+- **Sanitization:** ${sanitization.status}
+- **Age Gate:** ${ageGate.status}
+- **Caching:** ${cache.status}
 
 ---
 
@@ -462,12 +594,29 @@ ${rls.details}
 **Status:** ${secrets.status}
 ${secrets.details}
 
+### 4. Input Sanitization (Zod)
+
+**Status:** ${sanitization.status}
+${sanitization.details}
+
+### 5. Age Gate (13+)
+
+**Status:** ${ageGate.status}
+${ageGate.details}
+
 ---
 
-## Performance Audit (Low Bandwidth)
+## Performance & Reliability
+
+### 1. Low Bandwidth Optimization
 
 **Status:** ${perf.status}
 ${perf.details}
+
+### 2. Caching Strategy
+
+**Status:** ${cache.status}
+${cache.details}
 
 ---
 
