@@ -109,14 +109,20 @@ async function run() {
 
             if (membershipResult.length === 0) {
                 console.log(`\n⚠️ Missing membership for ${email} in tenant "stc". Creating...`);
-                await sql`
+                const insertedResult = await sql`
           INSERT INTO tenant_members (id, tenant_id, user_id, role, joined_at)
           SELECT gen_random_uuid()::text, ${tenant.id}, id, 'admin', NOW()
           FROM users
           WHERE email = ${email}
           ON CONFLICT (tenant_id, user_id) DO NOTHING
+          RETURNING *
         `;
-                console.log('✓ Created tenant membership with role "admin"');
+
+                if (insertedResult.length > 0) {
+                    console.log('✓ Created tenant membership with role "admin"');
+                } else {
+                    console.log('✓ Tenant membership already exists (skipped via ON CONFLICT)');
+                }
             } else {
                 console.log(`✓ Membership already exists with role: ${membershipResult[0].role}`);
                 if (membershipResult[0].role !== 'admin') {

@@ -34,7 +34,7 @@ async function run() {
             if (authResult.length > 0) {
                 console.log('✓ User exists in auth.users:', authResult[0].id);
                 console.log('\n👉 User needs to complete onboarding to create profile in users table');
-                // ... rest of logic for creation ...
+                // Intentionally not creating users in this check-only script
             } else {
                 console.log('❌ User not found in auth.users either');
             }
