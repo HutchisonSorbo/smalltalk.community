@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 const patches = [
     { name: 'react', version: '19.2.3' },
@@ -14,7 +14,12 @@ let allAvailable = true;
 
 for (const patch of patches) {
     try {
-        const result = execSync(`npm view ${patch.name}@${patch.version} version 2>/dev/null`).toString().trim();
+        const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+        const result = execFileSync(npmCmd, ['view', `${patch.name}@${patch.version}`, 'version'], {
+            stdio: ['ignore', 'pipe', 'ignore'],
+            encoding: 'utf-8'
+        }).trim();
+
         if (result === patch.version) {
             console.log(`✅ [AVAILABLE] ${patch.name}@${patch.version} has been released!`);
         } else {
