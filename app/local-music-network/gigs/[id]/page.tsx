@@ -17,6 +17,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShareDialog } from "@/components/local-music-network/ShareDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { safeUrl } from "@/lib/utils";
 
 export default function GigDetailPage() {
     const params = useParams();
@@ -91,7 +92,7 @@ export default function GigDetailPage() {
                     {/* Background Cover */}
                     {gig.coverImageUrl ? (
                         <Image
-                            src={gig.coverImageUrl}
+                            src={safeUrl(gig.coverImageUrl)!}
                             alt="Cover"
                             fill
                             className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -112,7 +113,7 @@ export default function GigDetailPage() {
                                 {/* Poster/Profile Image (if distinct from cover) */}
                                 {gig.imageUrl && (
                                     <div className="h-48 w-48 rounded-lg overflow-hidden border-4 border-background shadow-xl shrink-0 hidden md:block relative">
-                                        <Image src={gig.imageUrl} alt={gig.title} fill className="object-cover" />
+                                        <Image src={safeUrl(gig.imageUrl)!} alt={gig.title} fill className="object-cover" />
                                     </div>
                                 )}
 
@@ -146,7 +147,7 @@ export default function GigDetailPage() {
                             {gig.imageUrl && (
                                 <div className="md:hidden rounded-lg overflow-hidden border border-border shadow-sm">
                                     <Image 
-                                        src={gig.imageUrl} 
+                                        src={safeUrl(gig.imageUrl)!} 
                                         alt={gig.title} 
                                         width={0} 
                                         height={0} 

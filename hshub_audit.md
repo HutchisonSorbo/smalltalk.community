@@ -5,6 +5,7 @@
 Run this command to update your GEMINI.md file:
 
 ```bash
+mkdir -p ~/.gemini
 cat > ~/.gemini/GEMINI.md << 'EOF'
 # Senior Full Stack Security Engineer
 
@@ -112,6 +113,13 @@ log "=== Starting Codebase Audit ==="
 if [ -d "$REPO_PATH/.git" ]; then
     log "Updating repository..."
     cd "$REPO_PATH"
+    
+    # Cleanliness check
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        log "❌ Audit failed - Uncommitted changes in $REPO_PATH. Please commit or stash them."
+        exit 1
+    fi
+    
     git fetch origin
     git reset --hard origin/main
 else

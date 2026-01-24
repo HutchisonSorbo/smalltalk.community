@@ -179,29 +179,32 @@ export default function BandDetailsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full" />)}
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                        {members?.map((member) => (
-                                                            <div key={member.id} className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
-                                                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center relative overflow-hidden shrink-0">
-                                                                    {safeUrl(member.user.profileImageUrl) ? (
-                                                                        <Image
-                                                                            src={safeUrl(member.user.profileImageUrl)!}
-                                                                            alt={`${member.user.firstName} ${member.user.lastName}`}
-                                                                            fill
-                                                                            className="object-cover"
-                                                                        />
-                                                                    ) : <UserIcon className="h-6 w-6 text-primary" />}
-                                                                </div>
-                                                                <div>                                        <p className="font-medium">{member.user.firstName} {member.user.lastName}</p>
-                                        <p className="text-sm text-muted-foreground">{member.instrument || "Member"}</p>
-                                        {member.role === 'admin' && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Admin</span>}
-                                    </div>
-                                </div>
-                            ))}
-                            {(!members || members.length === 0) && <p className="text-muted-foreground">No members listed yet.</p>}
-                        </div>
-                    )}
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {members?.map((member) => (
+                                                    <div key={member.id} className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
+                                                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center relative overflow-hidden shrink-0">
+                                                            {safeUrl(member.user.profileImageUrl) ? (
+                                                                <Image
+                                                                    src={safeUrl(member.user.profileImageUrl)!}
+                                                                    alt={`${member.user.firstName} ${member.user.lastName}`}
+                                                                    fill
+                                                                    className="object-cover"
+                                                                />
+                                                            ) : (
+                                                                <UserIcon className="h-6 w-6 text-primary" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium">{member.user.firstName} {member.user.lastName}</p>
+                                                            <p className="text-sm text-muted-foreground">{member.instrument || "Member"}</p>
+                                                            {member.role === 'admin' && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Admin</span>}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {(!members || members.length === 0) && <p className="text-muted-foreground">No members listed yet.</p>}
+                                            </div>
+                                        )}
                 </section>
 
                 <Separator className="my-8" />

@@ -39,7 +39,18 @@ export async function POST(req: NextRequest) {
             const body = await req.json();
             const result = revalidateSchema.safeParse(body);
             if (result.success && result.data.tags) {
-                tagsToRevalidate = result.data.tags;
+                // Validate tags against allowlist
+                const allowedTags = Object.values(CACHE_TAGS);
+                const requestedTags = result.data.tags;
+                const invalidTags = requestedTags.filter(tag => !allowedTags.includes(tag as any));
+
+                if (invalidTags.length > 0) {
+                    return NextResponse.json(
+                        { message: "Invalid cache tags provided", invalidTags },
+                        { status: 400 }
+                    );
+                }
+                tagsToRevalidate = requestedTags;
             }
         } catch {
             // Ignore JSON parse errors, just use defaults

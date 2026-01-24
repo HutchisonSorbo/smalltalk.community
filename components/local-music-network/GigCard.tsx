@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { MapPin, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Gig } from "@shared/schema";
+import { safeUrl } from "@/lib/utils";
 
 import { ReportDialog } from "@/components/local-music-network/ReportDialog";
 
@@ -17,7 +18,7 @@ export function GigCard({ gig }: { gig: Gig }) {
             {gig.imageUrl && (
                 <Link href={`/gigs/${gig.id}`} className="block h-48 w-full bg-muted overflow-hidden relative">
                     <Image 
-                        src={gig.imageUrl} 
+                        src={safeUrl(gig.imageUrl)!} 
                         alt={gig.title} 
                         fill
                         className="object-cover hover:scale-105 transition-transform duration-500" 

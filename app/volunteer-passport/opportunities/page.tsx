@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, MapPin, Clock, Building2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { safeUrl } from "@/lib/utils";
 
 interface VolunteerRole {
     id: string;
@@ -127,8 +128,8 @@ export default function OpportunitiesPage() {
                                     <div className="flex items-center gap-3">
                                         {role.orgLogo ? (
                                             <Image
-                                                src={role.orgLogo}
-                                                alt=""
+                                                src={safeUrl(role.orgLogo)!}
+                                                alt={`${role.orgName} logo`}
                                                 width={40}
                                                 height={40}
                                                 className="rounded object-cover"

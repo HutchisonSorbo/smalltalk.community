@@ -14,6 +14,7 @@ import {
     UserCog, Clock, CheckCircle, XCircle, Edit
 } from "lucide-react";
 import { UserActionsClient } from "./user-actions-client";
+import { safeUrl } from "@/lib/utils";
 
 async function getUser(userId: string) {
     const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
@@ -294,7 +295,7 @@ export default async function UserDetailPage({
                                     {userAppsList.map((app: any) => (
                                         <Badge key={app.appId} variant="outline" className="gap-2 py-1.5">
                                             {app.appIcon && (
-                                                <Image src={app.appIcon} alt="" width={16} height={16} className="rounded" />
+                                                <Image src={safeUrl(app.appIcon)!} alt="" width={16} height={16} className="rounded" />
                                             )}
                                             {app.appName}
                                             {app.isPinned && <span className="text-yellow-500">★</span>}

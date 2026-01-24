@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 const createPageSchema = z.object({
     title: z.string().min(1),
     slug: z.string().min(1),
-    content: z.any(), // Rich text content
+    content: z.record(z.unknown()), // Rich text content
     status: z.enum(['draft', 'published']).optional().default('draft'),
     metaTitle: z.string().optional(),
     metaDescription: z.string().optional(),

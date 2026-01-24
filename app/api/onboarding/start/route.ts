@@ -9,13 +9,16 @@ import { z } from "zod";
 // Called when user clicks "Get Started" on welcome screen
 export async function POST(req: Request) {
     try {
-        // Validate that no unexpected body content is sent (optional safety check)
-        const schema = z.object({}).optional();
+        // Validate that no unexpected body content is sent
+        const schema = z.object({}).strict();
         try {
             const body = await req.json().catch(() => ({}));
-            schema.parse(body);
+            const result = schema.safeParse(body);
+            if (!result.success) {
+                return NextResponse.json({ error: "Unexpected request body" }, { status: 400 });
+            }
         } catch {
-            // Ignore body parsing errors, we don't need the body
+            // No body is fine
         }
 
         const cookieStore = await cookies();
