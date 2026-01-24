@@ -8,27 +8,33 @@ import { z } from "zod";
 import { insertAuditLog } from "@/lib/audit/auditLog";
 
 export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 204,
-        headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-    });
+    try {
+        return new NextResponse(null, {
+            status: 204,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            },
+        });
+    } catch (error) {
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
 }
 
 // Called when user clicks "Get Started" on welcome screen
 export async function POST(req: Request) {
+    let userId: string | undefined;
     try {
         const schema = z.object({}).strict();
         
+        // Always read raw body to prevent bypass
+        const rawBody = await req.text();
         let body = {};
-        const contentLength = req.headers.get("content-length");
-
-        if (contentLength && parseInt(contentLength) > 0) {
+        
+        if (rawBody.trim()) {
             try {
-                body = await req.json();
+                body = JSON.parse(rawBody);
             } catch {
                 return NextResponse.json({ error: "Malformed JSON" }, { status: 400 });
             }
@@ -65,6 +71,7 @@ export async function POST(req: Request) {
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        userId = user.id;
 
         // Set onboarding step to 1 (entering profile setup)
         await db
@@ -86,6 +93,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, step: 1 });
     } catch (error) {
         console.error("Error starting onboarding:", error);
+        
+        // Log error audit event
+        await insertAuditLog({
+            eventType: 'system',
+            severity: 'error',
+            message: 'Failed to start onboarding',
+            userId: userId,
+            safeQueryParams: { error: error instanceof Error ? error.message : String(error) }
+        });
+
         return NextResponse.json(
             { error: "Failed to start onboarding" },
             { status: 500 }

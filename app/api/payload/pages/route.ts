@@ -21,13 +21,19 @@ export async function OPTIONS(req: NextRequest) {
     const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
     const isAllowed = origin && allowedOrigin && origin === allowedOrigin;
 
+    const headers: Record<string, string> = {
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Vary": "Origin",
+    };
+
+    if (isAllowed) {
+        headers["Access-Control-Allow-Origin"] = origin;
+    }
+
     return new NextResponse(null, {
         status: 204,
-        headers: {
-            "Access-Control-Allow-Origin": isAllowed ? origin : "",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
+        headers,
     });
 }
 
