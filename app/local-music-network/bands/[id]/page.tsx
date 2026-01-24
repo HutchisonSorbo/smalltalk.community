@@ -10,6 +10,7 @@ import { Calendar, MapPin, Music, UserIcon, Edit, Shield, Globe, Facebook, Insta
 import { useAuth } from "@/hooks/useAuth";
 import type { Band, BandMemberWithUser, Gig } from "@shared/schema";
 import Link from "next/link";
+import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { safeUrl } from "@/lib/utils";
 
@@ -119,9 +120,14 @@ export default function BandDetailsPage() {
                         </div>
                     </div>
                     {/* Image placeholder or component */}
-                    <div className="w-full md:w-1/3 aspect-video bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
+                    <div className="w-full md:w-1/3 aspect-video bg-muted rounded-lg flex items-center justify-center text-muted-foreground relative overflow-hidden">
                         {safeUrl(band.profileImageUrl) ? (
-                            <img src={safeUrl(band.profileImageUrl)} alt={band.name} className="w-full h-full object-cover rounded-lg" />
+                            <Image
+                                src={safeUrl(band.profileImageUrl)!}
+                                alt={band.name}
+                                fill
+                                className="object-cover"
+                            />
                         ) : (
                             <Music className="h-16 w-16 opacity-20" />
                         )}
@@ -175,15 +181,19 @@ export default function BandDetailsPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {members?.map((member) => (
-                                <div key={member.id} className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
-                                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                        {safeUrl(member.user.profileImageUrl) ? (
-                                            <img src={safeUrl(member.user.profileImageUrl)} alt={`${member.user.firstName} ${member.user.lastName}`} className="h-12 w-12 rounded-full object-cover" />
-                                        ) : <UserIcon className="h-6 w-6 text-primary" />}
-                                    </div>
-                                    <div>
-                                        <p className="font-medium">{member.user.firstName} {member.user.lastName}</p>
+                                                        {members?.map((member) => (
+                                                            <div key={member.id} className="flex items-center gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
+                                                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                    {safeUrl(member.user.profileImageUrl) ? (
+                                                                        <Image
+                                                                            src={safeUrl(member.user.profileImageUrl)!}
+                                                                            alt={`${member.user.firstName} ${member.user.lastName}`}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                        />
+                                                                    ) : <UserIcon className="h-6 w-6 text-primary" />}
+                                                                </div>
+                                                                <div>                                        <p className="font-medium">{member.user.firstName} {member.user.lastName}</p>
                                         <p className="text-sm text-muted-foreground">{member.instrument || "Member"}</p>
                                         {member.role === 'admin' && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Admin</span>}
                                     </div>

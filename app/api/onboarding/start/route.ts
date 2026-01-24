@@ -4,10 +4,20 @@ import { cookies } from "next/headers";
 import { db } from "@/server/db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 // Called when user clicks "Get Started" on welcome screen
-export async function POST() {
+export async function POST(req: Request) {
     try {
+        // Validate that no unexpected body content is sent (optional safety check)
+        const schema = z.object({}).optional();
+        try {
+            const body = await req.json().catch(() => ({}));
+            schema.parse(body);
+        } catch {
+            // Ignore body parsing errors, we don't need the body
+        }
+
         const cookieStore = await cookies();
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,

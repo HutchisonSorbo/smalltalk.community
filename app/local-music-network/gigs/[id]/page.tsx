@@ -14,6 +14,7 @@ import { Calendar, MapPin, Music, Share2, Edit, Ticket, Users } from "lucide-rea
 import { format } from "date-fns";
 import { getGig } from "@/app/local-music-network/actions/gigs";
 import Link from "next/link";
+import Image from "next/image";
 import { ShareDialog } from "@/components/local-music-network/ShareDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -89,10 +90,11 @@ export default function GigDetailPage() {
                 <div className="relative h-[400px] bg-muted overflow-hidden group">
                     {/* Background Cover */}
                     {gig.coverImageUrl ? (
-                        <img
+                        <Image
                             src={gig.coverImageUrl}
                             alt="Cover"
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                     ) : (
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/30 to-secondary/30 flex items-center justify-center">
@@ -109,8 +111,8 @@ export default function GigDetailPage() {
                             <div className="flex flex-col md:flex-row items-end gap-6">
                                 {/* Poster/Profile Image (if distinct from cover) */}
                                 {gig.imageUrl && (
-                                    <div className="h-48 w-48 rounded-lg overflow-hidden border-4 border-background shadow-xl shrink-0 hidden md:block">
-                                        <img src={gig.imageUrl} alt={gig.title} className="w-full h-full object-cover" />
+                                    <div className="h-48 w-48 rounded-lg overflow-hidden border-4 border-background shadow-xl shrink-0 hidden md:block relative">
+                                        <Image src={gig.imageUrl} alt={gig.title} fill className="object-cover" />
                                     </div>
                                 )}
 
@@ -143,7 +145,14 @@ export default function GigDetailPage() {
                             {/* Mobile Poster Toggle */}
                             {gig.imageUrl && (
                                 <div className="md:hidden rounded-lg overflow-hidden border border-border shadow-sm">
-                                    <img src={gig.imageUrl} alt={gig.title} className="w-full h-auto" />
+                                    <Image 
+                                        src={gig.imageUrl} 
+                                        alt={gig.title} 
+                                        width={0} 
+                                        height={0} 
+                                        sizes="100vw" 
+                                        className="w-full h-auto" 
+                                    />
                                 </div>
                             )}
 

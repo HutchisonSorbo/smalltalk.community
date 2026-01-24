@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { format } from "date-fns";
 import { MapPin, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,8 +15,13 @@ export function GigCard({ gig }: { gig: Gig }) {
                 <ReportDialog targetType="gig" targetId={gig.id} />
             </div>
             {gig.imageUrl && (
-                <Link href={`/gigs/${gig.id}`} className="block h-48 w-full bg-muted overflow-hidden">
-                    <img src={gig.imageUrl} alt={gig.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                <Link href={`/gigs/${gig.id}`} className="block h-48 w-full bg-muted overflow-hidden relative">
+                    <Image 
+                        src={gig.imageUrl} 
+                        alt={gig.title} 
+                        fill
+                        className="object-cover hover:scale-105 transition-transform duration-500" 
+                    />
                 </Link>
             )}
             <div className="p-6 flex-1 flex flex-col">

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Plus, Loader2, User, CheckCircle, AlertCircle, Building2, Bell, Shield, Settings, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import type { TenantWithMembership } from "@/shared/schema";
 import { safeUrl } from "@/lib/utils";
@@ -46,10 +47,12 @@ function CommunityOSMembershipCard({ membership }: { membership: TenantWithMembe
         >
             <div className="flex items-center gap-3 mb-3">
                 {logoUrl ? (
-                    <img
+                    <Image
                         src={logoUrl}
                         alt={membership.tenant.name}
-                        className="h-8 w-8 rounded object-cover"
+                        width={32}
+                        height={32}
+                        className="rounded object-cover"
                     />
                 ) : (
                     <div

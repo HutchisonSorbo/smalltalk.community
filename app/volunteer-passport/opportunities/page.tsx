@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MapPin, Clock, Building2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 interface VolunteerRole {
     id: string;
@@ -125,10 +126,12 @@ export default function OpportunitiesPage() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3">
                                         {role.orgLogo ? (
-                                            <img
+                                            <Image
                                                 src={role.orgLogo}
                                                 alt=""
-                                                className="h-10 w-10 rounded object-cover"
+                                                width={40}
+                                                height={40}
+                                                className="rounded object-cover"
                                             />
                                         ) : (
                                             <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">

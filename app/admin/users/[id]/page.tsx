@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import Image from "next/image";
 import {
     ArrowLeft, Mail, Calendar, MapPin, Shield, Music, Heart, Briefcase, Users, AppWindow,
     UserCog, Clock, CheckCircle, XCircle, Edit
@@ -293,7 +294,7 @@ export default async function UserDetailPage({
                                     {userAppsList.map((app: any) => (
                                         <Badge key={app.appId} variant="outline" className="gap-2 py-1.5">
                                             {app.appIcon && (
-                                                <img src={app.appIcon} alt="" className="h-4 w-4 rounded" />
+                                                <Image src={app.appIcon} alt="" width={16} height={16} className="rounded" />
                                             )}
                                             {app.appName}
                                             {app.isPinned && <span className="text-yellow-500">★</span>}

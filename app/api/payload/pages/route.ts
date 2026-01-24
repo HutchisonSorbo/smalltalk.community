@@ -2,8 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { requireAdmin } from '@/lib/admin-auth'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const createPageSchema = z.object({
+    title: z.string().min(1),
+    slug: z.string().min(1),
+    content: z.any(), // Rich text content
+    status: z.enum(['draft', 'published']).optional().default('draft'),
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+})
 
 // GET all pages
 export async function GET() {
@@ -34,21 +44,29 @@ export async function POST(request: NextRequest) {
         const payload = await getPayload({ config })
         const body = await request.json()
 
+        const validatedData = createPageSchema.parse(body)
+
         const doc = await payload.create({
             collection: 'pages',
             data: {
-                title: body.title,
-                slug: body.slug,
-                content: body.content,
-                status: body.status || 'draft',
-                metaTitle: body.metaTitle,
-                metaDescription: body.metaDescription,
+                title: validatedData.title,
+                slug: validatedData.slug,
+                content: validatedData.content,
+                status: validatedData.status,
+                metaTitle: validatedData.metaTitle,
+                metaDescription: validatedData.metaDescription,
             },
         })
 
         return NextResponse.json({ doc })
     } catch (error) {
         console.error('Failed to create page:', error)
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { error: 'Validation failed', details: error.errors },
+                { status: 400 }
+            )
+        }
         return NextResponse.json(
             { error: 'Failed to create page' },
             { status: 500 }

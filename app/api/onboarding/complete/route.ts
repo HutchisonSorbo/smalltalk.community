@@ -3,8 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import { db } from "../../../../server/db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 export const dynamic = 'force-dynamic';
+
+const authHeaderSchema = z.string().startsWith("Bearer ", { message: "Invalid Authorization header format" });
 
 export async function POST(req: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -12,6 +15,13 @@ export async function POST(req: Request) {
     try {
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        // Validate header format
+        const validation = authHeaderSchema.safeParse(authHeader);
+        if (!validation.success) {
+            return NextResponse.json({ error: "Invalid Authorization header" }, { status: 400 });
+        }
+
         const token = authHeader.replace('Bearer ', '');
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
