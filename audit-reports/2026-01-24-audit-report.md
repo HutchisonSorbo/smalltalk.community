@@ -1,7 +1,7 @@
 
 # Security & Performance Audit Report
 **Date:** 2026-01-24
-**Time:** 7:48:48 pm AEST
+**Time:** 8:05:27 pm AEST
 **Repository:** smalltalk.community
 
 ---
@@ -13,6 +13,8 @@ Daily automated audit results.
 - **RLS Status:** PASS
 - **Secrets Status:** WARNING
 - **Performance:** WARNING
+- **Resilience:** WARNING
+- **Legal:** FAIL
 
 ---
 
@@ -63,7 +65,28 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 
 ---
 
+## Resilience & Legal
+**Status:** WARNING
+
+### 1. Resilience (White Screen Check)
+
+**Resilience Metrics:**
+- **Error Boundaries (error.tsx):** 1 (Prevents white screens)
+- **Loading States (loading.tsx):** 1 (Improves perceived performance)
+
+**Risky API Routes (Missing try/catch):**
+- app/api/auth/callback/route.ts
+
+### 2. Legal Compliance
+
+**Legal Compliance:**
+- ❌ MISSING Privacy Policy (Required for GDPR/App Stores).
+- ❌ MISSING Terms of Service (High Legal Risk).
+
+
+---
+
 ## Audit Performed By
 - Tool: Automated Script (Gemini Agent)
-- Date: 2026-01-24T08:48:48.241Z
+- Date: 2026-01-24T09:05:27.292Z
 

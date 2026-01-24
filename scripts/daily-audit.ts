@@ -225,11 +225,95 @@ async function checkPerformance(): Promise<{ status: string, summary: string, de
     return { status, summary, details };
 }
 
+async function checkResilience(): Promise<{ status: string, summary: string, details: string }> {
+    console.log('Running Resilience (White Screen) Check...');
+    let status = 'PASS';
+    let details = '\n**Resilience Metrics:**\n';
+    
+    // 1. Count Error Boundaries (error.tsx)
+    const errorFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "error.tsx" | wc -l`).trim(), 10) || 0;
+    
+    // 2. Count Loading States (loading.tsx)
+    const loadingFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "loading.tsx" | wc -l`).trim(), 10) || 0;
+    
+    details += `- **Error Boundaries (error.tsx):** ${errorFiles} (Prevents white screens)\n`;
+    details += `- **Loading States (loading.tsx):** ${loadingFiles} (Improves perceived performance)\n`;
+
+    if (errorFiles < 1) {
+        status = 'WARNING';
+        details += `- ⚠️ NO Error Boundaries found! App is at risk of crashing completely on error.\n`;
+    }
+
+    // 3. API Try/Catch Check
+    const apiDir = path.join(ROOT_DIR, 'app', 'api');
+    const riskyRoutes: string[] = [];
+    
+    if (fs.existsSync(apiDir)) {
+        const scanApiRoutes = (dir: string) => {
+            const files = fs.readdirSync(dir);
+            files.forEach(file => {
+                const filePath = path.join(dir, file);
+                const stat = fs.statSync(filePath);
+                if (stat.isDirectory()) {
+                    scanApiRoutes(filePath);
+                } else if (file === 'route.ts') {
+                    const content = fs.readFileSync(filePath, 'utf8');
+                    // Simple heuristic: if it exports POST/GET but has no "try {", flag it
+                    if ((content.includes('export async function GET') || content.includes('export async function POST')) && !content.includes('try {')) {
+                        riskyRoutes.push(path.relative(ROOT_DIR, filePath));
+                    }
+                }
+            });
+        };
+        scanApiRoutes(apiDir);
+    }
+    
+    if (riskyRoutes.length > 0) {
+        status = 'WARNING';
+        details += `\n**Risky API Routes (Missing try/catch):**\n`;
+        details += riskyRoutes.map(r => `- ${r}`).join('\n');
+    } else {
+        details += `- ✅ All API routes appear to use error handling.\n`;
+    }
+    
+    return { status, summary: `Resilience: ${status}`, details };
+}
+
+async function checkLegal(): Promise<{ status: string, summary: string, details: string }> {
+    console.log('Running Legal Check...');
+    let status = 'PASS';
+    let details = '\n**Legal Compliance:**\n';
+    
+    // Check for Privacy Policy
+    const hasPrivacy = fs.existsSync(path.join(ROOT_DIR, 'app', 'privacy', 'page.tsx')) || 
+                       fs.existsSync(path.join(ROOT_DIR, 'privacy.md'));
+                       
+    // Check for Terms
+    const hasTerms = fs.existsSync(path.join(ROOT_DIR, 'app', 'terms', 'page.tsx')) ||
+                     fs.existsSync(path.join(ROOT_DIR, 'terms.md'));
+                     
+    if (hasPrivacy) details += `- ✅ Privacy Policy found.\n`;
+    else {
+        status = 'FAIL';
+        details += `- ❌ MISSING Privacy Policy (Required for GDPR/App Stores).\n`;
+    }
+    
+    if (hasTerms) details += `- ✅ Terms of Service found.\n`;
+    else {
+        status = 'FAIL';
+        details += `- ❌ MISSING Terms of Service (High Legal Risk).\n`;
+    }
+    
+    return { status, summary: `Legal: ${status}`, details };
+}
+
 async function generateReport() {
   const cve = await checkCVEs();
   const rls = await checkRLS();
   const secrets = await checkSecrets();
   const perf = await checkPerformance();
+  const resilience = await checkResilience();
+  const legal = await checkLegal();
   
   const reportContent = `
 # Security & Performance Audit Report
@@ -246,6 +330,8 @@ Daily automated audit results.
 - **RLS Status:** ${rls.status}
 - **Secrets Status:** ${secrets.status}
 - **Performance:** ${perf.status}
+- **Resilience:** ${resilience.status}
+- **Legal:** ${legal.status}
 
 ---
 
@@ -268,6 +354,17 @@ ${secrets.details}
 ## Performance Audit (Low Bandwidth)
 **Status:** ${perf.status}
 ${perf.details}
+
+---
+
+## Resilience & Legal
+**Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' ? 'PASS' : 'WARNING'}
+
+### 1. Resilience (White Screen Check)
+${resilience.details}
+
+### 2. Legal Compliance
+${legal.details}
 
 ---
 
