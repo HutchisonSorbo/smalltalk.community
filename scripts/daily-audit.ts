@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
@@ -10,8 +9,32 @@ const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const REPORT_DIR = path.join(ROOT_DIR, 'audit-reports');
-const DATE_STR = new Date().toISOString().split('T')[0];
+
+// Timezone-aware date handling (Melbourne)
+const timeFormatter = new Intl.DateTimeFormat('en-AU', {
+  timeZone: 'Australia/Melbourne',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  timeZoneName: 'short',
+});
+
+// Format: DD/MM/YYYY, HH:mm:ss am/pm AEST
+const parts = timeFormatter.formatToParts(new Date());
+const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
+
+// Build YYYY-MM-DD for filename
+const year = getPart('year');
+const month = getPart('month');
+const day = getPart('day');
+const DATE_STR = `${year}-${month}-${day}`;
 const REPORT_FILE = path.join(REPORT_DIR, `${DATE_STR}-audit-report.md`);
+
+// Build display string
+const DISPLAY_TIME = timeFormatter.format(new Date());
 
 // Ensure report directory exists
 if (!fs.existsSync(REPORT_DIR)) {
@@ -20,7 +43,8 @@ if (!fs.existsSync(REPORT_DIR)) {
 
 interface AuditResult {
   status: 'PASS' | 'FAIL' | 'WARNING';
-  details: string[];
+  summary: string;
+  details: string;
 }
 
 function runCommand(command: string): string {
@@ -31,7 +55,7 @@ function runCommand(command: string): string {
   }
 }
 
-async function checkCVEs(): Promise<{ status: string, summary: string, details: string }> {
+async function checkCVEs(): Promise<AuditResult> {
   console.log('Running CVE Check...');
   try {
     // Run npm audit
@@ -41,7 +65,7 @@ async function checkCVEs(): Promise<{ status: string, summary: string, details: 
     const vulnerabilities = auditJson.metadata?.vulnerabilities || {};
     const total = vulnerabilities.total || 0;
     
-    let status = 'PASS';
+    let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
     if (vulnerabilities.critical > 0) status = 'FAIL';
     else if (vulnerabilities.high > 0) status = 'WARNING';
 
@@ -56,105 +80,127 @@ async function checkCVEs(): Promise<{ status: string, summary: string, details: 
     let details = `\n**Dependency Vulnerabilities:**\n${summary}\n\n**Key Versions:**\n- Next.js: ${nextVersion}\n- React: ${reactVersion}\n`;
 
     return { status, summary, details };
-  } catch (e) {
-    return { status: 'FAIL', summary: 'Error running npm audit', details: String(e) };
+  } catch (e: any) {
+    console.error('Error running checkCVEs:', e);
+    return { status: 'FAIL', summary: 'Error running CVE check', details: 'Internal error while running npm audit, see workflow logs for details.' };
   }
 }
 
-async function checkRLS(): Promise<{ status: string, summary: string, details: string }> {
+async function checkRLS(): Promise<AuditResult> {
   console.log('Running RLS Check (Static Analysis)...');
-  
-  const schemaPath = path.join(ROOT_DIR, 'shared', 'schema.ts');
-  if (!fs.existsSync(schemaPath)) {
-    return { status: 'FAIL', summary: 'Schema file not found', details: 'shared/schema.ts is missing' };
-  }
-
-  const schemaContent = fs.readFileSync(schemaPath, 'utf8');
-  const lines = schemaContent.split('\n');
-  
-  const tables: string[] = [];
-  const policies: Record<string, number> = {};
-  
-  let currentTable = '';
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    // Simple regex to find table definitions. 
-    // export const tableName = pgTable("table_name", ...
-    const tableMatch = line.match(/export const (\w+) = pgTable\("/);
-    if (tableMatch) {
-      currentTable = tableMatch[1];
-      tables.push(currentTable);
-      policies[currentTable] = 0;
+  try {
+    const schemaPath = path.join(ROOT_DIR, 'shared', 'schema.ts');
+    if (!fs.existsSync(schemaPath)) {
+      return { status: 'FAIL', summary: 'Schema file not found', details: 'shared/schema.ts is missing' };
     }
+
+    const schemaContent = fs.readFileSync(schemaPath, 'utf8');
+    const lines = schemaContent.split('\n');
     
-    if (currentTable && line.includes('pgPolicy(')) {
-      policies[currentTable]++;
+    const tables: string[] = [];
+    const policies: Record<string, number> = {};
+    
+    let currentTable = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Updated regex to handle single and double quotes
+      const tableMatch = line.match(/export const (\w+) = pgTable\(['"](\w+)['"]/);
+      
+      if (tableMatch) {
+        currentTable = tableMatch[1]; // The const name (e.g., 'users')
+        tables.push(currentTable);
+        policies[currentTable] = 0;
+      }
+      
+      // In this Drizzle schema, policies are defined inside the pgTable callback
+      if (currentTable && line.includes('pgPolicy(')) {
+        policies[currentTable]++;
+      }
     }
-  }
 
-  const tablesWithoutPolicies = tables.filter(t => policies[t] === 0);
-  const status = tablesWithoutPolicies.length === 0 ? 'PASS' : 'FAIL';
-  
-  let details = `\n**Tables Analyzed:** ${tables.length}\n`;
-  details += `**Tables with Policies:** ${tables.length - tablesWithoutPolicies.length}\n`;
-  details += `**Tables WITHOUT Policies:** ${tablesWithoutPolicies.length}\n`;
-  
-  if (tablesWithoutPolicies.length > 0) {
-    details += `\n**Missing RLS:**\n- ${tablesWithoutPolicies.join('\n- ')}\n`;
-  }
+    const tablesWithoutPolicies = tables.filter(t => policies[t] === 0);
+    const status = tablesWithoutPolicies.length === 0 ? 'PASS' : 'FAIL';
+    
+    let details = `\n**Tables Analyzed:** ${tables.length}\n`;
+    details += `**Tables with Policies:** ${tables.length - tablesWithoutPolicies.length}\n`;
+    details += `**Tables WITHOUT Policies:** ${tablesWithoutPolicies.length}\n`;
+    
+    if (tablesWithoutPolicies.length > 0) {
+      details += `\n**Missing RLS:**\n- ${tablesWithoutPolicies.join('\n- ')}\n`;
+    }
 
-  return { status, summary: `${tablesWithoutPolicies.length} tables missing RLS`, details };
+    return { status, summary: `${tablesWithoutPolicies.length} tables missing RLS`, details };
+  } catch (e: any) {
+    console.error('Error running checkRLS:', e);
+    return { status: 'FAIL', summary: 'Error running RLS check', details: 'Internal error while analyzing schema, see workflow logs for details.' };
+  }
 }
 
-async function checkSecrets(): Promise<{ status: string, summary: string, details: string }> {
+async function checkSecrets(): Promise<AuditResult> {
     console.log('Running Secret Scan...');
-    // Simple grep for obvious secrets
-    // Exclude .env, .git, node_modules, .next
-    
-    // We are looking for "sk-...", "ey...", "AIza..." type patterns in code files
-    // This is a basic heuristic
-    
-    // Better: Check for "NEXT_PUBLIC_" prefixing specific keywords
-    
-    const command = `grep -r "NEXT_PUBLIC_" "${ROOT_DIR}" --include="*.ts" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" --exclude-dir=".git" | grep -iE "key|secret|token|auth" || true`;
-    
-    const output = runCommand(command);
-    const lines = output.split('\n').filter(l => l.trim() !== '');
-    
-    // Filter out known safe keys if necessary (e.g. Supabase URL is safe, Anon key is safe-ish but we want to check)
-    // CLAUDE.md says: NEXT_PUBLIC_SUPABASE_URL is safe.
-    
-    const suspicious = lines.filter(line => {
-        // Allow SUPABASE_URL and SUPABASE_ANON_KEY (as per common patterns, though CLAUDE.md says anon key is safe for client)
-        if (line.includes('NEXT_PUBLIC_SUPABASE_URL')) return false;
-        if (line.includes('NEXT_PUBLIC_SUPABASE_ANON_KEY')) return false; // Explicitly allowed in client
-        if (line.includes('NEXT_PUBLIC_APP_URL')) return false;
+    try {
+        // Broadened patterns, exclusions, and output formatting (no snippets)
+        // Patterns: NEXT_PUBLIC_, sk-, eyJ, AIza, api_key, secret, token
+        const patterns = 'NEXT_PUBLIC_|sk-|eyJ|AIza|api_key|secret|token';
         
-        return true;
-    });
+        // Exclude this script and report directory
+        const excludeArgs = `--exclude-dir="node_modules" --exclude-dir=".next" --exclude-dir=".git" --exclude="daily-audit.ts" --exclude-dir="audit-reports"`;
+        
+        // Use -n for line numbers, -o to only show matching part? No, grep -r output is usually filename:line:content.
+        // We want to suppress content to avoid leaking secrets in the report.
+        // We can use awk or just process the output in JS.
+        // -I ignores binary files.
+        const command = `grep -rE "${patterns}" "${ROOT_DIR}" ${excludeArgs} -I -n || true`;
+        
+        const output = runCommand(command);
+        const lines = output.split('\n').filter(l => l.trim() !== '');
+        
+        const suspicious: string[] = [];
 
-    const status = suspicious.length === 0 ? 'PASS' : 'WARNING';
-    const summary = `${suspicious.length} potential secret exposures found`;
-    let details = `\n**Suspicious Occurrences:**\n`;
-    if (suspicious.length > 0) {
-        details += suspicious.map(s => `- \`${s.substring(0, 100)}...\``).join('\n');
-    } else {
-        details += "None found.";
+        lines.forEach(line => {
+             // Line format: filename:lineno:content
+             const parts = line.split(':');
+             if (parts.length < 3) return;
+
+             const file = parts[0];
+             const lineno = parts[1];
+             const content = parts.slice(2).join(':');
+
+             // Filter safe patterns
+             if (content.includes('NEXT_PUBLIC_SUPABASE_URL')) return;
+             if (content.includes('NEXT_PUBLIC_SUPABASE_ANON_KEY')) return;
+             if (content.includes('NEXT_PUBLIC_APP_URL')) return;
+             
+             // Add to suspicious list (File:Line only)
+             suspicious.push(`${path.relative(ROOT_DIR, file)}:${lineno}`);
+        });
+
+        const status = suspicious.length === 0 ? 'PASS' : 'WARNING';
+        const summary = `${suspicious.length} potential secret exposures found`;
+        let details = `\n**Suspicious Occurrences (File:Line):**\n`;
+        if (suspicious.length > 0) {
+            // Trim to max 20 to avoid huge reports
+            suspicious.slice(0, 20).forEach(s => details += `- ${s}\n`);
+            if (suspicious.length > 20) details += `- ...and ${suspicious.length - 20} more\n`;
+        } else {
+            details += "None found.\n";
+        }
+
+        return { status, summary, details };
+    } catch (e: any) {
+        console.error('Error running checkSecrets:', e);
+        return { status: 'FAIL', summary: 'Error running secret scan', details: 'Internal error while scanning for secrets, see workflow logs for details.' };
     }
-
-    return { status, summary, details };
 }
 
-async function checkPerformance(): Promise<{ status: string, summary: string, details: string }> {
+async function checkPerformance(): Promise<AuditResult> {
     console.log('Running Low-Bandwidth Performance Check...');
-    
-    const issues: string[] = [];
-    let status = 'PASS';
-
-    // 1. Check for Heavy Assets in public/ (> 500KB)
-    // Critical for low bandwidth
     try {
+        const issues: string[] = [];
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+
+        // 1. Check for Heavy Assets in public/ (> 500KB)
         const publicDir = path.join(ROOT_DIR, 'public');
         if (fs.existsSync(publicDir)) {
              const findLargeFiles = (dir: string) => {
@@ -175,155 +221,156 @@ async function checkPerformance(): Promise<{ status: string, summary: string, de
              };
              findLargeFiles(publicDir);
         }
-    } catch (e) {
-        issues.push(`Error scanning public assets: ${e}`);
-    }
 
-    // 2. Check for standard <img> tags (Should use next/image)
-    // Standard img tags don't lazy load or resize automatically
-    try {
-        // grep for "<img" in .tsx files
+        // 2. Check for standard <img> tags
         const grepImg = `grep -r "<img" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" || true`;
         const imgOutput = runCommand(grepImg);
         const imgLines = imgOutput.split('\n').filter(l => l.trim() !== '');
         
         if (imgLines.length > 0) {
             status = 'WARNING';
-            issues.push(`Found ${imgLines.length} standard \`<img>\` tags (Use \`<Image />\` for bandwidth optimization)`);
-             // Limit detail to first 3
+            issues.push(`Found ${imgLines.length} standard <img></code> tags (Use <code><Image /></code> for bandwidth optimization)`);
             imgLines.slice(0, 3).forEach(l => issues.push(`- ${l.substring(0, 100).trim()}...`));
         }
-    } catch (e) {}
 
-    // 3. Count 'use client' (Bundle Bloat)
-    let clientComponents = 0;
-    try {
+        // 3. Count 'use client'
+        let clientComponents = 0;
         const grepClient = `grep -r "use client" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" | wc -l`;
         clientComponents = parseInt(runCommand(grepClient).trim(), 10) || 0;
-    } catch (e) {}
 
-    // 4. Console.log check (Cleanup)
-    try {
-         const grepConsole = `grep -r "console.log" "${ROOT_DIR}" --include="*.tsx" --include="*.ts" --exclude-dir="node_modules" --exclude-dir=".next" --exclude-dir="scripts" | wc -l`;
-         const consoleCount = parseInt(runCommand(grepConsole).trim(), 10) || 0;
-         if (consoleCount > 0) {
+        // 4. Console.log check
+        const grepConsole = `grep -r "console.log" "${ROOT_DIR}" --include="*.tsx" --include="*.ts" --exclude-dir="node_modules" --exclude-dir=".next" --exclude-dir="scripts" | wc -l`;
+        const consoleCount = parseInt(runCommand(grepConsole).trim(), 10) || 0;
+        if (consoleCount > 0) {
              issues.push(`Found ${consoleCount} console.log statements (Remove for production performance)`);
-         }
-    } catch (e) {}
+        }
 
-    const summary = `${issues.length} performance warnings found. Client Components: ${clientComponents}`;
-    let details = `\n**Low-Bandwidth Optimization:**\n`;
-    details += `- **Client Components ('use client'):** ${clientComponents} (More = heavier JS bundles)\n`;
-    
-    if (issues.length > 0) {
-        details += `\n**Issues Found:**\n`;
-        details += issues.map(i => `- ${i}`).join('\n');
-    } else {
-        details += `\n- ✅ No large assets (>500KB)\n- ✅ No unoptimized <img> tags\n- ✅ Clean console logs`;
+        const summary = `${issues.length} performance warnings. Client Components: ${clientComponents}`;
+        let details = `\n**Low-Bandwidth Optimization:**\n`;
+        details += `- **Client Components ('use client'):** ${clientComponents} (More = heavier JS bundles)\n`;
+        
+        if (issues.length > 0) {
+            details += `\n**Issues Found:**\n`;
+            details += issues.map(i => `- ${i}`).join('\n');
+        } else {
+            details += `\n- ✅ No large assets (>500KB)\n- ✅ No unoptimized <img> tags\n- ✅ Clean console logs\n`;
+        }
+
+        return { status, summary, details };
+    } catch (e: any) {
+        console.error('Error running checkPerformance:', e);
+        return { status: 'FAIL', summary: 'Error running performance check', details: 'Internal error while checking performance, see workflow logs for details.' };
     }
-
-    return { status, summary, details };
 }
 
-async function checkResilience(): Promise<{ status: string, summary: string, details: string }> {
-    console.log('Running Resilience (White Screen) Check...');
-    let status = 'PASS';
-    let details = '\n**Resilience Metrics:**\n';
-    
-    // 1. Count Error Boundaries (error.tsx)
-    const errorFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "error.tsx" | wc -l`).trim(), 10) || 0;
-    
-    // 2. Count Loading States (loading.tsx)
-    const loadingFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "loading.tsx" | wc -l`).trim(), 10) || 0;
-    
-    details += `- **Error Boundaries (error.tsx):** ${errorFiles} (Prevents white screens)\n`;
-    details += `- **Loading States (loading.tsx):** ${loadingFiles} (Improves perceived performance)\n`;
+async function checkResilience(): Promise<AuditResult> {
+    console.log('Running Resilience Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Resilience Metrics:**\n';
+        
+        // 1. Count Error Boundaries
+        const errorFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "error.tsx" | wc -l`).trim(), 10) || 0;
+        
+        // 2. Count Loading States
+        const loadingFiles = parseInt(runCommand(`find "${path.join(ROOT_DIR, 'app')}" -name "loading.tsx" | wc -l`).trim(), 10) || 0;
+        
+        details += `- **Error Boundaries (error.tsx):** ${errorFiles} (Prevents white screens)\n`;
+        details += `- **Loading States (loading.tsx):** ${loadingFiles} (Improves perceived performance)\n`;
 
-    if (errorFiles < 1) {
-        status = 'WARNING';
-        details += `- ⚠️ NO Error Boundaries found! App is at risk of crashing completely on error.\n`;
-    }
+        if (errorFiles < 1) {
+            status = 'WARNING';
+            details += `- ⚠️ NO Error Boundaries found! App is at risk of crashing completely on error.\n`;
+        }
 
-    // 3. API Try/Catch Check
-    const apiDir = path.join(ROOT_DIR, 'app', 'api');
-    const riskyRoutes: string[] = [];
-    
-    if (fs.existsSync(apiDir)) {
-        const scanApiRoutes = (dir: string) => {
-            const files = fs.readdirSync(dir);
-            files.forEach(file => {
-                const filePath = path.join(dir, file);
-                const stat = fs.statSync(filePath);
-                if (stat.isDirectory()) {
-                    scanApiRoutes(filePath);
-                } else if (file === 'route.ts') {
-                    const content = fs.readFileSync(filePath, 'utf8');
-                    // Simple heuristic: if it exports POST/GET but has no "try {", flag it
-                    if ((content.includes('export async function GET') || content.includes('export async function POST')) && !content.includes('try {')) {
-                        riskyRoutes.push(path.relative(ROOT_DIR, filePath));
+        // 3. API Try/Catch Check
+        const apiDir = path.join(ROOT_DIR, 'app', 'api');
+        const riskyRoutes: string[] = [];
+        
+        if (fs.existsSync(apiDir)) {
+            const scanApiRoutes = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        scanApiRoutes(filePath);
+                    } else if (file === 'route.ts') {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        if ((content.includes('export async function GET') || content.includes('export async function POST')) && !content.includes('try {')) {
+                            riskyRoutes.push(path.relative(ROOT_DIR, filePath));
+                        }
                     }
-                }
-            });
-        };
-        scanApiRoutes(apiDir);
+                });
+            };
+            scanApiRoutes(apiDir);
+        }
+        
+        if (riskyRoutes.length > 0) {
+            status = 'WARNING';
+            details += `\n**Risky API Routes (Missing try/catch):**\n`;
+            details += riskyRoutes.map(r => `- ${r}`).join('\n');
+        } else {
+            details += `- ✅ All API routes appear to use error handling.\n`;
+        }
+        
+        return { status, summary: `Resilience: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkResilience:', e);
+        return { status: 'FAIL', summary: 'Error running resilience check', details: 'Internal error.' };
     }
-    
-    if (riskyRoutes.length > 0) {
-        status = 'WARNING';
-        details += `\n**Risky API Routes (Missing try/catch):**\n`;
-        details += riskyRoutes.map(r => `- ${r}`).join('\n');
-    } else {
-        details += `- ✅ All API routes appear to use error handling.\n`;
-    }
-    
-    return { status, summary: `Resilience: ${status}`, details };
 }
 
-async function checkLegal(): Promise<{ status: string, summary: string, details: string }> {
+async function checkLegal(): Promise<AuditResult> {
     console.log('Running Legal Check...');
-    let status = 'PASS';
-    let details = '\n**Legal Compliance:**\n';
-    
-    // Check for Privacy Policy
-    const hasPrivacy = fs.existsSync(path.join(ROOT_DIR, 'app', 'privacy', 'page.tsx')) || 
-                       fs.existsSync(path.join(ROOT_DIR, 'privacy.md'));
-                       
-    // Check for Terms
-    const hasTerms = fs.existsSync(path.join(ROOT_DIR, 'app', 'terms', 'page.tsx')) ||
-                     fs.existsSync(path.join(ROOT_DIR, 'terms.md'));
-                     
-    if (hasPrivacy) details += `- ✅ Privacy Policy found.\n`;
-    else {
-        status = 'FAIL';
-        details += `- ❌ MISSING Privacy Policy (Required for GDPR/App Stores).\n`;
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Legal Compliance:**\n';
+        
+        const hasPrivacy = fs.existsSync(path.join(ROOT_DIR, 'app', 'privacy', 'page.tsx')) || 
+                           fs.existsSync(path.join(ROOT_DIR, 'privacy.md'));
+                           
+        const hasTerms = fs.existsSync(path.join(ROOT_DIR, 'app', 'terms', 'page.tsx')) ||
+                         fs.existsSync(path.join(ROOT_DIR, 'terms.md'));
+                         
+        if (hasPrivacy) details += `- ✅ Privacy Policy found.\n`;
+        else {
+            status = 'FAIL';
+            details += `- ❌ MISSING Privacy Policy (Required for GDPR/App Stores).\n`;
+        }
+        
+        if (hasTerms) details += `- ✅ Terms of Service found.\n`;
+        else {
+            status = 'FAIL';
+            details += `- ❌ MISSING Terms of Service (High Legal Risk).\n`;
+        }
+        
+        return { status, summary: `Legal: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkLegal:', e);
+        return { status: 'FAIL', summary: 'Error running legal check', details: 'Internal error.' };
     }
-    
-    if (hasTerms) details += `- ✅ Terms of Service found.\n`;
-    else {
-        status = 'FAIL';
-        details += `- ❌ MISSING Terms of Service (High Legal Risk).\n`;
-    }
-    
-    return { status, summary: `Legal: ${status}`, details };
 }
 
 async function generateReport() {
-  const cve = await checkCVEs();
-  const rls = await checkRLS();
-  const secrets = await checkSecrets();
-  const perf = await checkPerformance();
-  const resilience = await checkResilience();
-  const legal = await checkLegal();
-  
-  const reportContent = `
+  try {
+      const cve = await checkCVEs();
+      const rls = await checkRLS();
+      const secrets = await checkSecrets();
+      const perf = await checkPerformance();
+      const resilience = await checkResilience();
+      const legal = await checkLegal();
+      
+      const reportContent = `
 # Security & Performance Audit Report
 **Date:** ${DATE_STR}
-**Time:** ${new Date().toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne' })} AEST
+**Time:** ${DISPLAY_TIME}
 **Repository:** smalltalk.community
 
 ---
 
 ## Executive Summary
+
 Daily automated audit results.
 
 - **CVE Status:** ${cve.status}
@@ -338,26 +385,31 @@ Daily automated audit results.
 ## Security Audit Results
 
 ### 1. CVE Analysis
+
 **Status:** ${cve.status}
 ${cve.details}
 
 ### 2. Supabase Security (RLS)
+
 **Status:** ${rls.status}
 ${rls.details}
 
 ### 3. Code Security (Secrets)
+
 **Status:** ${secrets.status}
 ${secrets.details}
 
 ---
 
 ## Performance Audit (Low Bandwidth)
+
 **Status:** ${perf.status}
 ${perf.details}
 
 ---
 
 ## Resilience & Legal
+
 **Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' ? 'PASS' : 'WARNING'}
 
 ### 1. Resilience (White Screen Check)
@@ -369,13 +421,20 @@ ${legal.details}
 ---
 
 ## Audit Performed By
+
 - Tool: Automated Script (Gemini Agent)
 - Date: ${new Date().toISOString()}
-
 `;
 
-  fs.writeFileSync(REPORT_FILE, reportContent);
-  console.log(`Report generated at: ${REPORT_FILE}`);
+      fs.writeFileSync(REPORT_FILE, reportContent);
+      console.log(`Report generated at: ${REPORT_FILE}`);
+  } catch (e) {
+      console.error('CRITICAL: Failed to generate report', e);
+      process.exit(1);
+  }
 }
 
-generateReport().catch(console.error);
+generateReport().catch(e => {
+    console.error('Unhandled error in generateReport wrapper:', e);
+    process.exit(1);
+});

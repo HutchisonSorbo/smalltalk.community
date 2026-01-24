@@ -1,12 +1,13 @@
 
 # Security & Performance Audit Report
 **Date:** 2026-01-24
-**Time:** 8:05:27 pm AEST
+**Time:** 24/01/2026, 08:07:56 pm AEDT
 **Repository:** smalltalk.community
 
 ---
 
 ## Executive Summary
+
 Daily automated audit results.
 
 - **CVE Status:** PASS
@@ -21,6 +22,7 @@ Daily automated audit results.
 ## Security Audit Results
 
 ### 1. CVE Analysis
+
 **Status:** PASS
 
 **Dependency Vulnerabilities:**
@@ -32,6 +34,7 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 
 
 ### 2. Supabase Security (RLS)
+
 **Status:** PASS
 
 **Tables Analyzed:** 36
@@ -40,16 +43,37 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 
 
 ### 3. Code Security (Secrets)
+
 **Status:** WARNING
 
-**Suspicious Occurrences:**
-- `/home/ryan/smalltalk.community/app/login/page.tsx:                                    siteKey={proce...`
-- `/home/ryan/smalltalk.community/scripts/daily-audit.ts:    // Better: Check for "NEXT_PUBLIC_" prefix...`
-- `/home/ryan/smalltalk.community/scripts/daily-audit.ts:    const command = `grep -r "NEXT_PUBLIC_" "$...`
+**Suspicious Occurrences (File:Line):**
+- DEVELOPMENT_STANDARDS.md:143
+- DEVELOPMENT_STANDARDS.md:149
+- middleware.ts:71
+- .github/commands/gemini-review.toml:64
+- .github/workflows/gemini-invoke.yml:24
+- .github/workflows/gemini-invoke.yml:28
+- .github/workflows/gemini-invoke.yml:29
+- .github/workflows/gemini-invoke.yml:32
+- .github/workflows/gemini-invoke.yml:35
+- .github/workflows/gemini-invoke.yml:47
+- .github/workflows/gemini-invoke.yml:57
+- .github/workflows/gemini-invoke.yml:61
+- .github/workflows/gemini-review.yml:25
+- .github/workflows/gemini-review.yml:29
+- .github/workflows/gemini-review.yml:30
+- .github/workflows/gemini-review.yml:33
+- .github/workflows/gemini-review.yml:36
+- .github/workflows/gemini-review.yml:48
+- .github/workflows/gemini-review.yml:59
+- .github/workflows/gemini-review.yml:63
+- ...and 70 more
+
 
 ---
 
 ## Performance Audit (Low Bandwidth)
+
 **Status:** WARNING
 
 **Low-Bandwidth Optimization:**
@@ -57,7 +81,7 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 
 **Issues Found:**
 - Large Asset: public/icon_backup.png (660.94 KB)
-- Found 16 standard `<img>` tags (Use `<Image />` for bandwidth optimization)
+- Found 16 standard <img></code> tags (Use <code><Image /></code> for bandwidth optimization)
 - - /home/ryan/smalltalk.community/app/admin/apps/page.tsx:...
 - - /home/ryan/smalltalk.community/app/admin/users/[id]/page.tsx:...
 - - /home/ryan/smalltalk.community/app/volunteer-passport/opportunities/page.tsx:...
@@ -66,6 +90,7 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 ---
 
 ## Resilience & Legal
+
 **Status:** WARNING
 
 ### 1. Resilience (White Screen Check)
@@ -87,6 +112,6 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 ---
 
 ## Audit Performed By
-- Tool: Automated Script (Gemini Agent)
-- Date: 2026-01-24T09:05:27.292Z
 
+- Tool: Automated Script (Gemini Agent)
+- Date: 2026-01-24T09:07:57.660Z
