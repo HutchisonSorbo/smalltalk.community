@@ -67,6 +67,41 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// User Preferences - Notifications and UI settings
+export const userPreferences = pgTable("user_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  // Notifications
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(true),
+  marketingEmails: boolean("marketing_emails").default(false),
+  // Preferences
+  theme: varchar("theme", { length: 20 }).default("system"), // 'light' | 'dark' | 'system'
+  language: varchar("language", { length: 10 }).default("en-AU"),
+  timezone: varchar("timezone", { length: 50 }).default("Australia/Melbourne"),
+  // Accessibility
+  highContrast: boolean("high_contrast").default(false),
+  reducedMotion: boolean("reduced_motion").default(false),
+  fontSize: varchar("font_size", { length: 10 }).default("medium"), // 'small' | 'medium' | 'large'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("preferences_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("preferences_self_update", { for: "update", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}`, withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("preferences_self_insert", { for: "insert", to: "authenticated", withCheck: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  index("preferences_user_id_idx").on(table.userId),
+]);
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+export type UserPreference = typeof userPreferences.$inferSelect;
+export type InsertUserPreference = typeof userPreferences.$inferInsert;
+
 // Musician profiles table
 export const musicianProfiles = pgTable("musician_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1048,7 +1083,7 @@ export type InsertOrganisation = z.infer<typeof insertOrganisationSchema>;
 export type Organisation = typeof organisations.$inferSelect;
 
 // Organisation Members
-export const orgRoleEnum = pgTable("organisation_members", {
+export const organisationMembers = pgTable("organisation_members", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -1060,7 +1095,6 @@ export const orgRoleEnum = pgTable("organisation_members", {
   index("org_members_user_idx").on(table.userId),
 ]);
 // Alias for cleaner export
-export const organisationMembers = orgRoleEnum;
 
 export const organisationMembersRelations = relations(organisationMembers, ({ one }) => ({
   organisation: one(organisations, {
@@ -1586,6 +1620,62 @@ export const tenantInvitesRelations = relations(tenantInvites, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Identity Verification - For community safety and trust
+export const identityVerifications = pgTable("identity_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'verified', 'rejected'
+  documentType: varchar("document_type", { length: 50 }),
+  idNumber: varchar("id_number", { length: 100 }), // Encrypted in real app
+  verificationMethod: varchar("verification_method", { length: 50 }), // 'digital_id', 'manual_review'
+  rejectionReason: text("rejection_reason"),
+  verifiedAt: timestamp("verified_at"),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("identities_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("identities_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("identities_user_id_idx").on(table.userId),
+]);
+
+export const identityVerificationsRelations = relations(identityVerifications, ({ one }) => ({
+  user: one(users, {
+    fields: [identityVerifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export type IdentityVerification = typeof identityVerifications.$inferSelect;
+export type InsertIdentityVerification = typeof identityVerifications.$inferInsert;
+
+// Activity Logs - Track security events and key actions
+export const activityLogs = pgTable("activity_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  eventType: varchar("event_type", { length: 100 }).notNull(), // 'login', 'password_change', 'mfa_enabled', 'profile_update'
+  description: text("description").notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  pgPolicy("activity_logs_self_read", { for: "select", to: "authenticated", using: sql`( (select auth.uid()) )::text = ${table.userId}` }),
+  pgPolicy("activity_logs_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("activity_logs_user_id_idx").on(table.userId),
+  index("activity_logs_event_type_idx").on(table.eventType),
+]);
+
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [activityLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = typeof activityLogs.$inferInsert;
 
 export type TenantInvite = typeof tenantInvites.$inferSelect;
 export type InsertTenantInvite = typeof tenantInvites.$inferInsert;

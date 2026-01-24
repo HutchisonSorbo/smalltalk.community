@@ -3,28 +3,19 @@ import { createClient } from "@/lib/supabase-server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings, User, Bell, Shield } from "lucide-react";
 import Link from "next/link";
+import { Separator } from "@/components/ui/separator";
 
-export const metadata = {
-    title: "Settings",
-    description: "Manage your account settings and preferences.",
-};
 
 export default async function SettingsPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        redirect("/login?next=/settings");
-    }
-
     return (
-        <div className="max-w-4xl mx-auto px-4 py-12">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                <p className="text-muted-foreground mt-2">
-                    Manage your account settings and preferences
+        <div className="space-y-6">
+            <div>
+                <h3 className="text-lg font-medium">Overview</h3>
+                <p className="text-sm text-muted-foreground">
+                    Your account overview and quick links.
                 </p>
             </div>
+            <Separator />
 
             <div className="grid gap-6 md:grid-cols-2">
                 <Card id="profile" className="hover:border-primary/50 transition-colors scroll-mt-24">

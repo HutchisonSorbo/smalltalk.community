@@ -135,6 +135,7 @@ export async function getTenantById(id: string): Promise<Tenant | null> {
  * @returns Array of tenant memberships with tenant details
  */
 export async function getUserTenants(userId: string): Promise<(TenantMember & { tenant: Tenant })[]> {
+    console.log(`[getUserTenants] Fetching tenants for user: ${userId}`);
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("tenant_members")
@@ -144,7 +145,17 @@ export async function getUserTenants(userId: string): Promise<(TenantMember & { 
     `)
         .eq("user_id", userId);
 
-    if (error || !data) return [];
+    if (error) {
+        console.error(`[getUserTenants] Error fetching memberships:`, error.message);
+        return [];
+    }
+
+    if (!data) {
+        console.log(`[getUserTenants] No memberships found for user: ${userId}`);
+        return [];
+    }
+
+    console.log(`[getUserTenants] Found ${data.length} memberships for user: ${userId}`);
     return data as (TenantMember & { tenant: Tenant })[];
 }
 
