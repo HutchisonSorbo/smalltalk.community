@@ -1,0 +1,65 @@
+name: Daily Security & Performance Audit
+
+on:
+  schedule:
+    - cron: '0 19 * * *' # 6:00 AM AEDT (19:00 UTC previous day)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  audit:
+    name: Run Daily Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run Audit Script
+        run: npx tsx scripts/daily-audit.ts
+        
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: daily security audit report"
+          title: "[Audit] Daily Security & Performance Report"
+          body: |
+            This is an automated pull request containing the daily security and performance audit report.
+            
+            **Report Location:** `audit-reports/`
+            
+            Please review the findings and merge if appropriate.
+          branch: audit/daily-report
+          base: main
+          delete-branch: true
+          
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        if: always()
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: Daily Security Audit Report - smalltalk.community
+          to: ryanhutchison@outlook.com.au
+          from: GitHub Actions <${{ secrets.MAIL_USERNAME }}>
+          body: |
+            The daily security audit for smalltalk.community has completed.
+            
+            Check the Actions tab or the Pull Requests for the latest report.
+            
+            Repository: ${{ github.repository }}

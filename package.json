@@ -92,6 +92,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
+    "@google/jules": "^0.1.42",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/react": "^16.3.1",
