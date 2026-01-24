@@ -146,10 +146,90 @@ async function checkSecrets(): Promise<{ status: string, summary: string, detail
     return { status, summary, details };
 }
 
+async function checkPerformance(): Promise<{ status: string, summary: string, details: string }> {
+    console.log('Running Low-Bandwidth Performance Check...');
+    
+    const issues: string[] = [];
+    let status = 'PASS';
+
+    // 1. Check for Heavy Assets in public/ (> 500KB)
+    // Critical for low bandwidth
+    try {
+        const publicDir = path.join(ROOT_DIR, 'public');
+        if (fs.existsSync(publicDir)) {
+             const findLargeFiles = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        findLargeFiles(filePath);
+                    } else {
+                        const sizeKB = stat.size / 1024;
+                        if (sizeKB > 500) {
+                            issues.push(`Large Asset: ${path.relative(ROOT_DIR, filePath)} (${sizeKB.toFixed(2)} KB)`);
+                            status = 'WARNING';
+                        }
+                    }
+                });
+             };
+             findLargeFiles(publicDir);
+        }
+    } catch (e) {
+        issues.push(`Error scanning public assets: ${e}`);
+    }
+
+    // 2. Check for standard <img> tags (Should use next/image)
+    // Standard img tags don't lazy load or resize automatically
+    try {
+        // grep for "<img" in .tsx files
+        const grepImg = `grep -r "<img" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" || true`;
+        const imgOutput = runCommand(grepImg);
+        const imgLines = imgOutput.split('\n').filter(l => l.trim() !== '');
+        
+        if (imgLines.length > 0) {
+            status = 'WARNING';
+            issues.push(`Found ${imgLines.length} standard \`<img>\` tags (Use \`<Image />\` for bandwidth optimization)`);
+             // Limit detail to first 3
+            imgLines.slice(0, 3).forEach(l => issues.push(`- ${l.substring(0, 100).trim()}...`));
+        }
+    } catch (e) {}
+
+    // 3. Count 'use client' (Bundle Bloat)
+    let clientComponents = 0;
+    try {
+        const grepClient = `grep -r "use client" "${ROOT_DIR}" --include="*.tsx" --exclude-dir="node_modules" --exclude-dir=".next" | wc -l`;
+        clientComponents = parseInt(runCommand(grepClient).trim(), 10) || 0;
+    } catch (e) {}
+
+    // 4. Console.log check (Cleanup)
+    try {
+         const grepConsole = `grep -r "console.log" "${ROOT_DIR}" --include="*.tsx" --include="*.ts" --exclude-dir="node_modules" --exclude-dir=".next" --exclude-dir="scripts" | wc -l`;
+         const consoleCount = parseInt(runCommand(grepConsole).trim(), 10) || 0;
+         if (consoleCount > 0) {
+             issues.push(`Found ${consoleCount} console.log statements (Remove for production performance)`);
+         }
+    } catch (e) {}
+
+    const summary = `${issues.length} performance warnings found. Client Components: ${clientComponents}`;
+    let details = `\n**Low-Bandwidth Optimization:**\n`;
+    details += `- **Client Components ('use client'):** ${clientComponents} (More = heavier JS bundles)\n`;
+    
+    if (issues.length > 0) {
+        details += `\n**Issues Found:**\n`;
+        details += issues.map(i => `- ${i}`).join('\n');
+    } else {
+        details += `\n- ✅ No large assets (>500KB)\n- ✅ No unoptimized <img> tags\n- ✅ Clean console logs`;
+    }
+
+    return { status, summary, details };
+}
+
 async function generateReport() {
   const cve = await checkCVEs();
   const rls = await checkRLS();
   const secrets = await checkSecrets();
+  const perf = await checkPerformance();
   
   const reportContent = `
 # Security & Performance Audit Report
@@ -165,6 +245,7 @@ Daily automated audit results.
 - **CVE Status:** ${cve.status}
 - **RLS Status:** ${rls.status}
 - **Secrets Status:** ${secrets.status}
+- **Performance:** ${perf.status}
 
 ---
 
@@ -181,6 +262,12 @@ ${rls.details}
 ### 3. Code Security (Secrets)
 **Status:** ${secrets.status}
 ${secrets.details}
+
+---
+
+## Performance Audit (Low Bandwidth)
+**Status:** ${perf.status}
+${perf.details}
 
 ---
 
