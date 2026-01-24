@@ -84,6 +84,60 @@ async function run() {
             }
         }
 
+        console.log('\n=== Step 3: Check and fix tenant memberships ===\n');
+
+        // Check if 'stc' tenant exists
+        const tenantResult = await sql`
+      SELECT id, code, name
+      FROM tenants
+      WHERE code = 'stc'
+    `;
+
+        if (tenantResult.length === 0) {
+            console.log('❌ Tenant "stc" NOT found in tenants table. Please create it first.');
+        } else {
+            const tenant = tenantResult[0];
+            console.log(`✓ Tenant found: ${tenant.name} (${tenant.code})`);
+
+            // Check if membership exists
+            const membershipResult = await sql`
+        SELECT id, role
+        FROM tenant_members
+        WHERE user_id = (SELECT id FROM users WHERE email = ${email})
+          AND tenant_id = ${tenant.id}
+      `;
+
+            if (membershipResult.length === 0) {
+                console.log(`\n⚠️ Missing membership for ${email} in tenant "stc". Creating...`);
+                const insertedResult = await sql`
+          INSERT INTO tenant_members (id, tenant_id, user_id, role, joined_at)
+          SELECT gen_random_uuid()::text, ${tenant.id}, id, 'admin', NOW()
+          FROM users
+          WHERE email = ${email}
+          ON CONFLICT (tenant_id, user_id) DO NOTHING
+          RETURNING *
+        `;
+
+                if (insertedResult.length > 0) {
+                    console.log('✓ Created tenant membership with role "admin"');
+                } else {
+                    console.log('✓ Tenant membership already exists (skipped via ON CONFLICT)');
+                }
+            } else {
+                console.log(`✓ Membership already exists with role: ${membershipResult[0].role}`);
+                if (membershipResult[0].role !== 'admin') {
+                    console.log('  ⚠️ Role is not "admin". Updating...');
+                    await sql`
+            UPDATE tenant_members 
+            SET role = 'admin' 
+            WHERE user_id = (SELECT id FROM users WHERE email = ${email})
+              AND tenant_id = ${tenant.id}
+          `;
+                    console.log('  ✓ Updated role to "admin"');
+                }
+            }
+        }
+
         console.log('\n=== Done! ===\n');
 
     } finally {
