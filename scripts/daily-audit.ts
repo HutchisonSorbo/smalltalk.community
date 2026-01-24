@@ -541,6 +541,59 @@ async function checkCacheHeaders(): Promise<AuditResult> {
     }
 }
 
+async function checkDocumentation(): Promise<AuditResult> {
+    console.log('Running Documentation Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Code Documentation (JSDoc):**\n';
+        
+        const libDir = path.join(ROOT_DIR, 'lib');
+        let totalFunctions = 0;
+        let documentedFunctions = 0;
+        
+        if (fs.existsSync(libDir)) {
+            const scanFiles = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        scanFiles(filePath);
+                    } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        // Rough regex to find exported functions
+                        const functionMatches = content.match(/export (async )?function \w+|export const \w+ = \(|export const \w+ = (async )?\(/g);
+                        if (functionMatches) {
+                            totalFunctions += functionMatches.length;
+                            // Count JSDoc blocks /** ... */
+                            const jsDocMatches = content.match(/\/\*\*[\s\S]*?\*\//g);
+                            if (jsDocMatches) {
+                                documentedFunctions += jsDocMatches.length;
+                            }
+                        }
+                    }
+                });
+            };
+            scanFiles(libDir);
+        }
+        
+        const coverage = totalFunctions > 0 ? (documentedFunctions / totalFunctions) * 100 : 100;
+        details += `- **JSDoc Coverage in /lib:** ${coverage.toFixed(1)}% (${documentedFunctions}/${totalFunctions} functions)\n`;
+        
+        if (coverage < 20) {
+             status = 'WARNING';
+             details += `- ⚠️ Low documentation coverage! Aim for >20% for core business logic.\n`;
+        } else {
+             details += `- ✅ Good documentation habits detected.\n`;
+        }
+        
+        return { status, summary: `Docs: ${coverage.toFixed(0)}%`, details };
+    } catch (e: any) {
+        console.error('Error running checkDocumentation:', e);
+        return { status: 'FAIL', summary: 'Doc Check Failed', details: 'Internal Error' };
+    }
+}
+
 async function generateReport() {
   try {
       const cve = await checkCVEs();
@@ -552,6 +605,7 @@ async function generateReport() {
       const sanitization = await checkSanitization();
       const ageGate = await checkAgeGate();
       const cache = await checkCacheHeaders();
+      const docs = await checkDocumentation();
       
       const reportContent = `
 # Security & Performance Audit Report
@@ -574,6 +628,7 @@ Daily automated audit results.
 - **Sanitization:** ${sanitization.status}
 - **Age Gate:** ${ageGate.status}
 - **Caching:** ${cache.status}
+- **Docs:** ${docs.status}
 
 ---
 
@@ -620,15 +675,18 @@ ${cache.details}
 
 ---
 
-## Resilience & Legal
+## Resilience, Legal & Docs
 
-**Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' ? 'PASS' : 'WARNING'}
+**Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' && docs.status !== 'FAIL' ? 'PASS' : 'WARNING'}
 
 ### 1. Resilience (White Screen Check)
 ${resilience.details}
 
 ### 2. Legal Compliance
 ${legal.details}
+
+### 3. Documentation Coverage
+${docs.details}
 
 ---
 
