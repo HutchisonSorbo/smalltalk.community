@@ -23,8 +23,14 @@ export const registerSchema = z.object({
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
         if (!val) return true;
         const date = new Date(val);
-        return !isNaN(date.getTime()) && date < new Date();
-    }, "Invalid date of birth"),
+        const now = new Date();
+        
+        // Normalize to YYYYMMDD for local date comparison (prevents timezone bypass)
+        const birthDateNum = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+        const minAgeDateNum = (now.getFullYear() - 13) * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+        
+        return !isNaN(date.getTime()) && birthDateNum <= minAgeDateNum;
+    }, "You must be at least 13 years old to register"),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],

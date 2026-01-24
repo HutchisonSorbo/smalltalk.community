@@ -1,7 +1,7 @@
 
 # Security & Performance Audit Report
 **Date:** 2026-01-24
-**Time:** 24/01/2026, 08:07:56 pm AEDT
+**Time:** 24/01/2026, 09:55:34 pm AEDT
 **Repository:** smalltalk.community
 
 ---
@@ -14,8 +14,12 @@ Daily automated audit results.
 - **RLS Status:** PASS
 - **Secrets Status:** WARNING
 - **Performance:** WARNING
-- **Resilience:** WARNING
-- **Legal:** FAIL
+- **Resilience:** PASS
+- **Legal:** PASS
+- **Sanitization:** FAIL
+- **Age Gate:** PASS
+- **Caching:** PASS
+- **Docs:** PASS
 
 ---
 
@@ -26,10 +30,10 @@ Daily automated audit results.
 **Status:** PASS
 
 **Dependency Vulnerabilities:**
-Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
+Total: 5 (Critical: 0, High: 0, Moderate: 5, Low: 0)
 
 **Key Versions:**
-- Next.js: 15.5.9
+- Next.js: ^16.1.4
 - React: ^19.2.3
 
 
@@ -37,8 +41,8 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 
 **Status:** PASS
 
-**Tables Analyzed:** 36
-**Tables with Policies:** 36
+**Tables Analyzed:** 43
+**Tables with Policies:** 43
 **Tables WITHOUT Policies:** 0
 
 
@@ -47,9 +51,17 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 **Status:** WARNING
 
 **Suspicious Occurrences (File:Line):**
+- shared/schema.ts:1585
 - DEVELOPMENT_STANDARDS.md:143
 - DEVELOPMENT_STANDARDS.md:149
-- middleware.ts:71
+- supabase/functions/ditto-auth/index.ts:18
+- supabase/functions/ditto-auth/index.ts:53
+- supabase/functions/ditto-auth/index.ts:55
+- supabase/functions/ditto-auth/index.ts:57
+- supabase/functions/ditto-auth/index.ts:62
+- supabase/functions/ditto-auth/index.ts:65
+- supabase/functions/ditto-auth/index.ts:66
+- supabase/functions/ditto-auth/index.ts:71
 - .github/commands/gemini-review.toml:64
 - .github/workflows/gemini-invoke.yml:24
 - .github/workflows/gemini-invoke.yml:28
@@ -59,54 +71,83 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 - .github/workflows/gemini-invoke.yml:47
 - .github/workflows/gemini-invoke.yml:57
 - .github/workflows/gemini-invoke.yml:61
-- .github/workflows/gemini-review.yml:25
-- .github/workflows/gemini-review.yml:29
-- .github/workflows/gemini-review.yml:30
-- .github/workflows/gemini-review.yml:33
-- .github/workflows/gemini-review.yml:36
-- .github/workflows/gemini-review.yml:48
-- .github/workflows/gemini-review.yml:59
-- .github/workflows/gemini-review.yml:63
-- ...and 70 more
+- ...and 219 more
+
+
+### 4. Input Sanitization (Zod)
+
+**Status:** FAIL
+
+**Input Validation (Zod):**
+
+**Potential Unvalidated API Routes:**
+- app/api/admin/revalidate/route.ts (Missing 'zod' or 'schema' keyword)
+- app/api/onboarding/complete/route.ts (Missing 'zod' or 'schema' keyword)
+- app/api/onboarding/start/route.ts (Missing 'zod' or 'schema' keyword)
+- app/api/payload/pages/route.ts (Missing 'zod' or 'schema' keyword)
+
+### 5. Age Gate (13+)
+
+**Status:** PASS
+
+**Age Restriction Enforcement:**
+- ✅ Age gate logic found in schemas (13+ enforcement detected).
 
 
 ---
 
-## Performance Audit (Low Bandwidth)
+## Performance & Reliability
+
+### 1. Low Bandwidth Optimization
 
 **Status:** WARNING
 
 **Low-Bandwidth Optimization:**
-- **Client Components ('use client'):** 122 (More = heavier JS bundles)
+- **Client Components ('use client'):** 158 (More = heavier JS bundles)
 
 **Issues Found:**
 - Large Asset: public/icon_backup.png (660.94 KB)
-- Found 16 standard <img></code> tags (Use <code><Image /></code> for bandwidth optimization)
-- - /home/ryan/smalltalk.community/app/admin/apps/page.tsx:...
-- - /home/ryan/smalltalk.community/app/admin/users/[id]/page.tsx:...
-- - /home/ryan/smalltalk.community/app/volunteer-passport/opportunities/page.tsx:...
-- Found 21 console.log statements (Remove for production performance)
+- Found 22 standard `<img>` tags (Use \`<Image />\' for bandwidth optimization)
+- - app/admin/apps/page.tsx: <img...
+- - app/admin/content/media/page.tsx: <img...
+- - app/admin/users/[id]/page.tsx: <img src={app.appIcon} alt="" cl...
+- Found 34 console.log statements (Remove for production performance)
+
+### 2. Caching Strategy
+
+**Status:** PASS
+
+**Cache Strategy:**
+- **Cached API Routes:** 1 / 19
+- ℹ️ Consider adding caching to more GET routes.
+
 
 ---
 
-## Resilience & Legal
+## Resilience, Legal & Docs
 
-**Status:** WARNING
+**Status:** PASS
 
 ### 1. Resilience (White Screen Check)
 
 **Resilience Metrics:**
 - **Error Boundaries (error.tsx):** 1 (Prevents white screens)
-- **Loading States (loading.tsx):** 1 (Improves perceived performance)
+- **Loading States (loading.tsx):** 2 (Improves perceived performance)
+- ✅ All API routes appear to use error handling.
 
-**Risky API Routes (Missing try/catch):**
-- app/api/auth/callback/route.ts
 
 ### 2. Legal Compliance
 
 **Legal Compliance:**
-- ❌ MISSING Privacy Policy (Required for GDPR/App Stores).
-- ❌ MISSING Terms of Service (High Legal Risk).
+- ✅ Privacy Policy found.
+- ✅ Terms of Service found.
+
+
+### 3. Documentation Coverage
+
+**Code Documentation (JSDoc):**
+- **JSDoc Coverage in /lib:** 72.3% (81/112 functions)
+- ✅ Good documentation habits detected.
 
 
 ---
@@ -114,4 +155,4 @@ Total: 4 (Critical: 0, High: 0, Moderate: 4, Low: 0)
 ## Audit Performed By
 
 - Tool: Automated Script (Gemini Agent)
-- Date: 2026-01-24T09:07:57.660Z
+- Date: 2026-01-24T10:55:39.043Z

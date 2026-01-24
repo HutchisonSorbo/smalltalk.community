@@ -241,7 +241,19 @@ async function checkPerformance(): Promise<AuditResult> {
             if (imgLines.length > 0) {
                 status = 'WARNING';
                 issues.push(`Found ${imgLines.length} standard \`<img>\` tags (Use \\\`<Image />\\\' for bandwidth optimization)`);
-                imgLines.slice(0, 3).forEach(l => issues.push(`- ${l.substring(0, 100).trim()}...`));
+                // Fix: Ensure paths are relative and clean up output
+                imgLines.slice(0, 3).forEach(l => {
+                    // split on first colon to separate filename from content
+                    const firstColon = l.indexOf(':');
+                    if (firstColon > -1) {
+                         const rawPath = l.substring(0, firstColon);
+                         const content = l.substring(firstColon + 1);
+                         const relativePath = path.relative(ROOT_DIR, rawPath);
+                         issues.push(`- ${relativePath}: ${content.substring(0, 80).trim()}...`);
+                    } else {
+                         issues.push(`- ${l.substring(0, 100).trim()}...`);
+                    }
+                });
             }
         } catch (e: any) {
             console.error('Error scanning for <img> tags:', e);
@@ -415,6 +427,212 @@ async function checkLegal(): Promise<AuditResult> {
     }
 }
 
+async function checkSanitization(): Promise<AuditResult> {
+    console.log('Running Data Sanitization Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Input Validation (Zod):**\n';
+        
+        const apiDir = path.join(ROOT_DIR, 'app', 'api');
+        const riskyRoutes: string[] = [];
+        
+        if (fs.existsSync(apiDir)) {
+            const scanApiRoutes = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        scanApiRoutes(filePath);
+                    } else if (file === 'route.ts') {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        
+                        // 1. Strip comments (basic)
+                        const cleanContent = content.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '');
+                        
+                        // 2. Check for exported mutating handlers
+                        const hasMutatingHandler = /export\s+(async\s+)?(function\s+(POST|PUT|PATCH)|const\s+(POST|PUT|PATCH)\s*=)/.test(cleanContent);
+                        
+                        if (hasMutatingHandler) {
+                             // 3. Check for validation usage
+                             // Looks for: "zod", ".parse(", ".safeParse(", "schema.parse", "validate("
+                             // Also check imports for "zod" or validation libs
+                             const hasValidation = /zod|schema\.parse|\.parse\(|\.safeParse\(|validate\(|validator\(/i.test(cleanContent);
+                             
+                             if (!hasValidation) {
+                                riskyRoutes.push(path.relative(ROOT_DIR, filePath));
+                             }
+                        }
+                    }
+                });
+            };
+            scanApiRoutes(apiDir);
+        }
+
+        if (riskyRoutes.length > 0) {
+            status = 'FAIL';
+            details += `\n**Potential Unvalidated API Routes:**\n`;
+            details += riskyRoutes.map(r => `- ${r} (Missing 'zod' or 'schema' keyword)`).join('\n');
+        } else {
+            details += `- ✅ API routes appear to use validation.\n`;
+        }
+        
+        return { status, summary: `Sanitization: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkSanitization:', e);
+        return { status: 'FAIL', summary: 'Sanitization Check Failed', details: 'Internal Error' };
+    }
+}
+
+    async function checkAgeGate(): Promise<AuditResult> {
+    console.log('Running Age Gate Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Age Restriction Enforcement:**\n';
+        
+        const schemaPath = path.join(ROOT_DIR, 'lib', 'onboarding-schemas.ts');
+        if (!fs.existsSync(schemaPath)) {
+            return { status: 'FAIL', summary: 'Missing Schema File', details: 'lib/onboarding-schemas.ts not found.' };
+        }
+        
+        const content = fs.readFileSync(schemaPath, 'utf8');
+        
+        // Stricter Regex Check
+        // 1. Must contain a DOB-related field name
+        const hasDobField = /dateOfBirth|dob|birthDate/i.test(content);
+        
+        // 2. Must contain logic for 13 years (calculation or comparison)
+        // Matches: "getFullYear() - 13", "Date.now() - 13 * 365", ">= 13", etc.
+        const has13Logic = /getFullYear\(\)\s*-\s*13|Date\.now\(\)\s*-\s*13\s*\*\s*365|setFullYear\(.*-\s*13\)|>=\s*13/.test(content);
+        
+        const hasAgeCheck = hasDobField && has13Logic;
+        
+        if (hasAgeCheck) {
+            details += `- ✅ Age gate logic found in schemas (13+ enforcement detected).\n`;
+        } else {
+            status = 'FAIL';
+            details += `- ❌ STRICT 13+ Age Gate NOT detected in lib/onboarding-schemas.ts!\n`;
+        }
+        
+        return { status, summary: `Age Gate: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkAgeGate:', e);
+        return { status: 'FAIL', summary: 'Age Gate Check Failed', details: 'Internal Error' };
+    }
+}
+
+async function checkCacheHeaders(): Promise<AuditResult> {
+    console.log('Running Cache Header Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Cache Strategy:**\n';
+        
+        const apiDir = path.join(ROOT_DIR, 'app', 'api');
+        let cacheControlCount = 0;
+        let routeCount = 0;
+        
+        if (fs.existsSync(apiDir)) {
+            const scanApiRoutes = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        scanApiRoutes(filePath);
+                    } else if (file === 'route.ts') {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        
+                        // Check for exported GET handler
+                        const hasGetHandler = /export\s+(async\s+)?(function\s+GET|const\s+GET\s*=)/.test(content);
+                        
+                        if (hasGetHandler) {
+                            routeCount++;
+                            if (content.includes('Cache-Control') || content.includes('revalidate')) {
+                                cacheControlCount++;
+                            }
+                        }
+                    }
+                });
+            };
+            scanApiRoutes(apiDir);
+        }
+        
+        details += `- **Cached API Routes:** ${cacheControlCount} / ${routeCount}\n`;
+        
+        if (routeCount > 0 && cacheControlCount === 0) {
+            status = 'WARNING';
+            details += `- ⚠️ No API routes seem to use explicit 'Cache-Control' headers. Important for low bandwidth.\n`;
+        } else if (cacheControlCount < routeCount / 2) {
+             // Just an observation, not a fail
+             details += `- ℹ️ Consider adding caching to more GET routes.\n`;
+        }
+        
+        return { status, summary: `Cache: ${status}`, details };
+    } catch (e: any) {
+        console.error('Error running checkCacheHeaders:', e);
+        return { status: 'FAIL', summary: 'Cache Check Failed', details: 'Internal Error' };
+    }
+}
+
+async function checkDocumentation(): Promise<AuditResult> {
+    console.log('Running Documentation Check...');
+    try {
+        let status: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        let details = '\n**Code Documentation (JSDoc):**\n';
+        
+        const libDir = path.join(ROOT_DIR, 'lib');
+        let totalFunctions = 0;
+        let documentedFunctions = 0;
+        
+        if (fs.existsSync(libDir)) {
+            const scanFiles = (dir: string) => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        scanFiles(filePath);
+                    } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
+                        const content = fs.readFileSync(filePath, 'utf8');
+                        
+                        // Regex to find exported functions/consts
+                        // Matches: "export function name", "export async function name", "export const name ="
+                        const exportRegex = /export\s+(async\s+)?(function\s+\w+|const\s+\w+\s*=)/g;
+                        
+                        let match;
+                        while ((match = exportRegex.exec(content)) !== null) {
+                            totalFunctions++;
+                            
+                            // Check if the preceding characters form a JSDoc block ending
+                            // Look backwards from match.index
+                            const precedingContent = content.substring(0, match.index).trim();
+                            if (precedingContent.endsWith('*/')) {
+                                documentedFunctions++;
+                            }
+                        }
+                    }
+                });
+            };
+            scanFiles(libDir);
+        }
+        
+        const coverage = totalFunctions > 0 ? (documentedFunctions / totalFunctions) * 100 : 100;
+        details += `- **JSDoc Coverage in /lib:** ${coverage.toFixed(1)}% (${documentedFunctions}/${totalFunctions} functions)\n`;
+        
+        if (coverage < 20) {
+             status = 'WARNING';
+             details += `- ⚠️ Low documentation coverage! Aim for >20% for core business logic.\n`;
+        } else {
+             details += `- ✅ Good documentation habits detected.\n`;
+        }
+        
+        return { status, summary: `Docs: ${coverage.toFixed(0)}%`, details };
+    } catch (e: any) {
+        console.error('Error running checkDocumentation:', e);
+        return { status: 'FAIL', summary: 'Doc Check Failed', details: 'Internal Error' };
+    }
+}
+
 async function generateReport() {
   try {
       const cve = await checkCVEs();
@@ -423,6 +641,10 @@ async function generateReport() {
       const perf = await checkPerformance();
       const resilience = await checkResilience();
       const legal = await checkLegal();
+      const sanitization = await checkSanitization();
+      const ageGate = await checkAgeGate();
+      const cache = await checkCacheHeaders();
+      const docs = await checkDocumentation();
       
       const reportContent = `
 # Security & Performance Audit Report
@@ -442,6 +664,10 @@ Daily automated audit results.
 - **Performance:** ${perf.status}
 - **Resilience:** ${resilience.status}
 - **Legal:** ${legal.status}
+- **Sanitization:** ${sanitization.status}
+- **Age Gate:** ${ageGate.status}
+- **Caching:** ${cache.status}
+- **Docs:** ${docs.status}
 
 ---
 
@@ -462,24 +688,44 @@ ${rls.details}
 **Status:** ${secrets.status}
 ${secrets.details}
 
+### 4. Input Sanitization (Zod)
+
+**Status:** ${sanitization.status}
+${sanitization.details}
+
+### 5. Age Gate (13+)
+
+**Status:** ${ageGate.status}
+${ageGate.details}
+
 ---
 
-## Performance Audit (Low Bandwidth)
+## Performance & Reliability
+
+### 1. Low Bandwidth Optimization
 
 **Status:** ${perf.status}
 ${perf.details}
 
+### 2. Caching Strategy
+
+**Status:** ${cache.status}
+${cache.details}
+
 ---
 
-## Resilience & Legal
+## Resilience, Legal & Docs
 
-**Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' ? 'PASS' : 'WARNING'}
+**Status:** ${resilience.status === 'PASS' && legal.status === 'PASS' && docs.status === 'PASS' ? 'PASS' : 'WARNING'}
 
 ### 1. Resilience (White Screen Check)
 ${resilience.details}
 
 ### 2. Legal Compliance
 ${legal.details}
+
+### 3. Documentation Coverage
+${docs.details}
 
 ---
 
