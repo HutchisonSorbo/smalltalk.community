@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase-server";
 import { SidebarNav } from "./components/SidebarNav";
 import { Separator } from "@/components/ui/separator";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
     title: "Settings",
     description: "Manage your account settings and preferences.",
