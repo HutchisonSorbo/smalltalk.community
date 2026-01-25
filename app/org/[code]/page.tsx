@@ -331,10 +331,17 @@ function OrgImpact({ stats }: OrgImpactProps) {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {stats.map((stat, idx) => {
+                    // Supported icons: users, star, check, map, globe, mail, phone
                     const IconComponent = {
                         users: Users,
                         star: Star,
                         check: CheckCircle,
+                        checkCircle: CheckCircle,
+                        map: MapPin,
+                        mappin: MapPin,
+                        globe: Globe,
+                        mail: Mail,
+                        phone: Phone,
                     }[stat.icon.toLowerCase()] || Star;
 
                     return (
@@ -367,11 +374,11 @@ function OrgPrograms({ programs }: OrgProgramsProps) {
                 {programs.map((prog, idx) => {
                     const safeLink = prog.linkUrl ? safeUrl(prog.linkUrl) : undefined;
                     return (
-                        <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-primary">
+                        <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-[var(--tenant-primary)]">
                             <h3 className="font-bold text-gray-900 dark:text-white mb-1">{prog.title || 'Untitled Program'}</h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prog.description || ''}</p>
                             {safeLink && (
-                                <a href={safeLink} className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+                                <a href={safeLink} className="text-xs font-semibold text-[var(--tenant-primary)] hover:underline flex items-center gap-1">
                                     Learn More <ExternalLink className="h-3 w-3" />
                                 </a>
                             )}
@@ -399,8 +406,15 @@ function OrgTeam({ team }: OrgTeamProps) {
                     const safeLinkedin = member.linkedinUrl ? safeUrl(member.linkedinUrl) : undefined;
                     return (
                         <div key={idx} className="flex items-center gap-4 p-4 border rounded-xl">
-                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                {member.name?.[0] || '?'}
+                            <div
+                                className="h-12 w-12 rounded-full flex items-center justify-center font-bold"
+                                style={{
+                                    backgroundColor: 'var(--tenant-primary)',
+                                    opacity: 0.1,
+                                    color: 'var(--tenant-primary)'
+                                }}
+                            >
+                                <span style={{ opacity: 10 }}>{member.name?.[0] || '?'}</span>
                             </div>
                             <div>
                                 <div className="font-semibold text-gray-900 dark:text-white">{member.name || 'Unknown Member'}</div>
@@ -436,9 +450,12 @@ function OrgGallery({ gallery }: OrgGalleryProps) {
                     if (!safeImg) return null;
                     return (
                         <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border bg-[var(--tenant-primary)]/5">
-                            <img
+                            <Image
                                 src={safeImg}
                                 alt={img.caption || `Organisation gallery photo ${idx + 1}`}
+                                width={400}
+                                height={400}
+                                unoptimized
                                 className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
                             />
                         </div>

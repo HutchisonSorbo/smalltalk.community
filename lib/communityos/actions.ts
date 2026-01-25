@@ -17,49 +17,67 @@ export type ActionResult<T = any> =
 
 // --- Validation Schemas ---
 
+/**
+ * Sanitise user text input to prevent XSS attacks
+ * Strips HTML tags and escapes special characters
+ */
+function sanitizeText(value: string | null | undefined): string {
+    if (!value) return '';
+    // Strip HTML tags
+    const withoutTags = value.replace(/<[^>]*>/g, '');
+    // Escape special characters
+    return withoutTags
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .trim();
+}
+
 const impactStatSchema = z.array(z.object({
-    label: z.string().min(1, "Label is required").max(100),
-    value: z.string().min(1, "Value is required").max(50),
-    icon: z.string().min(1, "Icon is required").max(50),
+    label: z.string().min(1, "Label is required").max(100).transform(sanitizeText),
+    value: z.string().min(1, "Value is required").max(50).transform(sanitizeText),
+    icon: z.string().min(1, "Icon is required").max(50).transform(sanitizeText),
 })).max(50);
 
 const programSchema = z.array(z.object({
-    title: z.string().min(1, "Title is required").max(100),
-    description: z.string().min(1, "Description is required").max(1000),
+    title: z.string().min(1, "Title is required").max(100).transform(sanitizeText),
+    description: z.string().min(1, "Description is required").max(1000).transform(sanitizeText),
     imageUrl: z.string().url().optional().or(z.literal("")),
     linkUrl: z.string().url().optional().or(z.literal("")),
 })).max(20);
 
 const teamMemberSchema = z.array(z.object({
-    name: z.string().min(1, "Name is required").max(100),
-    title: z.string().min(1, "Title is required").max(100),
-    bio: z.string().max(1000).optional().or(z.literal("")),
+    name: z.string().min(1, "Name is required").max(100).transform(sanitizeText),
+    title: z.string().min(1, "Title is required").max(100).transform(sanitizeText),
+    bio: z.string().max(1000).optional().or(z.literal("")).transform(sanitizeText),
     imageUrl: z.string().url().optional().or(z.literal("")),
     linkedinUrl: z.string().url().optional().or(z.literal("")),
 })).max(50);
 
 const gallerySchema = z.array(z.object({
     url: z.string().url("Valid image URL required"),
-    caption: z.string().max(255).optional().or(z.literal("")),
+    caption: z.string().max(255).optional().or(z.literal("")).transform(sanitizeText),
 })).max(100);
 
 const testimonialSchema = z.array(z.object({
-    quote: z.string().min(1, "Quote is required").max(1000),
-    author: z.string().min(1, "Author is required").max(100),
-    role: z.string().max(100).optional().or(z.literal("")),
+    quote: z.string().min(1, "Quote is required").max(1000).transform(sanitizeText),
+    author: z.string().min(1, "Author is required").max(100).transform(sanitizeText),
+    role: z.string().max(100).optional().or(z.literal("")).transform(sanitizeText),
     imageUrl: z.string().url().optional().or(z.literal("")),
 })).max(50);
 
 const ctaSchema = z.array(z.object({
-    label: z.string().min(1, "Label is required").max(50),
+    label: z.string().min(1, "Label is required").max(50).transform(sanitizeText),
     url: z.string().url("Valid URL required"),
     style: z.enum(['primary', 'secondary', 'outline']),
 })).max(10);
 
 const eventSchema = z.array(z.object({
-    title: z.string().min(1, "Title is required").max(100),
-    date: z.string().min(1, "Date is required"),
-    location: z.string().min(1, "Location is required").max(255),
+    title: z.string().min(1, "Title is required").max(100).transform(sanitizeText),
+    date: z.string().min(1, "Date is required").transform(sanitizeText),
+    location: z.string().min(1, "Location is required").max(255).transform(sanitizeText),
     url: z.string().url().optional().or(z.literal("")),
 })).max(100);
 
@@ -76,9 +94,9 @@ const socialLinksSchema = z.object({
 }).strict();
 
 const profileSchema = z.object({
-    name: z.string().min(1).max(255).optional(),
-    description: z.string().max(2000).optional().nullable(),
-    missionStatement: z.string().max(2000).optional().nullable(),
+    name: z.string().min(1).max(255).optional().transform(sanitizeText),
+    description: z.string().max(2000).optional().nullable().transform(sanitizeText),
+    missionStatement: z.string().max(2000).optional().nullable().transform(sanitizeText),
     logoUrl: z.string().url().max(1000).optional().nullable().or(z.literal("")),
     heroImageUrl: z.string().url().max(1000).optional().nullable().or(z.literal("")),
     primaryColor: z.string().regex(colorRegex, "Invalid color format").optional().nullable(),
@@ -86,7 +104,7 @@ const profileSchema = z.object({
     website: z.string().url().optional().nullable().or(z.literal("")),
     contactEmail: z.string().email().optional().nullable().or(z.literal("")),
     contactPhone: z.string().regex(/^[\d\s+\-()]+$/, "Invalid phone format").optional().nullable().or(z.literal("")),
-    address: z.string().max(500).optional().nullable(),
+    address: z.string().max(500).optional().nullable().transform(sanitizeText),
     isPublic: z.boolean().optional(),
     socialLinks: socialLinksSchema.optional(),
 });
@@ -95,6 +113,12 @@ const profileSchema = z.object({
  * Helper to verify tenant admin access
  */
 async function verifyAdmin(tenantId: string): Promise<ActionResult<{ userId: string }>> {
+    // Validate tenantId format
+    const tenantIdValidation = z.string().uuid().safeParse(tenantId);
+    if (!tenantIdValidation.success) {
+        return { success: false, error: "Invalid tenant ID format" };
+    }
+
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
