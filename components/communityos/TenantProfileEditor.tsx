@@ -7,15 +7,12 @@ import * as z from "zod";
 import { Tenant } from "@/shared/schema";
 import {
     updateTenantProfile,
-    updateTenantImpactStats,
-    updateTenantPrograms,
-    updateTenantTeam,
-    updateTenantGallery,
-    updateTenantTestimonials,
-    updateTenantCTAs,
-    updateTenantEvents
+    ActionResult
 } from "@/lib/communityos/actions";
-import { uploadTenantImage } from "@/lib/communityos/upload-action";
+import { UploadField } from "./UploadField";
+import { ImpactSection } from "./profile-sections/ImpactSection";
+import { ProgramsSection } from "./profile-sections/ProgramsSection";
+import { TeamSection } from "./profile-sections/TeamSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -42,7 +39,7 @@ const generalSchema = z.object({
 
 const contactSchema = z.object({
     contactEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-    contactPhone: z.string().optional(),
+    contactPhone: z.string().trim().regex(/^[\d\s+\-()]+$/, "Invalid phone format").optional().or(z.literal("")),
     address: z.string().optional(),
     socialLinks: z.object({
         facebook: z.string().url().optional().or(z.literal("")),
@@ -104,6 +101,9 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
             } else {
                 toast.error(result.error || "Update failed");
             }
+        } catch (e: any) {
+            console.error("onGeneralSubmit error", e);
+            toast.error("Update failed: " + (e?.message || "unknown error"));
         } finally {
             setIsSaving(false);
         }
@@ -118,14 +118,17 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
             } else {
                 toast.error(result.error || "Update failed");
             }
+        } catch (e: any) {
+            console.error("onContactSubmit error", e);
+            toast.error("Update failed: " + (e?.message || "unknown error"));
         } finally {
             setIsSaving(false);
         }
     }
 
     return (
-        <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 h-auto">
+        <Tabs defaultValue="general" className="w-full max-w-full">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 lg:grid-cols-7 h-auto">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="contact">Contact</TabsTrigger>
                 <TabsTrigger value="impact">Impact</TabsTrigger>
@@ -139,80 +142,27 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
             <TabsContent value="general">
                 <Card>
                     <CardHeader>
-                        <CardTitle>General Information</CardTitle>
+                        <CardTitle className="text-xl font-bold">
+                            <h2 className="text-xl font-bold inline">General Information</h2>
+                        </CardTitle>
                         <CardDescription>Basic details about your organisation.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                            {/* Logo Upload */}
-                            <div className="space-y-4">
-                                <FormLabel>Organisation Logo</FormLabel>
-                                <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-xl">
-                                    {tenant.logoUrl ? (
-                                        <img src={tenant.logoUrl} alt="Logo preview" className="h-32 w-32 object-contain rounded-lg shadow-sm" />
-                                    ) : (
-                                        <div className="h-32 w-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
-                                            No Logo
-                                        </div>
-                                    )}
-                                    <div className="flex flex-col w-full gap-2">
-                                        <Input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-                                                const formData = new FormData();
-                                                formData.append("file", file);
-                                                const res = await uploadTenantImage(tenant.id, formData, "logo");
-                                                if (res.success && res.url) {
-                                                    await updateTenantProfile(tenant.id, { logoUrl: res.url });
-                                                    toast.success("Logo updated");
-                                                    window.location.reload(); // Quick refresh to show new image
-                                                } else {
-                                                    toast.error(res.error || "Upload failed");
-                                                }
-                                            }}
-                                        />
-                                        <p className="text-xs text-gray-500">Square recommended (max 2MB)</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Hero Image Upload */}
-                            <div className="space-y-4">
-                                <FormLabel>Hero Banner Image</FormLabel>
-                                <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-xl">
-                                    {tenant.heroImageUrl ? (
-                                        <img src={tenant.heroImageUrl} alt="Hero preview" className="h-32 w-full object-cover rounded-lg shadow-sm" />
-                                    ) : (
-                                        <div className="h-32 w-full bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
-                                            No Hero Image
-                                        </div>
-                                    )}
-                                    <div className="flex flex-col w-full gap-2">
-                                        <Input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-                                                const formData = new FormData();
-                                                formData.append("file", file);
-                                                const res = await uploadTenantImage(tenant.id, formData, "hero");
-                                                if (res.success && res.url) {
-                                                    await updateTenantProfile(tenant.id, { heroImageUrl: res.url });
-                                                    toast.success("Hero image updated");
-                                                    window.location.reload();
-                                                } else {
-                                                    toast.error(res.error || "Upload failed");
-                                                }
-                                            }}
-                                        />
-                                        <p className="text-xs text-gray-500">Panoramic recommended (max 5MB)</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <UploadField
+                                tenantId={tenant.id}
+                                label="Organisation Logo"
+                                type="logo"
+                                initialUrl={tenant.logoUrl}
+                                recommendation="Square recommended (max 2MB)"
+                            />
+                            <UploadField
+                                tenantId={tenant.id}
+                                label="Hero Banner Image"
+                                type="hero"
+                                initialUrl={tenant.heroImageUrl}
+                                recommendation="Panoramic recommended (max 5MB)"
+                            />
                         </div>
 
                         <Form {...generalForm}>
@@ -335,7 +285,9 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
             <TabsContent value="contact">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Contact & Social</CardTitle>
+                        <CardTitle className="text-xl font-bold">
+                            <h2 className="text-xl font-bold inline">Contact & Social</h2>
+                        </CardTitle>
                         <CardDescription>How people can reach your organisation.</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -488,176 +440,5 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
                 <Card><CardContent className="pt-6 text-center text-gray-500">Testimonials, Events and CTA management coming soon...</CardContent></Card>
             </TabsContent>
         </Tabs>
-    );
-}
-
-// ============================================================================
-// Sub-sections (usually in separate files, but keeping together for now)
-// ============================================================================
-
-function ImpactSection({ tenant }: { tenant: Tenant }) {
-    const [stats, setStats] = useState(tenant.impactStats || []);
-    const [isSaving, setIsSaving] = useState(false);
-
-    async function handleSave() {
-        setIsSaving(true);
-        const result = await updateTenantImpactStats(tenant.id, stats);
-        if (result.success) toast.success("Impact stats updated");
-        else toast.error(result.error || "Update failed");
-        setIsSaving(false);
-    }
-
-    const addStat = () => setStats([...stats, { label: "", value: "", icon: "star" }]);
-    const removeStat = (index: number) => setStats(stats.filter((_, i) => i !== index));
-    const updateStat = (index: number, key: string, val: string) => {
-        const newStats = [...stats];
-        (newStats[index] as any)[key] = val;
-        setStats(newStats);
-    };
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Impact Statistics</CardTitle>
-                <CardDescription>Showcase your organisation's impact with key metrics.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {stats.map((stat, index) => (
-                    <div key={index} className="flex flex-wrap items-end gap-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                        <div className="flex-1 min-w-[120px]">
-                            <label className="text-xs font-medium uppercase text-gray-500">Label</label>
-                            <Input value={stat.label} onChange={(e) => updateStat(index, "label", e.target.value)} placeholder="e.g. Members" />
-                        </div>
-                        <div className="flex-1 min-w-[120px]">
-                            <label className="text-xs font-medium uppercase text-gray-500">Value</label>
-                            <Input value={stat.value} onChange={(e) => updateStat(index, "value", e.target.value)} placeholder="e.g. 1,000+" />
-                        </div>
-                        <div className="w-24">
-                            <label className="text-xs font-medium uppercase text-gray-500">Icon</label>
-                            <Input value={stat.icon} onChange={(e) => updateStat(index, "icon", e.target.value)} placeholder="Icon alias" />
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeStat(index)} className="text-red-500 hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                ))}
-                <Button variant="outline" onClick={addStat} className="w-full">
-                    <Plus className="mr-2 h-4 w-4" /> Add Metric
-                </Button>
-            </CardContent>
-            <CardFooter>
-                <Button onClick={handleSave} disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Statistics
-                </Button>
-            </CardFooter>
-        </Card>
-    );
-}
-
-function ProgramsSection({ tenant }: { tenant: Tenant }) {
-    const [programs, setPrograms] = useState(tenant.programs || []);
-    const [isSaving, setIsSaving] = useState(false);
-
-    async function handleSave() {
-        setIsSaving(true);
-        const result = await updateTenantPrograms(tenant.id, programs);
-        if (result.success) toast.success("Programs updated");
-        else toast.error(result.error || "Update failed");
-        setIsSaving(false);
-    }
-
-    const addProgram = () => setPrograms([...programs, { title: "", description: "" }]);
-    const removeProgram = (index: number) => setPrograms(programs.filter((_, i) => i !== index));
-    const updateProgram = (index: number, key: string, val: string) => {
-        const newItems = [...programs];
-        (newItems[index] as any)[key] = val;
-        setPrograms(newItems);
-    };
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Programs & Services</CardTitle>
-                <CardDescription>Highlight what your organisation offers.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {programs.map((item, index) => (
-                    <div key={index} className="space-y-3 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                        <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-semibold">Program #{index + 1}</h4>
-                            <Button variant="ghost" size="icon" onClick={() => removeProgram(index)} className="text-red-500">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <Input value={item.title} onChange={(e) => updateProgram(index, "title", e.target.value)} placeholder="Program Title" />
-                        <Textarea value={item.description} onChange={(e) => updateProgram(index, "description", e.target.value)} placeholder="Description..." />
-                        <Input value={item.linkUrl} onChange={(e) => updateProgram(index, "linkUrl", e.target.value)} placeholder="Learn More URL (optional)" />
-                    </div>
-                ))}
-                <Button variant="outline" onClick={addProgram} className="w-full">
-                    <Plus className="mr-2 h-4 w-4" /> Add Program
-                </Button>
-            </CardContent>
-            <CardFooter>
-                <Button onClick={handleSave} disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Programs
-                </Button>
-            </CardFooter>
-        </Card>
-    );
-}
-
-function TeamSection({ tenant }: { tenant: Tenant }) {
-    const [team, setTeam] = useState(tenant.teamMembers || []);
-    const [isSaving, setIsSaving] = useState(false);
-
-    async function handleSave() {
-        setIsSaving(true);
-        const result = await updateTenantTeam(tenant.id, team);
-        if (result.success) toast.success("Team updated");
-        else toast.error(result.error || "Update failed");
-        setIsSaving(false);
-    }
-
-    const addMember = () => setTeam([...team, { name: "", title: "" }]);
-    const removeMember = (index: number) => setTeam(team.filter((_, i) => i !== index));
-    const updateMember = (index: number, key: string, val: string) => {
-        const newItems = [...team];
-        (newItems[index] as any)[key] = val;
-        setTeam(newItems);
-    };
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Team Members</CardTitle>
-                <CardDescription>Introduce your leadership and key staff.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {team.map((item, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50 relative">
-                        <Input value={item.name} onChange={(e) => updateMember(index, "name", e.target.value)} placeholder="Name" />
-                        <Input value={item.title} onChange={(e) => updateMember(index, "title", e.target.value)} placeholder="Title / Role" />
-                        <div className="md:col-span-2 flex gap-2">
-                            <Input value={item.linkedinUrl} onChange={(e) => updateMember(index, "linkedinUrl", e.target.value)} placeholder="LinkedIn Profile URL" className="flex-1" />
-                            <Button variant="ghost" size="icon" onClick={() => removeMember(index)} className="text-red-500">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                ))}
-                <Button variant="outline" onClick={addMember} className="w-full">
-                    <Plus className="mr-2 h-4 w-4" /> Add Team Member
-                </Button>
-            </CardContent>
-            <CardFooter>
-                <Button onClick={handleSave} disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Team
-                </Button>
-            </CardFooter>
-        </Card>
     );
 }

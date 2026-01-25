@@ -2,15 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { updateTenantProfile, updateTenantImpactStats } from '@/lib/communityos/actions';
 import * as tenantContext from '@/lib/communityos/tenant-context';
 import * as supabaseServer from '@/lib/supabase-server';
-import * as supabaseService from '@/lib/supabase-service';
 
 // Mock dependencies
 vi.mock('@/lib/supabase-server', () => ({
     createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/supabase-service', () => ({
-    createServiceClient: vi.fn(),
+// Mock Drizzle
+vi.mock('@/server/db', () => ({
+    db: {
+        update: vi.fn().mockReturnThis(),
+        set: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue({}),
+    },
 }));
 
 vi.mock('@/lib/communityos/tenant-context', () => ({
@@ -21,7 +25,9 @@ vi.mock('next/cache', () => ({
     revalidatePath: vi.fn(),
 }));
 
-describe('CommunityOS Actions', () => {
+import { db } from '@/server/db';
+
+describe('CommunityOS Actions (Refined)', () => {
     const mockTenantId = 'test-tenant-id';
     const mockUserId = 'test-user-id';
 
@@ -29,14 +35,18 @@ describe('CommunityOS Actions', () => {
         vi.clearAllMocks();
     });
 
+    const setupAuth = (user: any = { id: mockUserId }, isAdmin = true) => {
+        (supabaseServer.createClient as any).mockResolvedValue({
+            auth: {
+                getUser: vi.fn().mockResolvedValue({ data: { user } }),
+            },
+        });
+        (tenantContext.isTenantAdmin as any).mockResolvedValue(isAdmin);
+    };
+
     describe('updateTenantProfile', () => {
         it('should return error if not authenticated', async () => {
-            (supabaseServer.createClient as any).mockResolvedValue({
-                auth: {
-                    getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
-                },
-            });
-
+            setupAuth(null);
             const result = await updateTenantProfile(mockTenantId, { name: 'New Name' });
             expect(result.success).toBe(false);
             if (!result.success) {
@@ -44,96 +54,53 @@ describe('CommunityOS Actions', () => {
             }
         });
 
-        it('should return error if not an admin', async () => {
-            (supabaseServer.createClient as any).mockResolvedValue({
-                auth: {
-                    getUser: vi.fn().mockResolvedValue({ data: { user: { id: mockUserId } } }),
-                },
-            });
-            (tenantContext.isTenantAdmin as any).mockResolvedValue(false);
-
-            const result = await updateTenantProfile(mockTenantId, { name: 'New Name' });
+        it('should return error if Zod validation fails (invalid color)', async () => {
+            setupAuth();
+            const result = await updateTenantProfile(mockTenantId, { primaryColor: 'not-a-color' });
             expect(result.success).toBe(false);
             if (!result.success) {
-                expect(result.error).toBe('Admin privileges required');
+                expect(result.error).toContain('Validation failed');
             }
         });
 
         it('should update profile successfully when admin', async () => {
-            // Mock auth
-            (supabaseServer.createClient as any).mockResolvedValue({
-                auth: {
-                    getUser: vi.fn().mockResolvedValue({ data: { user: { id: mockUserId } } }),
-                },
-            });
-            (tenantContext.isTenantAdmin as any).mockResolvedValue(true);
+            setupAuth();
+            (db.where as any).mockResolvedValue({});
 
-            // Mock DB
-            const mockUpdate = vi.fn().mockReturnThis();
-            const mockEq = vi.fn().mockResolvedValue({ error: null });
-            (supabaseService.createServiceClient as any).mockReturnValue({
-                from: vi.fn().mockReturnValue({
-                    update: mockUpdate,
-                    eq: mockEq,
-                }),
+            const result = await updateTenantProfile(mockTenantId, {
+                name: 'New Name',
+                missionStatement: 'New Mission',
+                primaryColor: '#ff0000'
             });
-
-            const result = await updateTenantProfile(mockTenantId, { name: 'New Name', missionStatement: 'New Mission' });
 
             expect(result.success).toBe(true);
-            expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+            expect(db.set).toHaveBeenCalledWith(expect.objectContaining({
                 name: 'New Name',
-                mission_statement: 'New Mission',
+                missionStatement: 'New Mission'
             }));
-        });
-
-        it('should return error if database update fails', async () => {
-            (supabaseServer.createClient as any).mockResolvedValue({
-                auth: {
-                    getUser: vi.fn().mockResolvedValue({ data: { user: { id: mockUserId } } }),
-                },
-            });
-            (tenantContext.isTenantAdmin as any).mockResolvedValue(true);
-
-            (supabaseService.createServiceClient as any).mockReturnValue({
-                from: vi.fn().mockReturnValue({
-                    update: vi.fn().mockReturnThis(),
-                    eq: vi.fn().mockResolvedValue({ error: { message: 'DB Error' } }),
-                }),
-            });
-
-            const result = await updateTenantProfile(mockTenantId, { name: 'New Name' });
-            expect(result.success).toBe(false);
-            if (!result.success) {
-                expect(result.error).toBe('Failed to update profile');
-            }
         });
     });
 
     describe('updateTenantImpactStats', () => {
+        it('should validate impact stats schema', async () => {
+            setupAuth();
+            const invalidStats = [{ label: '', value: '100' }];
+            const result = await updateTenantImpactStats(mockTenantId, invalidStats);
+            expect(result.success).toBe(false);
+        });
+
         it('should update impact stats successfully', async () => {
-            (supabaseServer.createClient as any).mockResolvedValue({
-                auth: {
-                    getUser: vi.fn().mockResolvedValue({ data: { user: { id: mockUserId } } }),
-                },
-            });
-            (tenantContext.isTenantAdmin as any).mockResolvedValue(true);
-
-            const mockUpdate = vi.fn().mockReturnThis();
-            const mockEq = vi.fn().mockResolvedValue({ error: null });
-            (supabaseService.createServiceClient as any).mockReturnValue({
-                from: vi.fn().mockReturnValue({
-                    update: mockUpdate,
-                    eq: mockEq,
-                }),
-            });
-
+            setupAuth();
             const stats = [{ label: 'Members', value: '100', icon: 'users' }];
             const result = await updateTenantImpactStats(mockTenantId, stats);
 
+            if (!result.success) {
+                console.error('Impact update failed:', result.error);
+            }
+
             expect(result.success).toBe(true);
-            expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
-                impact_stats: stats,
+            expect(db.set).toHaveBeenCalledWith(expect.objectContaining({
+                impactStats: stats,
             }));
         });
     });

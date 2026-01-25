@@ -23,8 +23,15 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
     const { code } = await params;
     const tenant = await getPublicTenantByCode(code);
 
-    const primaryColor = tenant?.primaryColor || "#4F46E5";
-    const secondaryColor = tenant?.secondaryColor || "#818CF8";
+    const colorRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+
+    const primaryColor = (tenant?.primaryColor && colorRegex.test(tenant.primaryColor))
+        ? tenant.primaryColor
+        : "#4F46E5";
+
+    const secondaryColor = (tenant?.secondaryColor && colorRegex.test(tenant.secondaryColor))
+        ? tenant.secondaryColor
+        : "#818CF8";
 
     return (
         <div

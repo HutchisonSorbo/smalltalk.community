@@ -1,10 +1,12 @@
 "use server";
 
+import { db } from "@/server/db";
+import { tenants, type Tenant } from "@/shared/schema";
+import { eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase-server";
-import { createServiceClient } from "@/lib/supabase-service";
 import { isTenantAdmin } from "@/lib/communityos/tenant-context";
 import { revalidatePath } from "next/cache";
-import type { Tenant } from "@/shared/schema";
+import { z } from "zod";
 
 /**
  * Result pattern for server actions
@@ -13,10 +15,76 @@ export type ActionResult<T = any> =
     | { success: true; data: T }
     | { success: false; error: string };
 
+// --- Validation Schemas ---
+
+const impactStatSchema = z.array(z.object({
+    label: z.string().min(1, "Label is required").max(100),
+    value: z.string().min(1, "Value is required").max(50),
+    icon: z.string().min(1, "Icon is required").max(50),
+}));
+
+const programSchema = z.array(z.object({
+    title: z.string().min(1, "Title is required").max(100),
+    description: z.string().min(1, "Description is required").max(1000),
+    imageUrl: z.string().url().optional().or(z.literal("")),
+    linkUrl: z.string().url().optional().or(z.literal("")),
+}));
+
+const teamMemberSchema = z.array(z.object({
+    name: z.string().min(1, "Name is required").max(100),
+    title: z.string().min(1, "Title is required").max(100),
+    bio: z.string().max(1000).optional().or(z.literal("")),
+    imageUrl: z.string().url().optional().or(z.literal("")),
+    linkedinUrl: z.string().url().optional().or(z.literal("")),
+}));
+
+const gallerySchema = z.array(z.object({
+    url: z.string().url("Valid image URL required"),
+    caption: z.string().max(255).optional().or(z.literal("")),
+}));
+
+const testimonialSchema = z.array(z.object({
+    quote: z.string().min(1, "Quote is required").max(1000),
+    author: z.string().min(1, "Author is required").max(100),
+    role: z.string().max(100).optional().or(z.literal("")),
+    imageUrl: z.string().url().optional().or(z.literal("")),
+}));
+
+const ctaSchema = z.array(z.object({
+    label: z.string().min(1, "Label is required").max(50),
+    url: z.string().url("Valid URL required"),
+    style: z.enum(['primary', 'secondary', 'outline']),
+}));
+
+const eventSchema = z.array(z.object({
+    title: z.string().min(1, "Title is required").max(100),
+    date: z.string().min(1, "Date is required"),
+    location: z.string().min(1, "Location is required").max(255),
+    url: z.string().url().optional().or(z.literal("")),
+}));
+
+const colorRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+
+const profileSchema = z.object({
+    name: z.string().min(1).max(255).optional(),
+    description: z.string().max(2000).optional().nullable(),
+    missionStatement: z.string().max(2000).optional().nullable(),
+    logoUrl: z.string().url().optional().nullable().or(z.literal("")),
+    heroImageUrl: z.string().url().optional().nullable().or(z.literal("")),
+    primaryColor: z.string().regex(colorRegex, "Invalid color format").optional().nullable(),
+    secondaryColor: z.string().regex(colorRegex, "Invalid color format").optional().nullable(),
+    website: z.string().url().optional().nullable().or(z.literal("")),
+    contactEmail: z.string().email().optional().nullable().or(z.literal("")),
+    contactPhone: z.string().regex(/^[\d\s+\-()]+$/, "Invalid phone format").optional().nullable().or(z.literal("")),
+    address: z.string().max(500).optional().nullable(),
+    isPublic: z.boolean().optional(),
+    socialLinks: z.record(z.string().nullable()).optional(),
+});
+
 /**
  * Helper to verify tenant admin access
  */
-async function verifyAdmin(tenantId: string): Promise<{ success: boolean; userId?: string; error?: string }> {
+async function verifyAdmin(tenantId: string): Promise<ActionResult<{ userId: string }>> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -30,10 +98,10 @@ async function verifyAdmin(tenantId: string): Promise<{ success: boolean; userId
             return { success: false, error: "Admin privileges required" };
         }
 
-        return { success: true, userId: user.id };
+        return { success: true, data: { userId: user.id } };
     } catch (err) {
-        console.error("[verifyAdmin] error:", err);
-        return { success: false, error: "Access verification failed" };
+        console.error(`[verifyAdmin] error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Authorization check failed" };
     }
 }
 
@@ -42,47 +110,31 @@ async function verifyAdmin(tenantId: string): Promise<{ success: boolean; userId
  */
 export async function updateTenantProfile(
     tenantId: string,
-    profileData: Partial<Pick<Tenant, "name" | "description" | "missionStatement" | "logoUrl" | "heroImageUrl" | "primaryColor" | "secondaryColor" | "website" | "contactEmail" | "contactPhone" | "address" | "isPublic" | "socialLinks">>
+    profileData: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
+
+    const result = profileSchema.safeParse(profileData);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
+
+    const validatedData = result.data;
 
     try {
-        const supabase = createServiceClient();
-
-        // Map camelCase to snake_case for Supabase client
-        const dbData: any = {};
-        if (profileData.name !== undefined) dbData.name = profileData.name;
-        if (profileData.description !== undefined) dbData.description = profileData.description;
-        if (profileData.missionStatement !== undefined) dbData.mission_statement = profileData.missionStatement;
-        if (profileData.logoUrl !== undefined) dbData.logo_url = profileData.logoUrl;
-        if (profileData.heroImageUrl !== undefined) dbData.hero_image_url = profileData.heroImageUrl;
-        if (profileData.primaryColor !== undefined) dbData.primary_color = profileData.primaryColor;
-        if (profileData.secondaryColor !== undefined) dbData.secondary_color = profileData.secondaryColor;
-        if (profileData.website !== undefined) dbData.website = profileData.website;
-        if (profileData.contactEmail !== undefined) dbData.contact_email = profileData.contactEmail;
-        if (profileData.contactPhone !== undefined) dbData.contact_phone = profileData.contactPhone;
-        if (profileData.address !== undefined) dbData.address = profileData.address;
-        if (profileData.isPublic !== undefined) dbData.is_public = profileData.isPublic;
-        if (profileData.socialLinks !== undefined) dbData.social_links = profileData.socialLinks;
-
-        dbData.updated_at = new Date().toISOString();
-
-        const { error } = await supabase
-            .from("tenants")
-            .update(dbData)
-            .eq("id", tenantId);
-
-        if (error) {
-            console.error("[updateTenantProfile] db error:", error);
-            return { success: false, error: "Failed to update profile" };
-        }
+        await db.update(tenants)
+            .set({
+                ...validatedData,
+                updatedAt: new Date(),
+            })
+            .where(eq(tenants.id, tenantId));
 
         revalidatePath(`/communityos/${tenantId}/settings/profile`);
         return { success: true, data: null };
     } catch (err) {
-        console.error("[updateTenantProfile] unexpected error:", err);
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantProfile] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update profile" };
     }
 }
 
@@ -91,27 +143,29 @@ export async function updateTenantProfile(
  */
 export async function updateTenantImpactStats(
     tenantId: string,
-    stats: Tenant["impactStats"]
+    stats: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
+
+    const result = impactStatSchema.safeParse(stats);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
 
     try {
-        const supabase = createServiceClient();
-        const { error } = await supabase
-            .from("tenants")
-            .update({
-                impact_stats: stats,
-                updated_at: new Date().toISOString()
+        await db.update(tenants)
+            .set({
+                impactStats: result.data,
+                updatedAt: new Date()
             })
-            .eq("id", tenantId);
-
-        if (error) return { success: false, error: "Failed to update impact statistics" };
+            .where(eq(tenants.id, tenantId));
 
         revalidatePath(`/communityos/${tenantId}/settings/profile/impact`);
         return { success: true, data: null };
     } catch (err) {
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantImpactStats] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update impact statistics" };
     }
 }
 
@@ -120,27 +174,29 @@ export async function updateTenantImpactStats(
  */
 export async function updateTenantPrograms(
     tenantId: string,
-    programs: Tenant["programs"]
+    programs: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
+
+    const result = programSchema.safeParse(programs);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
 
     try {
-        const supabase = createServiceClient();
-        const { error } = await supabase
-            .from("tenants")
-            .update({
-                programs: programs,
-                updated_at: new Date().toISOString()
+        await db.update(tenants)
+            .set({
+                programs: result.data,
+                updatedAt: new Date()
             })
-            .eq("id", tenantId);
+            .where(eq(tenants.id, tenantId));
 
-        if (error) return { success: false, error: "Failed to update programs" };
-
-        revalidatePath(`/communityos/${tenantId}/settings/profile/programs`);
+        revalidatePath(`/communityos/${tenantId}/settings/profile`);
         return { success: true, data: null };
     } catch (err) {
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantPrograms] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update programs" };
     }
 }
 
@@ -149,27 +205,29 @@ export async function updateTenantPrograms(
  */
 export async function updateTenantTeam(
     tenantId: string,
-    team: Tenant["teamMembers"]
+    team: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
+
+    const result = teamMemberSchema.safeParse(team);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
 
     try {
-        const supabase = createServiceClient();
-        const { error } = await supabase
-            .from("tenants")
-            .update({
-                team_members: team,
-                updated_at: new Date().toISOString()
+        await db.update(tenants)
+            .set({
+                teamMembers: result.data,
+                updatedAt: new Date()
             })
-            .eq("id", tenantId);
-
-        if (error) return { success: false, error: "Failed to update team" };
+            .where(eq(tenants.id, tenantId));
 
         revalidatePath(`/communityos/${tenantId}/settings/profile/team`);
         return { success: true, data: null };
     } catch (err) {
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantTeam] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update team members" };
     }
 }
 
@@ -178,27 +236,29 @@ export async function updateTenantTeam(
  */
 export async function updateTenantGallery(
     tenantId: string,
-    gallery: Tenant["gallery"]
+    gallery: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
     if (!auth.success) return { success: false, error: auth.error! };
 
-    try {
-        const supabase = createServiceClient();
-        const { error } = await supabase
-            .from("tenants")
-            .update({
-                gallery_images: gallery,
-                updated_at: new Date().toISOString()
-            })
-            .eq("id", tenantId);
+    const result = gallerySchema.safeParse(gallery);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
 
-        if (error) return { success: false, error: "Failed to update gallery" };
+    try {
+        await db.update(tenants)
+            .set({
+                gallery: result.data,
+                updatedAt: new Date()
+            })
+            .where(eq(tenants.id, tenantId));
 
         revalidatePath(`/communityos/${tenantId}/settings/profile/gallery`);
         return { success: true, data: null };
     } catch (err) {
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantGallery] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update gallery" };
     }
 }
 
@@ -207,27 +267,29 @@ export async function updateTenantGallery(
  */
 export async function updateTenantTestimonials(
     tenantId: string,
-    testimonials: Tenant["testimonials"]
+    testimonials: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
     if (!auth.success) return { success: false, error: auth.error! };
 
-    try {
-        const supabase = createServiceClient();
-        const { error } = await supabase
-            .from("tenants")
-            .update({
-                testimonials: testimonials,
-                updated_at: new Date().toISOString()
-            })
-            .eq("id", tenantId);
+    const result = testimonialSchema.safeParse(testimonials);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
 
-        if (error) return { success: false, error: "Failed to update testimonials" };
+    try {
+        await db.update(tenants)
+            .set({
+                testimonials: result.data,
+                updatedAt: new Date()
+            })
+            .where(eq(tenants.id, tenantId));
 
         revalidatePath(`/communityos/${tenantId}/settings/profile/testimonials`);
         return { success: true, data: null };
     } catch (err) {
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantTestimonials] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update testimonials" };
     }
 }
 
@@ -236,27 +298,29 @@ export async function updateTenantTestimonials(
  */
 export async function updateTenantCTAs(
     tenantId: string,
-    ctas: Tenant["ctas"]
+    ctas: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
     if (!auth.success) return { success: false, error: auth.error! };
 
-    try {
-        const supabase = createServiceClient();
-        const { error } = await supabase
-            .from("tenants")
-            .update({
-                cta_buttons: ctas,
-                updated_at: new Date().toISOString()
-            })
-            .eq("id", tenantId);
+    const result = ctaSchema.safeParse(ctas);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
 
-        if (error) return { success: false, error: "Failed to update call-to-action buttons" };
+    try {
+        await db.update(tenants)
+            .set({
+                ctas: result.data,
+                updatedAt: new Date()
+            })
+            .where(eq(tenants.id, tenantId));
 
         revalidatePath(`/communityos/${tenantId}/settings/profile/cta`);
         return { success: true, data: null };
     } catch (err) {
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantCTAs] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update call-to-action buttons" };
     }
 }
 
@@ -265,26 +329,28 @@ export async function updateTenantCTAs(
  */
 export async function updateTenantEvents(
     tenantId: string,
-    events: Tenant["events"]
+    events: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
     if (!auth.success) return { success: false, error: auth.error! };
 
-    try {
-        const supabase = createServiceClient();
-        const { error } = await supabase
-            .from("tenants")
-            .update({
-                upcoming_events: events,
-                updated_at: new Date().toISOString()
-            })
-            .eq("id", tenantId);
+    const result = eventSchema.safeParse(events);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
 
-        if (error) return { success: false, error: "Failed to update upcoming events" };
+    try {
+        await db.update(tenants)
+            .set({
+                events: result.data,
+                updatedAt: new Date()
+            })
+            .where(eq(tenants.id, tenantId));
 
         revalidatePath(`/communityos/${tenantId}/settings/profile/events`);
         return { success: true, data: null };
     } catch (err) {
-        return { success: false, error: "An unexpected error occurred" };
+        console.error(`[updateTenantEvents] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to update upcoming events" };
     }
 }

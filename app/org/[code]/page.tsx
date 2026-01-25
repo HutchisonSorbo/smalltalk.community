@@ -33,6 +33,54 @@ interface OrgProfilePageProps {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^[\d\s+\-()]+$/;
 
+// --- Interfaces for Type Safety ---
+
+interface OrgStat {
+    value: string | number;
+    label: string;
+    icon?: string;
+}
+
+interface OrgProgram {
+    title: string;
+    description: string;
+    imageUrl?: string;
+    linkUrl?: string;
+}
+
+interface OrgTeamMember {
+    name: string;
+    title: string;
+    bio?: string;
+    imageUrl?: string;
+    linkedinUrl?: string;
+}
+
+interface OrgGalleryImage {
+    url: string;
+    caption?: string;
+}
+
+interface OrgTestimonial {
+    quote: string;
+    author: string;
+    role?: string;
+    imageUrl?: string;
+}
+
+interface OrgCTA {
+    label: string;
+    url: string;
+    style: 'primary' | 'secondary' | 'outline';
+}
+
+interface OrgEvent {
+    title: string;
+    date: string;
+    location: string;
+    url?: string;
+}
+
 /**
  * Safely extract hostname from a URL without throwing
  */
@@ -267,7 +315,7 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
 }
 
 interface OrgImpactProps {
-    stats: any[];
+    stats: OrgStat[];
 }
 
 function OrgImpact({ stats }: OrgImpactProps) {
@@ -280,8 +328,8 @@ function OrgImpact({ stats }: OrgImpactProps) {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {stats.map((stat, idx) => (
                     <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border text-center">
-                        <div className="text-2xl font-bold text-primary mb-1">{stat.value}</div>
-                        <div className="text-xs text-gray-500 uppercase font-medium">{stat.label}</div>
+                        <div className="text-2xl font-bold text-primary mb-1">{stat.value ?? '0'}</div>
+                        <div className="text-xs text-gray-500 uppercase font-medium">{stat.label ?? 'Metric'}</div>
                     </div>
                 ))}
             </div>
@@ -290,7 +338,7 @@ function OrgImpact({ stats }: OrgImpactProps) {
 }
 
 interface OrgProgramsProps {
-    programs: any[];
+    programs: OrgProgram[];
 }
 
 function OrgPrograms({ programs }: OrgProgramsProps) {
@@ -303,8 +351,8 @@ function OrgPrograms({ programs }: OrgProgramsProps) {
             <div className="space-y-4">
                 {programs.map((prog, idx) => (
                     <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-primary">
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-1">{prog.title}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prog.description}</p>
+                        <h3 className="font-bold text-gray-900 dark:text-white mb-1">{prog.title || 'Untitled Program'}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prog.description || ''}</p>
                         {prog.linkUrl && (
                             <a href={safeUrl(prog.linkUrl)} className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
                                 Learn More <ExternalLink className="h-3 w-3" />
@@ -318,7 +366,7 @@ function OrgPrograms({ programs }: OrgProgramsProps) {
 }
 
 interface OrgTeamProps {
-    team: any[];
+    team: OrgTeamMember[];
 }
 
 function OrgTeam({ team }: OrgTeamProps) {
@@ -332,11 +380,11 @@ function OrgTeam({ team }: OrgTeamProps) {
                 {team.map((member, idx) => (
                     <div key={idx} className="flex items-center gap-4 p-4 border rounded-xl">
                         <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {member.name.charAt(0)}
+                            {member.name?.[0] || '?'}
                         </div>
                         <div>
-                            <div className="font-semibold text-gray-900 dark:text-white">{member.name}</div>
-                            <div className="text-sm text-gray-500">{member.title}</div>
+                            <div className="font-semibold text-gray-900 dark:text-white">{member.name || 'Unknown Member'}</div>
+                            <div className="text-sm text-gray-500">{member.title || ''}</div>
                             {member.linkedinUrl && (
                                 <a href={safeUrl(member.linkedinUrl)} className="text-xs text-[#0A66C2] hover:underline" target="_blank" rel="noopener noreferrer">
                                     LinkedIn
@@ -351,7 +399,7 @@ function OrgTeam({ team }: OrgTeamProps) {
 }
 
 interface OrgGalleryProps {
-    gallery: any[];
+    gallery: OrgGalleryImage[];
 }
 
 function OrgGallery({ gallery }: OrgGalleryProps) {
@@ -373,7 +421,7 @@ function OrgGallery({ gallery }: OrgGalleryProps) {
 }
 
 interface OrgTestimonialsProps {
-    testimonials: any[];
+    testimonials: OrgTestimonial[];
 }
 
 function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
@@ -386,8 +434,8 @@ function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {testimonials.map((t, idx) => (
                     <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-gray-800/20 border shadow-sm relative italic">
-                        <div className="text-gray-600 dark:text-gray-300 mb-4">"{t.quote}"</div>
-                        <div className="not-italic font-bold text-sm text-[var(--tenant-primary)]">— {t.author}</div>
+                        <div className="text-gray-600 dark:text-gray-300 mb-4">"{t.quote || ''}"</div>
+                        <div className="not-italic font-bold text-sm text-[var(--tenant-primary)]">— {t.author || 'Anonymous'}</div>
                     </div>
                 ))}
             </div>
@@ -396,7 +444,7 @@ function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
 }
 
 interface OrgCTAsProps {
-    ctas: any[];
+    ctas: OrgCTA[];
 }
 
 function OrgCTAs({ ctas }: OrgCTAsProps) {
