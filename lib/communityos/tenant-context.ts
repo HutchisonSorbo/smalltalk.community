@@ -35,6 +35,7 @@ export type PublicTenant = Pick<
     | "name"
     | "logoUrl"
     | "primaryColor"
+    | "secondaryColor"
     | "description"
     | "website"
     | "heroImageUrl"
@@ -44,6 +45,13 @@ export type PublicTenant = Pick<
     | "contactPhone"
     | "address"
     | "isPublic"
+    | "impactStats"
+    | "programs"
+    | "teamMembers"
+    | "gallery"
+    | "testimonials"
+    | "ctas"
+    | "events"
 >;
 
 /**
@@ -87,6 +95,13 @@ export async function getPublicTenantByCode(code: string): Promise<PublicTenant 
         "contact_phone",
         "address",
         "is_public",
+        "impact_stats",
+        "programs",
+        "team_members",
+        "gallery",
+        "testimonials",
+        "ctas",
+        "events",
     ].join(", ");
 
     try {
@@ -123,17 +138,25 @@ function mapDbRowToPublicTenant(data: any): PublicTenant {
         id: data.id,
         code: data.code,
         name: data.name,
-        logoUrl: data.logo_url,
-        primaryColor: data.primary_color,
-        description: data.description,
-        website: data.website,
-        heroImageUrl: data.hero_image_url,
-        missionStatement: data.mission_statement,
-        socialLinks: (data.social_links ?? {}) as Record<string, string | undefined>,
-        contactEmail: data.contact_email,
-        contactPhone: data.contact_phone,
-        address: data.address,
-        isPublic: data.is_public,
+        logoUrl: data.logo_url ?? null,
+        primaryColor: data.primary_color ?? null,
+        secondaryColor: data.secondary_color ?? null,
+        description: data.description ?? null,
+        website: data.website ?? null,
+        heroImageUrl: data.hero_image_url ?? null,
+        missionStatement: data.mission_statement ?? null,
+        socialLinks: (data.social_links ?? {}) as Record<string, string>,
+        contactEmail: data.contact_email ?? null,
+        contactPhone: data.contact_phone ?? null,
+        address: data.address ?? null,
+        isPublic: !!data.is_public,
+        impactStats: (data.impact_stats ?? []) as any[],
+        programs: (data.programs ?? []) as any[],
+        teamMembers: (data.team_members ?? []) as any[],
+        gallery: (data.gallery ?? []) as any[],
+        testimonials: (data.testimonials ?? []) as any[],
+        ctas: (data.ctas ?? []) as any[],
+        events: (data.events ?? []) as any[],
     };
 }
 

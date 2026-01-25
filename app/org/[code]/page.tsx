@@ -20,6 +20,9 @@ import {
     Phone,
     MapPin,
     ExternalLink,
+    Users,
+    Star,
+    CheckCircle,
 } from "lucide-react";
 
 interface OrgProfilePageProps {
@@ -90,20 +93,18 @@ function sanitizeLogCode(input: unknown): string {
 
 interface OrgHeroProps {
     name: string;
-    primaryColor: string | null | undefined;
-    safeHeroUrl: string | undefined;
-    safeLogoUrl: string | undefined;
+    primaryColor?: string | null;
+    safeHeroUrl: string | null | undefined;
+    safeLogoUrl: string | null | undefined;
 }
 
 /** Hero section with background and logo */
-function OrgHero({ name, primaryColor, safeHeroUrl, safeLogoUrl }: OrgHeroProps) {
-    const bgColor = primaryColor || "#4F46E5";
+function OrgHero({ name, safeHeroUrl, safeLogoUrl }: OrgHeroProps) {
     return (
         <section className="relative">
             <div
-                className="h-48 md:h-64 w-full bg-cover bg-center"
+                className="h-48 md:h-64 w-full bg-cover bg-center bg-[var(--tenant-primary)]"
                 style={{
-                    backgroundColor: bgColor,
                     backgroundImage: safeHeroUrl ? `url(${safeHeroUrl})` : undefined,
                 }}
             />
@@ -119,8 +120,7 @@ function OrgHero({ name, primaryColor, safeHeroUrl, safeLogoUrl }: OrgHeroProps)
                         />
                     ) : (
                         <div
-                            className="h-full w-full flex items-center justify-center text-4xl font-bold text-white"
-                            style={{ backgroundColor: bgColor }}
+                            className="h-full w-full flex items-center justify-center text-4xl font-bold text-white bg-[var(--tenant-primary)]"
                         >
                             {name.charAt(0).toUpperCase()}
                         </div>
@@ -149,7 +149,7 @@ function OrgHeader({ name, safeWebsiteUrl, websiteHostname }: OrgHeaderProps) {
                     href={safeWebsiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-primary hover:underline"
+                    className="inline-flex items-center gap-1 mt-2 text-[var(--tenant-primary)] hover:underline"
                 >
                     <Globe className="h-4 w-4" />
                     <span>{websiteHostname}</span>
@@ -199,7 +199,7 @@ function SocialLink({ platform, url }: { platform: string; url: string }) {
             href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary hover:text-white transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-primary"
+            className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-600 hover:bg-[var(--tenant-primary)] hover:text-white transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-[var(--tenant-primary)]"
             aria-label={`Visit ${platform}`}
         >
             {icons[platform] || <ExternalLink className="h-5 w-5" />}
@@ -240,7 +240,7 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
                 {email && (
                     <a
                         href={`mailto:${email}`}
-                        className="flex items-center gap-2 hover:text-primary"
+                        className="flex items-center gap-2 hover:text-[var(--tenant-primary)]"
                     >
                         <Mail className="h-5 w-5" />
                         <span>{email}</span>
@@ -249,7 +249,7 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
                 {phone && (
                     <a
                         href={`tel:${phone}`}
-                        className="flex items-center gap-2 hover:text-primary"
+                        className="flex items-center gap-2 hover:text-[var(--tenant-primary)]"
                     >
                         <Phone className="h-5 w-5" />
                         <span>{phone}</span>
@@ -261,6 +261,158 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
                         <span>{address}</span>
                     </div>
                 )}
+            </div>
+        </section>
+    );
+}
+
+interface OrgImpactProps {
+    stats: any[];
+}
+
+function OrgImpact({ stats }: OrgImpactProps) {
+    if (!stats || stats.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Our Impact
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {stats.map((stat, idx) => (
+                    <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border text-center">
+                        <div className="text-2xl font-bold text-primary mb-1">{stat.value}</div>
+                        <div className="text-xs text-gray-500 uppercase font-medium">{stat.label}</div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+interface OrgProgramsProps {
+    programs: any[];
+}
+
+function OrgPrograms({ programs }: OrgProgramsProps) {
+    if (!programs || programs.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Programs & Services
+            </h2>
+            <div className="space-y-4">
+                {programs.map((prog, idx) => (
+                    <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-primary">
+                        <h3 className="font-bold text-gray-900 dark:text-white mb-1">{prog.title}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prog.description}</p>
+                        {prog.linkUrl && (
+                            <a href={safeUrl(prog.linkUrl)} className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+                                Learn More <ExternalLink className="h-3 w-3" />
+                            </a>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+interface OrgTeamProps {
+    team: any[];
+}
+
+function OrgTeam({ team }: OrgTeamProps) {
+    if (!team || team.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Leadership & Team
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {team.map((member, idx) => (
+                    <div key={idx} className="flex items-center gap-4 p-4 border rounded-xl">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                            {member.name.charAt(0)}
+                        </div>
+                        <div>
+                            <div className="font-semibold text-gray-900 dark:text-white">{member.name}</div>
+                            <div className="text-sm text-gray-500">{member.title}</div>
+                            {member.linkedinUrl && (
+                                <a href={safeUrl(member.linkedinUrl)} className="text-xs text-[#0A66C2] hover:underline" target="_blank" rel="noopener noreferrer">
+                                    LinkedIn
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+interface OrgGalleryProps {
+    gallery: any[];
+}
+
+function OrgGallery({ gallery }: OrgGalleryProps) {
+    if (!gallery || gallery.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Photo Gallery
+            </h2>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {gallery.map((img, idx) => (
+                    <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border bg-[var(--tenant-primary)]/5">
+                        <img src={safeUrl(img.url)} alt={img.caption || ""} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+interface OrgTestimonialsProps {
+    testimonials: any[];
+}
+
+function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
+    if (!testimonials || testimonials.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider text-center">
+                Testimonials
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {testimonials.map((t, idx) => (
+                    <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-gray-800/20 border shadow-sm relative italic">
+                        <div className="text-gray-600 dark:text-gray-300 mb-4">"{t.quote}"</div>
+                        <div className="not-italic font-bold text-sm text-[var(--tenant-primary)]">— {t.author}</div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+interface OrgCTAsProps {
+    ctas: any[];
+}
+
+function OrgCTAs({ ctas }: OrgCTAsProps) {
+    if (!ctas || ctas.length === 0) return null;
+    return (
+        <section className="mb-12">
+            <div className="flex flex-wrap justify-center gap-4">
+                {ctas.map((cta, idx) => (
+                    <a
+                        key={idx}
+                        href={safeUrl(cta.url)}
+                        className="px-8 py-3 rounded-full font-bold text-white bg-[var(--tenant-primary)] hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                    >
+                        {cta.label}
+                    </a>
+                ))}
             </div>
         </section>
     );
@@ -381,13 +533,6 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
 
     return (
         <div className="max-w-full overflow-hidden">
-            <OrgHero
-                name={tenant.name}
-                primaryColor={tenant.primaryColor}
-                safeHeroUrl={safeHeroUrl}
-                safeLogoUrl={safeLogoUrl}
-            />
-
             <main className="max-w-3xl mx-auto px-4 pt-20 md:pt-24 pb-16">
                 <OrgHeader
                     name={tenant.name}
@@ -395,19 +540,51 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
                     websiteHostname={websiteHostname}
                 />
 
-                {aboutContent && <OrgAbout content={aboutContent} />}
+                <OrgHero
+                    name={tenant.name}
+                    safeHeroUrl={safeHeroUrl}
+                    safeLogoUrl={safeLogoUrl}
+                />
 
-                {hasSocialLinks && socialLinks && (
-                    <OrgSocialLinks socialLinks={socialLinks} />
-                )}
+                <div className="mt-12">
+                    {aboutContent && <OrgAbout content={aboutContent} />}
 
-                {hasContactInfo && (
-                    <OrgContact
-                        email={validEmail}
-                        phone={validPhone}
-                        address={sanitizedAddress}
-                    />
-                )}
+                    {tenant.impactStats && tenant.impactStats.length > 0 && (
+                        <OrgImpact stats={tenant.impactStats} />
+                    )}
+
+                    {tenant.programs && tenant.programs.length > 0 && (
+                        <OrgPrograms programs={tenant.programs} />
+                    )}
+
+                    {tenant.gallery && tenant.gallery.length > 0 && (
+                        <OrgGallery gallery={tenant.gallery} />
+                    )}
+
+                    {tenant.teamMembers && tenant.teamMembers.length > 0 && (
+                        <OrgTeam team={tenant.teamMembers} />
+                    )}
+
+                    {tenant.testimonials && tenant.testimonials.length > 0 && (
+                        <OrgTestimonials testimonials={tenant.testimonials} />
+                    )}
+
+                    {tenant.ctas && tenant.ctas.length > 0 && (
+                        <OrgCTAs ctas={tenant.ctas} />
+                    )}
+
+                    {hasSocialLinks && socialLinks && (
+                        <OrgSocialLinks socialLinks={socialLinks} />
+                    )}
+
+                    {hasContactInfo && (
+                        <OrgContact
+                            email={validEmail}
+                            phone={validPhone}
+                            address={sanitizedAddress}
+                        />
+                    )}
+                </div>
             </main>
 
             <OrgFooter tenantName={tenant.name} />

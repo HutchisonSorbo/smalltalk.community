@@ -20,7 +20,7 @@ vi.mock('@/lib/supabase-server', () => ({
     })),
 }));
 
-import { getPublicTenantByCode } from '@/lib/communityos/tenant-context';
+import { getPublicTenantByCode, type PublicTenant } from '@/lib/communityos/tenant-context';
 import { createClient } from '@/lib/supabase-server';
 
 describe('getPublicTenantByCode', () => {
@@ -43,15 +43,23 @@ describe('getPublicTenantByCode', () => {
             name: 'smalltalk.community Inc',
             isPublic: true,
             description: 'Test description',
-            logoUrl: undefined,
-            primaryColor: undefined,
-            website: undefined,
-            heroImageUrl: undefined,
-            missionStatement: undefined,
+            logoUrl: null,
+            primaryColor: null,
+            secondaryColor: null,
+            website: null,
+            heroImageUrl: null,
+            missionStatement: null,
             socialLinks: {},
-            contactEmail: undefined,
-            contactPhone: undefined,
-            address: undefined,
+            contactEmail: null,
+            contactPhone: null,
+            address: null,
+            impactStats: [],
+            programs: [],
+            teamMembers: [],
+            gallery: [],
+            testimonials: [],
+            ctas: [],
+            events: [],
         };
 
         // Setup mock chain
