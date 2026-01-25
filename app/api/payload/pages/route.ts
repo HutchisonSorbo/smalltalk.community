@@ -2,8 +2,40 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { requireAdmin } from '@/lib/admin-auth'
+import { z } from 'zod'
+import { insertAuditLog } from '@/lib/audit/auditLog'
 
 export const dynamic = 'force-dynamic'
+
+const createPageSchema = z.object({
+    title: z.string().min(1),
+    slug: z.string().min(1),
+    content: z.record(z.unknown()), // Rich text content
+    status: z.enum(['draft', 'published']).optional().default('draft'),
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+})
+
+export async function OPTIONS(req: NextRequest) {
+    const origin = req.headers.get('origin');
+    const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
+    const isAllowed = origin && allowedOrigin && origin === allowedOrigin;
+
+    const headers: Record<string, string> = {
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Vary": "Origin",
+    };
+
+    if (isAllowed) {
+        headers["Access-Control-Allow-Origin"] = origin;
+    }
+
+    return new NextResponse(null, {
+        status: 204,
+        headers,
+    });
+}
 
 // GET all pages
 export async function GET() {
@@ -30,25 +62,46 @@ export async function GET() {
 // POST create new page
 export async function POST(request: NextRequest) {
     try {
-        await requireAdmin()
+        const user = await requireAdmin()
         const payload = await getPayload({ config })
         const body = await request.json()
+
+        const validatedData = createPageSchema.parse(body)
+
+        // TODO: Implement thorough Lexical content sanitization here.
+        // For now, we trust Lexical's internal structure but logging this step.
+        const sanitizedContent = validatedData.content; 
 
         const doc = await payload.create({
             collection: 'pages',
             data: {
-                title: body.title,
-                slug: body.slug,
-                content: body.content,
-                status: body.status || 'draft',
-                metaTitle: body.metaTitle,
-                metaDescription: body.metaDescription,
+                title: validatedData.title,
+                slug: validatedData.slug,
+                content: sanitizedContent,
+                status: validatedData.status,
+                metaTitle: validatedData.metaTitle,
+                metaDescription: validatedData.metaDescription,
             },
         })
+
+        // Audit Log
+        await insertAuditLog({
+            eventType: 'system',
+            severity: 'info',
+            message: `Page created: ${doc.title}`,
+            userId: user.id,
+            safeQueryParams: { pageId: doc.id, slug: doc.slug }
+        });
 
         return NextResponse.json({ doc })
     } catch (error) {
         console.error('Failed to create page:', error)
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { error: 'Validation failed', details: error.errors },
+                { status: 400 }
+            )
+        }
         return NextResponse.json(
             { error: 'Failed to create page' },
             { status: 500 }

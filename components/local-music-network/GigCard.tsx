@@ -1,21 +1,30 @@
 import Link from "next/link";
+import Image from "next/image";
 import { format } from "date-fns";
 import { MapPin, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Gig } from "@shared/schema";
+import { safeUrl } from "@/lib/utils";
 
 import { ReportDialog } from "@/components/local-music-network/ReportDialog";
 
 export function GigCard({ gig }: { gig: Gig }) {
     const date = new Date(gig.date);
+    const sanitizedImageUrl = safeUrl(gig.imageUrl);
+
     return (
         <div className="flex flex-col h-full border rounded-lg bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow overflow-hidden relative group">
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <ReportDialog targetType="gig" targetId={gig.id} />
             </div>
-            {gig.imageUrl && (
-                <Link href={`/gigs/${gig.id}`} className="block h-48 w-full bg-muted overflow-hidden">
-                    <img src={gig.imageUrl} alt={gig.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+            {sanitizedImageUrl && (
+                <Link href={`/gigs/${gig.id}`} className="block h-48 w-full bg-muted overflow-hidden relative">
+                    <Image 
+                        src={sanitizedImageUrl} 
+                        alt={gig.title} 
+                        fill
+                        className="object-cover hover:scale-105 transition-transform duration-500" 
+                    />
                 </Link>
             )}
             <div className="p-6 flex-1 flex flex-col">

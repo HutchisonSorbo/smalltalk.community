@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import Link from 'next/link'
+import Image from 'next/image'
 // Define local Media type since generated types might be missing in some environments
 export interface Media {
     id: string
@@ -123,10 +124,12 @@ export default async function MediaLibraryPage() {
                                         className="group relative aspect-square rounded-lg border bg-muted overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary"
                                     >
                                         {isImage && sanitizedUrl ? (
-                                            <img
+                                            <Image
                                                 src={sanitizedUrl}
                                                 alt={item.alt || ''}
-                                                className="w-full h-full object-cover"
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 16vw"
+                                                className="object-cover"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import {
     Table,
     TableBody,
@@ -113,10 +114,12 @@ export default async function AppsAdminPage() {
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 {validIconUrl ? (
-                                                    <img
+                                                    <Image
                                                         src={validIconUrl}
                                                         alt={app.name ? `${app.name} icon` : "App icon"}
-                                                        className="h-8 w-8 rounded object-cover"
+                                                        width={32}
+                                                        height={32}
+                                                        className="rounded object-cover"
                                                     />
                                                 ) : (
                                                     <div className="h-8 w-8 rounded bg-muted flex items-center justify-center text-xs font-medium">
