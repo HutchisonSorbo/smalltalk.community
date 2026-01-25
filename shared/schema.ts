@@ -1509,6 +1509,46 @@ export const tenants = pgTable("tenants", {
   contactPhone: varchar("contact_phone", { length: 50 }),
   address: text("address"),
   isPublic: boolean("is_public").default(false),
+  // Enhanced public profile fields
+  impactStats: jsonb("impact_stats").$type<{
+    label: string;
+    value: string;
+    icon: string;
+  }[]>().default([]),
+  programs: jsonb("programs").$type<{
+    title: string;
+    description: string;
+    imageUrl?: string;
+    linkUrl?: string;
+  }[]>().default([]),
+  teamMembers: jsonb("team_members").$type<{
+    name: string;
+    title: string;
+    bio?: string;
+    imageUrl?: string;
+    linkedinUrl?: string;
+  }[]>().default([]),
+  gallery: jsonb("gallery").$type<{
+    url: string;
+    caption?: string;
+  }[]>().default([]),
+  testimonials: jsonb("testimonials").$type<{
+    quote: string;
+    author: string;
+    role?: string;
+    imageUrl?: string;
+  }[]>().default([]),
+  ctas: jsonb("ctas").$type<{
+    label: string;
+    url: string;
+    style: 'primary' | 'secondary' | 'outline';
+  }[]>().default([]),
+  events: jsonb("events").$type<{
+    title: string;
+    date: string;
+    location: string;
+    url?: string;
+  }[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

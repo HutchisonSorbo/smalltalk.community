@@ -35,6 +35,9 @@ export default defineConfig({
     "sessions",
     "user_*",
     "apps",
-    "onboarding*"
+    "onboarding*",
+    "tenants",
+    "tenant_*",
+    "admin_*"
   ],
 });
