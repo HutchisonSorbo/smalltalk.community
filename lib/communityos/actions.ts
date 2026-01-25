@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { tenants, type Tenant } from "@/shared/schema";
+import { tenants } from "@/shared/schema";
 import { eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase-server";
 import { isTenantAdmin } from "@/lib/communityos/tenant-context";
@@ -65,12 +65,26 @@ const eventSchema = z.array(z.object({
 
 const colorRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
+const socialLinkValue = z.string().url().optional().nullable().or(z.literal(""));
+
+const socialLinksSchema = z.object({
+    facebook: socialLinkValue,
+    instagram: socialLinkValue,
+    twitter: socialLinkValue,
+    youtube: socialLinkValue,
+    soundcloud: socialLinkValue,
+    bandcamp: socialLinkValue,
+    linkedin: socialLinkValue,
+    tiktok: socialLinkValue,
+    spotify: socialLinkValue,
+}).strict();
+
 const profileSchema = z.object({
     name: z.string().min(1).max(255).optional(),
     description: z.string().max(2000).optional().nullable(),
     missionStatement: z.string().max(2000).optional().nullable(),
-    logoUrl: z.string().url().optional().nullable().or(z.literal("")),
-    heroImageUrl: z.string().url().optional().nullable().or(z.literal("")),
+    logoUrl: z.string().max(1000).optional().nullable().or(z.literal("")),
+    heroImageUrl: z.string().max(1000).optional().nullable().or(z.literal("")),
     primaryColor: z.string().regex(colorRegex, "Invalid color format").optional().nullable(),
     secondaryColor: z.string().regex(colorRegex, "Invalid color format").optional().nullable(),
     website: z.string().url().optional().nullable().or(z.literal("")),
@@ -78,7 +92,7 @@ const profileSchema = z.object({
     contactPhone: z.string().regex(/^[\d\s+\-()]+$/, "Invalid phone format").optional().nullable().or(z.literal("")),
     address: z.string().max(500).optional().nullable(),
     isPublic: z.boolean().optional(),
-    socialLinks: z.record(z.string().nullable()).optional(),
+    socialLinks: socialLinksSchema.optional(),
 });
 
 /**

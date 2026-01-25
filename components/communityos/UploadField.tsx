@@ -18,12 +18,13 @@ interface UploadFieldProps {
     className?: string;
 }
 
-export function UploadField({ tenantId, label, type, initialUrl, recommendation, className }: UploadFieldProps) {
+/** Hook to encapsulate upload logic and state */
+function useUploadField(tenantId: string, label: string, type: "logo" | "hero", initialUrl?: string | null) {
     const [currentUrl, setCurrentUrl] = useState(initialUrl);
     const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
 
-    const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -33,7 +34,7 @@ export function UploadField({ tenantId, label, type, initialUrl, recommendation,
             formData.append("file", file);
 
             const res = await uploadTenantImage(tenantId, formData, type);
-            if (res.success && res.url) {
+            if (res.success) {
                 const updateRes = await updateTenantProfile(tenantId, {
                     [type === "logo" ? "logoUrl" : "heroImageUrl"]: res.url
                 });
@@ -41,7 +42,7 @@ export function UploadField({ tenantId, label, type, initialUrl, recommendation,
                 if (updateRes.success) {
                     setCurrentUrl(res.url);
                     toast.success(`${label} updated`);
-                    router.refresh(); // Refresh server state without full page reload
+                    router.refresh();
                 } else {
                     toast.error(updateRes.error || `Failed to save ${type} reference`);
                 }
@@ -56,9 +57,16 @@ export function UploadField({ tenantId, label, type, initialUrl, recommendation,
         }
     };
 
+    return { currentUrl, isUploading, handleFileChange };
+}
+
+export function UploadField({ tenantId, label, type, initialUrl, recommendation, className }: UploadFieldProps) {
+    const { currentUrl, isUploading, handleFileChange } = useUploadField(tenantId, label, type, initialUrl);
+    const fileInputId = `upload-${type}-${tenantId}`;
+
     return (
         <div className={`space-y-4 ${className}`}>
-            <FormLabel>{label}</FormLabel>
+            <FormLabel htmlFor={fileInputId}>{label}</FormLabel>
             <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-xl border-gray-200 dark:border-gray-800">
                 {currentUrl ? (
                     <img
@@ -73,9 +81,10 @@ export function UploadField({ tenantId, label, type, initialUrl, recommendation,
                 )}
                 <div className="flex flex-col w-full gap-2">
                     <Input
+                        id={fileInputId}
                         type="file"
                         accept="image/*"
-                        onChange={onChange}
+                        onChange={handleFileChange}
                         disabled={isUploading}
                     />
                     <p className="text-xs text-gray-500">{recommendation}</p>

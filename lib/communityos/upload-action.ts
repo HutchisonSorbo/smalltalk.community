@@ -1,7 +1,5 @@
 "use server";
 
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "path";
 import { createClient } from "@/lib/supabase-server";
 import { isTenantAdmin } from "@/lib/communityos/tenant-context";
 
@@ -16,7 +14,7 @@ function isValidImageMagicBytes(buffer: Buffer): boolean {
     if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return true;
 
     // JPEG: FF D8 FF
-    if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return true;
+    if (buffer[0] === 0x0FF && buffer[1] === 0x0D8 && buffer[2] === 0x0FF) return true;
 
     // GIF: 47 49 46 38
     if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) return true;
@@ -30,13 +28,13 @@ function isValidImageMagicBytes(buffer: Buffer): boolean {
 }
 
 /**
- * Uploads an image (logo or hero) for a tenant, validating the user's admin status and the file integrity.
+ * Uploads an image (logo or hero) for a tenant to Supabase Storage, 
+ * validating the user's admin status and the file integrity.
  * 
  * @param tenantId - The unique identifier of the tenant. Must be an alphanumeric string.
  * @param formData - The form data containing the file to upload (keyed as "file").
  * @param type - The purpose of the image: "logo" for branding or "hero" for banners.
- * @returns An object indicating success, with the public URL on success or an error message on failure.
- * @throws Never throws directly; captures and returns internal errors as { success: false, error: string }.
+ * @returns An object indicating success, with the durable public URL on success or an error message on failure.
  */
 export async function uploadTenantImage(
     tenantId: string,
@@ -50,7 +48,8 @@ export async function uploadTenantImage(
 
     // 2. Auth & Admin Check
     try {
-        const supabase = await createClient();
+        // Use service role for storage operations to ensure permissions
+        const supabase = await createClient(true);
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Authentication required" };
 
@@ -86,16 +85,30 @@ export async function uploadTenantImage(
             return { success: false, error: "Security check failed: file is not a valid image" };
         }
 
-        // 5. Save File
-        const uploadDir = join(process.cwd(), "public", "uploads", "tenants", tenantId);
-        await mkdir(uploadDir, { recursive: true });
-
+        // 5. Save File to Supabase Storage (Bucket: 'uploads')
+        // Using 'uploads' bucket as defined in scripts/check_storage.mjs
         const filename = `${type}-${Date.now()}.${extension}`;
-        const filepath = join(uploadDir, filename);
+        const storagePath = `tenants/${tenantId}/${filename}`;
 
-        await writeFile(filepath, buffer);
+        const { error: uploadError } = await supabase.storage
+            .from('uploads')
+            .upload(storagePath, buffer, {
+                contentType: file.type,
+                cacheControl: '3600',
+                upsert: true
+            });
 
-        return { success: true, url: `/uploads/tenants/${tenantId}/${filename}` };
+        if (uploadError) {
+            console.error(`[uploadTenantImage] Supabase storage error:`, uploadError);
+            return { success: false, error: "Failed to upload image to cloud storage" };
+        }
+
+        // 6. Get Public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('uploads')
+            .getPublicUrl(storagePath);
+
+        return { success: true, url: publicUrl };
 
     } catch (err) {
         console.error(`[uploadTenantImage] failed for tenant ${tenantId}:`, err);

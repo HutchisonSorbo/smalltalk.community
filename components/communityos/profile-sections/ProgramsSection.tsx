@@ -10,8 +10,15 @@ import { toast } from "sonner";
 import { updateTenantPrograms } from "@/lib/communityos/actions";
 import { Tenant } from "@/shared/schema";
 
+interface Program {
+    title: string;
+    description: string;
+    imageUrl?: string;
+    linkUrl?: string;
+}
+
 export function ProgramsSection({ tenant }: { tenant: Tenant }) {
-    const [programs, setPrograms] = useState(tenant.programs || []);
+    const [programs, setPrograms] = useState<Program[]>(tenant.programs as Program[] || []);
     const [isSaving, setIsSaving] = useState(false);
 
     async function handleSave() {
@@ -30,9 +37,9 @@ export function ProgramsSection({ tenant }: { tenant: Tenant }) {
 
     const addProgram = () => setPrograms([...programs, { title: "", description: "" }]);
     const removeProgram = (index: number) => setPrograms(programs.filter((_, i) => i !== index));
-    const updateProgram = (index: number, key: string, val: string) => {
+    const updateProgram = (index: number, key: keyof Program, val: string) => {
         const newItems = [...programs];
-        (newItems[index] as any)[key] = val;
+        newItems[index] = { ...newItems[index], [key]: val };
         setPrograms(newItems);
     };
 

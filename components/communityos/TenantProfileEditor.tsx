@@ -354,7 +354,9 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
                                                 <FormItem>
                                                     <div className="flex items-center gap-2">
                                                         <Facebook className="h-4 w-4 text-[#1877F2]" />
-                                                        <FormControl><Input {...field} placeholder="Facebook URL" /></FormControl>
+                                                        <FormControl>
+                                                            <Input {...field} aria-label="Facebook URL" placeholder="Facebook URL" />
+                                                        </FormControl>
                                                     </div>
                                                 </FormItem>
                                             )}
@@ -366,7 +368,9 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
                                                 <FormItem>
                                                     <div className="flex items-center gap-2">
                                                         <Instagram className="h-4 w-4 text-[#E4405F]" />
-                                                        <FormControl><Input {...field} placeholder="Instagram URL" /></FormControl>
+                                                        <FormControl>
+                                                            <Input {...field} aria-label="Instagram URL" placeholder="Instagram URL" />
+                                                        </FormControl>
                                                     </div>
                                                 </FormItem>
                                             )}
@@ -378,7 +382,9 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
                                                 <FormItem>
                                                     <div className="flex items-center gap-2">
                                                         <Twitter className="h-4 w-4 text-[#1DA1F2]" />
-                                                        <FormControl><Input {...field} placeholder="Twitter URL" /></FormControl>
+                                                        <FormControl>
+                                                            <Input {...field} aria-label="Twitter URL" placeholder="Twitter URL" />
+                                                        </FormControl>
                                                     </div>
                                                 </FormItem>
                                             )}
@@ -390,7 +396,9 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
                                                 <FormItem>
                                                     <div className="flex items-center gap-2">
                                                         <Linkedin className="h-4 w-4 text-[#0A66C2]" />
-                                                        <FormControl><Input {...field} placeholder="LinkedIn URL" /></FormControl>
+                                                        <FormControl>
+                                                            <Input {...field} aria-label="LinkedIn URL" placeholder="LinkedIn URL" />
+                                                        </FormControl>
                                                     </div>
                                                 </FormItem>
                                             )}
@@ -402,7 +410,9 @@ export function TenantProfileEditor({ tenant }: TenantProfileEditorProps) {
                                                 <FormItem>
                                                     <div className="flex items-center gap-2">
                                                         <Youtube className="h-4 w-4 text-[#FF0000]" />
-                                                        <FormControl><Input {...field} placeholder="YouTube URL" /></FormControl>
+                                                        <FormControl>
+                                                            <Input {...field} aria-label="YouTube URL" placeholder="YouTube URL" />
+                                                        </FormControl>
                                                     </div>
                                                 </FormItem>
                                             )}

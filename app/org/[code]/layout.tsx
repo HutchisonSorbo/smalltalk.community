@@ -35,7 +35,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
 
     return (
         <div
-            className="min-h-screen bg-gray-50 dark:bg-gray-900"
+            className="min-h-screen max-w-full bg-gray-50 dark:bg-gray-900"
             style={{
                 "--tenant-primary": primaryColor,
                 "--tenant-secondary": secondaryColor,

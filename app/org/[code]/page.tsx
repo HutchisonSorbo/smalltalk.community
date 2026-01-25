@@ -349,17 +349,20 @@ function OrgPrograms({ programs }: OrgProgramsProps) {
                 Programs & Services
             </h2>
             <div className="space-y-4">
-                {programs.map((prog, idx) => (
-                    <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-primary">
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-1">{prog.title || 'Untitled Program'}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prog.description || ''}</p>
-                        {prog.linkUrl && (
-                            <a href={safeUrl(prog.linkUrl)} className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
-                                Learn More <ExternalLink className="h-3 w-3" />
-                            </a>
-                        )}
-                    </div>
-                ))}
+                {programs.map((prog, idx) => {
+                    const safeLink = prog.linkUrl ? safeUrl(prog.linkUrl) : undefined;
+                    return (
+                        <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-primary">
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-1">{prog.title || 'Untitled Program'}</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prog.description || ''}</p>
+                            {safeLink && (
+                                <a href={safeLink} className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+                                    Learn More <ExternalLink className="h-3 w-3" />
+                                </a>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </section>
     );
@@ -377,22 +380,25 @@ function OrgTeam({ team }: OrgTeamProps) {
                 Leadership & Team
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {team.map((member, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-4 border rounded-xl">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {member.name?.[0] || '?'}
+                {team.map((member, idx) => {
+                    const safeLinkedin = member.linkedinUrl ? safeUrl(member.linkedinUrl) : undefined;
+                    return (
+                        <div key={idx} className="flex items-center gap-4 p-4 border rounded-xl">
+                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                {member.name?.[0] || '?'}
+                            </div>
+                            <div>
+                                <div className="font-semibold text-gray-900 dark:text-white">{member.name || 'Unknown Member'}</div>
+                                <div className="text-sm text-gray-500">{member.title || ''}</div>
+                                {safeLinkedin && (
+                                    <a href={safeLinkedin} className="text-xs text-[#0A66C2] hover:underline" target="_blank" rel="noopener noreferrer">
+                                        LinkedIn
+                                    </a>
+                                )}
+                            </div>
                         </div>
-                        <div>
-                            <div className="font-semibold text-gray-900 dark:text-white">{member.name || 'Unknown Member'}</div>
-                            <div className="text-sm text-gray-500">{member.title || ''}</div>
-                            {member.linkedinUrl && (
-                                <a href={safeUrl(member.linkedinUrl)} className="text-xs text-[#0A66C2] hover:underline" target="_blank" rel="noopener noreferrer">
-                                    LinkedIn
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </section>
     );
@@ -410,11 +416,15 @@ function OrgGallery({ gallery }: OrgGalleryProps) {
                 Photo Gallery
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                {gallery.map((img, idx) => (
-                    <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border bg-[var(--tenant-primary)]/5">
-                        <img src={safeUrl(img.url)} alt={img.caption || ""} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
-                    </div>
-                ))}
+                {gallery.map((img, idx) => {
+                    const safeImg = safeUrl(img.url);
+                    if (!safeImg) return null;
+                    return (
+                        <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border bg-[var(--tenant-primary)]/5">
+                            <img src={safeImg} alt={img.caption || ""} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
+                        </div>
+                    );
+                })}
             </div>
         </section>
     );
@@ -434,7 +444,7 @@ function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {testimonials.map((t, idx) => (
                     <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-gray-800/20 border shadow-sm relative italic">
-                        <div className="text-gray-600 dark:text-gray-300 mb-4">"{t.quote || ''}"</div>
+                        <div className="text-gray-600 dark:text-gray-300 mb-4">&quot;{t.quote || ''}&quot;</div>
                         <div className="not-italic font-bold text-sm text-[var(--tenant-primary)]">— {t.author || 'Anonymous'}</div>
                     </div>
                 ))}
@@ -452,15 +462,19 @@ function OrgCTAs({ ctas }: OrgCTAsProps) {
     return (
         <section className="mb-12">
             <div className="flex flex-wrap justify-center gap-4">
-                {ctas.map((cta, idx) => (
-                    <a
-                        key={idx}
-                        href={safeUrl(cta.url)}
-                        className="px-8 py-3 rounded-full font-bold text-white bg-[var(--tenant-primary)] hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                    >
-                        {cta.label}
-                    </a>
-                ))}
+                {ctas.map((cta, idx) => {
+                    const safeCtaUrl = safeUrl(cta.url);
+                    if (!safeCtaUrl) return null;
+                    return (
+                        <a
+                            key={idx}
+                            href={safeCtaUrl}
+                            className="px-8 py-3 rounded-full font-bold text-white bg-[var(--tenant-primary)] hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                        >
+                            {cta.label}
+                        </a>
+                    );
+                })}
             </div>
         </section>
     );
