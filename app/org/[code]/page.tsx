@@ -375,8 +375,8 @@ function OrgPrograms({ programs }: OrgProgramsProps) {
                     const safeLink = prog.linkUrl ? safeUrl(prog.linkUrl) : undefined;
                     return (
                         <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-[var(--tenant-primary)]">
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-1">{prog.title || 'Untitled Program'}</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{prog.description || ''}</p>
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{prog.title || 'Untitled Program'}</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-3">{prog.description || ''}</p>
                             {safeLink && (
                                 <a href={safeLink} className="text-xs font-semibold text-[var(--tenant-primary)] hover:underline flex items-center gap-1">
                                     Learn More <ExternalLink className="h-3 w-3" />
@@ -416,8 +416,8 @@ function OrgTeam({ team }: OrgTeamProps) {
                                 <span>{member.name?.[0] || '?'}</span>
                             </div>
                             <div>
-                                <div className="font-semibold text-gray-900 dark:text-white">{member.name || 'Unknown Member'}</div>
-                                <div className="text-sm text-gray-500">{member.title || ''}</div>
+                                <div className="font-semibold text-gray-900 dark:text-white truncate">{member.name || 'Unknown Member'}</div>
+                                <div className="text-sm text-gray-500 truncate">{member.title || ''}</div>
                                 {safeLinkedin && (
                                     <a href={safeLinkedin} className="text-xs text-[#0A66C2] hover:underline" target="_blank" rel="noopener noreferrer">
                                         LinkedIn
@@ -481,7 +481,7 @@ function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
                     const safeAvatar = t.imageUrl ? safeUrl(t.imageUrl) : undefined;
                     return (
                         <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-gray-800/20 border shadow-sm relative italic flex flex-col">
-                            <div className="text-gray-600 dark:text-gray-300 mb-6 flex-grow">&quot;{t.quote || ''}&quot;</div>
+                            <div className="text-gray-600 dark:text-gray-300 mb-6 flex-grow line-clamp-4">&quot;{t.quote || ''}&quot;</div>
                             <div className="flex items-center gap-3">
                                 {safeAvatar ? (
                                     <div className="h-10 w-10 rounded-full overflow-hidden border">
@@ -498,9 +498,9 @@ function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
                                         {t.author?.[0] || '?'}
                                     </div>
                                 )}
-                                <div className="not-italic">
-                                    <div className="font-bold text-sm text-[var(--tenant-primary)]">— {t.author || 'Anonymous'}</div>
-                                    {t.role && <div className="text-xs text-gray-500 dark:text-gray-400">{t.role}</div>}
+                                <div className="not-italic overflow-hidden">
+                                    <div className="font-bold text-sm text-[var(--tenant-primary)] truncate">— {t.author || 'Anonymous'}</div>
+                                    {t.role && <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{t.role}</div>}
                                 </div>
                             </div>
                         </div>
