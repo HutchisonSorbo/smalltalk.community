@@ -36,9 +36,9 @@ const PHONE_REGEX = /^[\d\s+\-()]+$/;
 // --- Interfaces for Type Safety ---
 
 interface OrgStat {
-    value: string | number;
+    value: string;
     label: string;
-    icon?: string;
+    icon: string;
 }
 
 interface OrgProgram {
@@ -147,13 +147,16 @@ interface OrgHeroProps {
 }
 
 /** Hero section with background and logo */
-function OrgHero({ name, safeHeroUrl, safeLogoUrl }: OrgHeroProps) {
+function OrgHero({ name, primaryColor, safeHeroUrl, safeLogoUrl }: OrgHeroProps) {
+    const bgColor = primaryColor || 'var(--tenant-primary)';
+
     return (
         <section className="relative">
             <div
-                className="h-48 md:h-64 w-full bg-cover bg-center bg-[var(--tenant-primary)]"
+                className="h-48 md:h-64 w-full bg-cover bg-center"
                 style={{
                     backgroundImage: safeHeroUrl ? `url(${safeHeroUrl})` : undefined,
+                    backgroundColor: !safeHeroUrl ? bgColor : undefined,
                 }}
             />
             <div className="absolute left-1/2 -translate-x-1/2 -bottom-16 md:-bottom-20">
@@ -168,7 +171,8 @@ function OrgHero({ name, safeHeroUrl, safeLogoUrl }: OrgHeroProps) {
                         />
                     ) : (
                         <div
-                            className="h-full w-full flex items-center justify-center text-4xl font-bold text-white bg-[var(--tenant-primary)]"
+                            className="h-full w-full flex items-center justify-center text-4xl font-bold text-white shadow-inner"
+                            style={{ backgroundColor: bgColor }}
                         >
                             {name.charAt(0).toUpperCase()}
                         </div>
@@ -326,12 +330,23 @@ function OrgImpact({ stats }: OrgImpactProps) {
                 Our Impact
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {stats.map((stat, idx) => (
-                    <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border text-center">
-                        <div className="text-2xl font-bold text-primary mb-1">{stat.value ?? '0'}</div>
-                        <div className="text-xs text-gray-500 uppercase font-medium">{stat.label ?? 'Metric'}</div>
-                    </div>
-                ))}
+                {stats.map((stat, idx) => {
+                    const IconComponent = {
+                        users: Users,
+                        star: Star,
+                        check: CheckCircle,
+                    }[stat.icon.toLowerCase()] || Star;
+
+                    return (
+                        <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border text-center flex flex-col items-center justify-center gap-2">
+                            <div className="p-3 rounded-full bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)] mb-1">
+                                <IconComponent className="h-6 w-6" />
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white leading-none">{stat.value ?? '0'}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{stat.label ?? 'Metric'}</div>
+                        </div>
+                    );
+                })}
             </div>
         </section>
     );
@@ -446,12 +461,82 @@ function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
                 Testimonials
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {testimonials.map((t, idx) => (
-                    <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-gray-800/20 border shadow-sm relative italic">
-                        <div className="text-gray-600 dark:text-gray-300 mb-4">&quot;{t.quote || ''}&quot;</div>
-                        <div className="not-italic font-bold text-sm text-[var(--tenant-primary)]">— {t.author || 'Anonymous'}</div>
-                    </div>
-                ))}
+                {testimonials.map((t, idx) => {
+                    const safeAvatar = t.imageUrl ? safeUrl(t.imageUrl) : undefined;
+                    return (
+                        <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-gray-800/20 border shadow-sm relative italic flex flex-col">
+                            <div className="text-gray-600 dark:text-gray-300 mb-6 flex-grow">&quot;{t.quote || ''}&quot;</div>
+                            <div className="flex items-center gap-3">
+                                {safeAvatar ? (
+                                    <div className="h-10 w-10 rounded-full overflow-hidden border">
+                                        <Image
+                                            src={safeAvatar}
+                                            alt={t.author || 'Contributor'}
+                                            width={40}
+                                            height={40}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 not-italic font-bold">
+                                        {t.author?.[0] || '?'}
+                                    </div>
+                                )}
+                                <div className="not-italic">
+                                    <div className="font-bold text-sm text-[var(--tenant-primary)]">— {t.author || 'Anonymous'}</div>
+                                    {t.role && <div className="text-xs text-gray-500 dark:text-gray-400">{t.role}</div>}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
+interface OrgEventsProps {
+    events: OrgEvent[];
+}
+
+function OrgEvents({ events }: OrgEventsProps) {
+    if (!events || events.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Upcoming Events
+            </h2>
+            <div className="space-y-4">
+                {events.map((event, idx) => {
+                    const safeEventUrl = event.url ? safeUrl(event.url) : undefined;
+                    return (
+                        <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm gap-4">
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white mb-1">{event.title || 'Untitled Event'}</h3>
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                                    <div className="flex items-center gap-1">
+                                        <Star className="h-3 w-3" />
+                                        <span>{event.date}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        <span>{event.location}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {safeEventUrl && (
+                                <a
+                                    href={safeEventUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-[var(--tenant-primary)] hover:text-white transition-colors text-center"
+                                >
+                                    Event Details
+                                </a>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </section>
     );
@@ -622,6 +707,7 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
 
                 <OrgHero
                     name={tenant.name}
+                    primaryColor={tenant.primaryColor}
                     safeHeroUrl={safeHeroUrl}
                     safeLogoUrl={safeLogoUrl}
                 />
@@ -643,6 +729,10 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
 
                     {tenant.teamMembers && tenant.teamMembers.length > 0 && (
                         <OrgTeam team={tenant.teamMembers} />
+                    )}
+
+                    {tenant.events && tenant.events.length > 0 && (
+                        <OrgEvents events={tenant.events} />
                     )}
 
                     {tenant.testimonials && tenant.testimonials.length > 0 && (

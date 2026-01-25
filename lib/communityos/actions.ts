@@ -21,14 +21,14 @@ const impactStatSchema = z.array(z.object({
     label: z.string().min(1, "Label is required").max(100),
     value: z.string().min(1, "Value is required").max(50),
     icon: z.string().min(1, "Icon is required").max(50),
-}));
+})).max(50);
 
 const programSchema = z.array(z.object({
     title: z.string().min(1, "Title is required").max(100),
     description: z.string().min(1, "Description is required").max(1000),
     imageUrl: z.string().url().optional().or(z.literal("")),
     linkUrl: z.string().url().optional().or(z.literal("")),
-}));
+})).max(20);
 
 const teamMemberSchema = z.array(z.object({
     name: z.string().min(1, "Name is required").max(100),
@@ -36,32 +36,32 @@ const teamMemberSchema = z.array(z.object({
     bio: z.string().max(1000).optional().or(z.literal("")),
     imageUrl: z.string().url().optional().or(z.literal("")),
     linkedinUrl: z.string().url().optional().or(z.literal("")),
-}));
+})).max(50);
 
 const gallerySchema = z.array(z.object({
     url: z.string().url("Valid image URL required"),
     caption: z.string().max(255).optional().or(z.literal("")),
-}));
+})).max(100);
 
 const testimonialSchema = z.array(z.object({
     quote: z.string().min(1, "Quote is required").max(1000),
     author: z.string().min(1, "Author is required").max(100),
     role: z.string().max(100).optional().or(z.literal("")),
     imageUrl: z.string().url().optional().or(z.literal("")),
-}));
+})).max(50);
 
 const ctaSchema = z.array(z.object({
     label: z.string().min(1, "Label is required").max(50),
     url: z.string().url("Valid URL required"),
     style: z.enum(['primary', 'secondary', 'outline']),
-}));
+})).max(10);
 
 const eventSchema = z.array(z.object({
     title: z.string().min(1, "Title is required").max(100),
     date: z.string().min(1, "Date is required"),
     location: z.string().min(1, "Location is required").max(255),
     url: z.string().url().optional().or(z.literal("")),
-}));
+})).max(100);
 
 const colorRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
@@ -72,11 +72,7 @@ const socialLinksSchema = z.object({
     instagram: socialLinkValue,
     twitter: socialLinkValue,
     youtube: socialLinkValue,
-    soundcloud: socialLinkValue,
-    bandcamp: socialLinkValue,
     linkedin: socialLinkValue,
-    tiktok: socialLinkValue,
-    spotify: socialLinkValue,
 }).strict();
 
 const profileSchema = z.object({
@@ -134,12 +130,20 @@ export async function updateTenantProfile(
         return { success: false, error: "Validation failed: " + result.error.errors[0].message };
     }
 
-    const validatedData = result.data;
+    const { socialLinks, ...otherData } = result.data;
+    const whitelistedSocialLinks = socialLinks ? {
+        facebook: socialLinks.facebook,
+        instagram: socialLinks.instagram,
+        twitter: socialLinks.twitter,
+        youtube: socialLinks.youtube,
+        linkedin: socialLinks.linkedin,
+    } : undefined;
 
     try {
         await db.update(tenants)
             .set({
-                ...validatedData,
+                ...otherData,
+                ...(whitelistedSocialLinks ? { socialLinks: whitelistedSocialLinks } : {}),
                 updatedAt: new Date(),
             })
             .where(eq(tenants.id, tenantId));
@@ -253,7 +257,7 @@ export async function updateTenantGallery(
     gallery: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
 
     const result = gallerySchema.safeParse(gallery);
     if (!result.success) {
@@ -284,7 +288,7 @@ export async function updateTenantTestimonials(
     testimonials: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
 
     const result = testimonialSchema.safeParse(testimonials);
     if (!result.success) {
@@ -315,7 +319,7 @@ export async function updateTenantCTAs(
     ctas: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
 
     const result = ctaSchema.safeParse(ctas);
     if (!result.success) {
@@ -346,7 +350,7 @@ export async function updateTenantEvents(
     events: any
 ): Promise<ActionResult> {
     const auth = await verifyAdmin(tenantId);
-    if (!auth.success) return { success: false, error: auth.error! };
+    if (!auth.success) return auth;
 
     const result = eventSchema.safeParse(events);
     if (!result.success) {
