@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         }
 
         for (const tag of tagsToRevalidate) {
-            revalidateTag(tag);
+            revalidateTag(tag, {});
         }
 
         console.log("[Admin Revalidate] Cleared cache tags:", tagsToRevalidate);
