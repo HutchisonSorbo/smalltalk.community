@@ -421,7 +421,11 @@ function OrgGallery({ gallery }: OrgGalleryProps) {
                     if (!safeImg) return null;
                     return (
                         <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border bg-[var(--tenant-primary)]/5">
-                            <img src={safeImg} alt={img.caption || ""} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
+                            <img
+                                src={safeImg}
+                                alt={img.caption || `Organisation gallery photo ${idx + 1}`}
+                                className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                            />
                         </div>
                     );
                 })}
@@ -459,6 +463,20 @@ interface OrgCTAsProps {
 
 function OrgCTAs({ ctas }: OrgCTAsProps) {
     if (!ctas || ctas.length === 0) return null;
+
+    const getCtaClass = (style: string) => {
+        const base = "px-8 py-3 rounded-full font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-center";
+        switch (style) {
+            case 'secondary':
+                return `${base} bg-[var(--tenant-secondary)] text-white hover:opacity-90`;
+            case 'outline':
+                return `${base} border-2 border-[var(--tenant-primary)] text-[var(--tenant-primary)] hover:bg-[var(--tenant-primary)] hover:text-white`;
+            case 'primary':
+            default:
+                return `${base} bg-[var(--tenant-primary)] text-white hover:opacity-90`;
+        }
+    };
+
     return (
         <section className="mb-12">
             <div className="flex flex-wrap justify-center gap-4">
@@ -469,7 +487,7 @@ function OrgCTAs({ ctas }: OrgCTAsProps) {
                         <a
                             key={idx}
                             href={safeCtaUrl}
-                            className="px-8 py-3 rounded-full font-bold text-white bg-[var(--tenant-primary)] hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                            className={getCtaClass(cta.style)}
                         >
                             {cta.label}
                         </a>
