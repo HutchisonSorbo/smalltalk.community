@@ -409,12 +409,11 @@ function OrgTeam({ team }: OrgTeamProps) {
                             <div
                                 className="h-12 w-12 rounded-full flex items-center justify-center font-bold"
                                 style={{
-                                    backgroundColor: 'var(--tenant-primary)',
-                                    opacity: 0.1,
+                                    backgroundColor: 'color-mix(in srgb, var(--tenant-primary), transparent 90%)',
                                     color: 'var(--tenant-primary)'
                                 }}
                             >
-                                <span style={{ opacity: 10 }}>{member.name?.[0] || '?'}</span>
+                                <span>{member.name?.[0] || '?'}</span>
                             </div>
                             <div>
                                 <div className="font-semibold text-gray-900 dark:text-white">{member.name || 'Unknown Member'}</div>
@@ -449,7 +448,7 @@ function OrgGallery({ gallery }: OrgGalleryProps) {
                     const safeImg = safeUrl(img.url);
                     if (!safeImg) return null;
                     return (
-                        <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border bg-[var(--tenant-primary)]/5">
+                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border bg-[var(--tenant-primary)]/5 dark:bg-[var(--tenant-primary)]/10">
                             <Image
                                 src={safeImg}
                                 alt={img.caption || `Organisation gallery photo ${idx + 1}`}

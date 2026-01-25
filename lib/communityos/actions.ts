@@ -44,8 +44,8 @@ const impactStatSchema = z.array(z.object({
 const programSchema = z.array(z.object({
     title: z.string().min(1, "Title is required").max(100).transform(sanitizeText),
     description: z.string().min(1, "Description is required").max(1000).transform(sanitizeText),
-    imageUrl: z.string().url().optional().or(z.literal("")),
-    linkUrl: z.string().url().optional().or(z.literal("")),
+    imageUrl: z.string().regex(/^https?:\/\//, "Must be a valid HTTP/HTTPS URL").optional().or(z.literal("")),
+    linkUrl: z.string().regex(/^https?:\/\//, "Must be a valid HTTP/HTTPS URL").optional().or(z.literal("")),
 })).max(20);
 
 const teamMemberSchema = z.array(z.object({
@@ -83,7 +83,7 @@ const eventSchema = z.array(z.object({
 
 const colorRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
-const socialLinkValue = z.string().url().optional().nullable().or(z.literal(""));
+const socialLinkValue = z.string().regex(/^https?:\/\//, "Must be a valid HTTP/HTTPS URL").optional().nullable().or(z.literal(""));
 
 const socialLinksSchema = z.object({
     facebook: socialLinkValue,
@@ -94,17 +94,17 @@ const socialLinksSchema = z.object({
 }).strict();
 
 const profileSchema = z.object({
-    name: z.string().min(1).max(255).optional().transform(sanitizeText),
-    description: z.string().max(2000).optional().nullable().transform(sanitizeText),
-    missionStatement: z.string().max(2000).optional().nullable().transform(sanitizeText),
-    logoUrl: z.string().url().max(1000).optional().nullable().or(z.literal("")),
-    heroImageUrl: z.string().url().max(1000).optional().nullable().or(z.literal("")),
+    name: z.string().min(1).max(255).transform(sanitizeText).optional(),
+    description: z.string().max(2000).transform(sanitizeText).optional().nullable(),
+    missionStatement: z.string().max(2000).transform(sanitizeText).optional().nullable(),
+    logoUrl: z.string().regex(/^https?:\/\//, "Must be a valid HTTP/HTTPS URL").max(1000).optional().nullable().or(z.literal("")),
+    heroImageUrl: z.string().regex(/^https?:\/\//, "Must be a valid HTTP/HTTPS URL").max(1000).optional().nullable().or(z.literal("")),
     primaryColor: z.string().regex(colorRegex, "Invalid color format").optional().nullable(),
     secondaryColor: z.string().regex(colorRegex, "Invalid color format").optional().nullable(),
-    website: z.string().url().optional().nullable().or(z.literal("")),
+    website: z.string().regex(/^https?:\/\//, "Must be a valid HTTP/HTTPS URL").optional().nullable().or(z.literal("")),
     contactEmail: z.string().email().optional().nullable().or(z.literal("")),
     contactPhone: z.string().regex(/^[\d\s+\-()]+$/, "Invalid phone format").optional().nullable().or(z.literal("")),
-    address: z.string().max(500).optional().nullable().transform(sanitizeText),
+    address: z.string().max(500).transform(sanitizeText).optional().nullable(),
     isPublic: z.boolean().optional(),
     socialLinks: socialLinksSchema.optional(),
 });
