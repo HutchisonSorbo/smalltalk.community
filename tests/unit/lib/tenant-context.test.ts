@@ -20,7 +20,7 @@ vi.mock('@/lib/supabase-server', () => ({
     })),
 }));
 
-import { getPublicTenantByCode } from '@/lib/communityos/tenant-context';
+import { getPublicTenantByCode, PublicTenant } from '@/lib/communityos/tenant-context';
 import { createClient } from '@/lib/supabase-server';
 
 describe('getPublicTenantByCode', () => {
@@ -30,28 +30,53 @@ describe('getPublicTenantByCode', () => {
 
     it('returns tenant when found and public', async () => {
         const mockTenantRow = {
-            id: 'test-id',
+            id: 'stc-id',
             code: 'stc',
             name: 'smalltalk.community Inc',
             is_public: true,
-            description: 'Test description',
+            description: 'A Victorian non-profit organisation supporting community connection and development.',
+            logo_url: null,
+            primary_color: null,
+            secondary_color: null,
+            website: null,
+            hero_image_url: null,
+            mission_statement: null,
+            social_links: {},
+            contact_email: null,
+            contact_phone: null,
+            address: null,
+            impact_stats: [],
+            programs: [],
+            team_members: [],
+            gallery_images: [],
+            testimonials: [],
+            cta_buttons: [],
+            upcoming_events: [],
         };
 
         const expectedTenant: PublicTenant = {
-            id: 'test-id',
+            id: 'stc-id',
             code: 'stc',
             name: 'smalltalk.community Inc',
-            isPublic: true,
-            description: 'Test description',
-            logoUrl: undefined,
-            primaryColor: undefined,
-            website: undefined,
-            heroImageUrl: undefined,
-            missionStatement: undefined,
+            logoUrl: null,
+            primaryColor: null,
+            secondaryColor: null,
+            description: 'A Victorian non-profit organisation supporting community connection and development.',
+            website: null,
+            heroImageUrl: null,
+            missionStatement: null,
             socialLinks: {},
-            contactEmail: undefined,
-            contactPhone: undefined,
-            address: undefined,
+            contactEmail: null,
+            contactPhone: null,
+            address: null,
+            isPublic: true,
+            impactStats: [],
+            programs: [],
+            teamMembers: [],
+            gallery: [],
+            testimonials: [],
+            ctas: [],
+            events: [],
         };
 
         // Setup mock chain

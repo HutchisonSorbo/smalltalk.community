@@ -5,7 +5,18 @@
 
 import { createClient } from "@/lib/supabase-server";
 import { createServiceClient } from "@/lib/supabase-service";
-import type { Tenant, TenantMember, TenantRole } from "@/shared/schema";
+import type {
+    Tenant,
+    TenantMember,
+    TenantRole,
+    ImpactStat,
+    Program,
+    TeamMember,
+    GalleryImage,
+    Testimonial,
+    CtaButton,
+    UpcomingEvent,
+} from "@/shared/schema";
 
 /**
  * Fetch a tenant by its URL code/slug
@@ -46,13 +57,13 @@ export type PublicTenant = Pick<
     | "address"
     | "isPublic"
 > & {
-    impactStats: any[];
-    programs: any[];
-    teamMembers: any[];
-    gallery: any[];
-    testimonials: any[];
-    ctas: any[];
-    events: any[];
+    impactStats: ImpactStat[];
+    programs: Program[];
+    teamMembers: TeamMember[];
+    gallery: GalleryImage[];
+    testimonials: Testimonial[];
+    ctas: CtaButton[];
+    events: UpcomingEvent[];
 };
 
 /**
@@ -150,15 +161,15 @@ function mapDbRowToPublicTenant(data: any): PublicTenant {
         socialLinks: (data.social_links ?? {}) as Record<string, string>,
         contactEmail: data.contact_email ?? null,
         contactPhone: data.contact_phone ?? null,
-        address: data.address ?? null,
-        isPublic: !!data.is_public,
-        impactStats: (data.impact_stats ?? []) as any[],
-        programs: (data.programs ?? []) as any[],
-        teamMembers: (data.team_members ?? []) as any[],
-        gallery: (data.gallery_images ?? []) as any[],
-        testimonials: (data.testimonials ?? []) as any[],
-        ctas: (data.cta_buttons ?? []) as any[],
-        events: (data.upcoming_events ?? []) as any[],
+        address: data?.address ?? null,
+        isPublic: !!data?.is_public,
+        impactStats: Array.isArray(data?.impact_stats) ? data.impact_stats : [],
+        programs: Array.isArray(data?.programs) ? data.programs : [],
+        teamMembers: Array.isArray(data?.team_members) ? data.team_members : [],
+        gallery: Array.isArray(data?.gallery_images) ? data.gallery_images : [],
+        testimonials: Array.isArray(data?.testimonials) ? data.testimonials : [],
+        ctas: Array.isArray(data?.cta_buttons) ? data.cta_buttons : [],
+        events: Array.isArray(data?.upcoming_events) ? data.upcoming_events : [],
     };
 }
 
