@@ -21,11 +21,9 @@ import {
     Phone,
     MapPin,
     ExternalLink,
-    Users,
-    Star,
     CheckCircle,
-    Edit,
 } from "lucide-react";
+import { PublicProfileAdminControls } from "@/components/org/public-profile-admin-controls";
 import type {
     ImpactStat,
     Program,
@@ -102,32 +100,8 @@ function sanitizeLogCode(input: unknown): string {
         .replace(/[^\w\-_.]/g, "_");
 }
 
-/**
- * Admin Edit Controls (Fixed overlay)
- */
-function AdminControls({ tenantCode }: { tenantCode: string }) {
-    // Validate tenantCode against allowed slug pattern (alphanumeric, -, _, .) to prevent path traversal
-    // and ensure we are constructing a valid internal route.
-    const isValidSlug = /^[a-zA-Z0-9\-_.]+$/.test(tenantCode) && !tenantCode.includes("..");
+// Internal AdminControls removed in favor of components/org/public-profile-admin-controls.tsx
 
-    if (!isValidSlug) return null;
-
-    const sanitizedCode = encodeURIComponent(tenantCode);
-    const dashboardPath = `/communityos/${sanitizedCode}/dashboard`;
-
-    return (
-        <div className="fixed bottom-6 right-6 z-50 print:hidden">
-            <Link
-                href={dashboardPath}
-                className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-transform hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black dark:focus-visible:ring-white"
-                aria-label="Edit Public Profile"
-            >
-                <Edit className="h-4 w-4" />
-                <span>Edit Profile</span>
-            </Link>
-        </div>
-    );
-}
 
 // ============================================================================
 // Extracted Components
@@ -787,7 +761,7 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
 
             <OrgFooter tenantName={tenant.name} />
 
-            {isAdmin && <AdminControls tenantCode={tenant.code} />}
+            {isAdmin && <PublicProfileAdminControls tenant={tenant} />}
         </div>
     );
 }

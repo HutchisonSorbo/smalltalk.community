@@ -1,0 +1,107 @@
+
+Running 2 tests using 2 workers
+
+  ✓  2 [chromium] › tests/e2e/accessibility-org-profile.spec.ts:25:5 › Public Org Profile Accessibility › should pass axe accessibility scan on edit profile sheet (159ms)
+Accessibility violations found: [
+  {
+    "id": "region",
+    "impact": "moderate",
+    "tags": [
+      "cat.keyboard",
+      "best-practice",
+      "RGAAv4",
+      "RGAA-9.2.1"
+    ],
+    "description": "Ensure all page content is contained by landmarks",
+    "help": "All page content should be contained by landmarks",
+    "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/region?application=playwright",
+    "nodes": [
+      {
+        "any": [
+          {
+            "id": "region",
+            "data": {
+              "isIframe": false
+            },
+            "relatedNodes": [],
+            "impact": "moderate",
+            "message": "Some page content is not contained by landmarks"
+          }
+        ],
+        "all": [],
+        "none": [],
+        "impact": "moderate",
+        "html": "<a href=\"#main-content\" class=\"sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] px-4 py-2 bg-background text-foreground border rounded-md shadow-lg font-medium ring-2 ring-primary transition-all\">Skip to main content</a>",
+        "target": [
+          ".sr-only"
+        ],
+        "failureSummary": "Fix any of the following:\n  Some page content is not contained by landmarks"
+      }
+    ]
+  }
+]
+  ✘  1 [chromium] › tests/e2e/accessibility-org-profile.spec.ts:6:5 › Public Org Profile Accessibility › should pass axe accessibility scan on /org/stc (5.0s)
+
+
+  1) [chromium] › tests/e2e/accessibility-org-profile.spec.ts:6:5 › Public Org Profile Accessibility › should pass axe accessibility scan on /org/stc 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoEqual[2m([22m[32mexpected[39m[2m) // deep equality[22m
+
+    [32m- Expected  -  1[39m
+    [31m+ Received  + 39[39m
+
+    [32m- Array [][39m
+    [31m+ Array [[39m
+    [31m+   Object {[39m
+    [31m+     "description": "Ensure all page content is contained by landmarks",[39m
+    [31m+     "help": "All page content should be contained by landmarks",[39m
+    [31m+     "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/region?application=playwright",[39m
+    [31m+     "id": "region",[39m
+    [31m+     "impact": "moderate",[39m
+    [31m+     "nodes": Array [[39m
+    [31m+       Object {[39m
+    [31m+         "all": Array [],[39m
+    [31m+         "any": Array [[39m
+    [31m+           Object {[39m
+    [31m+             "data": Object {[39m
+    [31m+               "isIframe": false,[39m
+    [31m+             },[39m
+    [31m+             "id": "region",[39m
+    [31m+             "impact": "moderate",[39m
+    [31m+             "message": "Some page content is not contained by landmarks",[39m
+    [31m+             "relatedNodes": Array [],[39m
+    [31m+           },[39m
+    [31m+         ],[39m
+    [31m+         "failureSummary": "Fix any of the following:[39m
+    [31m+   Some page content is not contained by landmarks",[39m
+    [31m+         "html": "<a href=\"#main-content\" class=\"sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] px-4 py-2 bg-background text-foreground border rounded-md shadow-lg font-medium ring-2 ring-primary transition-all\">Skip to main content</a>",[39m
+    [31m+         "impact": "moderate",[39m
+    [31m+         "none": Array [],[39m
+    [31m+         "target": Array [[39m
+    [31m+           ".sr-only",[39m
+    [31m+         ],[39m
+    [31m+       },[39m
+    [31m+     ],[39m
+    [31m+     "tags": Array [[39m
+    [31m+       "cat.keyboard",[39m
+    [31m+       "best-practice",[39m
+    [31m+       "RGAAv4",[39m
+    [31m+       "RGAA-9.2.1",[39m
+    [31m+     ],[39m
+    [31m+   },[39m
+    [31m+ ][39m
+
+      20 |         }
+      21 |
+    > 22 |         expect(results.violations).toEqual([]);
+         |                                    ^
+      23 |     });
+      24 |
+      25 |     test('should pass axe accessibility scan on edit profile sheet', async ({ page }) => {
+        at /home/ryan/Documents/Projects/smalltalk.community/tests/e2e/accessibility-org-profile.spec.ts:22:36
+
+    Error Context: test-results/accessibility-org-profile--56020-cessibility-scan-on-org-stc-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/accessibility-org-profile.spec.ts:6:5 › Public Org Profile Accessibility › should pass axe accessibility scan on /org/stc 
+  1 passed (12.0s)
