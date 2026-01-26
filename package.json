@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/cleanup-binaries.mjs && npm run build:sw && next build",
-    "build:sw": "npx esbuild src/sw.ts --bundle --outfile=public/sw.js --minify",
+    "build:sw": "esbuild src/sw.ts --bundle --outfile=public/sw.js --minify",
     "start": "next start",
     "check": "tsc",
     "typecheck": "tsc --noEmit",
@@ -125,6 +125,7 @@
     "@vitest/coverage-v8": "^4.0.16",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.8",
+    "esbuild": "^0.24.2",
     "eslint": "^9.21.0",
     "eslint-config-next": "^16.1.2",
     "eslint-plugin-jsx-a11y": "^6.10.2",

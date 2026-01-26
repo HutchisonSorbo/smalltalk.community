@@ -69,36 +69,44 @@ async function handleNavigate(request: Request): Promise<Response> {
 }
 
 async function handleCachedAsset(request: Request, cachedResponse: Response, event: FetchEvent): Promise<Response> {
-    // Update cache in background
-    const updateCache = async () => {
-        try {
-            const networkResponse = await fetch(request);
-            if (networkResponse && networkResponse.status === 200) {
-                const responseToCache = networkResponse.clone();
-                const cache = await caches.open(CACHE_NAME);
-                await cache.put(request, responseToCache);
+    try {
+        // Update cache in background
+        const updateCache = async () => {
+            try {
+                const networkResponse = await fetch(request);
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseToCache = networkResponse.clone();
+                    const cache = await caches.open(CACHE_NAME);
+                    await cache.put(request, responseToCache);
+                }
+            } catch (err) {
+                console.error('[SW] Background cache update failed:', err);
             }
-        } catch (err) {
-            console.error('[SW] Background cache update failed:', err);
-        }
-    };
-    event.waitUntil(updateCache());
+        };
+        event.waitUntil(updateCache());
+    } catch (err) {
+        console.error('[SW] handleCachedAsset failed:', err);
+    }
 
     return cachedResponse;
 }
 
 async function cacheResponse(request: Request, networkResponse: Response, event: FetchEvent): Promise<void> {
-    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-        const responseToCache = networkResponse.clone();
-        const cacheOp = async () => {
-            try {
-                const cache = await caches.open(CACHE_NAME);
-                await cache.put(request, responseToCache);
-            } catch (err) {
-                console.error('[SW] Cache put failed:', err);
-            }
-        };
-        event.waitUntil(cacheOp());
+    try {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            const cacheOp = async () => {
+                try {
+                    const cache = await caches.open(CACHE_NAME);
+                    await cache.put(request, responseToCache);
+                } catch (err) {
+                    console.error('[SW] Cache put failed:', err);
+                }
+            };
+            event.waitUntil(cacheOp());
+        }
+    } catch (err) {
+        console.error('[SW] cacheResponse failed:', err);
     }
 }
 
