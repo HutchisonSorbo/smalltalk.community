@@ -7,7 +7,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getPublicTenantByCode } from "@/lib/communityos/tenant-context";
+import { getPublicTenantByCode, isTenantAdmin } from "@/lib/communityos/tenant-context";
+import { createClient } from "@/lib/supabase-server";
 import { safeUrl } from "@/lib/utils";
 import {
     Facebook,
@@ -23,6 +24,7 @@ import {
     Users,
     Star,
     CheckCircle,
+    Edit,
 } from "lucide-react";
 import type {
     ImpactStat,
@@ -98,6 +100,24 @@ function sanitizeLogCode(input: unknown): string {
         .slice(0, 64)
         .replace(/[\r\n\t]/g, "")
         .replace(/[^\w\-_.]/g, "_");
+}
+
+/**
+ * Admin Edit Controls (Fixed overlay)
+ */
+function AdminControls({ tenantCode }: { tenantCode: string }) {
+    return (
+        <div className="fixed bottom-6 right-6 z-50 print:hidden">
+            <Link
+                href={`/communityos/${tenantCode}/dashboard`}
+                className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-transform hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 border border-white/10"
+                aria-label="Edit Public Profile"
+            >
+                <Edit className="h-4 w-4" />
+                <span>Edit Profile</span>
+            </Link>
+        </div>
+    );
 }
 
 // ============================================================================
@@ -677,6 +697,18 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
 
     const aboutContent = tenant.missionStatement || tenant.description;
 
+    // Check for admin access to show edit controls
+    let isAdmin = false;
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && tenant.id) {
+            isAdmin = await isTenantAdmin(user.id, tenant.id);
+        }
+    } catch (err) {
+        console.error("Error checking admin status:", err);
+    }
+
     return (
         <div className="max-w-full overflow-hidden">
             <main className="max-w-3xl mx-auto px-4 pt-20 md:pt-24 pb-16">
@@ -739,6 +771,8 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
             </main>
 
             <OrgFooter tenantName={tenant.name} />
+
+            {isAdmin && <AdminControls tenantCode={tenant.code} />}
         </div>
     );
 }
