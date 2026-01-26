@@ -645,6 +645,49 @@ export interface TenantWithMembership {
   joinedAt: string;
 }
 
+export interface ImpactStat {
+  label: string;
+  value: string;
+  icon?: string;
+}
+
+export interface Program {
+  title: string;
+  description: string;
+  imageUrl?: string;
+}
+
+export interface TeamMember {
+  name: string;
+  role: string;
+  bio?: string;
+  imageUrl?: string;
+}
+
+export interface GalleryImage {
+  url: string;
+  caption?: string;
+}
+
+export interface Testimonial {
+  quote: string;
+  author: string;
+  role?: string;
+}
+
+export interface CtaButton {
+  label: string;
+  url: string;
+  variant?: "primary" | "secondary" | "outline";
+}
+
+export interface UpcomingEvent {
+  title: string;
+  date: string;
+  description?: string;
+  link?: string;
+}
+
 export const gigManagersRelations = relations(gigManagers, ({ one }) => ({
   gig: one(gigs, {
     fields: [gigManagers.gigId],
@@ -1509,46 +1552,13 @@ export const tenants = pgTable("tenants", {
   contactPhone: varchar("contact_phone", { length: 50 }),
   address: text("address"),
   isPublic: boolean("is_public").default(false),
-  // Enhanced public profile fields
-  impactStats: jsonb("impact_stats").$type<{
-    label: string;
-    value: string;
-    icon: string;
-  }[]>().default([]),
-  programs: jsonb("programs").$type<{
-    title: string;
-    description: string;
-    imageUrl?: string;
-    linkUrl?: string;
-  }[]>().default([]),
-  teamMembers: jsonb("team_members").$type<{
-    name: string;
-    title: string;
-    bio?: string;
-    imageUrl?: string;
-    linkedinUrl?: string;
-  }[]>().default([]),
-  gallery: jsonb("gallery").$type<{
-    url: string;
-    caption?: string;
-  }[]>().default([]),
-  testimonials: jsonb("testimonials").$type<{
-    quote: string;
-    author: string;
-    role?: string;
-    imageUrl?: string;
-  }[]>().default([]),
-  ctas: jsonb("ctas").$type<{
-    label: string;
-    url: string;
-    style: 'primary' | 'secondary' | 'outline';
-  }[]>().default([]),
-  events: jsonb("events").$type<{
-    title: string;
-    date: string;
-    location: string;
-    url?: string;
-  }[]>().default([]),
+  impactStats: jsonb("impact_stats").$type<ImpactStat[]>().default([]),
+  programs: jsonb("programs").$type<Program[]>().default([]),
+  teamMembers: jsonb("team_members").$type<TeamMember[]>().default([]),
+  galleryImages: jsonb("gallery_images").$type<GalleryImage[]>().default([]),
+  testimonials: jsonb("testimonials").$type<Testimonial[]>().default([]),
+  ctaButtons: jsonb("cta_buttons").$type<CtaButton[]>().default([]),
+  upcomingEvents: jsonb("upcoming_events").$type<UpcomingEvent[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
