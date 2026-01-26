@@ -111,7 +111,7 @@ function AdminControls({ tenantCode }: { tenantCode: string }) {
         <div className="fixed bottom-6 right-6 z-50 print:hidden">
             <Link
                 href={`/communityos/${sanitizedCode}/dashboard`}
-                className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-transform hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 border border-white/10"
+                className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-transform hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black dark:focus-visible:ring-white"
                 aria-label="Edit Public Profile"
             >
                 <Edit className="h-4 w-4" />
@@ -705,7 +705,10 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError) {
-            console.error(`Error fetching user for admin check (tenant=${sanitizeLogCode(code)}):`, authError);
+            // Ignore expected missing session errors (user not logged in)
+            if (authError.name !== "AuthSessionMissingError") {
+                console.error(`Error fetching user for admin check (tenant=${sanitizeLogCode(code)}):`, authError);
+            }
         } else if (user && tenant.id) {
             isAdmin = await isTenantAdmin(user.id, tenant.id);
         }
