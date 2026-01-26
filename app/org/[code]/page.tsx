@@ -24,6 +24,15 @@ import {
     Star,
     CheckCircle,
 } from "lucide-react";
+import type {
+    ImpactStat,
+    Program,
+    TeamMember,
+    GalleryImage,
+    Testimonial,
+    CtaButton as OrgCTA,
+    UpcomingEvent
+} from "@/shared/schema";
 
 interface OrgProfilePageProps {
     params: Promise<{ code: string }>;
@@ -35,51 +44,7 @@ const PHONE_REGEX = /^[\d\s+\-()]+$/;
 
 // --- Interfaces for Type Safety ---
 
-interface OrgStat {
-    value: string;
-    label: string;
-    icon: string;
-}
 
-interface OrgProgram {
-    title: string;
-    description: string;
-    imageUrl?: string;
-    linkUrl?: string;
-}
-
-interface OrgTeamMember {
-    name: string;
-    title: string;
-    bio?: string;
-    imageUrl?: string;
-    linkedinUrl?: string;
-}
-
-interface OrgGalleryImage {
-    url: string;
-    caption?: string;
-}
-
-interface OrgTestimonial {
-    quote: string;
-    author: string;
-    role?: string;
-    imageUrl?: string;
-}
-
-interface OrgCTA {
-    label: string;
-    url: string;
-    style: 'primary' | 'secondary' | 'outline';
-}
-
-interface OrgEvent {
-    title: string;
-    date: string;
-    location: string;
-    url?: string;
-}
 
 /**
  * Safely extract hostname from a URL without throwing
@@ -319,7 +284,7 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
 }
 
 interface OrgImpactProps {
-    stats: OrgStat[];
+    stats: ImpactStat[];
 }
 
 function OrgImpact({ stats }: OrgImpactProps) {
@@ -342,7 +307,7 @@ function OrgImpact({ stats }: OrgImpactProps) {
                         globe: Globe,
                         mail: Mail,
                         phone: Phone,
-                    }[stat.icon.toLowerCase()] || Star;
+                    }[(stat.icon ?? 'star').toLowerCase()] || Star;
 
                     return (
                         <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border text-center flex flex-col items-center justify-center gap-2">
@@ -360,7 +325,7 @@ function OrgImpact({ stats }: OrgImpactProps) {
 }
 
 interface OrgProgramsProps {
-    programs: OrgProgram[];
+    programs: Program[];
 }
 
 function OrgPrograms({ programs }: OrgProgramsProps) {
@@ -391,7 +356,7 @@ function OrgPrograms({ programs }: OrgProgramsProps) {
 }
 
 interface OrgTeamProps {
-    team: OrgTeamMember[];
+    team: TeamMember[];
 }
 
 function OrgTeam({ team }: OrgTeamProps) {
@@ -433,7 +398,7 @@ function OrgTeam({ team }: OrgTeamProps) {
 }
 
 interface OrgGalleryProps {
-    gallery: OrgGalleryImage[];
+    gallery: GalleryImage[];
 }
 
 function OrgGallery({ gallery }: OrgGalleryProps) {
@@ -466,7 +431,7 @@ function OrgGallery({ gallery }: OrgGalleryProps) {
 }
 
 interface OrgTestimonialsProps {
-    testimonials: OrgTestimonial[];
+    testimonials: Testimonial[];
 }
 
 function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
@@ -512,7 +477,7 @@ function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
 }
 
 interface OrgEventsProps {
-    events: OrgEvent[];
+    events: UpcomingEvent[];
 }
 
 function OrgEvents({ events }: OrgEventsProps) {
@@ -588,7 +553,7 @@ function OrgCTAs({ ctas }: OrgCTAsProps) {
                         <a
                             key={idx}
                             href={safeCtaUrl}
-                            className={getCtaClass(cta.style)}
+                            className={getCtaClass(cta.style || 'primary')}
                         >
                             {cta.label}
                         </a>

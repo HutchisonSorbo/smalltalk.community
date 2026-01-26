@@ -648,20 +648,22 @@ export interface TenantWithMembership {
 export interface ImpactStat {
   label: string;
   value: string;
-  icon?: string;
+  icon: string;
 }
 
 export interface Program {
   title: string;
   description: string;
   imageUrl?: string;
+  linkUrl?: string;
 }
 
 export interface TeamMember {
   name: string;
-  role: string;
+  title: string;
   bio?: string;
   imageUrl?: string;
+  linkedinUrl?: string;
 }
 
 export interface GalleryImage {
@@ -673,19 +675,21 @@ export interface Testimonial {
   quote: string;
   author: string;
   role?: string;
+  imageUrl?: string;
 }
 
 export interface CtaButton {
   label: string;
   url: string;
-  variant?: "primary" | "secondary" | "outline";
+  style?: "primary" | "secondary" | "outline";
 }
 
 export interface UpcomingEvent {
   title: string;
   date: string;
+  location: string;
   description?: string;
-  link?: string;
+  url?: string;
 }
 
 export const gigManagersRelations = relations(gigManagers, ({ one }) => ({
