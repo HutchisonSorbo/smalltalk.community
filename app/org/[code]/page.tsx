@@ -702,12 +702,15 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
     let isAdmin = false;
     try {
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && tenant.id) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError) {
+            console.error(`Error fetching user for admin check (tenant=${sanitizeLogCode(code)}):`, authError);
+        } else if (user && tenant.id) {
             isAdmin = await isTenantAdmin(user.id, tenant.id);
         }
     } catch (err) {
-        console.error(`Error checking admin status for tenant=${sanitizeLogCode(code)}:`, err);
+        console.error(`Unexpected error checking admin status for tenant=${sanitizeLogCode(code)}:`, err);
     }
 
     return (
