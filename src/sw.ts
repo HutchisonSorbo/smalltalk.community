@@ -21,13 +21,16 @@ sw.addEventListener('install', (event: ExtendableEvent) => {
             const cache = await caches.open(CACHE_NAME);
             await cache.addAll(ASSETS_TO_CACHE);
             console.log('[SW] Installed');
+            // Move skipWaiting to successful path
+            sw.skipWaiting();
         } catch (error) {
             console.error('[SW] Install failed:', error);
+            // Re-throw so installation fails
+            throw error;
         }
     };
 
     event.waitUntil(installHandler());
-    sw.skipWaiting();
 });
 
 sw.addEventListener('activate', (event: ExtendableEvent) => {
@@ -53,6 +56,52 @@ sw.addEventListener('activate', (event: ExtendableEvent) => {
     event.waitUntil(activateHandler());
 });
 
+async function handleNavigate(request: Request): Promise<Response> {
+    try {
+        return await fetch(request);
+    } catch (error) {
+        console.error('[SW] Navigation fetch failed, falling back to offline page', error);
+        const cache = await caches.open(CACHE_NAME);
+        const offlineResponse = await cache.match(OFFLINE_URL);
+        if (offlineResponse) return offlineResponse;
+        throw error;
+    }
+}
+
+async function handleCachedAsset(request: Request, cachedResponse: Response, event: FetchEvent): Promise<Response> {
+    // Update cache in background
+    const updateCache = async () => {
+        try {
+            const networkResponse = await fetch(request);
+            if (networkResponse && networkResponse.status === 200) {
+                const responseToCache = networkResponse.clone();
+                const cache = await caches.open(CACHE_NAME);
+                await cache.put(request, responseToCache);
+            }
+        } catch (err) {
+            console.error('[SW] Background cache update failed:', err);
+        }
+    };
+    event.waitUntil(updateCache());
+
+    return cachedResponse;
+}
+
+async function cacheResponse(request: Request, networkResponse: Response, event: FetchEvent): Promise<void> {
+    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        const responseToCache = networkResponse.clone();
+        const cacheOp = async () => {
+            try {
+                const cache = await caches.open(CACHE_NAME);
+                await cache.put(request, responseToCache);
+            } catch (err) {
+                console.error('[SW] Cache put failed:', err);
+            }
+        };
+        event.waitUntil(cacheOp());
+    }
+}
+
 sw.addEventListener('fetch', (event: FetchEvent) => {
     if (event.request.method !== 'GET') return;
 
@@ -60,54 +109,20 @@ sw.addEventListener('fetch', (event: FetchEvent) => {
         try {
             // Navigation requests (HTML pages) -> Network First with Offline Fallback
             if (event.request.mode === 'navigate') {
-                try {
-                    return await fetch(event.request);
-                } catch (error) {
-                    console.error('[SW] Navigation fetch failed, falling back to offline page', error);
-                    const cache = await caches.open(CACHE_NAME);
-                    const offlineResponse = await cache.match(OFFLINE_URL);
-                    if (offlineResponse) return offlineResponse;
-                    throw error;
-                }
+                return await handleNavigate(event.request);
             }
 
             // Stale-while-revalidate for assets
             const cachedResponse = await caches.match(event.request);
             if (cachedResponse) {
-                // Update cache in background
-                const updateCache = async () => {
-                    try {
-                        const networkResponse = await fetch(event.request);
-                        if (networkResponse && networkResponse.status === 200) {
-                            const responseToCache = networkResponse.clone();
-                            const cache = await caches.open(CACHE_NAME);
-                            await cache.put(event.request, responseToCache);
-                        }
-                    } catch (err) {
-                        console.error('[SW] Background cache update failed:', err);
-                    }
-                };
-                event.waitUntil(updateCache());
-
-                return cachedResponse;
+                return await handleCachedAsset(event.request, cachedResponse, event);
             }
 
             // Network First for everything else
             const networkResponse = await fetch(event.request);
 
-            // Valid response check and cache
-            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-                const responseToCache = networkResponse.clone();
-                const cacheOp = async () => {
-                    try {
-                        const cache = await caches.open(CACHE_NAME);
-                        await cache.put(event.request, responseToCache);
-                    } catch (err) {
-                        console.error('[SW] Cache put failed:', err);
-                    }
-                };
-                event.waitUntil(cacheOp());
-            }
+            // Cache valid responses
+            await cacheResponse(event.request, networkResponse, event);
 
             return networkResponse;
 
@@ -117,8 +132,7 @@ sw.addEventListener('fetch', (event: FetchEvent) => {
             // Null-safe Accept header check
             const accept = event.request.headers.get('accept') || '';
             if (accept.includes('image')) {
-                // Could return a placeholder image here if we had one
-                // return caches.match('/images/offline-placeholder.png');
+                // Could return a placeholder image here
             }
 
             throw error;

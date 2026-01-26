@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/cleanup-binaries.mjs && next build",
+    "build": "node scripts/cleanup-binaries.mjs && npm run build:sw && next build",
+    "build:sw": "npx esbuild src/sw.ts --bundle --outfile=public/sw.js --minify",
     "start": "next start",
     "check": "tsc",
     "typecheck": "tsc --noEmit",

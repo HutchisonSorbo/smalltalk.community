@@ -97,6 +97,13 @@
             box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
         }
 
+        button.btn {
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -125,7 +132,7 @@
             <div class="status-dot"></div>
             Offline Mode
         </div>
-        <div class="icon">📡❌</div>
+        <div class="icon" aria-hidden="true">📡❌</div>
         <h1>Connection Lost</h1>
         <p>You're currently offline. This platform is designed to work in low-connectivity areas like Murrindindi Shire,
             but some features require a sync to load.</p>
@@ -139,8 +146,13 @@
             </ul>
         </div>
 
-        <a href="javascript:window.location.reload()" class="btn">Try Reconnect</a>
+        <button class="btn" id="reconnectBtn">Try Reconnect</button>
     </div>
+    <script>
+        document.getElementById('reconnectBtn').addEventListener('click', () => {
+            window.location.reload();
+        });
+    </script>
 </body>
 
 </html>
