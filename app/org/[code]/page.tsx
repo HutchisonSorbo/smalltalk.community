@@ -106,10 +106,11 @@ function sanitizeLogCode(input: unknown): string {
  * Admin Edit Controls (Fixed overlay)
  */
 function AdminControls({ tenantCode }: { tenantCode: string }) {
+    const sanitizedCode = encodeURIComponent(tenantCode);
     return (
         <div className="fixed bottom-6 right-6 z-50 print:hidden">
             <Link
-                href={`/communityos/${tenantCode}/dashboard`}
+                href={`/communityos/${sanitizedCode}/dashboard`}
                 className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-transform hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 border border-white/10"
                 aria-label="Edit Public Profile"
             >
@@ -706,7 +707,7 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
             isAdmin = await isTenantAdmin(user.id, tenant.id);
         }
     } catch (err) {
-        console.error("Error checking admin status:", err);
+        console.error(`Error checking admin status for tenant=${sanitizeLogCode(code)}:`, err);
     }
 
     return (
