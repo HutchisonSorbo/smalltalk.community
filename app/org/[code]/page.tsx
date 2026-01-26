@@ -106,11 +106,19 @@ function sanitizeLogCode(input: unknown): string {
  * Admin Edit Controls (Fixed overlay)
  */
 function AdminControls({ tenantCode }: { tenantCode: string }) {
+    // Validate tenantCode against allowed slug pattern (alphanumeric, -, _, .) to prevent path traversal
+    // and ensure we are constructing a valid internal route.
+    const isValidSlug = /^[a-zA-Z0-9\-_.]+$/.test(tenantCode) && !tenantCode.includes("..");
+
+    if (!isValidSlug) return null;
+
     const sanitizedCode = encodeURIComponent(tenantCode);
+    const dashboardPath = `/communityos/${sanitizedCode}/dashboard`;
+
     return (
         <div className="fixed bottom-6 right-6 z-50 print:hidden">
             <Link
-                href={`/communityos/${sanitizedCode}/dashboard`}
+                href={dashboardPath}
                 className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full font-semibold shadow-lg hover:scale-105 transition-transform hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black dark:focus-visible:ring-white"
                 aria-label="Edit Public Profile"
             >
