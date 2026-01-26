@@ -93,18 +93,16 @@ async function handleCachedAsset(request: Request, cachedResponse: Response, eve
 
 async function cacheResponse(request: Request, networkResponse: Response, event: FetchEvent): Promise<void> {
     try {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
-            const cacheOp = async () => {
-                try {
-                    const cache = await caches.open(CACHE_NAME);
-                    await cache.put(request, responseToCache);
-                } catch (err) {
-                    console.error('[SW] Cache put failed:', err);
-                }
-            };
-            event.waitUntil(cacheOp());
-        }
+        const responseToCache = networkResponse.clone();
+        const cacheOp = async () => {
+            try {
+                const cache = await caches.open(CACHE_NAME);
+                await cache.put(request, responseToCache);
+            } catch (err) {
+                console.error('[SW] Cache put failed:', err);
+            }
+        };
+        event.waitUntil(cacheOp());
     } catch (err) {
         console.error('[SW] cacheResponse failed:', err);
     }
@@ -130,7 +128,9 @@ sw.addEventListener('fetch', (event: FetchEvent) => {
             const networkResponse = await fetch(event.request);
 
             // Cache valid responses
-            await cacheResponse(event.request, networkResponse, event);
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+                await cacheResponse(event.request, networkResponse, event);
+            }
 
             return networkResponse;
 
