@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 // --- Subcomponents ---
 
-function BasicInfo({ control }: { control: any }) {
+function BasicInfo({ control }: { control: Control<FormValues> }) {
     return (
         <div className="space-y-4">
             <h3 className="font-semibold text-lg border-b pb-2">Basic Info</h3>
@@ -98,7 +98,7 @@ function BasicInfo({ control }: { control: any }) {
     );
 }
 
-function ContactLocation({ control }: { control: any }) {
+function ContactLocation({ control }: { control: Control<FormValues> }) {
     return (
         <div className="space-y-4">
             <h3 className="font-semibold text-lg border-b pb-2">Contact & Location</h3>
@@ -150,7 +150,7 @@ function ContactLocation({ control }: { control: any }) {
     );
 }
 
-function SocialLinks({ control }: { control: any }) {
+function SocialLinks({ control }: { control: Control<FormValues> }) {
     return (
         <div className="space-y-4">
             <h3 className="font-semibold text-lg border-b pb-2">Social Links</h3>
@@ -159,7 +159,7 @@ function SocialLinks({ control }: { control: any }) {
                     <FormField
                         key={platform}
                         control={control}
-                        name={platform as any}
+                        name={platform as keyof FormValues}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="capitalize">{platform === "twitter" ? "X (Twitter)" : platform}</FormLabel>
@@ -174,11 +174,11 @@ function SocialLinks({ control }: { control: any }) {
     );
 }
 
-function FormActions({ isSubmitting, onSuccess }: { isSubmitting: boolean, onSuccess?: () => void }) {
+function FormActions({ isSubmitting, onCancel }: { isSubmitting: boolean, onCancel?: () => void }) {
     return (
         <div className="sticky bottom-0 pt-4 pb-2 bg-white dark:bg-gray-950 border-t mt-6 flex justify-end gap-2">
-            {onSuccess && (
-                <Button type="button" variant="outline" onClick={onSuccess}>Cancel</Button>
+            {onCancel && (
+                <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
             )}
             <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -256,7 +256,7 @@ export function EditProfileForm({ tenant, onSuccess }: EditProfileFormProps) {
                 <BasicInfo control={form.control} />
                 <ContactLocation control={form.control} />
                 <SocialLinks control={form.control} />
-                <FormActions isSubmitting={isSubmitting} onSuccess={onSuccess} />
+                <FormActions isSubmitting={isSubmitting} onCancel={onSuccess} />
             </form>
         </Form>
     );
