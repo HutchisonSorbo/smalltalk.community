@@ -10,9 +10,14 @@ import { registerServiceWorker } from "@/lib/pwa-utils";
 export function PWARegistration() {
     useEffect(() => {
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-            registerServiceWorker().catch((err) => {
-                console.error("[PWA] Registration failed in component:", err);
-            });
+            const initServiceWorker = async () => {
+                try {
+                    await registerServiceWorker();
+                } catch (err) {
+                    console.error("[PWA] Registration failed in component:", err);
+                }
+            };
+            initServiceWorker();
         }
     }, []);
 
