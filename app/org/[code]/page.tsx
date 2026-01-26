@@ -20,6 +20,9 @@ import {
     Phone,
     MapPin,
     ExternalLink,
+    Users,
+    Star,
+    CheckCircle,
 } from "lucide-react";
 
 interface OrgProfilePageProps {
@@ -29,6 +32,54 @@ interface OrgProfilePageProps {
 // Regex patterns for contact validation
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^[\d\s+\-()]+$/;
+
+// --- Interfaces for Type Safety ---
+
+interface OrgStat {
+    value: string;
+    label: string;
+    icon: string;
+}
+
+interface OrgProgram {
+    title: string;
+    description: string;
+    imageUrl?: string;
+    linkUrl?: string;
+}
+
+interface OrgTeamMember {
+    name: string;
+    title: string;
+    bio?: string;
+    imageUrl?: string;
+    linkedinUrl?: string;
+}
+
+interface OrgGalleryImage {
+    url: string;
+    caption?: string;
+}
+
+interface OrgTestimonial {
+    quote: string;
+    author: string;
+    role?: string;
+    imageUrl?: string;
+}
+
+interface OrgCTA {
+    label: string;
+    url: string;
+    style: 'primary' | 'secondary' | 'outline';
+}
+
+interface OrgEvent {
+    title: string;
+    date: string;
+    location: string;
+    url?: string;
+}
 
 /**
  * Safely extract hostname from a URL without throwing
@@ -90,21 +141,22 @@ function sanitizeLogCode(input: unknown): string {
 
 interface OrgHeroProps {
     name: string;
-    primaryColor: string | null | undefined;
-    safeHeroUrl: string | undefined;
-    safeLogoUrl: string | undefined;
+    primaryColor?: string | null;
+    safeHeroUrl: string | null | undefined;
+    safeLogoUrl: string | null | undefined;
 }
 
 /** Hero section with background and logo */
 function OrgHero({ name, primaryColor, safeHeroUrl, safeLogoUrl }: OrgHeroProps) {
-    const bgColor = primaryColor || "#4F46E5";
+    const bgColor = primaryColor || 'var(--tenant-primary)';
+
     return (
         <section className="relative">
             <div
                 className="h-48 md:h-64 w-full bg-cover bg-center"
                 style={{
-                    backgroundColor: bgColor,
                     backgroundImage: safeHeroUrl ? `url(${safeHeroUrl})` : undefined,
+                    backgroundColor: !safeHeroUrl ? bgColor : undefined,
                 }}
             />
             <div className="absolute left-1/2 -translate-x-1/2 -bottom-16 md:-bottom-20">
@@ -119,7 +171,7 @@ function OrgHero({ name, primaryColor, safeHeroUrl, safeLogoUrl }: OrgHeroProps)
                         />
                     ) : (
                         <div
-                            className="h-full w-full flex items-center justify-center text-4xl font-bold text-white"
+                            className="h-full w-full flex items-center justify-center text-4xl font-bold text-white shadow-inner"
                             style={{ backgroundColor: bgColor }}
                         >
                             {name.charAt(0).toUpperCase()}
@@ -149,7 +201,7 @@ function OrgHeader({ name, safeWebsiteUrl, websiteHostname }: OrgHeaderProps) {
                     href={safeWebsiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-primary hover:underline"
+                    className="inline-flex items-center gap-1 mt-2 text-[var(--tenant-primary)] hover:underline"
                 >
                     <Globe className="h-4 w-4" />
                     <span>{websiteHostname}</span>
@@ -199,7 +251,7 @@ function SocialLink({ platform, url }: { platform: string; url: string }) {
             href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary hover:text-white transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-primary"
+            className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-600 hover:bg-[var(--tenant-primary)] hover:text-white transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-[var(--tenant-primary)]"
             aria-label={`Visit ${platform}`}
         >
             {icons[platform] || <ExternalLink className="h-5 w-5" />}
@@ -240,7 +292,7 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
                 {email && (
                     <a
                         href={`mailto:${email}`}
-                        className="flex items-center gap-2 hover:text-primary"
+                        className="flex items-center gap-2 hover:text-[var(--tenant-primary)]"
                     >
                         <Mail className="h-5 w-5" />
                         <span>{email}</span>
@@ -249,7 +301,7 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
                 {phone && (
                     <a
                         href={`tel:${phone}`}
-                        className="flex items-center gap-2 hover:text-primary"
+                        className="flex items-center gap-2 hover:text-[var(--tenant-primary)]"
                     >
                         <Phone className="h-5 w-5" />
                         <span>{phone}</span>
@@ -261,6 +313,287 @@ function OrgContact({ email, phone, address }: OrgContactProps) {
                         <span>{address}</span>
                     </div>
                 )}
+            </div>
+        </section>
+    );
+}
+
+interface OrgImpactProps {
+    stats: OrgStat[];
+}
+
+function OrgImpact({ stats }: OrgImpactProps) {
+    if (!stats || stats.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Our Impact
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {stats.map((stat, idx) => {
+                    // Supported icons: users, star, check, map, globe, mail, phone
+                    const IconComponent = {
+                        users: Users,
+                        star: Star,
+                        check: CheckCircle,
+                        checkCircle: CheckCircle,
+                        map: MapPin,
+                        mappin: MapPin,
+                        globe: Globe,
+                        mail: Mail,
+                        phone: Phone,
+                    }[stat.icon.toLowerCase()] || Star;
+
+                    return (
+                        <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border text-center flex flex-col items-center justify-center gap-2">
+                            <div className="p-3 rounded-full bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)] mb-1">
+                                <IconComponent className="h-6 w-6" />
+                            </div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white leading-none">{stat.value ?? '0'}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">{stat.label ?? 'Metric'}</div>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
+interface OrgProgramsProps {
+    programs: OrgProgram[];
+}
+
+function OrgPrograms({ programs }: OrgProgramsProps) {
+    if (!programs || programs.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Programs & Services
+            </h2>
+            <div className="space-y-4">
+                {programs.map((prog, idx) => {
+                    const safeLink = prog.linkUrl ? safeUrl(prog.linkUrl) : undefined;
+                    return (
+                        <div key={idx} className="p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm border-l-4 border-l-[var(--tenant-primary)]">
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{prog.title || 'Untitled Program'}</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-3">{prog.description || ''}</p>
+                            {safeLink && (
+                                <a href={safeLink} className="text-xs font-semibold text-[var(--tenant-primary)] hover:underline flex items-center gap-1">
+                                    Learn More <ExternalLink className="h-3 w-3" />
+                                </a>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
+interface OrgTeamProps {
+    team: OrgTeamMember[];
+}
+
+function OrgTeam({ team }: OrgTeamProps) {
+    if (!team || team.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Leadership & Team
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {team.map((member, idx) => {
+                    const safeLinkedin = member.linkedinUrl ? safeUrl(member.linkedinUrl) : undefined;
+                    return (
+                        <div key={idx} className="flex items-center gap-4 p-4 border rounded-xl">
+                            <div
+                                className="h-12 w-12 rounded-full flex items-center justify-center font-bold"
+                                style={{
+                                    backgroundColor: 'color-mix(in srgb, var(--tenant-primary), transparent 90%)',
+                                    color: 'var(--tenant-primary)'
+                                }}
+                            >
+                                <span>{member.name?.[0] || '?'}</span>
+                            </div>
+                            <div>
+                                <div className="font-semibold text-gray-900 dark:text-white truncate">{member.name || 'Unknown Member'}</div>
+                                <div className="text-sm text-gray-500 truncate">{member.title || ''}</div>
+                                {safeLinkedin && (
+                                    <a href={safeLinkedin} className="text-xs text-[#0A66C2] hover:underline" target="_blank" rel="noopener noreferrer">
+                                        LinkedIn
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
+interface OrgGalleryProps {
+    gallery: OrgGalleryImage[];
+}
+
+function OrgGallery({ gallery }: OrgGalleryProps) {
+    if (!gallery || gallery.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Photo Gallery
+            </h2>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {gallery.map((img, idx) => {
+                    const safeImg = safeUrl(img.url);
+                    if (!safeImg) return null;
+                    return (
+                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border bg-[var(--tenant-primary)]/5 dark:bg-[var(--tenant-primary)]/10">
+                            <Image
+                                src={safeImg}
+                                alt={img.caption || `Organisation gallery photo ${idx + 1}`}
+                                width={400}
+                                height={400}
+                                unoptimized
+                                className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
+interface OrgTestimonialsProps {
+    testimonials: OrgTestimonial[];
+}
+
+function OrgTestimonials({ testimonials }: OrgTestimonialsProps) {
+    if (!testimonials || testimonials.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider text-center">
+                Testimonials
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {testimonials.map((t, idx) => {
+                    const safeAvatar = t.imageUrl ? safeUrl(t.imageUrl) : undefined;
+                    return (
+                        <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-gray-800/20 border shadow-sm relative italic flex flex-col">
+                            <div className="text-gray-600 dark:text-gray-300 mb-6 flex-grow line-clamp-4">&quot;{t.quote || ''}&quot;</div>
+                            <div className="flex items-center gap-3">
+                                {safeAvatar ? (
+                                    <div className="h-10 w-10 rounded-full overflow-hidden border">
+                                        <Image
+                                            src={safeAvatar}
+                                            alt={t.author || 'Contributor'}
+                                            width={40}
+                                            height={40}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 not-italic font-bold">
+                                        {t.author?.[0] || '?'}
+                                    </div>
+                                )}
+                                <div className="not-italic overflow-hidden">
+                                    <div className="font-bold text-sm text-[var(--tenant-primary)] truncate">— {t.author || 'Anonymous'}</div>
+                                    {t.role && <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{t.role}</div>}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
+interface OrgEventsProps {
+    events: OrgEvent[];
+}
+
+function OrgEvents({ events }: OrgEventsProps) {
+    if (!events || events.length === 0) return null;
+    return (
+        <section className="mb-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
+                Upcoming Events
+            </h2>
+            <div className="space-y-4">
+                {events.map((event, idx) => {
+                    const safeEventUrl = event.url ? safeUrl(event.url) : undefined;
+                    return (
+                        <div key={idx} className="flex flex-col md:flex-row md:items-center justify-between p-5 border rounded-xl bg-white dark:bg-gray-800/20 shadow-sm gap-4">
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white mb-1">{event.title || 'Untitled Event'}</h3>
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                                    <div className="flex items-center gap-1">
+                                        <Star className="h-3 w-3" />
+                                        <span>{event.date}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        <span>{event.location}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {safeEventUrl && (
+                                <a
+                                    href={safeEventUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-[var(--tenant-primary)] hover:text-white transition-colors text-center"
+                                >
+                                    Event Details
+                                </a>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
+interface OrgCTAsProps {
+    ctas: OrgCTA[];
+}
+
+function OrgCTAs({ ctas }: OrgCTAsProps) {
+    if (!ctas || ctas.length === 0) return null;
+
+    const getCtaClass = (style: string) => {
+        const base = "px-8 py-3 rounded-full font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-center";
+        switch (style) {
+            case 'secondary':
+                return `${base} bg-[var(--tenant-secondary)] text-white hover:opacity-90`;
+            case 'outline':
+                return `${base} border-2 border-[var(--tenant-primary)] text-[var(--tenant-primary)] hover:bg-[var(--tenant-primary)] hover:text-white`;
+            case 'primary':
+            default:
+                return `${base} bg-[var(--tenant-primary)] text-white hover:opacity-90`;
+        }
+    };
+
+    return (
+        <section className="mb-12">
+            <div className="flex flex-wrap justify-center gap-4">
+                {ctas.map((cta, idx) => {
+                    const safeCtaUrl = safeUrl(cta.url);
+                    if (!safeCtaUrl) return null;
+                    return (
+                        <a
+                            key={idx}
+                            href={safeCtaUrl}
+                            className={getCtaClass(cta.style)}
+                        >
+                            {cta.label}
+                        </a>
+                    );
+                })}
             </div>
         </section>
     );
@@ -381,13 +714,6 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
 
     return (
         <div className="max-w-full overflow-hidden">
-            <OrgHero
-                name={tenant.name}
-                primaryColor={tenant.primaryColor}
-                safeHeroUrl={safeHeroUrl}
-                safeLogoUrl={safeLogoUrl}
-            />
-
             <main className="max-w-3xl mx-auto px-4 pt-20 md:pt-24 pb-16">
                 <OrgHeader
                     name={tenant.name}
@@ -395,19 +721,56 @@ export default async function OrgProfilePage({ params }: OrgProfilePageProps) {
                     websiteHostname={websiteHostname}
                 />
 
-                {aboutContent && <OrgAbout content={aboutContent} />}
+                <OrgHero
+                    name={tenant.name}
+                    primaryColor={tenant.primaryColor}
+                    safeHeroUrl={safeHeroUrl}
+                    safeLogoUrl={safeLogoUrl}
+                />
 
-                {hasSocialLinks && socialLinks && (
-                    <OrgSocialLinks socialLinks={socialLinks} />
-                )}
+                <div className="mt-12">
+                    {aboutContent && <OrgAbout content={aboutContent} />}
 
-                {hasContactInfo && (
-                    <OrgContact
-                        email={validEmail}
-                        phone={validPhone}
-                        address={sanitizedAddress}
-                    />
-                )}
+                    {tenant.impactStats && tenant.impactStats.length > 0 && (
+                        <OrgImpact stats={tenant.impactStats} />
+                    )}
+
+                    {tenant.programs && tenant.programs.length > 0 && (
+                        <OrgPrograms programs={tenant.programs} />
+                    )}
+
+                    {tenant.gallery && tenant.gallery.length > 0 && (
+                        <OrgGallery gallery={tenant.gallery} />
+                    )}
+
+                    {tenant.teamMembers && tenant.teamMembers.length > 0 && (
+                        <OrgTeam team={tenant.teamMembers} />
+                    )}
+
+                    {tenant.events && tenant.events.length > 0 && (
+                        <OrgEvents events={tenant.events} />
+                    )}
+
+                    {tenant.testimonials && tenant.testimonials.length > 0 && (
+                        <OrgTestimonials testimonials={tenant.testimonials} />
+                    )}
+
+                    {tenant.ctas && tenant.ctas.length > 0 && (
+                        <OrgCTAs ctas={tenant.ctas} />
+                    )}
+
+                    {hasSocialLinks && socialLinks && (
+                        <OrgSocialLinks socialLinks={socialLinks} />
+                    )}
+
+                    {hasContactInfo && (
+                        <OrgContact
+                            email={validEmail}
+                            phone={validPhone}
+                            address={sanitizedAddress}
+                        />
+                    )}
+                </div>
             </main>
 
             <OrgFooter tenantName={tenant.name} />

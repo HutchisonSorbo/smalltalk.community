@@ -122,6 +122,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
                             >
                                 Home
                             </Link>
+                            {(role === 'admin' || role === 'board') && (
+                                <Link
+                                    href={`/communityos/${tenantCode}/settings/profile`}
+                                    className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
+                                >
+                                    Settings
+                                </Link>
+                            )}
                             <Link
                                 href="/dashboard"
                                 className="text-sm font-medium text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition-colors"
