@@ -18,8 +18,20 @@ interface PublicProfileAdminControlsProps {
     tenant: PublicTenant;
 }
 
+/**
+ * Validates if the color string is a valid 6-digit hex code.
+ * Falls back to black if invalid.
+ */
+function isValidHexColor(color: string | null | undefined): boolean {
+    if (!color) return false;
+    return /^#[0-9A-F]{6}$/i.test(color);
+}
+
 export function PublicProfileAdminControls({ tenant }: PublicProfileAdminControlsProps) {
     const [open, setOpen] = useState(false);
+
+    // Sanitize primary color
+    const safePrimaryColor = isValidHexColor(tenant.primaryColor) ? tenant.primaryColor! : '#000000';
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
@@ -28,7 +40,7 @@ export function PublicProfileAdminControls({ tenant }: PublicProfileAdminControl
                     <Button
                         size="lg"
                         className="rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-white border border-white/10"
-                        style={{ backgroundColor: tenant.primaryColor || '#000000' }}
+                        style={{ backgroundColor: safePrimaryColor }}
                         aria-label="Edit Profile"
                     >
                         <Edit className="h-4 w-4 mr-2" />

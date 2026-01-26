@@ -21,6 +21,8 @@ import {
     Phone,
     MapPin,
     ExternalLink,
+    Users,
+    Star,
     CheckCircle,
 } from "lucide-react";
 import { PublicProfileAdminControls } from "@/components/org/public-profile-admin-controls";

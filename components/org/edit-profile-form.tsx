@@ -40,6 +40,156 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// --- Subcomponents ---
+
+function BasicInfo({ control }: { control: any }) {
+    return (
+        <div className="space-y-4">
+            <h3 className="font-semibold text-lg border-b pb-2">Basic Info</h3>
+            <FormField
+                control={control}
+                name="name"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Organisation Name</FormLabel>
+                        <FormControl><Input placeholder="Acme Corp" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name="missionStatement"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Mission Statement</FormLabel>
+                        <FormControl><Textarea placeholder="Our mission is..." className="resize-none h-20" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name="description"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl><Textarea placeholder="About us..." className="resize-none h-32" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name="primaryColor"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Primary Brand Color</FormLabel>
+                        <div className="flex gap-2">
+                            <FormControl><Input placeholder="#000000" {...field} /></FormControl>
+                            <div className="w-10 h-10 rounded border shadow-sm" style={{ backgroundColor: field.value || '#ffffff' }} />
+                        </div>
+                        <FormDescription>Hex code format (e.g. #FF5733)</FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+    );
+}
+
+function ContactLocation({ control }: { control: any }) {
+    return (
+        <div className="space-y-4">
+            <h3 className="font-semibold text-lg border-b pb-2">Contact & Location</h3>
+            <FormField
+                control={control}
+                name="website"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Website</FormLabel>
+                        <FormControl><Input placeholder="https://..." {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name="contactEmail"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Contact Email</FormLabel>
+                        <FormControl><Input placeholder="contact@example.com" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name="contactPhone"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl><Input placeholder="(555) 123-4567" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name="address"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl><Input placeholder="123 Main St, City" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+    );
+}
+
+function SocialLinks({ control }: { control: any }) {
+    return (
+        <div className="space-y-4">
+            <h3 className="font-semibold text-lg border-b pb-2">Social Links</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {["facebook", "instagram", "twitter", "linkedin", "youtube"].map((platform) => (
+                    <FormField
+                        key={platform}
+                        control={control}
+                        name={platform as any}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="capitalize">{platform === "twitter" ? "X (Twitter)" : platform}</FormLabel>
+                                <FormControl><Input placeholder={`https://${platform}.com/...`} {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function FormActions({ isSubmitting, onSuccess }: { isSubmitting: boolean, onSuccess?: () => void }) {
+    return (
+        <div className="sticky bottom-0 pt-4 pb-2 bg-white dark:bg-gray-950 border-t mt-6 flex justify-end gap-2">
+            {onSuccess && (
+                <Button type="button" variant="outline" onClick={onSuccess}>Cancel</Button>
+            )}
+            <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+            </Button>
+        </div>
+    );
+}
+
+// --- Main Component ---
+
 interface EditProfileFormProps {
     tenant: PublicTenant;
     onSuccess?: () => void;
@@ -48,6 +198,8 @@ interface EditProfileFormProps {
 export function EditProfileForm({ tenant, onSuccess }: EditProfileFormProps) {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const socialLinks = tenant.socialLinks || {};
 
     const defaultValues: FormValues = {
         name: tenant.name || "",
@@ -58,11 +210,11 @@ export function EditProfileForm({ tenant, onSuccess }: EditProfileFormProps) {
         contactPhone: tenant.contactPhone || "",
         address: tenant.address || "",
         primaryColor: tenant.primaryColor || "",
-        facebook: tenant.socialLinks.facebook || "",
-        instagram: tenant.socialLinks.instagram || "",
-        twitter: tenant.socialLinks.twitter || "",
-        linkedin: tenant.socialLinks.linkedin || "",
-        youtube: tenant.socialLinks.youtube || "",
+        facebook: socialLinks.facebook ?? "",
+        instagram: socialLinks.instagram ?? "",
+        twitter: socialLinks.twitter ?? "",
+        linkedin: socialLinks.linkedin ?? "",
+        youtube: socialLinks.youtube ?? "",
     };
 
     const form = useForm<FormValues>({
@@ -75,32 +227,24 @@ export function EditProfileForm({ tenant, onSuccess }: EditProfileFormProps) {
         try {
             const formData = new FormData();
             Object.entries(data).forEach(([key, value]) => {
-                if (value !== undefined && value !== null) {
-                    formData.append(key, value);
-                }
+                if (value !== undefined && value !== null) formData.append(key, value);
             });
 
             const result = await updateTenantProfile(tenant.code, formData);
 
             if (result.error) {
-                toast({
-                    title: "Error",
-                    description: result.error,
-                    variant: "destructive",
-                });
+                toast({ title: "Error", description: result.error, variant: "destructive" });
             } else {
-                toast({
-                    title: "Success",
-                    description: "Profile updated successfully.",
-                });
+                toast({ title: "Success", description: "Profile updated successfully." });
                 if (onSuccess) onSuccess();
             }
         } catch (error) {
-            toast({
-                title: "Error",
-                description: "Something went wrong. Please try again.",
-                variant: "destructive",
+            console.error("[EditProfileForm:onSubmit] Error submitting form:", {
+                tenantCode: tenant.code,
+                error,
+                formData: data // Be careful logging PI, but for debug context ok
             });
+            toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
         } finally {
             setIsSubmitting(false);
         }
@@ -109,207 +253,10 @@ export function EditProfileForm({ tenant, onSuccess }: EditProfileFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-                <div className="space-y-4">
-                    <h3 className="font-semibold text-lg border-b pb-2">Basic Info</h3>
-                    <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Organisation Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Acme Corp" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="missionStatement"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Mission Statement</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="Our mission is..." className="resize-none h-20" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="About us..." className="resize-none h-32" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="primaryColor"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Primary Brand Color</FormLabel>
-                                <div className="flex gap-2">
-                                    <FormControl>
-                                        <Input placeholder="#000000" {...field} />
-                                    </FormControl>
-                                    <div
-                                        className="w-10 h-10 rounded border shadow-sm"
-                                        style={{ backgroundColor: field.value || '#ffffff' }}
-                                    />
-                                </div>
-                                <FormDescription>Hex code format (e.g. #FF5733)</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="space-y-4">
-                    <h3 className="font-semibold text-lg border-b pb-2">Contact & Location</h3>
-                    <FormField
-                        control={form.control}
-                        name="website"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Website</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="https://..." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="contactEmail"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Contact Email</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="contact@example.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="contactPhone"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Phone</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="(555) 123-4567" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Address</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="123 Main St, City" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                <div className="space-y-4">
-                    <h3 className="font-semibold text-lg border-b pb-2">Social Links</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="facebook"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Facebook</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="https://facebook.com/..." {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="instagram"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Instagram</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="https://instagram.com/..." {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="twitter"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>X (Twitter)</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="https://x.com/..." {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="linkedin"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>LinkedIn</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="https://linkedin.com/in/..." {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="youtube"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>YouTube</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="https://youtube.com/..." {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                </div>
-
-                <div className="sticky bottom-0 pt-4 pb-2 bg-white dark:bg-gray-950 border-t mt-6 flex justify-end gap-2">
-                    {onSuccess && (
-                        <Button type="button" variant="outline" onClick={onSuccess}>
-                            Cancel
-                        </Button>
-                    )}
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Changes
-                    </Button>
-                </div>
+                <BasicInfo control={form.control} />
+                <ContactLocation control={form.control} />
+                <SocialLinks control={form.control} />
+                <FormActions isSubmitting={isSubmitting} onSuccess={onSuccess} />
             </form>
         </Form>
     );

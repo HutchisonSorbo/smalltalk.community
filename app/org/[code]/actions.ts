@@ -22,25 +22,10 @@ const updateTenantSchema = z.object({
     youtube: z.string().url().optional().or(z.literal("")),
 });
 
-export async function updateTenantProfile(tenantCode: string, formData: FormData) {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-        return { error: "Unauthorized" };
-    }
-
-    const tenant = await getTenantByCode(tenantCode);
-    if (!tenant) {
-        return { error: "Tenant not found" };
-    }
-
-    const isAdmin = await isTenantAdmin(user.id, tenant.id);
-    if (!isAdmin) {
-        return { error: "Forbidden" };
-    }
-
-    // Parse form data
+/**
+ * Parses and validates tenant form data.
+ */
+function parseTenantFormData(formData: FormData) {
     const rawData = {
         name: formData.get("name")?.toString() || "",
         description: formData.get("description")?.toString() || "",
@@ -57,41 +42,59 @@ export async function updateTenantProfile(tenantCode: string, formData: FormData
         youtube: formData.get("youtube")?.toString() || "",
     };
 
-    const validated = updateTenantSchema.safeParse(rawData);
+    return updateTenantSchema.safeParse(rawData);
+}
 
-    if (!validated.success) {
-        return { error: "Validation error", details: validated.error.flatten() };
-    }
+/**
+ * Merges existing social links with new ones from the form.
+ */
+function mergeSocialLinks(existingSocials: Record<string, string>, newSocialsData: Record<string, string | undefined>) {
+    const merged = { ...existingSocials, ...newSocialsData };
 
-    const {
-        facebook,
-        instagram,
-        twitter,
-        linkedin,
-        youtube,
-        ...fields
-    } = validated.data;
-
-    // Construct social links object
-    // Merge with existing links just in case, but here we replace specific keys
-    const currentSocials = (tenant.socialLinks as Record<string, string>) || {};
-    const newSocials = {
-        ...currentSocials,
-        facebook: facebook || undefined,
-        instagram: instagram || undefined,
-        twitter: twitter || undefined,
-        linkedin: linkedin || undefined,
-        youtube: youtube || undefined,
-    };
-
-    // Clean up undefined values from social links
-    Object.keys(newSocials).forEach(key => {
-        if (newSocials[key] === undefined) {
-            delete newSocials[key];
-        }
+    // Remove undefined values
+    Object.keys(merged).forEach(key => {
+        if (merged[key] === undefined) delete merged[key];
     });
 
+    return merged;
+}
+
+/**
+ * Updates a tenant's profile with new data.
+ * 
+ * @param {string} tenantCode The tenant's unique URL code (slug).
+ * @param {FormData} formData The form data containing profile updates.
+ * @returns {Promise<{ success?: boolean; error?: string; details?: any }>} Result object indicating success or failure.
+ * 
+ * Side Effects:
+ * - Updates the `tenants` table in the database.
+ * - Revalidates the public profile page cache.
+ */
+export async function updateTenantProfile(tenantCode: string, formData: FormData): Promise<{ success?: boolean; error?: string; details?: any }> {
     try {
+        const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !user) return { error: "Unauthorized" };
+
+        const tenant = await getTenantByCode(tenantCode);
+        if (!tenant) return { error: "Tenant not found" };
+
+        const isAdmin = await isTenantAdmin(user.id, tenant.id);
+        if (!isAdmin) return { error: "Forbidden" };
+
+        const validated = parseTenantFormData(formData);
+        if (!validated.success) {
+            return { error: "Validation error", details: validated.error.flatten() };
+        }
+
+        const { facebook, instagram, twitter, linkedin, youtube, ...fields } = validated.data;
+
+        const newSocials = mergeSocialLinks(
+            (tenant.socialLinks as Record<string, string>) || {},
+            { facebook: facebook || undefined, instagram: instagram || undefined, twitter: twitter || undefined, linkedin: linkedin || undefined, youtube: youtube || undefined }
+        );
+
         const { error } = await supabase
             .from("tenants")
             .update({
@@ -113,7 +116,7 @@ export async function updateTenantProfile(tenantCode: string, formData: FormData
         revalidatePath(`/org/${tenantCode}`);
         return { success: true };
     } catch (error) {
-        console.error("Error updating tenant:", error);
+        console.error(`[updateTenantProfile] Error updating tenant ${tenantCode}:`, error);
         return { error: "Failed to update profile" };
     }
 }
