@@ -3,10 +3,11 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test.describe('Public Org Profile Accessibility', () => {
-    test('should pass axe accessibility scan on /org/stc', async ({ page }) => {
+    const tenantCode = process.env.TEST_TENANT_CODE || 'stc';
+
+    test(`should pass axe accessibility scan on /org/${tenantCode}`, async ({ page }) => {
         // Navigate to the public profile
-        // Note: This relies on 'stc' tenant existing. If it fails due to 404, we might need a backup.
-        await page.goto('/org/stc');
+        await page.goto(`/org/${tenantCode}`);
 
         // Wait for main content to identify success or 404
         // If it's a 404, the test will likely fail on timeout or specific assertion, 

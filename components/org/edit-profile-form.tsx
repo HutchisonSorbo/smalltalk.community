@@ -242,7 +242,7 @@ export function EditProfileForm({ tenant, onSuccess }: EditProfileFormProps) {
             console.error("[EditProfileForm:onSubmit] Error submitting form:", {
                 tenantCode: tenant.code,
                 error,
-                formData: data // Be careful logging PI, but for debug context ok
+                fields: Object.keys(data).join(", "),
             });
             toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
         } finally {
