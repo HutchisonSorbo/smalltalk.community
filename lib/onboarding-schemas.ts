@@ -55,6 +55,19 @@ export const profileSetupSchema = z.object({
     location: z.string().optional(), // We might convert to lat/long on server
     profileImageUrl: z.string().url().optional(),
 
+    // Added for OAuth users who might be missing DOB
+    dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
+        if (!val) return true;
+        const date = new Date(val);
+        const now = new Date();
+
+        // Normalize to YYYYMMDD for local date comparison
+        const birthDateNum = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+        const minAgeDateNum = (now.getFullYear() - 13) * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+
+        return !isNaN(date.getTime()) && birthDateNum <= minAgeDateNum;
+    }, "You must be at least 13 years old"),
+
     // For Organizations
     serviceArea: z.string().optional(),
 
