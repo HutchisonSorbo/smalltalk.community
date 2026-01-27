@@ -39,9 +39,16 @@ import {
   contactRequests,
   type ContactRequest,
   type InsertContactRequest,
+  classifieds,
+  type Classified,
+  type InsertClassified,
+  professionalProfiles,
+  type ProfessionalProfile,
+  type InsertProfessionalProfile,
+  userPrivacySettings,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull } from "drizzle-orm";
+import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull, getTableColumns } from "drizzle-orm";
 
 export interface MusicianFilters {
   location?: string;
@@ -69,6 +76,7 @@ export interface GigFilters {
   location?: string;
   date?: string; // 'upcoming', 'past', 'today'
   genre?: string;
+  bandId?: string;
   searchQuery?: string;
   limit?: number;
   offset?: number;
@@ -80,6 +88,24 @@ export interface BandFilters extends Partial<Band> {
   offset?: number;
 }
 
+export interface ClassifiedFilters {
+  location?: string;
+  instrument?: string;
+  type?: string;
+  genre?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ProfessionalFilters {
+  location?: string;
+  role?: string;
+  searchQuery?: string;
+  limit?: number;
+  offset?: number;
+  hasLocation?: boolean;
+}
+
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
@@ -88,6 +114,7 @@ export interface IStorage {
 
   // Musician profile operations
   getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]>;
+  getMusicianLocations(filters?: MusicianFilters): Promise<Pick<MusicianProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'instruments' | 'isLocationShared'>[]>;
   getMusicianProfile(id: string): Promise<MusicianProfile | undefined>;
   getMusicianProfilesByUser(userId: string): Promise<MusicianProfile[]>;
   createMusicianProfile(profile: InsertMusicianProfile): Promise<MusicianProfile>;
@@ -132,6 +159,22 @@ export interface IStorage {
   getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }>;
   hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean>;
 
+  // Classifieds operations
+  getClassifieds(filters?: ClassifiedFilters): Promise<Classified[]>;
+  getClassified(id: string): Promise<Classified | undefined>;
+  createClassified(classified: InsertClassified): Promise<Classified>;
+  deleteClassified(id: string): Promise<boolean>;
+
+  // Professionals operations
+  getProfessionalProfiles(filters?: ProfessionalFilters): Promise<ProfessionalProfile[]>;
+  getProfessionalLocations(filters?: ProfessionalFilters): Promise<Pick<ProfessionalProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'role' | 'isLocationShared'>[]>;
+  getProfessionalProfile(id: string): Promise<ProfessionalProfile | undefined>;
+  getProfessionalProfileByUserId(userId: string): Promise<ProfessionalProfile | undefined>;
+  createProfessionalProfile(profile: InsertProfessionalProfile): Promise<ProfessionalProfile>;
+  updateProfessionalProfile(id: string, profile: Partial<InsertProfessionalProfile>): Promise<ProfessionalProfile | undefined>;
+  deleteProfessionalProfile(id: string): Promise<boolean>;
+
+
   // Band operations
   createBand(band: InsertBand): Promise<Band>;
   getBand(id: string): Promise<Band | undefined>;
@@ -162,6 +205,20 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private _ratingCache = new Map<string, { data: { average: number; count: number }; timestamp: number }>();
+  private _CACHE_TTL = 60 * 1000; // 1 minute
+  private _CACHE_MAX_SIZE = 1000;
+
+  // Helper to prevent SQL DoS via wildcard injection
+  private _escapeLikeString(str: string): string {
+    return str.replace(/[\\%_]/g, "\\$&");
+  }
+
+  private _invalidateRatingCache(targetType: string, targetId: string) {
+    const key = `${targetType}|${targetId}`;
+    this._ratingCache.delete(key);
+  }
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -173,14 +230,19 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // Exclude createdAt from the update set to prevent overwriting on conflict
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { createdAt, ...updateData } = userData;
+
     const [user] = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          ...userData,
+          ...updateData,
           updatedAt: new Date(),
         },
       })
@@ -188,61 +250,103 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+
   // Musician profile operations
   async getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]> {
-    const conditions = [eq(musicianProfiles.isActive, true)];
-
-    if (filters) {
-      if (filters.location) {
-        conditions.push(eq(musicianProfiles.location, filters.location));
-      }
-      if (filters.experienceLevel) {
-        conditions.push(eq(musicianProfiles.experienceLevel, filters.experienceLevel));
-      }
-      if (filters.availability) {
-        conditions.push(eq(musicianProfiles.availability, filters.availability));
-      }
-      if (filters.instruments && filters.instruments.length > 0) {
-        conditions.push(arrayOverlaps(musicianProfiles.instruments, filters.instruments));
-      }
-      if (filters.genres && filters.genres.length > 0) {
-        conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
-      }
-      if (filters.searchQuery) {
-        const query = `%${filters.searchQuery}%`;
-        const searchCondition = or(
-          ilike(musicianProfiles.name, query),
-          ilike(musicianProfiles.bio, query),
-          // Use array_to_string for array columns
-          sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${query}`,
-          sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${query}`
-        );
-        if (searchCondition) {
-          conditions.push(searchCondition);
-        }
-      }
-
-      if (filters.hasLocation) {
-        const locationCondition = and(
-          isNotNull(musicianProfiles.latitude),
-          isNotNull(musicianProfiles.longitude),
-          eq(musicianProfiles.isLocationShared, true),
-          ne(musicianProfiles.latitude, ""),
-          ne(musicianProfiles.longitude, "")
-        );
-        if (locationCondition) {
-          conditions.push(locationCondition);
-        }
-      }
-    }
-
+    const conditions = this._buildMusicianFilters(filters);
     return db
-      .select()
+      .select({ ...getTableColumns(musicianProfiles) })
       .from(musicianProfiles)
-      .where(and(...conditions))
+      .leftJoin(users, eq(musicianProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(musicianProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
       .orderBy(desc(musicianProfiles.createdAt))
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
+  }
+
+  async getMusicianLocations(filters?: MusicianFilters): Promise<Pick<MusicianProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'instruments' | 'isLocationShared'>[]> {
+    const conditions = this._buildMusicianFilters(filters);
+    return db
+      .select({
+        id: musicianProfiles.id,
+        latitude: musicianProfiles.latitude,
+        longitude: musicianProfiles.longitude,
+        location: musicianProfiles.location,
+        instruments: musicianProfiles.instruments,
+        isLocationShared: musicianProfiles.isLocationShared
+      })
+      .from(musicianProfiles)
+      .leftJoin(users, eq(musicianProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(musicianProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
+      .limit(filters?.limit || 2000);
+  }
+
+  private _buildMusicianFilters(filters?: MusicianFilters) {
+    const conditions = [eq(musicianProfiles.isActive, true)];
+
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(eq(musicianProfiles.location, filters.location));
+    }
+    if (filters.experienceLevel) {
+      conditions.push(eq(musicianProfiles.experienceLevel, filters.experienceLevel));
+    }
+    if (filters.availability) {
+      conditions.push(eq(musicianProfiles.availability, filters.availability));
+    }
+    if (filters.instruments && filters.instruments.length > 0) {
+      conditions.push(arrayOverlaps(musicianProfiles.instruments, filters.instruments));
+    }
+    if (filters.genres && filters.genres.length > 0) {
+      conditions.push(arrayOverlaps(musicianProfiles.genres, filters.genres));
+    }
+    if (filters.searchQuery) {
+      const query = this._escapeLikeString(filters.searchQuery);
+      // Optimization: Use prefix match for name (more efficient index usage)
+      // Only use wildcard if the user intends it or for description fields
+      const isPrefix = filters.searchQuery.length >= 3;
+      const nameCondition = isPrefix
+        ? ilike(musicianProfiles.name, `${query}%`)
+        : ilike(musicianProfiles.name, `%${query}%`);
+
+      const searchCondition = or(
+        nameCondition,
+        ilike(musicianProfiles.bio, `%${query}%`),
+        // Optimization: direct array overlap is faster than array_to_string if exact match
+        // But for partial search, we still need generic check.
+        // We keep the logic but rely on the fact that name is prioritized visually.
+        sql`array_to_string(${musicianProfiles.instruments}, ',') ILIKE ${`%${query}%`}`,
+        sql`array_to_string(${musicianProfiles.genres}, ',') ILIKE ${`%${query}%`}`
+      );
+      if (searchCondition) {
+        conditions.push(searchCondition);
+      }
+    }
+
+    if (filters.hasLocation) {
+      const locationCondition = and(
+        isNotNull(musicianProfiles.latitude),
+        isNotNull(musicianProfiles.longitude),
+        eq(musicianProfiles.isLocationShared, true),
+        ne(musicianProfiles.latitude, ""),
+        ne(musicianProfiles.longitude, "")
+      );
+      if (locationCondition) {
+        conditions.push(locationCondition);
+      }
+    }
+    return conditions;
   }
 
   async getMusicianProfile(id: string): Promise<MusicianProfile | undefined> {
@@ -286,47 +390,203 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
-  // Marketplace listing operations
-  async getMarketplaceListings(filters?: MarketplaceFilters): Promise<MarketplaceListing[]> {
-    const conditions = [eq(marketplaceListings.isActive, true)];
+  // Classifieds operations
+  async getClassifieds(filters?: ClassifiedFilters): Promise<Classified[]> {
+    const conditions = [eq(classifieds.isActive, true)];
 
     if (filters) {
-      if (filters.location) {
-        conditions.push(eq(marketplaceListings.location, filters.location));
-      }
-      if (filters.category && filters.category.length > 0) {
-        if (filters.category.length === 1) {
-          conditions.push(eq(marketplaceListings.category, filters.category[0]));
-        } else {
-          const categoryConditions = filters.category.map(cat =>
-            eq(marketplaceListings.category, cat)
-          );
-          conditions.push(or(...categoryConditions)!);
-        }
-      }
-      if (filters.condition && filters.condition.length > 0) {
-        if (filters.condition.length === 1) {
-          conditions.push(eq(marketplaceListings.condition, filters.condition[0]));
-        } else {
-          const conditionConditions = filters.condition.map(cond =>
-            eq(marketplaceListings.condition, cond)
-          );
-          conditions.push(or(...conditionConditions)!);
-        }
-      }
-      if (filters.minPrice !== undefined) {
-        conditions.push(gte(marketplaceListings.price, filters.minPrice));
-      }
-      if (filters.maxPrice !== undefined) {
-        conditions.push(lte(marketplaceListings.price, filters.maxPrice));
-      }
+      if (filters.location) conditions.push(ilike(classifieds.location, `%${filters.location}%`));
+      if (filters.instrument) conditions.push(eq(classifieds.instrument, filters.instrument));
+      if (filters.type) conditions.push(eq(classifieds.type, filters.type));
+      if (filters.genre) conditions.push(eq(classifieds.genre, filters.genre));
     }
 
+    return db
+      .select()
+      .from(classifieds)
+      .where(and(...conditions))
+      .orderBy(desc(classifieds.createdAt))
+      .limit(filters?.limit || 50)
+      .offset(filters?.offset || 0);
+  }
+
+  async getClassified(id: string): Promise<Classified | undefined> {
+    const [item] = await db
+      .select()
+      .from(classifieds)
+      .where(eq(classifieds.id, id));
+    return item;
+  }
+
+  async createClassified(data: InsertClassified): Promise<Classified> {
+    const [item] = await db
+      .insert(classifieds)
+      .values(data)
+      .returning();
+    return item;
+  }
+
+  async deleteClassified(id: string): Promise<boolean> {
+    const [deleted] = await db
+      .delete(classifieds)
+      .where(eq(classifieds.id, id))
+      .returning();
+    return !!deleted;
+  }
+
+  // Professionals operations
+  async getProfessionalProfiles(filters?: ProfessionalFilters): Promise<ProfessionalProfile[]> {
+    const conditions = this._buildProfessionalFilters(filters);
+    return db
+      .select({ ...getTableColumns(professionalProfiles) })
+      .from(professionalProfiles)
+      .leftJoin(users, eq(professionalProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(professionalProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
+      .orderBy(desc(professionalProfiles.createdAt))
+      .limit(filters?.limit || 50)
+      .offset(filters?.offset || 0);
+  }
+
+  async getProfessionalLocations(filters?: ProfessionalFilters): Promise<Pick<ProfessionalProfile, 'id' | 'latitude' | 'longitude' | 'location' | 'role' | 'isLocationShared'>[]> {
+    const conditions = this._buildProfessionalFilters(filters);
+    return db
+      .select({
+        id: professionalProfiles.id,
+        latitude: professionalProfiles.latitude,
+        longitude: professionalProfiles.longitude,
+        location: professionalProfiles.location,
+        role: professionalProfiles.role,
+        isLocationShared: professionalProfiles.isLocationShared
+      })
+      .from(professionalProfiles)
+      .leftJoin(users, eq(professionalProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(professionalProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
+      .limit(filters?.limit || 2000);
+  }
+
+  private _buildProfessionalFilters(filters?: ProfessionalFilters) {
+    const conditions = [eq(professionalProfiles.isActive, true)];
+    if (!filters) return conditions;
+
+    if (filters.location) conditions.push(ilike(professionalProfiles.location, `%${filters.location}%`));
+    if (filters.role) conditions.push(eq(professionalProfiles.role, filters.role));
+    if (filters.searchQuery) {
+      const query = `%${filters.searchQuery}%`;
+      conditions.push(or(
+        ilike(professionalProfiles.businessName, query),
+        ilike(professionalProfiles.bio, query),
+        ilike(professionalProfiles.services, query)
+      )!);
+    }
+
+    if (filters.hasLocation) {
+      conditions.push(and(
+        isNotNull(professionalProfiles.latitude),
+        isNotNull(professionalProfiles.longitude),
+        eq(professionalProfiles.isLocationShared, true),
+        ne(professionalProfiles.latitude, ""),
+        ne(professionalProfiles.longitude, "")
+      )!);
+    }
+    return conditions;
+  }
+
+  async getProfessionalProfile(id: string): Promise<ProfessionalProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(professionalProfiles)
+      .where(eq(professionalProfiles.id, id));
+    return profile;
+  }
+
+  async getProfessionalProfileByUserId(userId: string): Promise<ProfessionalProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(professionalProfiles)
+      .where(eq(professionalProfiles.userId, userId));
+    return profile;
+  }
+
+  async createProfessionalProfile(profile: InsertProfessionalProfile): Promise<ProfessionalProfile> {
+    const [created] = await db
+      .insert(professionalProfiles)
+      .values(profile)
+      .returning();
+    return created;
+  }
+
+  async updateProfessionalProfile(id: string, profile: Partial<InsertProfessionalProfile>): Promise<ProfessionalProfile | undefined> {
+    const [updated] = await db
+      .update(professionalProfiles)
+      .set({ ...profile, updatedAt: new Date() })
+      .where(eq(professionalProfiles.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteProfessionalProfile(id: string): Promise<boolean> {
+    const [deleted] = await db
+      .delete(professionalProfiles)
+      .where(eq(professionalProfiles.id, id))
+      .returning();
+    return !!deleted;
+  }
+
+  // Marketplace listing operations
+  async getMarketplaceListings(filters?: MarketplaceFilters): Promise<MarketplaceListing[]> {
+    const conditions = this._buildMarketplaceFilters(filters);
     return db
       .select()
       .from(marketplaceListings)
       .where(and(...conditions))
       .orderBy(desc(marketplaceListings.createdAt));
+  }
+
+  private _buildMarketplaceFilters(filters?: MarketplaceFilters) {
+    const conditions = [eq(marketplaceListings.isActive, true)];
+
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(eq(marketplaceListings.location, filters.location));
+    }
+    if (filters.category && filters.category.length > 0) {
+      if (filters.category.length === 1) {
+        conditions.push(eq(marketplaceListings.category, filters.category[0]));
+      } else {
+        const categoryConditions = filters.category.map(cat =>
+          eq(marketplaceListings.category, cat)
+        );
+        conditions.push(or(...categoryConditions)!);
+      }
+    }
+    if (filters.condition && filters.condition.length > 0) {
+      if (filters.condition.length === 1) {
+        conditions.push(eq(marketplaceListings.condition, filters.condition[0]));
+      } else {
+        const conditionConditions = filters.condition.map(cond =>
+          eq(marketplaceListings.condition, cond)
+        );
+        conditions.push(or(...conditionConditions)!);
+      }
+    }
+    if (filters.minPrice !== undefined) {
+      conditions.push(gte(marketplaceListings.price, filters.minPrice));
+    }
+    if (filters.maxPrice !== undefined) {
+      conditions.push(lte(marketplaceListings.price, filters.maxPrice));
+    }
+    return conditions;
   }
 
   async getMarketplaceListing(id: string): Promise<MarketplaceListing | undefined> {
@@ -451,7 +711,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUnreadMessageCount(userId: string): Promise<number> {
     const result = await db
-      .select({ count: sql<number>`count(*):: int` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(messages)
       .where(and(eq(messages.receiverId, userId), eq(messages.isRead, false)));
     return result[0]?.count || 0;
@@ -491,6 +751,7 @@ export class DatabaseStorage implements IStorage {
 
   async createReview(review: InsertReview): Promise<Review> {
     const [newReview] = await db.insert(reviews).values(review).returning();
+    this._invalidateRatingCache(newReview.targetType, newReview.targetId);
     return newReview;
   }
 
@@ -506,27 +767,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBands(filters?: Partial<Band> & { searchQuery?: string }): Promise<Band[]> {
+    const conditions = this._buildBandFilters(filters);
+    return await db.select().from(bands).where(and(...conditions));
+  }
+
+  private _buildBandFilters(filters?: Partial<Band> & { searchQuery?: string }) {
     const conditions = [eq(bands.isActive, true)];
 
-    if (filters) {
-      if (filters.location) {
-        conditions.push(ilike(bands.location, `%${filters.location}%`));
-      }
-      if (filters.searchQuery) {
-        const query = `%${filters.searchQuery}%`;
-        const searchCondition = or(
-          ilike(bands.name, query),
-          ilike(bands.bio, query),
-          ilike(bands.location, query),
-          sql`array_to_string(${bands.genres}, ',') ILIKE ${query}`
-        );
-        if (searchCondition) {
-          conditions.push(searchCondition);
-        }
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(ilike(bands.location, `%${filters.location}%`));
+    }
+    if (filters.searchQuery) {
+      const query = `%${filters.searchQuery}%`;
+      const searchCondition = or(
+        ilike(bands.name, query),
+        ilike(bands.bio, query),
+        ilike(bands.location, query),
+        sql`array_to_string(${bands.genres}, ',') ILIKE ${query}`
+      );
+      if (searchCondition) {
+        conditions.push(searchCondition);
       }
     }
-
-    return await db.select().from(bands).where(and(...conditions));
+    return conditions;
   }
 
   async getBandsByUser(userId: string): Promise<Band[]> {
@@ -598,38 +863,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGigs(filters?: GigFilters): Promise<Gig[]> {
-    const conditions: any[] = [];
-
-    if (filters) {
-      if (filters.location) {
-        conditions.push(ilike(gigs.location, `%${filters.location}%`));
-      }
-      if (filters.genre) {
-        conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
-      }
-      if (filters.date === 'upcoming') {
-        conditions.push(gte(gigs.date, new Date()));
-      } else if (filters.date === 'past') {
-        conditions.push(lt(gigs.date, new Date()));
-      }
-      if (filters.searchQuery) {
-        const query = `%${filters.searchQuery}%`;
-        conditions.push(
-          or(
-            ilike(gigs.title, query),
-            ilike(gigs.description, query),
-            ilike(gigs.genre, query),
-            ilike(gigs.location, query)
-          )
-        );
-      }
-    }
-
+    const conditions = this._buildGigFilters(filters);
     return await db.select().from(gigs)
       .where(and(...conditions))
       .orderBy(gigs.date)
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
+  }
+
+  private _buildGigFilters(filters?: GigFilters) {
+    const conditions: any[] = [];
+    if (!filters) return conditions;
+
+    if (filters.location) {
+      conditions.push(ilike(gigs.location, `%${filters.location}%`));
+    }
+    if (filters.genre) {
+      conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
+    }
+    if (filters.bandId) {
+      conditions.push(eq(gigs.bandId, filters.bandId));
+    }
+    if (filters.date === 'upcoming') {
+      conditions.push(gte(gigs.date, new Date()));
+    } else if (filters.date === 'past') {
+      conditions.push(lt(gigs.date, new Date()));
+    }
+    if (filters.searchQuery) {
+      const query = `%${filters.searchQuery}%`;
+      conditions.push(
+        or(
+          ilike(gigs.title, query),
+          ilike(gigs.description, query),
+          ilike(gigs.genre, query),
+          ilike(gigs.location, query)
+        )
+      );
+    }
+    return conditions;
   }
 
   async getGigsByBand(bandId: string): Promise<Gig[]> {
@@ -650,15 +921,49 @@ export class DatabaseStorage implements IStorage {
       .set({ ...review, updatedAt: new Date() })
       .where(eq(reviews.id, id))
       .returning();
+
+    if (updated) {
+      this._invalidateRatingCache(updated.targetType, updated.targetId);
+    }
     return updated;
   }
 
   async deleteReview(id: string): Promise<boolean> {
     const result = await db.delete(reviews).where(eq(reviews.id, id)).returning();
+    if (result.length > 0) {
+      this._invalidateRatingCache(result[0].targetType, result[0].targetId);
+    }
     return result.length > 0;
   }
 
   async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
+    // Validate input length to prevent cache memory exhaustion attacks
+    if (targetType.length > 50 || targetId.length > 50) {
+      // Fallback to DB without caching for suspicious inputs
+      const result = await db
+        .select({
+          average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
+          count: sql<number>`COUNT(*)::int`,
+        })
+        .from(reviews)
+        .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
+      return {
+        average: result[0]?.average || 0,
+        count: result[0]?.count || 0,
+      };
+    }
+
+    const cacheKey = `${targetType}|${targetId}`;
+    const cached = this._ratingCache.get(cacheKey);
+    const now = Date.now();
+
+    if (cached && (now - cached.timestamp < this._CACHE_TTL)) {
+      // Refresh LRU position by re-inserting
+      this._ratingCache.delete(cacheKey);
+      this._ratingCache.set(cacheKey, cached);
+      return cached.data;
+    }
+
     const result = await db
       .select({
         average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
@@ -666,10 +971,21 @@ export class DatabaseStorage implements IStorage {
       })
       .from(reviews)
       .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
-    return {
+
+    const data = {
       average: result[0]?.average || 0,
       count: result[0]?.count || 0,
     };
+
+    // Eviction policy: Remove oldest entry if limit reached
+    if (this._ratingCache.size >= this._CACHE_MAX_SIZE) {
+      const oldestKey = this._ratingCache.keys().next().value;
+      if (oldestKey) {
+        this._ratingCache.delete(oldestKey);
+      }
+    }
+    this._ratingCache.set(cacheKey, { data, timestamp: now });
+    return data;
   }
 
   async hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean> {
@@ -811,7 +1127,7 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`User ${oldId} not found`);
     }
 
-    await db.transaction(async (tx) => {
+    await db.transaction(async (tx: any) => {
       // 1. Create new user with temp email
       const tempEmail = `migrated_${Date.now()}_${oldUser.email}`;
       await tx.insert(users).values({

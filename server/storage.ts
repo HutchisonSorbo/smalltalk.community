@@ -48,7 +48,7 @@ import {
   userPrivacySettings,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull, getTableColumns } from "drizzle-orm";
+import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull, isNull, getTableColumns } from "drizzle-orm";
 
 export interface MusicianFilters {
   location?: string;
@@ -261,7 +261,10 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(userPrivacySettings, eq(musicianProfiles.userId, userPrivacySettings.userId))
       .where(and(
         ...conditions,
-        ne(userPrivacySettings.profileVisibility, 'private'),
+        or(
+          isNull(userPrivacySettings.profileVisibility),
+          ne(userPrivacySettings.profileVisibility, 'private')
+        ),
         ne(users.isSuspended, true)
       ))
       .orderBy(desc(musicianProfiles.createdAt))
@@ -285,7 +288,10 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(userPrivacySettings, eq(musicianProfiles.userId, userPrivacySettings.userId))
       .where(and(
         ...conditions,
-        ne(userPrivacySettings.profileVisibility, 'private'),
+        or(
+          isNull(userPrivacySettings.profileVisibility),
+          ne(userPrivacySettings.profileVisibility, 'private')
+        ),
         ne(users.isSuspended, true)
       ))
       .limit(filters?.limit || 2000);
@@ -444,7 +450,10 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(userPrivacySettings, eq(professionalProfiles.userId, userPrivacySettings.userId))
       .where(and(
         ...conditions,
-        ne(userPrivacySettings.profileVisibility, 'private'),
+        or(
+          isNull(userPrivacySettings.profileVisibility),
+          ne(userPrivacySettings.profileVisibility, 'private')
+        ),
         ne(users.isSuspended, true)
       ))
       .orderBy(desc(professionalProfiles.createdAt))
@@ -468,7 +477,10 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(userPrivacySettings, eq(professionalProfiles.userId, userPrivacySettings.userId))
       .where(and(
         ...conditions,
-        ne(userPrivacySettings.profileVisibility, 'private'),
+        or(
+          isNull(userPrivacySettings.profileVisibility),
+          ne(userPrivacySettings.profileVisibility, 'private')
+        ),
         ne(users.isSuspended, true)
       ))
       .limit(filters?.limit || 2000);
@@ -876,359 +888,3 @@ export class DatabaseStorage implements IStorage {
     if (!filters) return conditions;
 
     if (filters.location) {
-      conditions.push(ilike(gigs.location, `%${filters.location}%`));
-    }
-    if (filters.genre) {
-      conditions.push(ilike(gigs.genre, `%${filters.genre}%`));
-    }
-    if (filters.bandId) {
-      conditions.push(eq(gigs.bandId, filters.bandId));
-    }
-    if (filters.date === 'upcoming') {
-      conditions.push(gte(gigs.date, new Date()));
-    } else if (filters.date === 'past') {
-      conditions.push(lt(gigs.date, new Date()));
-    }
-    if (filters.searchQuery) {
-      const query = `%${filters.searchQuery}%`;
-      conditions.push(
-        or(
-          ilike(gigs.title, query),
-          ilike(gigs.description, query),
-          ilike(gigs.genre, query),
-          ilike(gigs.location, query)
-        )
-      );
-    }
-    return conditions;
-  }
-
-  async getGigsByBand(bandId: string): Promise<Gig[]> {
-    return await db.select().from(gigs)
-      .where(and(eq(gigs.bandId, bandId), gte(gigs.date, new Date())))
-      .orderBy(gigs.date);
-  }
-
-  async getGigsByMusician(musicianId: string): Promise<Gig[]> {
-    return await db.select().from(gigs)
-      .where(and(eq(gigs.musicianId, musicianId), gte(gigs.date, new Date())))
-      .orderBy(gigs.date);
-  }
-
-  async updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined> {
-    const [updated] = await db
-      .update(reviews)
-      .set({ ...review, updatedAt: new Date() })
-      .where(eq(reviews.id, id))
-      .returning();
-
-    if (updated) {
-      this._invalidateRatingCache(updated.targetType, updated.targetId);
-    }
-    return updated;
-  }
-
-  async deleteReview(id: string): Promise<boolean> {
-    const result = await db.delete(reviews).where(eq(reviews.id, id)).returning();
-    if (result.length > 0) {
-      this._invalidateRatingCache(result[0].targetType, result[0].targetId);
-    }
-    return result.length > 0;
-  }
-
-  async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
-    // Validate input length to prevent cache memory exhaustion attacks
-    if (targetType.length > 50 || targetId.length > 50) {
-      // Fallback to DB without caching for suspicious inputs
-      const result = await db
-        .select({
-          average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
-          count: sql<number>`COUNT(*)::int`,
-        })
-        .from(reviews)
-        .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
-      return {
-        average: result[0]?.average || 0,
-        count: result[0]?.count || 0,
-      };
-    }
-
-    const cacheKey = `${targetType}|${targetId}`;
-    const cached = this._ratingCache.get(cacheKey);
-    const now = Date.now();
-
-    if (cached && (now - cached.timestamp < this._CACHE_TTL)) {
-      // Refresh LRU position by re-inserting
-      this._ratingCache.delete(cacheKey);
-      this._ratingCache.set(cacheKey, cached);
-      return cached.data;
-    }
-
-    const result = await db
-      .select({
-        average: sql<number>`COALESCE(AVG(${reviews.rating}), 0)::float`,
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(reviews)
-      .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
-
-    const data = {
-      average: result[0]?.average || 0,
-      count: result[0]?.count || 0,
-    };
-
-    // Eviction policy: Remove oldest entry if limit reached
-    if (this._ratingCache.size >= this._CACHE_MAX_SIZE) {
-      const oldestKey = this._ratingCache.keys().next().value;
-      if (oldestKey) {
-        this._ratingCache.delete(oldestKey);
-      }
-    }
-    this._ratingCache.set(cacheKey, { data, timestamp: now });
-    return data;
-  }
-
-  async hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean> {
-    const result = await db
-      .select()
-      .from(reviews)
-      .where(
-        and(
-          eq(reviews.reviewerId, userId),
-          eq(reviews.targetType, targetType),
-          eq(reviews.targetId, targetId)
-        )
-      );
-    return result.length > 0;
-  }
-
-  async checkRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise<boolean> {
-    const now = new Date();
-    const windowStartThreshold = new Date(now.getTime() - windowSeconds * 1000);
-
-    const [record] = await db
-      .select()
-      .from(rateLimits)
-      .where(and(eq(rateLimits.userId, userId), eq(rateLimits.type, type)));
-
-    if (!record) {
-      // First time action
-      await db.insert(rateLimits).values({
-        userId,
-        type,
-        hits: 1,
-        windowStart: now,
-      });
-      return true;
-    }
-
-    if (record.windowStart < windowStartThreshold) {
-      // Window expired, reset
-      await db
-        .update(rateLimits)
-        .set({ hits: 1, windowStart: now })
-        .where(eq(rateLimits.id, record.id));
-      return true;
-    }
-
-    if (record.hits >= limit) {
-      // Limit exceeded
-      return false;
-    }
-
-    // Increment
-    await db
-      .update(rateLimits)
-      .set({ hits: record.hits + 1 })
-      .where(eq(rateLimits.id, record.id));
-
-    return true;
-  }
-
-  // Notifications
-  async getNotifications(userId: string): Promise<Notification[]> {
-    return db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.userId, userId))
-      .orderBy(desc(notifications.createdAt));
-  }
-
-  async getUnreadNotificationCount(userId: string): Promise<number> {
-    const result = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
-    return result[0]?.count || 0;
-  }
-
-  async createNotification(notification: InsertNotification): Promise<Notification> {
-    const [created] = await db.insert(notifications).values(notification).returning();
-    return created;
-  }
-
-  async markNotificationAsRead(id: string): Promise<void> {
-    await db
-      .update(notifications)
-      .set({ isRead: true })
-      .where(eq(notifications.id, id));
-  }
-
-  async markAllNotificationsAsRead(userId: string): Promise<void> {
-    await db
-      .update(notifications)
-      .set({ isRead: true })
-      .where(eq(notifications.userId, userId));
-  }
-
-  // Contact Requests
-  async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
-    const [created] = await db.insert(contactRequests).values(request).returning();
-    return created;
-  }
-
-  async getContactRequest(requesterId: string, recipientId: string): Promise<ContactRequest | undefined> {
-    const [request] = await db
-      .select()
-      .from(contactRequests)
-      .where(
-        and(
-          eq(contactRequests.requesterId, requesterId),
-          eq(contactRequests.recipientId, recipientId)
-        )
-      );
-    return request;
-  }
-
-  async getContactRequestById(id: string): Promise<ContactRequest | undefined> {
-    const [request] = await db
-      .select()
-      .from(contactRequests)
-      .where(eq(contactRequests.id, id));
-    return request;
-  }
-
-  async updateContactRequestStatus(id: string, status: string): Promise<void> {
-    await db
-      .update(contactRequests)
-      .set({ status })
-      .where(eq(contactRequests.id, id));
-  }
-
-  // Reports
-  async createReport(report: InsertReport): Promise<Report> {
-    const [created] = await db.insert(reports).values(report).returning();
-    return created;
-  }
-
-  async migrateUserId(oldId: string, newId: string): Promise<void> {
-    const oldUser = await this.getUser(oldId);
-    if (!oldUser) {
-      throw new Error(`User ${oldId} not found`);
-    }
-
-    await db.transaction(async (tx: any) => {
-      // 1. Create new user with temp email
-      const tempEmail = `migrated_${Date.now()}_${oldUser.email}`;
-      await tx.insert(users).values({
-        ...oldUser,
-        id: newId,
-        email: tempEmail,
-        updatedAt: new Date(),
-      });
-
-      // 2. Update all references
-      // Musician Profiles
-      await tx
-        .update(musicianProfiles)
-        .set({ userId: newId })
-        .where(eq(musicianProfiles.userId, oldId));
-
-      // Marketplace Listings
-      await tx
-        .update(marketplaceListings)
-        .set({ userId: newId })
-        .where(eq(marketplaceListings.userId, oldId));
-
-      // Notifications
-      await tx
-        .update(notifications)
-        .set({ userId: newId })
-        .where(eq(notifications.userId, oldId));
-
-      // Contact Requests
-      await tx
-        .update(contactRequests)
-        .set({ requesterId: newId })
-        .where(eq(contactRequests.requesterId, oldId));
-      await tx
-        .update(contactRequests)
-        .set({ recipientId: newId })
-        .where(eq(contactRequests.recipientId, oldId));
-
-      // Messages
-      await tx
-        .update(messages)
-        .set({ senderId: newId })
-        .where(eq(messages.senderId, oldId));
-      await tx
-        .update(messages)
-        .set({ receiverId: newId })
-        .where(eq(messages.receiverId, oldId));
-
-      // Reviews
-      await tx
-        .update(reviews)
-        .set({ reviewerId: newId })
-        .where(eq(reviews.reviewerId, oldId));
-
-      // Bands
-      await tx
-        .update(bands)
-        .set({ userId: newId })
-        .where(eq(bands.userId, oldId));
-
-      // Band Members
-      await tx
-        .update(bandMembers)
-        .set({ userId: newId })
-        .where(eq(bandMembers.userId, oldId));
-
-      // Rate Limits
-      await tx
-        .update(rateLimits)
-        .set({ userId: newId })
-        .where(eq(rateLimits.userId, oldId));
-
-      // Gigs
-      await tx
-        .update(gigs)
-        .set({ creatorId: newId })
-        .where(eq(gigs.creatorId, oldId));
-
-      // Gig Managers
-      await tx
-        .update(gigManagers)
-        .set({ userId: newId })
-        .where(eq(gigManagers.userId, oldId));
-
-      // Reports
-      await tx
-        .update(reports)
-        .set({ reporterId: newId })
-        .where(eq(reports.reporterId, oldId));
-
-      // 3. Delete old user
-      await tx.delete(users).where(eq(users.id, oldId));
-
-      // 4. Update email on new user
-      await tx
-        .update(users)
-        .set({ email: oldUser.email })
-        .where(eq(users.id, newId));
-    });
-  }
-}
-
-
-export const storage = new DatabaseStorage();
