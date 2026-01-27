@@ -4,13 +4,17 @@ on:
   pull_request_review_comment:
     types: [created]
 
+permissions:
+  contents: write
+
 jobs:
   fix:
     runs-on: ubuntu-latest
-    # Only run if CodeRabbit commented and it's not a reply
+    # Only run if CodeRabbit commented on a PR from the same repo (not a fork)
     if: |
       github.event.comment.user.login == 'coderabbitai[bot]' &&
-      github.event.comment.in_reply_to_id == null
+      github.event.comment.in_reply_to_id == null &&
+      github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
