@@ -40,20 +40,6 @@ interface FixerInput {
     fileContent: string;
 }
 
-interface GenAiResponse {
-    candidates?: {
-        content?: {
-            parts?: {
-                text: string;
-            }[]
-        }[]
-    }[];
-}
-
-interface TimeoutResult {
-    error: Error;
-}
-
 /**
  * Validates and loads all necessary inputs.
  */
@@ -162,13 +148,11 @@ async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemIn
                 setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
             );
 
-            const result = await Promise.race<Promise<GenAiResponse> | Promise<TimeoutResult>>([
-                generatePromise,
-                timeoutPromise as Promise<never>
-            ]);
+            // @ts-ignore - Promise.race types can be tricky
+            const result = await Promise.race([generatePromise, timeoutPromise]);
 
             // Result handling based on @google/genai structure
-            const candidate = (result as GenAiResponse).candidates?.[0];
+            const candidate = (result as any).candidates?.[0];
             let fixedCode = candidate?.content?.parts?.[0]?.text?.trim() || '';
 
             // Clean up potential markdown formatting if Gemini ignored the instruction
