@@ -45,6 +45,7 @@ interface Config {
 
 /**
  * Validates and loads configuration.
+ * @returns {Config} The configuration object.
  */
 function loadConfig(): Config {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
@@ -83,8 +84,13 @@ function loadTasks(config: Config): FileTask[] {
         process.exit(1);
     }
 
+    if (!Array.isArray(comments)) {
+        console.error(`Invalid comments format in ${commentsFile}: expected array, got ${typeof comments}`);
+        process.exit(1);
+    }
+
     // Filter for CodeRabbit
-    const targetComments = comments.filter(c => c.user.login === 'coderabbitai[bot]');
+    const targetComments = comments.filter(c => c.user.login.toLowerCase() === 'coderabbitai[bot]');
     if (targetComments.length === 0) {
         console.log('No CodeRabbit comments found.');
         return [];
@@ -136,6 +142,7 @@ function sanitizeInput(str: string): string {
 function buildPrompt(task: FileTask): { systemInstruction: string; userPrompt: string } {
     const { filePath, fileContent, comments } = task;
 
+    const sanitizedFilePath = sanitizeInput(filePath);
     const issues = comments.map((c, i) => {
         return `ISSUE #${i + 1}:
 Comment: ${sanitizeInput(c.body)}
@@ -156,7 +163,7 @@ STRICT RULES:
 
     const userPrompt = `
 CONTEXT:
-File Path: ${filePath}
+File Path: ${sanitizedFilePath}
 Review Comments:
 ${issues}
 
@@ -168,6 +175,13 @@ ${fileContent}
 
 /**
  * Generates content using Gemini with retry logic.
+ * @param {GoogleGenAI} genAI - The GenAI client instance.
+ * @param {string} modelName - The model name to use.
+ * @param {string} systemInstruction - The system instruction prompt.
+ * @param {string} userPrompt - The user prompt details.
+ * @param {string} filePath - The file path for logging/context.
+ * @returns {Promise<string>} The generated fixed code.
+ * @throws {Error} If generation fails after retries.
  */
 async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemInstruction: string, userPrompt: string, filePath: string): Promise<string> {
     const maxRetries = 3;

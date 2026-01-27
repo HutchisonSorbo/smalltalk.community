@@ -27,6 +27,8 @@ jobs:
           # Fallback to GITHUB_TOKEN if GH_PAT is missing, but prefer PAT for triggering workflows (CodeRabbit)
           token: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
+      # Fixed 30s sleep to batch multiple incoming comments.
+      # Trades off latency for rate-limit efficiency.
       - name: Debounce
         run: sleep 30
 
@@ -44,7 +46,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" > comments.json
+          gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" --paginate > comments.json
 
       - name: Run Gemini Fixer
         env:
@@ -63,6 +65,7 @@ jobs:
           git config --global user.name "Gemini Fixer [bot]"
           git config --global user.email "gemini-fixer@smalltalk.community"
           git add .
-          git commit -m "fix: address CodeRabbit review comments" || echo "No changes to commit"
+          CHANGED_FILES=$(git diff --name-only --cached | wc -l)
+          git commit -m "fix: address CodeRabbit review comments ($CHANGED_FILES files changed)" || echo "No changes to commit"
           # Use -- to prevent flag injection, and quote the branch variable
           git push origin -- "$BRANCH_NAME"
