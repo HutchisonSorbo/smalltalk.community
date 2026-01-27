@@ -45,9 +45,10 @@ import {
   professionalProfiles,
   type ProfessionalProfile,
   type InsertProfessionalProfile,
+  userPrivacySettings,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull } from "drizzle-orm";
+import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull, getTableColumns } from "drizzle-orm";
 
 export interface MusicianFilters {
   location?: string;
@@ -254,9 +255,15 @@ export class DatabaseStorage implements IStorage {
   async getMusicianProfiles(filters?: MusicianFilters): Promise<MusicianProfile[]> {
     const conditions = this._buildMusicianFilters(filters);
     return db
-      .select()
+      .select({ ...getTableColumns(musicianProfiles) })
       .from(musicianProfiles)
-      .where(and(...conditions))
+      .leftJoin(users, eq(musicianProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(musicianProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
       .orderBy(desc(musicianProfiles.createdAt))
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
@@ -274,7 +281,13 @@ export class DatabaseStorage implements IStorage {
         isLocationShared: musicianProfiles.isLocationShared
       })
       .from(musicianProfiles)
-      .where(and(...conditions))
+      .leftJoin(users, eq(musicianProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(musicianProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
       .limit(filters?.limit || 2000);
   }
 
@@ -425,9 +438,15 @@ export class DatabaseStorage implements IStorage {
   async getProfessionalProfiles(filters?: ProfessionalFilters): Promise<ProfessionalProfile[]> {
     const conditions = this._buildProfessionalFilters(filters);
     return db
-      .select()
+      .select({ ...getTableColumns(professionalProfiles) })
       .from(professionalProfiles)
-      .where(and(...conditions))
+      .leftJoin(users, eq(professionalProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(professionalProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
       .orderBy(desc(professionalProfiles.createdAt))
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
@@ -445,7 +464,13 @@ export class DatabaseStorage implements IStorage {
         isLocationShared: professionalProfiles.isLocationShared
       })
       .from(professionalProfiles)
-      .where(and(...conditions))
+      .leftJoin(users, eq(professionalProfiles.userId, users.id))
+      .leftJoin(userPrivacySettings, eq(professionalProfiles.userId, userPrivacySettings.userId))
+      .where(and(
+        ...conditions,
+        ne(userPrivacySettings.profileVisibility, 'private'),
+        ne(users.isSuspended, true)
+      ))
       .limit(filters?.limit || 2000);
   }
 

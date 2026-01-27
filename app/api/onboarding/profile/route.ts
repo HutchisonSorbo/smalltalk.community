@@ -7,7 +7,8 @@ import {
     professionalProfiles,
     organisations,
     organisationMembers,
-    userOnboardingResponses
+    userOnboardingResponses,
+    userPrivacySettings
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
@@ -122,6 +123,28 @@ export async function POST(req: Request) {
                 questionKey: "profile_setup",
                 response: profileData
             });
+
+            // Enforce strict privacy defaults for minors
+            if (userUpdates.isMinor) {
+                await tx.insert(userPrivacySettings).values({
+                    userId,
+                    profileVisibility: 'private',
+                    showRealName: false,
+                    showLocation: false,
+                    showAge: false,
+                    allowEmailLookup: false,
+                    defaultPostVisibility: 'community'
+                }).onConflictDoUpdate({
+                    target: userPrivacySettings.userId,
+                    set: {
+                        profileVisibility: 'private',
+                        showRealName: false,
+                        showLocation: false,
+                        showAge: false,
+                        allowEmailLookup: false
+                    }
+                });
+            }
 
             if (accType === 'Individual') {
                 if (uType === 'professional') {
