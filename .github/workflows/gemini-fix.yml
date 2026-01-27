@@ -1,0 +1,57 @@
+name: '🤖 Gemini Auto-Fixer'
+
+on:
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    # Only run if CodeRabbit commented on a PR from the same repo (not a fork)
+    if: |
+      github.event.comment.user.login == 'coderabbitai[bot]' &&
+      github.event.comment.in_reply_to_id == null &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          # Fallback to GITHUB_TOKEN if GH_PAT is missing, but prefer PAT for triggering workflows (CodeRabbit)
+          token: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Gemini Fixer
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Use 2.0-flash to match script. Script honors this env var.
+          GEMINI_MODEL: 'gemini-2.0-flash'
+          FILE_PATH: ${{ github.event.comment.path }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          DIFF_HUNK: ${{ github.event.comment.diff_hunk }}
+        run: npx tsx scripts/gemini-fixer.ts
+
+      - name: Commit and Push Fix
+        env:
+          # Securely pass token and branch
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          COMMENT_PATH: ${{ github.event.comment.path }}
+        run: |
+          git config --global user.name "Gemini Fixer [bot]"
+          git config --global user.email "gemini-fixer@smalltalk.community"
+          git add .
+          git commit -m "fix: address CodeRabbit review comment on $COMMENT_PATH" || echo "No changes to commit"
+          # Use -- to prevent flag injection, and quote the branch variable
+          git push origin -- "$BRANCH_NAME"
