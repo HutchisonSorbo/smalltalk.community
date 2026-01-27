@@ -1,0 +1,36 @@
+name: '🔄 Impersonate Jules'
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  impersonate:
+    runs-on: ubuntu-latest
+    # Target Jules specifically
+    if: github.event.pull_request.user.login == 'google-labs-jules[bot]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Re-open PR as User
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          echo "Closing original PR #$PR_NUMBER..."
+          gh pr close "$PR_NUMBER" --comment "Automatically re-opening this PR as the user to trigger CodeRabbit and local automation."
+          
+          echo "Re-opening PR from branch $BRANCH..."
+          gh pr create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --head "$BRANCH" \
+            --base "$BASE" \
+            --label "daily-audit"

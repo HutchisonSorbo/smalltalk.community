@@ -1,0 +1,47 @@
+name: '🤖 Gemini Auto-Fixer'
+
+on:
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    # Only run if CodeRabbit commented and it's not a reply
+    if: |
+      github.event.comment.user.login == 'coderabbitai[bot]' &&
+      github.event.comment.in_reply_to_id == null
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Gemini Fixer
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: 'gemini-1.5-flash' # Adjusted to confirmed stable ID, user can override to 3.0 via env if available
+          FILE_PATH: ${{ github.event.comment.path }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          DIFF_HUNK: ${{ github.event.comment.diff_hunk }}
+        run: npx tsx scripts/gemini-fixer.ts
+
+      - name: Commit and Push Fix
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "Gemini Fixer [bot]"
+          git config --global user.email "gemini-fixer@smalltalk.community"
+          git add .
+          git commit -m "fix: address CodeRabbit review comment on ${{ github.event.comment.path }}" || echo "No changes to commit"
+          git push origin ${{ github.event.pull_request.head.ref }}
