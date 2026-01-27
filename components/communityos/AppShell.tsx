@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useTenant } from "./TenantProvider";
-import { communityOSApps } from "./AppLauncher";
+import { communityOSApps } from "./apps-config";
 
 interface AppShellProps {
     appId: string;

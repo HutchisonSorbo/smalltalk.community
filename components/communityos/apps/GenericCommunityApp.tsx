@@ -59,7 +59,7 @@ export function GenericCommunityApp({
     const handleSave = () => {
         if (formData.title) {
             upsertDocument(
-                isEditing || Math.random().toString(36).substr(2, 9),
+                isEditing === "new" ? crypto.randomUUID() : (isEditing as string),
                 {
                     title: formData.title,
                     description: formData.description || "",

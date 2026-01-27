@@ -48,7 +48,7 @@ export function RosteringApp() {
     const handleSave = () => {
         if (formData.workerName && formData.startTime && formData.endTime) {
             upsertDocument(
-                isEditing || Math.random().toString(36).substr(2, 9),
+                isEditing === "new" ? crypto.randomUUID() : (isEditing as string),
                 {
                     workerName: formData.workerName,
                     role: formData.role || "Volunteer",
