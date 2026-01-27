@@ -50,7 +50,7 @@ interface Config {
 function loadConfig(): Config {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
-        console.error('Missing required environment variable: GOOGLE_API_KEY');
+        console.error('Missing required environment variable: GOOGLE_API_KEY or GEMINI_API_KEY');
         process.exit(1);
     }
     const modelName = process.env.GEMINI_MODEL || MODEL_NAME;
@@ -89,8 +89,26 @@ function loadTasks(config: Config): FileTask[] {
         process.exit(1);
     }
 
+    // Safe validation and filtering
+    const validComments: Comment[] = [];
+    for (const c of comments) {
+        if (!c || typeof c !== 'object') {
+            console.warn('Skipping invalid comment: not an object');
+            continue;
+        }
+        if (!c.user || typeof c.user.login !== 'string') {
+            console.warn('Skipping invalid comment: missing user.login');
+            continue;
+        }
+        if (typeof c.path !== 'string') {
+            console.warn('Skipping invalid comment: missing path');
+            continue;
+        }
+        validComments.push(c);
+    }
+
     // Filter for CodeRabbit
-    const targetComments = comments.filter(c => c.user.login.toLowerCase() === 'coderabbitai[bot]');
+    const targetComments = validComments.filter(c => c.user.login.toLowerCase() === 'coderabbitai[bot]');
     if (targetComments.length === 0) {
         console.log('No CodeRabbit comments found.');
         return [];
