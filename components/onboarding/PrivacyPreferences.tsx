@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch"; // Assuming standard UI switch
 import { Label } from "@/components/ui/label"; // Assuming Label component
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useAuth } from "@/hooks/useAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { privacyDetailsSchema, type PrivacyDetailsInput } from "@/lib/onboarding-schemas";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
@@ -19,6 +20,8 @@ interface PrivacyPreferencesProps {
 export function PrivacyPreferences({ onNext }: PrivacyPreferencesProps) {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { user } = useAuth();
+    const isMinor = user?.isMinor || false;
 
     const form = useForm<PrivacyDetailsInput>({
         resolver: zodResolver(privacyDetailsSchema),
@@ -35,6 +38,12 @@ export function PrivacyPreferences({ onNext }: PrivacyPreferencesProps) {
             }
         }
     });
+
+    useEffect(() => {
+        if (isMinor && form.getValues("privacySettings.profileVisibility") === "public") {
+            form.setValue("privacySettings.profileVisibility", "community_members");
+        }
+    }, [isMinor, form]);
 
     async function onSubmit(data: PrivacyDetailsInput) {
         setLoading(true);
@@ -77,11 +86,16 @@ export function PrivacyPreferences({ onNext }: PrivacyPreferencesProps) {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="public">Public (Everyone)</SelectItem>
+                                        {!isMinor && <SelectItem value="public">Public (Everyone)</SelectItem>}
                                         <SelectItem value="community_members">Community Members</SelectItem>
                                         <SelectItem value="private">Private</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                {isMinor && (
+                                    <FormDescription className="pt-2 text-xs text-amber-600">
+                                        For your safety, public profile visibility is not available for users under 18.
+                                    </FormDescription>
+                                )}
                             </FormItem>
                         )}
                     />

@@ -10,6 +10,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 interface ProfileSetupProps {
     onNext: () => void;
@@ -20,6 +21,10 @@ export function ProfileSetup({ onNext }: ProfileSetupProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
+    // Check if we need to ask for DOB (if missing from user profile)
+    // Note: user.dateOfBirth might be a Date object or string depending on useAuth implementation
+    const needsDob = user && !user.dateOfBirth;
+
     const form = useForm<ProfileSetupInput>({
         resolver: zodResolver(profileSetupSchema),
         defaultValues: {
@@ -27,6 +32,7 @@ export function ProfileSetup({ onNext }: ProfileSetupProps) {
             bio: "",
             location: "",
             profileImageUrl: "",
+            dateOfBirth: undefined,
             // Defaults for Org can differ, handled by form logic or API
         },
     });
@@ -34,21 +40,24 @@ export function ProfileSetup({ onNext }: ProfileSetupProps) {
     async function onSubmit(data: ProfileSetupInput) {
         setLoading(true);
         try {
-            const token = (await import("@supabase/supabase-js")).createClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-            ).auth.getSession().then(({ data }) => data.session?.access_token);
+            if (needsDob && !data.dateOfBirth) {
+                form.setError("dateOfBirth", { message: "Date of birth is required" });
+                setLoading(false);
+                return;
+            }
+
+            const supabase = createClient();
+            const { data: sessionData } = await supabase.auth.getSession();
+            const token = sessionData.session?.access_token;
+
+            if (!token) throw new Error("No active session");
 
             // Better to use a standard api client helper, but fetch is fine for now
             const res = await fetch("/api/onboarding/profile", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    // "Authorization": `Bearer ${token}` // Middleware or cookie handling usually suffices, 
-                    // but our API checks header. We need the session token.
-                    // useAuth hook might expose session or token.
-                    // For now, let's assume global session or cookie.
-                    // Actually, our API explicitly checks 'Authorization' header.
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify(data),
             });
@@ -72,6 +81,30 @@ export function ProfileSetup({ onNext }: ProfileSetupProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {needsDob && (
+                    <FormField
+                        control={form.control}
+                        name="dateOfBirth"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Date of Birth</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="date"
+                                        {...field}
+                                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                                        onChange={(e) => field.onChange(e.target.value)}
+                                    />
+                                </FormControl>
+                                <FormDescription>
+                                    Required for age verification. You must be 13 or older.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+
                 <FormField
                     control={form.control}
                     name="headline"

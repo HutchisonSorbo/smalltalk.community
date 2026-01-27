@@ -111,6 +111,7 @@ export async function POST(req: Request) {
             accountTypeSpecification: accountTypeSpecification,
             organisationName: organisationName,
             isMinor: isMinor,
+            messagePrivacy: isMinor ? 'verified_only' : 'everyone', // Enforce privacy for minors
             onboardingStep: 0,
             profileCompletionPercentage: 10, // Account created = 10%
             onboardingCompleted: false,
@@ -125,6 +126,7 @@ export async function POST(req: Request) {
                 accountTypeSpecification: accountTypeSpecification,
                 organisationName: organisationName,
                 isMinor: isMinor,
+                messagePrivacy: isMinor ? 'verified_only' : 'everyone',
                 onboardingStep: 0,
                 profileCompletionPercentage: 10,
                 onboardingCompleted: false,
