@@ -6,7 +6,7 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/communityos/AppShell";
 import { AppContentLoader } from "@/components/communityos/AppContentLoader";
-import { communityOSApps } from "@/components/communityos/AppLauncher";
+import { communityOSApps } from "@/components/communityos/apps-config";
 
 interface AppPageProps {
     params: Promise<{ tenantId: string; appId: string }>;

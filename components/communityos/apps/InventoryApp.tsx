@@ -49,7 +49,7 @@ export function InventoryApp() {
     const handleSave = () => {
         if (formData.name && formData.quantity !== undefined) {
             upsertDocument(
-                isEditing || Math.random().toString(36).substr(2, 9),
+                isEditing === "new" ? crypto.randomUUID() : (isEditing as string),
                 {
                     name: formData.name,
                     category: formData.category || "General",

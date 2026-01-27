@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorBoundary } from "react-error-boundary";
-import { communityOSApps } from "./AppLauncher";
+import { communityOSApps } from "./apps-config";
 
 // Loading skeleton for apps
 function AppLoadingSkeleton() {
