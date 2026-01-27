@@ -4,6 +4,10 @@ on:
   pull_request_review_comment:
     types: [created]
 
+concurrency:
+  group: gemini-fix-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -23,6 +27,9 @@ jobs:
           # Fallback to GITHUB_TOKEN if GH_PAT is missing, but prefer PAT for triggering workflows (CodeRabbit)
           token: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
+      - name: Debounce
+        run: sleep 30
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -32,14 +39,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fetch all active comments
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" > comments.json
+
       - name: Run Gemini Fixer
         env:
           GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           # Use 2.0-flash to match script. Script honors this env var.
           GEMINI_MODEL: 'gemini-2.0-flash'
-          FILE_PATH: ${{ github.event.comment.path }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          DIFF_HUNK: ${{ github.event.comment.diff_hunk }}
+          COMMENTS_FILE: 'comments.json'
         run: npx tsx scripts/gemini-fixer.ts
 
       - name: Commit and Push Fix
@@ -47,11 +59,10 @@ jobs:
           # Securely pass token and branch
           GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-          COMMENT_PATH: ${{ github.event.comment.path }}
         run: |
           git config --global user.name "Gemini Fixer [bot]"
           git config --global user.email "gemini-fixer@smalltalk.community"
           git add .
-          git commit -m "fix: address CodeRabbit review comment on $COMMENT_PATH" || echo "No changes to commit"
+          git commit -m "fix: address CodeRabbit review comments" || echo "No changes to commit"
           # Use -- to prevent flag injection, and quote the branch variable
           git push origin -- "$BRANCH_NAME"

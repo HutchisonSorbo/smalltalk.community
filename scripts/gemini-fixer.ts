@@ -3,26 +3,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * @fileoverview Gemini Fixer Script
+ * @fileoverview Gemini Fixer Script (Batch Mode)
  * 
- * Uses Google's Gemini 2.0 Flash model (via @google/genai) to automatically
- * fix code based on code review comments (e.g. from CodeRabbit).
+ * Uses Google's Gemini 2.0 Flash model to automatically fix code based on 
+ * code review comments (e.g. from CodeRabbit).
  * 
- * It reads the file content, applies the fix requested in the comment,
- * and writes the corrected code back to the file.
- * 
- * Requires:
- * - GOOGLE_API_KEY (or GEMINI_API_KEY)
- * - FILE_PATH
- * - COMMENT_BODY
- * 
- * Optional:
- * - GEMINI_MODEL (defaults to 'gemini-2.0-flash')
- * - DIFF_HUNK (for context)
- * 
- * Side Effects:
- * - Reads/Writes files system.
- * - Exits process on error.
+ * Features:
+ * - Reads `comments.json` (GitHub API format)
+ * - Groups comments by file
+ * - Batches fixes: 1 API call per file
+ * - Linear processing to respect rate limits (implicit via awaiting)
  */
 
 const MODEL_NAME = 'gemini-2.0-flash';
@@ -30,69 +20,104 @@ const MODEL_NAME = 'gemini-2.0-flash';
 // Biome-ignore lint/suspicious/noControlCharactersInRegex: Needed for sanitizing LLM input
 const CONTROL_CHARS_REGEX = /[\x00-\x1F\x7F]/g;
 
-interface FixerInput {
-    apiKey: string;
+interface Comment {
+    path: string;
+    body: string;
+    diff_hunk: string;
+    user: {
+        login: string;
+    };
+    line?: number;
+}
+
+interface FileTask {
     filePath: string;
-    commentBody: string;
-    diffHunk: string;
-    modelName: string;
     absolutePath: string;
     fileContent: string;
+    comments: Comment[];
 }
 
-interface GenAiResponse {
-    candidates?: {
-        content?: {
-            parts?: {
-                text: string;
-            }[]
-        }[]
-    }[];
-}
-
-interface TimeoutResult {
-    error: Error;
+interface Config {
+    apiKey: string;
+    modelName: string;
+    repoRoot: string;
 }
 
 /**
- * Validates and loads all necessary inputs.
+ * Validates and loads configuration.
  */
-function loadInput(): FixerInput {
+function loadConfig(): Config {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-    const filePath = process.env.FILE_PATH;
-    const commentBody = process.env.COMMENT_BODY;
-    const diffHunk = process.env.DIFF_HUNK || '';
+    if (!apiKey) {
+        console.error('Missing required environment variable: GOOGLE_API_KEY');
+        process.exit(1);
+    }
     const modelName = process.env.GEMINI_MODEL || MODEL_NAME;
-
-    if (!apiKey || !filePath || !commentBody) {
-        console.error('Missing required environment variables: GOOGLE_API_KEY, FILE_PATH, COMMENT_BODY');
-        process.exit(1);
-    }
-
     const repoRoot = process.cwd();
-    const absolutePath = path.resolve(repoRoot, filePath);
+    return { apiKey, modelName, repoRoot };
+}
 
-    // Path Traversal Check
-    const relativePath = path.relative(repoRoot, absolutePath);
-    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        console.error(`Security Error: Path traversal attempt detected. ${absolutePath} is outside repo root.`);
+/**
+ * Loads comments and prepares tasks grouped by file.
+ */
+function loadTasks(config: Config): FileTask[] {
+    const commentsFile = process.env.COMMENTS_FILE;
+    if (!commentsFile) {
+        console.error('Missing required environment variable: COMMENTS_FILE');
+        // If not running in batch mode, we might fallback to single-file mode? 
+        // For now, let's enforce batch mode as per plan.
         process.exit(1);
     }
 
-    if (!fs.existsSync(absolutePath)) {
-        console.error(`File not found: ${absolutePath}`);
+    if (!fs.existsSync(commentsFile)) {
+        console.error(`Comments file not found: ${commentsFile}`);
         process.exit(1);
     }
 
-    // Verify it's a file
-    if (!fs.statSync(absolutePath).isFile()) {
-        console.error(`Error: ${absolutePath} is not a regular file.`);
+    const rawComments = fs.readFileSync(commentsFile, 'utf-8');
+    let comments: Comment[];
+    try {
+        comments = JSON.parse(rawComments);
+    } catch (e) {
+        console.error('Failed to parse comments.json', e);
         process.exit(1);
     }
 
-    const fileContent = fs.readFileSync(absolutePath, 'utf-8');
+    // Filter for CodeRabbit
+    const targetComments = comments.filter(c => c.user.login === 'coderabbitai[bot]');
+    if (targetComments.length === 0) {
+        console.log('No CodeRabbit comments found.');
+        return [];
+    }
 
-    return { apiKey, filePath, commentBody, diffHunk, modelName, absolutePath, fileContent };
+    // Group by file
+    const groups = new Map<string, Comment[]>();
+    for (const c of targetComments) {
+        if (!groups.has(c.path)) {
+            groups.set(c.path, []);
+        }
+        groups.get(c.path)?.push(c);
+    }
+
+    const tasks: FileTask[] = [];
+    for (const [filePath, fileComments] of Array.from(groups)) {
+        const absolutePath = path.resolve(config.repoRoot, filePath);
+
+        // Security check
+        const relativePath = path.relative(config.repoRoot, absolutePath);
+        if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+            console.warn(`Skipping suspicious path: ${filePath}`);
+            continue;
+        }
+
+        if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
+            const fileContent = fs.readFileSync(absolutePath, 'utf-8');
+            tasks.push({ filePath, absolutePath, fileContent, comments: fileComments });
+        } else {
+            console.warn(`File not found or not a file: ${filePath}`);
+        }
+    }
+    return tasks;
 }
 
 /**
@@ -108,26 +133,32 @@ function sanitizeInput(str: string): string {
 /**
  * Constructs the prompts for Gemini.
  */
-function buildPrompt(input: FixerInput): { systemInstruction: string; userPrompt: string } {
-    const { filePath, commentBody, diffHunk, fileContent } = input;
-    const safeComment = sanitizeInput(commentBody);
-    const safeDiff = sanitizeInput(diffHunk);
+function buildPrompt(task: FileTask): { systemInstruction: string; userPrompt: string } {
+    const { filePath, fileContent, comments } = task;
+
+    const issues = comments.map((c, i) => {
+        return `ISSUE #${i + 1}:
+Comment: ${sanitizeInput(c.body)}
+Diff Context:
+${sanitizeInput(c.diff_hunk)}
+`;
+    }).join('\n');
 
     const systemInstruction = `You are an expert software engineer adhering to Australian English standards.
-Your task is to fix the code in the provided file based on the code review comment.
+Your task is to fix the code in the provided file based on the code review comments.
 STRICT RULES:
 1. Return ONLY the corrected code for the entire file.
 2. Do not add markdown backticks or explanations.
 3. Maintain WCAG 2.2 AA accessibility standards.
 4. Ensure data isolation (RLS) is preserved.
-5. If the comment is not actionable or unsafe, return the original file content.`;
+5. Address ALL listed issues in a single pass.
+6. If the comments are not actionable or unsafe, return the original file content.`;
 
     const userPrompt = `
 CONTEXT:
 File Path: ${filePath}
-Review Comment: ${safeComment}
-Diff Context:
-${safeDiff}
+Review Comments:
+${issues}
 
 FILE CONTENT:
 ${fileContent}
@@ -138,13 +169,13 @@ ${fileContent}
 /**
  * Generates content using Gemini with retry logic.
  */
-async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemInstruction: string, userPrompt: string, input: FixerInput): Promise<string> {
+async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemInstruction: string, userPrompt: string, filePath: string): Promise<string> {
     const maxRetries = 3;
     let attempt = 0;
 
     while (attempt < maxRetries) {
         try {
-            const timeoutMs = 60000;
+            const timeoutMs = 90000; // Increased timeout for potentially larger files/tasks
             const generatePromise = genAI.models.generateContent({
                 model: modelName,
                 config: {
@@ -178,8 +209,9 @@ async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemIn
             return fixedCode;
         } catch (err: any) {
             attempt++;
-            console.warn(`Attempt ${attempt} failed for ${input.filePath} with model ${modelName}: ${err.message}`);
+            console.warn(`Attempt ${attempt} failed for ${filePath} with model ${modelName}: ${err.message}`);
             if (attempt >= maxRetries) {
+                // If we fail, we rethrow so we can catch it in the loop and skip the file
                 throw new Error(`Failed to generate content after ${maxRetries} attempts.`);
             }
             // Linear backoff
@@ -192,25 +224,22 @@ async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemIn
 /**
  * Validates the generated code.
  */
-function validateOutput(fixedCode: string, input: FixerInput): void {
+function validateOutput(fixedCode: string, originalContent: string): void {
     if (!fixedCode) {
-        console.error('Gemini returned empty response.');
-        process.exit(1);
+        throw new Error('Gemini returned empty response.');
     }
 
     // 1. Sanity check: Size comparison
-    if (fixedCode.length < input.fileContent.length * 0.1 && input.fileContent.length > 50) {
-        console.error('Validation failed: Fixed code is suspiciously short.');
-        console.log(`Metadata: Fixed Length=${fixedCode.length}, Original Length=${input.fileContent.length}`);
-        process.exit(1);
+    if (fixedCode.length < originalContent.length * 0.1 && originalContent.length > 50) {
+        throw new Error('Validation failed: Fixed code is suspiciously short.');
     }
 }
 
 /**
  * Writes the fixed code to the file with backup mechanism.
  */
-function writeWithBackup(fixedCode: string, input: FixerInput): void {
-    const { absolutePath, filePath, fileContent } = input;
+function writeWithBackup(fixedCode: string, task: FileTask): void {
+    const { absolutePath, filePath, fileContent } = task;
     const backupPath = `${absolutePath}.bak`;
 
     try {
@@ -230,30 +259,55 @@ function writeWithBackup(fixedCode: string, input: FixerInput): void {
                 console.error('CRITICAL: Failed to restore backup!', restoreErr);
             }
         }
-        process.exit(1);
+        throw writeErr;
     }
 }
 
 /**
  * Main execution function.
- * @async
- * @returns {Promise<void>}
  */
 async function run(): Promise<void> {
     try {
-        const input = loadInput();
-        const genAI = new GoogleGenAI({ apiKey: input.apiKey });
-        const { systemInstruction, userPrompt } = buildPrompt(input);
+        const config = loadConfig();
+        const tasks = loadTasks(config);
+        const genAI = new GoogleGenAI({ apiKey: config.apiKey });
 
-        console.log(`Requesting fix for ${input.filePath} using ${input.modelName}...`);
+        if (tasks.length === 0) {
+            console.log('No tasks to process.');
+            return;
+        }
 
-        const fixedCode = await generateWithRetry(genAI, input.modelName, systemInstruction, userPrompt, input);
+        console.log(`Found ${tasks.length} files to process.`);
 
-        validateOutput(fixedCode, input);
-        writeWithBackup(fixedCode, input);
+        let failureCount = 0;
+
+        for (const task of tasks) {
+            console.log(`Processing ${task.filePath} with ${task.comments.length} comments...`);
+            try {
+                const { systemInstruction, userPrompt } = buildPrompt(task);
+                const fixedCode = await generateWithRetry(genAI, config.modelName, systemInstruction, userPrompt, task.filePath);
+
+                validateOutput(fixedCode, task.fileContent);
+                writeWithBackup(fixedCode, task);
+            } catch (e: any) {
+                console.error(`Failed to process ${task.filePath}: ${e.message}`);
+                failureCount++;
+            }
+        }
+
+        if (failureCount > 0) {
+            console.warn(`Completed with ${failureCount} errors.`);
+            // We exit 0 even with errors to allow other fixes to be committed, 
+            // unless we want to fail the whole workflow? 
+            // Better to commit what we fixed. The logs will show errors.
+            // But if ALL failed, maybe exit 1? 
+            if (failureCount === tasks.length) {
+                process.exit(1);
+            }
+        }
 
     } catch (error) {
-        console.error('Error during Gemini generation:', error);
+        console.error('Fatal error during execution:', error);
         process.exit(1);
     }
 }
