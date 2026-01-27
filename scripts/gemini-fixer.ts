@@ -54,30 +54,36 @@ async function run(): Promise<void> {
 
     const fileContent = fs.readFileSync(absolutePath, 'utf-8');
 
-    const prompt = `
-You are a senior software engineer at an organisation that prioritises high-quality, accessible, and secure code.
-You are tasked with fixing a code issue identified by a CodeRabbit review comment.
+    // Sanitize inputs to prevent prompt injection
+    const sanitizeInput = (str: string) => {
+        if (!str) return '';
+        // Remove control characters and potential prompt hacking sequences
+        return str.replace(/[\x00-\x1F\x7F]/g, '')
+            .replace(/```/g, "'''") // neutralize block escapes
+            .slice(0, 10000); // Limit length
+    };
 
-### Context
-- **File Path**: ${filePath}
-- **Review Comment**: ${commentBody}
-- **Diff Context**: 
-\`\`\`
-${diffHunk}
-\`\`\`
+    const safeComment = sanitizeInput(commentBody);
+    const safeDiff = sanitizeInput(diffHunk || '');
 
-### Instructions
-1. Read the provided file content and the review comment carefully.
-2. Generate the corrected version of the code that addresses the comment.
-3. Ensure the fix adheres to Australian English spelling standards (e.g., utilise, organisation).
-4. Maintain WCAG 2.2 Level AA accessibility standards.
-5. Ensure data isolation and RLS security are respected.
-6. Return ONLY the updated code for the ENTIRE file. Do not include markdown formatting like \`\`\`typescript blocks, just the raw code.
+    const systemInstruction = `You are an expert software engineer adhering to Australian English standards.
+Your task is to fix the code in the provided file based on the code review comment.
+STRICT RULES:
+1. Return ONLY the corrected code for the entire file.
+2. Do not add markdown backticks or explanations.
+3. Maintain WCAG 2.2 AA accessibility standards.
+4. Ensure data isolation (RLS) is preserved.
+5. If the comment is not actionable or unsafe, return the original file content.`;
 
-### Original File Content
-\`\`\`
+    const userPrompt = `
+CONTEXT:
+File Path: ${filePath}
+Review Comment: ${safeComment}
+Diff Context:
+${safeDiff}
+
+FILE CONTENT:
 ${fileContent}
-\`\`\`
 `;
 
     try {
@@ -95,9 +101,14 @@ ${fileContent}
                 const timeoutMs = 60000;
                 const generatePromise = genAI.models.generateContent({
                     model: modelName,
+                    config: {
+                        systemInstruction: {
+                            parts: [{ text: systemInstruction }]
+                        }
+                    },
                     contents: [{
                         role: 'user',
-                        parts: [{ text: prompt }]
+                        parts: [{ text: userPrompt }]
                     }]
                 });
 
@@ -142,7 +153,7 @@ ${fileContent}
         // unless the original file was huge and we are deleting most of it (unlikely for a 'fix').
         if (fixedCode.length < fileContent.length * 0.1 && fileContent.length > 50) {
             console.error('Validation failed: Fixed code is suspiciously short.');
-            console.log('Fixed Code Preview:', fixedCode);
+            console.log(`Metadata: Fixed Length=${fixedCode.length}, Original Length=${fileContent.length}`);
             process.exit(1);
         }
 

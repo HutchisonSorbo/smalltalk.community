@@ -43,10 +43,11 @@ jobs:
           # Securely pass token and branch
           GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          COMMENT_PATH: ${{ github.event.comment.path }}
         run: |
           git config --global user.name "Gemini Fixer [bot]"
           git config --global user.email "gemini-fixer@smalltalk.community"
           git add .
-          git commit -m "fix: address CodeRabbit review comment on ${{ github.event.comment.path }}" || echo "No changes to commit"
+          git commit -m "fix: address CodeRabbit review comment on $COMMENT_PATH" || echo "No changes to commit"
           # Use -- to prevent flag injection, and quote the branch variable
           git push origin -- "$BRANCH_NAME"

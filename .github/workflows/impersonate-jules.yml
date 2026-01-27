@@ -28,8 +28,9 @@ jobs:
           BODY: ${{ github.event.pull_request.body }}
           BASE: ${{ github.event.pull_request.base.ref }}
         run: |
-          echo "Closing original PR #$PR_NUMBER..."
-          gh pr close "$PR_NUMBER" --comment "Automatically re-opening this PR as the user to trigger CodeRabbit and local automation."
+          # Use gh to close and re-open
+          # The logic:
+          # 1. Close the original PR from Jules
           
           echo "Re-opening PR from branch $BRANCH..."
           # Securely pass body content into gh CLI
@@ -38,6 +39,8 @@ jobs:
           
           # 2. Create the new PR
           # We use a heredoc or printf to a file to safely handle special chars in body
+          # Use trap for guaranteed cleanup
+          trap 'rm -f pr_body.txt' EXIT
           printf "%s" "$BODY" > pr_body.txt
           
           gh pr create \
@@ -46,6 +49,3 @@ jobs:
              --head "$BRANCH" \
              --base "$BASE" \
              --label "daily-audit"
-          
-          # Cleanup
-          rm pr_body.txt
