@@ -13,6 +13,7 @@ import { getABSDemographics, type ABSDemographics } from "@/lib/abs-api";
 import { getOSMAmenities, type OSMAmenities } from "@/lib/osm-api";
 import { createClient } from "@/lib/supabase-server";
 import { verifyTenantAccess } from "@/lib/communityos/tenant-context";
+import { logAuditEvent } from "@/lib/audit-log";
 
 // Request validation schema
 const requestSchema = z.object({
@@ -32,7 +33,19 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 // In-memory rate limiting (consider Redis for production)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 204,
+        headers: {
+            "Access-Control-Allow-Origin": "*", // or specific origin
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+    });
+}
+
 export async function POST(request: NextRequest) {
+    let auditContext: { userId?: string; tenantId?: string } = {};
     try {
         // Parse and validate request body
         const body = await request.json();
@@ -57,6 +70,7 @@ export async function POST(request: NextRequest) {
 
         // Verify tenant access
         const { hasAccess } = await verifyTenantAccess(user.id, tenantId);
+        auditContext = { userId: user.id, tenantId };
         if (!hasAccess) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
@@ -160,12 +174,22 @@ Provide a helpful, informative response focused on community development and pla
         });
     } catch (error: any) {
         console.error("Community Insights API error:", error);
+        try {
+            await logAuditEvent({
+                action: "community_insights_error",
+                userId: auditContext.userId ?? null,
+                tenantId: auditContext.tenantId ?? null,
+                metadata: { message: String(error?.message ?? error) },
+            });
+        } catch (logError) {
+            console.error("Failed to write audit log:", logError);
+        }
 
         // Check for specific Google AI errors if possible, or just log details
-        if (error && error.status) {
+        if (error.status) {
              console.error(`Status: ${error.status}`);
         }
-        if (error && error.message) {
+        if (error.message) {
              console.error(`Message: ${error.message}`);
         }
 
