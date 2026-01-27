@@ -57,7 +57,8 @@ export const profileSetupSchema = z.object({
 
     // Added for OAuth users who might be missing DOB
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
-        if (!val) return true;
+        if (val === undefined || val === null) return true;
+        if (typeof val === "string" && val.trim() === "") return false;
         const date = new Date(val);
         const now = new Date();
 

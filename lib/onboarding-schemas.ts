@@ -22,7 +22,13 @@ export const registerSchema = z.object({
     organisationName: z.string().optional(),
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
         if (!val) return true;
-        const date = new Date(val);
+        let date: Date;
+        if (typeof val === "string") {
+            const [year, month, day] = val.split("-").map(Number);
+            date = new Date(year, month - 1, day);
+        } else {
+            date = val;
+        }
         const now = new Date();
         
         // Normalize to YYYYMMDD for local date comparison (prevents timezone bypass)
@@ -59,7 +65,13 @@ export const profileSetupSchema = z.object({
     dateOfBirth: z.string().or(z.date()).optional().refine((val) => {
         if (val === undefined || val === null) return true;
         if (typeof val === "string" && val.trim() === "") return false;
-        const date = new Date(val);
+        let date: Date;
+        if (typeof val === "string") {
+            const [year, month, day] = val.split("-").map(Number);
+            date = new Date(year, month - 1, day);
+        } else {
+            date = val;
+        }
         const now = new Date();
 
         // Normalize to YYYYMMDD for local date comparison
