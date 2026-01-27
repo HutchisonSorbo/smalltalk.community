@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -162,13 +162,11 @@ async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemIn
                 setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
             );
 
-            const result = await Promise.race<Promise<GenAiResponse> | Promise<TimeoutResult>>([
-                generatePromise,
-                timeoutPromise as Promise<never>
-            ]);
+            // Race the generate promise against the timeout
+            const result = await Promise.race([generatePromise, timeoutPromise]) as GenerateContentResponse;
 
             // Result handling based on @google/genai structure
-            const candidate = (result as GenAiResponse).candidates?.[0];
+            const candidate = result.candidates?.[0];
             let fixedCode = candidate?.content?.parts?.[0]?.text?.trim() || '';
 
             // Clean up potential markdown formatting if Gemini ignored the instruction
