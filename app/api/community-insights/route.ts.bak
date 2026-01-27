@@ -162,10 +162,10 @@ Provide a helpful, informative response focused on community development and pla
         console.error("Community Insights API error:", error);
 
         // Check for specific Google AI errors if possible, or just log details
-        if (error && error.status) {
+        if (error.status) {
              console.error(`Status: ${error.status}`);
         }
-        if (error && error.message) {
+        if (error.message) {
              console.error(`Message: ${error.message}`);
         }
 
