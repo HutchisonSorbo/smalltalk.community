@@ -133,10 +133,19 @@ ${context}
 
 Provide a helpful, informative response focused on community development and planning.`;
 
+        // Use explicit content structure for better compatibility and error handling
         const response = await genAI.models.generateContent({
             model,
-            contents: prompt,
+            contents: [
+                {
+                    role: "user",
+                    parts: [
+                        { text: prompt }
+                    ]
+                }
+            ],
         });
+
         const insights = response.text ?? "Unable to generate insights.";
 
         return NextResponse.json({
@@ -149,8 +158,17 @@ Provide a helpful, informative response focused on community development and pla
                 amenities: amenities ? "OpenStreetMap" : null,
             },
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Community Insights API error:", error);
+
+        // Check for specific Google AI errors if possible, or just log details
+        if (error.status) {
+             console.error(`Status: ${error.status}`);
+        }
+        if (error.message) {
+             console.error(`Message: ${error.message}`);
+        }
+
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }
