@@ -3,17 +3,41 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Gemini Fixer Script
+ * @fileoverview Gemini Fixer Script
  * 
- * Utilises Gemini 3.0 Flash to automatically resolve CodeRabbit review comments.
+ * Uses Google's Gemini 2.0 Flash model (via @google/genai) to automatically
+ * fix code based on code review comments (e.g. from CodeRabbit).
+ * 
+ * It reads the file content, applies the fix requested in the comment,
+ * and writes the corrected code back to the file.
+ * 
+ * Requires:
+ * - GOOGLE_API_KEY (or GEMINI_API_KEY)
+ * - FILE_PATH
+ * - COMMENT_BODY
+ * 
+ * Optional:
+ * - GEMINI_MODEL (defaults to 'gemini-2.0-flash')
+ * - DIFF_HUNK (for context)
+ * 
+ * Side Effects:
+ * - Reads/Writes files system.
+ * - Exits process on error.
  */
 
-async function run() {
+const MODEL_NAME = 'gemini-2.0-flash';
+
+/**
+ * Main execution function.
+ * @async
+ * @returns {Promise<void>}
+ */
+async function run(): Promise<void> {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
     const filePath = process.env.FILE_PATH;
     const commentBody = process.env.COMMENT_BODY;
     const diffHunk = process.env.DIFF_HUNK;
-    const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash'; // Fallback to 2.0 if 3.0 not found
+    const modelName = process.env.GEMINI_MODEL || MODEL_NAME;
 
     if (!apiKey || !filePath || !commentBody) {
         console.error('Missing required environment variables: GOOGLE_API_KEY, FILE_PATH, COMMENT_BODY');
@@ -58,28 +82,83 @@ ${fileContent}
 
     try {
         console.log(`Requesting fix for ${filePath} using ${modelName}...`);
-        const result = await genAI.models.generateContent({
-            model: modelName,
-            contents: [{
-                role: 'user',
-                parts: [{ text: prompt }]
-            }]
-        });
+        const maxRetries = 3;
+        let attempt = 0;
+        let result;
+
+        while (attempt < maxRetries) {
+            try {
+                // Timeout logic using AbortController if supported by SDK or simple race
+                // The @google/genai SDK might not support signal directly in generateContent options yet,
+                // so we use a race or assume the SDK has internal timeouts. 
+                // We'll wrap in a generic timeout promise.
+                const timeoutMs = 60000;
+                const generatePromise = genAI.models.generateContent({
+                    model: modelName,
+                    contents: [{
+                        role: 'user',
+                        parts: [{ text: prompt }]
+                    }]
+                });
+
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
+                );
+
+                // @ts-ignore - Promise.race types can be tricky with SDK return types
+                result = await Promise.race([generatePromise, timeoutPromise]);
+                break; // Success
+            } catch (err: any) {
+                attempt++;
+                console.warn(`Attempt ${attempt} failed for ${filePath} with model ${modelName}: ${err.message}`);
+                if (attempt >= maxRetries) {
+                    throw new Error(`Failed to generate content after ${maxRetries} attempts.`);
+                }
+                // Linear backoff
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+        }
 
         // Result handling based on @google/genai structure
-        const candidate = result.candidates?.[0];
+        const candidate = (result as any).candidates?.[0];
         let fixedCode = candidate?.content?.parts?.[0]?.text?.trim() || '';
 
         // Clean up potential markdown formatting if Gemini ignored the instruction
         if (fixedCode.startsWith('```')) {
-            fixedCode = fixedCode.replace(/^```[a-z]*\n/, '').replace(/\n```$/, '');
+            const lines = fixedCode.split('\n');
+            // Remove first line (```language) and last line (```)
+            fixedCode = lines.slice(1, -1).join('\n');
         }
 
-        if (fixedCode && fixedCode.length > 0) {
-            fs.writeFileSync(absolutePath, fixedCode, 'utf-8');
-            console.log(`Successfully applied fix to ${filePath}`);
-        } else {
+        if (!fixedCode) {
             console.error('Gemini returned empty response.');
+            process.exit(1);
+        }
+
+        // --- Validation & Backup ---
+
+        // 1. Sanity check: Size comparison (basic heuristic)
+        // If the new code is drastically smaller (e.g. < 10% of original), it might be an error message or hallucination
+        // unless the original file was huge and we are deleting most of it (unlikely for a 'fix').
+        if (fixedCode.length < fileContent.length * 0.1 && fileContent.length > 50) {
+            console.error('Validation failed: Fixed code is suspiciously short.');
+            console.log('Fixed Code Preview:', fixedCode);
+            process.exit(1);
+        }
+
+        // 2. Create Backup
+        const backupPath = `${absolutePath}.bak`;
+        fs.writeFileSync(backupPath, fileContent);
+        console.log(`Backup created at ${backupPath}`);
+
+        try {
+            // Write to file
+            fs.writeFileSync(absolutePath, fixedCode);
+            console.log(`Successfully applied fix to ${filePath}`);
+        } catch (writeErr) {
+            console.error('Failed to write fixed code:', writeErr);
+            // Restore backup
+            fs.copyFileSync(backupPath, absolutePath);
             process.exit(1);
         }
     } catch (error) {
