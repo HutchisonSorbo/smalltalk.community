@@ -7,12 +7,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { getABSDemographics, type ABSDemographics } from "@/lib/abs-api";
 import { getOSMAmenities, type OSMAmenities } from "@/lib/osm-api";
 import { createClient } from "@/lib/supabase-server";
 import { verifyTenantAccess } from "@/lib/communityos/tenant-context";
+import { getAIClient, AI_MODEL_CONFIG, SAFETY_SETTINGS } from "@/lib/ai-config";
 
 // Request validation schema
 const requestSchema = z.object({
@@ -61,6 +61,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
+        // Fetch user profile to determine age-appropriate safety settings
+        // Data isolation is preserved via RLS and explicit id filtering
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("age_group")
+            .eq("id", user.id)
+            .single();
+
+        const isTeen = profile?.age_group === "teen";
+
         // Rate limiting
         const rateLimitKey = `insights:${user.id}`;
         const rateLimit = rateLimitMap.get(rateLimitKey);
@@ -96,10 +106,11 @@ export async function POST(request: NextRequest) {
         // Build context for AI
         const context = buildAIContext(demographics, amenities);
 
-        // Check for Gemini API key
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            console.warn("[Community Insights] GEMINI_API_KEY environment variable is not set");
+        // Get AI Client using centralised config
+        const genAI = getAIClient();
+
+        if (!genAI) {
+            console.warn("[Community Insights] API Key (GOOGLE_API_KEY or GEMINI_API_KEY) not set");
             // Return helpful message with context data if available
             const contextSummary = demographics
                 ? `Based on available data for ${demographics.locality} (${demographics.postcode}): Population: ${demographics.population.toLocaleString()}, Median Age: ${demographics.medianAge}`
@@ -118,13 +129,9 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Generate AI insights
-        const genAI = new GoogleGenAI({ apiKey });
-        const model = "gemini-1.5-flash";
-
-        const prompt = `You are a helpful community insights assistant for a non-profit organization. 
+        const prompt = `You are a helpful community insights assistant for a non-profit organisation. 
 Answer the following question about the community, using the provided context data.
-Be concise, helpful, and focused on actionable insights for community organizations.
+Be concise, helpful, and focused on actionable insights for community organisations.
 If you don't have enough data to answer accurately, say so.
 
 USER QUESTION: ${query}
@@ -134,9 +141,13 @@ ${context}
 
 Provide a helpful, informative response focused on community development and planning.`;
 
-        // Use explicit content structure for better compatibility and error handling
+        // Generate AI insights with appropriate safety settings based on age group
         const response = await genAI.models.generateContent({
-            model,
+            model: AI_MODEL_CONFIG.model,
+            config: {
+                ...AI_MODEL_CONFIG.generationConfig,
+                safetySettings: isTeen ? SAFETY_SETTINGS.teen : SAFETY_SETTINGS.adult,
+            },
             contents: [
                 {
                     role: "user",
@@ -147,7 +158,20 @@ Provide a helpful, informative response focused on community development and pla
             ],
         });
 
-        const insights = response.text ?? "Unable to generate insights.";
+        // Robust parsing of the response
+        let insights = "";
+        const candidate = response.candidates?.[0];
+        if (candidate?.content?.parts) {
+            insights = candidate.content.parts
+                .map(part => part.text)
+                .filter(Boolean)
+                .join('')
+                .trim();
+        }
+
+        if (!insights) {
+            insights = "Unable to generate insights.";
+        }
 
         return NextResponse.json({
             query,

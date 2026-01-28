@@ -1,22 +1,16 @@
 /**
  * Unit tests for the Community Insights API route.
  *
- * These tests focus on request validation which can be reliably tested
- * without complex mock orchestration. Integration tests would be needed
- * for full authentication and AI generation testing.
+ * These tests focus on request validation and mocking external dependencies.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// Mock all dependencies with default implementations
-vi.mock('@google/genai', () => ({
-    GoogleGenAI: vi.fn().mockImplementation(() => ({
-        models: {
-            generateContent: vi.fn().mockResolvedValue({
-                text: 'AI-generated community insights.',
-            }),
-        },
-    })),
+// Mock dependencies
+vi.mock('@/lib/ai-config', () => ({
+    getAIClient: vi.fn(),
+    AI_MODEL_CONFIG: { model: 'test-model', generationConfig: {} },
+    SAFETY_SETTINGS: { adult: [] }
 }));
 
 vi.mock('@/lib/supabase-server', () => ({
@@ -46,6 +40,7 @@ vi.mock('@/lib/osm-api', () => ({
 
 // Import after mocks are set up
 import { POST } from '@/app/api/community-insights/route';
+import { getAIClient } from '@/lib/ai-config';
 
 describe('Community Insights API', () => {
     const originalEnv = process.env;
@@ -54,6 +49,19 @@ describe('Community Insights API', () => {
     beforeEach(() => {
         process.env = { ...originalEnv };
         vi.clearAllMocks();
+
+        // Setup default mock for getAIClient
+        (getAIClient as any).mockReturnValue({
+            models: {
+                generateContent: vi.fn().mockResolvedValue({
+                    candidates: [{
+                        content: {
+                            parts: [{ text: 'AI-generated community insights.' }]
+                        }
+                    }]
+                }),
+            },
+        });
     });
 
     afterEach(() => {
@@ -155,7 +163,7 @@ describe('Community Insights API', () => {
         });
 
         it('should accept valid request with required parameters', async () => {
-            process.env.GEMINI_API_KEY = 'test-key';
+            // Mock getAIClient returning a valid client is done in beforeEach
 
             const request = new NextRequest('http://localhost/api/community-insights', {
                 method: 'POST',
@@ -167,11 +175,31 @@ describe('Community Insights API', () => {
             });
 
             const response = await POST(request);
-            // Should pass validation and reach AI generation (mocked)
             expect(response.status).toBe(200);
 
             const data = await response.json();
             expect(data.query).toBe('What is the population?');
+            expect(data.insights).toBe('AI-generated community insights.');
+        });
+
+        it('should return AI unavailable if no client returned', async () => {
+             (getAIClient as any).mockReturnValue(null);
+
+            const request = new NextRequest('http://localhost/api/community-insights', {
+                method: 'POST',
+                body: JSON.stringify({
+                    query: 'What is the population?',
+                    tenantId: validTenantId,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const response = await POST(request);
+            expect(response.status).toBe(200);
+
+            const data = await response.json();
+            expect(data.isAIUnavailable).toBe(true);
+            expect(data.insights).toContain('configured');
         });
     });
 });
