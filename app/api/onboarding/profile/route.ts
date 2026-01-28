@@ -51,14 +51,14 @@ export async function POST(req: Request) {
         // We can get the session from headers if we forward them, or just utilise the token
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
         }
 
         const token = authHeader.replace('Bearer ', '');
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
         if (authError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
         }
 
         // 2. Parse Body
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         const userId = user.id;
 
         // 3. Get User Details (to decide table)
-        const userRec = await db.select().from(users).where(eq(users.id, userId)).limit(1).then((res: any) => res[0]);
+        const userRec = await db.select().from(users).where(eq(users.id, userId)).limit(1).then((res) => res[0]);
 
         if (!userRec) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -124,7 +124,7 @@ export async function POST(req: Request) {
         // If Individual -> check userType -> insert into musicianProfiles or professionalProfiles
 
         // Transaction to ensure atomicity
-        await db.transaction(async (tx: any) => {
+        await db.transaction(async (tx) => {
             const accType = userRec.accountType;
             const uType = userRec.userType;
 
