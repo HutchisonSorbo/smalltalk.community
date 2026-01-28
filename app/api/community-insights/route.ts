@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
         // Check for Gemini API key
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
+            console.warn("[Community Insights] GEMINI_API_KEY environment variable is not set");
             // Return helpful message with context data if available
             const contextSummary = demographics
                 ? `Based on available data for ${demographics.locality} (${demographics.postcode}): Population: ${demographics.population.toLocaleString()}, Median Age: ${demographics.medianAge}`
@@ -158,15 +159,19 @@ Provide a helpful, informative response focused on community development and pla
                 amenities: amenities ? "OpenStreetMap" : null,
             },
         });
-    } catch (error: any) {
-        console.error("Community Insights API error:", error);
+    } catch (error: unknown) {
+        console.error("[Community Insights] API error:", error);
 
-        // Check for specific Google AI errors if possible, or just log details
-        if (error && error.status) {
-             console.error(`Status: ${error.status}`);
-        }
-        if (error && error.message) {
-             console.error(`Message: ${error.message}`);
+        // Log detailed error information for debugging
+        if (error instanceof Error) {
+            console.error(`[Community Insights] Error name: ${error.name}`);
+            console.error(`[Community Insights] Error message: ${error.message}`);
+            if ("status" in error && typeof error.status === "number") {
+                console.error(`[Community Insights] HTTP status: ${error.status}`);
+            }
+            if ("code" in error && typeof error.code === "string") {
+                console.error(`[Community Insights] Error code: ${error.code}`);
+            }
         }
 
         return NextResponse.json(
