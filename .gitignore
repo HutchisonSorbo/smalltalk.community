@@ -34,3 +34,4 @@ artifacts/superpowers/
 
 # Generated types
 next-env.d.ts
+*.tsbuildinfo
