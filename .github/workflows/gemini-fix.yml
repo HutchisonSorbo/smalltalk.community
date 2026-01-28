@@ -3,6 +3,7 @@ name: '🤖 Gemini Auto-Fixer'
 on:
   pull_request_review_comment:
     types: [created]
+  workflow_dispatch:
 
 concurrency:
   group: gemini-fix-${{ github.event.pull_request.number }}
