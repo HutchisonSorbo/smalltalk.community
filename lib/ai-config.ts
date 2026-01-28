@@ -16,7 +16,7 @@ export const SAFETY_SETTINGS = {
 };
 
 export const AI_MODEL_CONFIG = {
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-2.5-flash',
     generationConfig: {
         maxOutputTokens: 8192,
         temperature: 0.7

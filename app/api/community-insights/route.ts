@@ -61,6 +61,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
+        // Fetch user profile to determine age-appropriate safety settings
+        // Data isolation is preserved via RLS and explicit id filtering
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("age_group")
+            .eq("id", user.id)
+            .single();
+
+        const isTeen = profile?.age_group === "teen";
+
         // Rate limiting
         const rateLimitKey = `insights:${user.id}`;
         const rateLimit = rateLimitMap.get(rateLimitKey);
@@ -96,7 +106,7 @@ export async function POST(request: NextRequest) {
         // Build context for AI
         const context = buildAIContext(demographics, amenities);
 
-        // Get AI Client using centralized config
+        // Get AI Client using centralised config
         const genAI = getAIClient();
 
         if (!genAI) {
@@ -119,9 +129,9 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const prompt = `You are a helpful community insights assistant for a non-profit organization. 
+        const prompt = `You are a helpful community insights assistant for a non-profit organisation. 
 Answer the following question about the community, using the provided context data.
-Be concise, helpful, and focused on actionable insights for community organizations.
+Be concise, helpful, and focused on actionable insights for community organisations.
 If you don't have enough data to answer accurately, say so.
 
 USER QUESTION: ${query}
@@ -131,12 +141,12 @@ ${context}
 
 Provide a helpful, informative response focused on community development and planning.`;
 
-        // Generate AI insights
+        // Generate AI insights with appropriate safety settings based on age group
         const response = await genAI.models.generateContent({
             model: AI_MODEL_CONFIG.model,
             config: {
                 ...AI_MODEL_CONFIG.generationConfig,
-                safetySettings: SAFETY_SETTINGS.adult,
+                safetySettings: isTeen ? SAFETY_SETTINGS.teen : SAFETY_SETTINGS.adult,
             },
             contents: [
                 {
