@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         const userId = user.id;
 
         // 3. Get User Details (to decide table)
-        const userRec = await db.select().from(users).where(eq(users.id, userId)).limit(1).then((res) => res[0]);
+        const [userRec] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
         if (!userRec) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
         // If Individual -> check userType -> insert into musicianProfiles or professionalProfiles
 
         // Transaction to ensure atomicity
-        await db.transaction(async (tx) => {
+        await db.transaction(async (tx: any) => {
             const accType = userRec.accountType;
             const uType = userRec.userType;
 
