@@ -52,7 +52,7 @@ jobs:
       - name: Run Gemini Fixer
         env:
           GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          # Use 2.0-flash to match script. Script honors this env var.
+          # Use 3.0-flash to match script. Script honors this env var.
           GEMINI_MODEL: 'gemini-3.0-flash'
           COMMENTS_FILE: 'comments.json'
         run: npx tsx scripts/gemini-fixer.ts
