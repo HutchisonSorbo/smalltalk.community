@@ -17,7 +17,7 @@ import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
 // We use Drizzle for DB, so we don't need Supabase Sudo client strictly, but we need to verify the user from the Request headers/Supabase token.
 // Actually, in App Router, we should use createServerClient from @supabase/ssr usually.
 // But we are sticking to simple verification for now or assuming middleware passed user.
-// Let's use the Authorization header to verify the user using basic supabase client.
+// Let's utilise the Authorization header to verify the user using basic supabase client.
 
 export const dynamic = 'force-dynamic'; // Ensure not cached
 
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     try {
         // 1. Authenticate
-        // We can get the session from headers if we forward them, or just use the token
+        // We can get the session from headers if we forward them, or just utilise the token
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) {
             return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         const userId = user.id;
 
         // 3. Get User Details (to decide table)
-        const userRec = await db.select().from(users).where(eq(users.id, userId)).limit(1).then((res: any) => res[0]);
+        const userRec = await db.select().from(users).where(eq(users.id, userId)).limit(1).then((res) => res[0]);
 
         if (!userRec) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
 
             if (age < 13) {
                 return NextResponse.json({
-                    error: "You must be at least 13 years old to use this platform."
+                    error: "You must be at least 13 years old to utilise this platform."
                 }, { status: 400 });
             }
 
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
         // If Individual -> check userType -> insert into musicianProfiles or professionalProfiles
 
         // Transaction to ensure atomicity
-        await db.transaction(async (tx: any) => {
+        await db.transaction(async (tx) => {
             const accType = userRec.accountType;
             const uType = userRec.userType;
 
