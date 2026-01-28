@@ -28,7 +28,7 @@ vi.mock('next/cache', () => ({
 import { db } from '@/server/db';
 
 describe('CommunityOS Actions (Refined)', () => {
-    const mockTenantId = 'test-tenant-id';
+    const mockTenantId = '00000000-0000-0000-0000-000000000000';
     const mockUserId = 'test-user-id';
 
     beforeEach(() => {
