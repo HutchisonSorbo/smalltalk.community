@@ -82,6 +82,13 @@ export async function POST(req: Request) {
         // 3.1 Handle Date of Birth / Age Verification for OAuth users
         let userUpdates: any = {};
 
+        // Critical: Ensure Date of Birth is provided if not already on record (e.g. OAuth users)
+        if (!userRec.dateOfBirth && !profileData.dateOfBirth) {
+            return NextResponse.json({
+                error: "Date of birth is required for account setup"
+            }, { status: 400 });
+        }
+
         if (profileData.dateOfBirth) {
             const dob = new Date(profileData.dateOfBirth);
             const today = new Date();
