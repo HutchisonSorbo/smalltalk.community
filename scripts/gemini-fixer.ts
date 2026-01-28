@@ -15,7 +15,7 @@ import * as path from 'path';
  * - Linear processing to respect rate limits (implicit via awaiting)
  */
 
-const MODEL_NAME = 'gemini-3.0-flash';
+const MODEL_NAME = 'gemini-2.0-flash';
 
 // Biome-ignore lint/suspicious/noControlCharactersInRegex: Needed for sanitizing LLM input
 const CONTROL_CHARS_REGEX = /[\x00-\x1F\x7F]/g;

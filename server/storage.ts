@@ -489,11 +489,13 @@ export class DatabaseStorage implements IStorage {
   private _buildProfessionalFilters(filters?: ProfessionalFilters) {
     const conditions = [eq(professionalProfiles.isActive, true)];
     if (!filters) return conditions;
-
-    if (filters.location) conditions.push(ilike(professionalProfiles.location, `%${filters.location}%`));
+    if (filters.location) {
+      const escaped = this._escapeLikeString(filters.location);
+      conditions.push(ilike(professionalProfiles.location, `%${escaped}%`));
+    }
     if (filters.role) conditions.push(eq(professionalProfiles.role, filters.role));
     if (filters.searchQuery) {
-      const query = `%${filters.searchQuery}%`;
+      const query = `%${this._escapeLikeString(filters.searchQuery)}%`;
       conditions.push(or(
         ilike(professionalProfiles.businessName, query),
         ilike(professionalProfiles.bio, query),
@@ -886,5 +888,3 @@ export class DatabaseStorage implements IStorage {
   private _buildGigFilters(filters?: GigFilters) {
     const conditions: any[] = [];
     if (!filters) return conditions;
-
-    if (filters.location) {
