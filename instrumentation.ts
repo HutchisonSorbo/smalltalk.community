@@ -2,6 +2,11 @@ import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Prevent New Relic crash if app name is missing
+    if (!process.env.NEW_RELIC_APP_NAME) {
+      process.env.NEW_RELIC_APP_NAME = 'smalltalk.community';
+    }
+
     await import("./sentry.server.config");
     await import("newrelic");
   }
