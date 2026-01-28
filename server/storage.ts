@@ -49,6 +49,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, sql, ne, gte, lte, arrayOverlaps, ilike, lt, isNotNull, isNull, getTableColumns } from "drizzle-orm";
+import type { SQL } from 'drizzle-orm';
 
 export interface MusicianFilters {
   location?: string;
@@ -782,12 +783,12 @@ export class DatabaseStorage implements IStorage {
     return band;
   }
 
-  async getBands(filters?: Partial<Band> & { searchQuery?: string }): Promise<Band[]> {
+  async getBands(filters?: BandFilters): Promise<Band[]> {
     const conditions = this._buildBandFilters(filters);
     return await db.select().from(bands).where(and(...conditions));
   }
 
-  private _buildBandFilters(filters?: Partial<Band> & { searchQuery?: string }) {
+  private _buildBandFilters(filters?: BandFilters) {
     const conditions = [eq(bands.isActive, true)];
 
     if (!filters) return conditions;
@@ -887,4 +888,4 @@ export class DatabaseStorage implements IStorage {
       .offset(filters?.offset || 0);
   }
 
-  private _buildGigFilters(filters?: GigFilters) {
+  private _buildGigFilters(filters?: GigFilters): SQL[] {
