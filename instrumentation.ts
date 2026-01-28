@@ -1,5 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
 
+/**
+ * Registers runtime-specific instrumentation and monitoring hooks.
+ */
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     // Prevent New Relic crash if app name is missing
