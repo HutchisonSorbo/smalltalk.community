@@ -13,8 +13,6 @@ import {
 import { eq } from "drizzle-orm";
 import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
 
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
 // Use service role for database updates that might require admin privileges or bypassing RLS if needed (though we use Drizzle so we bypass RLS mostly unless using Postgres directly via Supabase client)
 // We use Drizzle for DB, so we don't need Supabase Sudo client strictly, but we need to verify the user from the Request headers/Supabase token.
 // Actually, in App Router, we should use createServerClient from @supabase/ssr usually.
@@ -119,7 +117,7 @@ export async function POST(req: Request) {
         // If Individual -> check userType -> insert into musicianProfiles or professionalProfiles
 
         // Transaction to ensure atomicity
-        await db.transaction(async (tx: Tx) => {
+        await db.transaction(async (tx: any) => {
             const accType = userRec.accountType;
             const uType = userRec.userType;
 
