@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 /**
  * @fileoverview Gemini Fixer Script (Batch Mode)
  * 
- * Uses Google's Gemini 2.0 Flash model to automatically fix code based on 
+ * Uses Google's Gemini 3 Flash model to automatically fix code based on 
  * code review comments (e.g. from CodeRabbit).
  * 
  * Features:

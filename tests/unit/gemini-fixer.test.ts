@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import { loadConfig, validateOutput, buildPrompt, loadTasks, run } from '../../scripts/gemini-fixer';
-import { GoogleGenAI } from '@google/genai';
 
 vi.mock('fs', async () => {
     const actual = await vi.importActual<typeof import('fs')>('fs');
@@ -65,6 +64,7 @@ describe('gemini-fixer', () => {
             const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('exit'); });
             delete process.env.COMMENTS_FILE;
             expect(() => loadTasks({ apiKey: 'key', modelName: 'model', repoRoot: 'root' })).toThrow('exit');
+            expect(exitSpy).toHaveBeenCalledWith(1);
         });
 
         it('should filter out non-coderabbit comments and path traversal', () => {

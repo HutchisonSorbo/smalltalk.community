@@ -26,7 +26,7 @@ concurrency:
 
 permissions:
   contents: write
-  pull-requests: read
+  pull-requests: write
   actions: write # Needed to re-trigger workflow_dispatch
 
 jobs:
@@ -49,11 +49,11 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.scheduled_at != '0'
         run: |
           CURRENT_TIME=$(date +%s)
-          SCHEDULED_TIME=${{ github.event.inputs.scheduled_at }}
+          SCHEDULED_TIME="${{ github.event.inputs.scheduled_at }}"
           WAIT_TIME=$((SCHEDULED_TIME - CURRENT_TIME))
-          if [ $WAIT_TIME -gt 0 ]; then
+          if [ "$WAIT_TIME" -gt 0 ]; then
             echo "Waiting $WAIT_TIME seconds until scheduled execution time..."
-            sleep $WAIT_TIME
+            sleep "$WAIT_TIME"
           else
             echo "Scheduled time already passed. Proceeding..."
           fi
