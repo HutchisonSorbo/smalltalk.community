@@ -64,6 +64,10 @@ Before planning, verify skills from brainstorm and check for additional skills:
 
 ## Rollback plan
 
+## Push (mandatory)
+
+(Instructions to push changes using `gh cli` after verified completion)
+
 ## Persist (mandatory)
 
 Write the plan output to:
