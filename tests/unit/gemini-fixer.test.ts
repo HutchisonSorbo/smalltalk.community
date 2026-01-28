@@ -1,8 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
-import { loadConfig, validateOutput, buildPrompt } from '../../scripts/gemini-fixer';
+import * as path from 'path';
+import { loadConfig, validateOutput, buildPrompt, loadTasks, run } from '../../scripts/gemini-fixer';
+import { GoogleGenAI } from '@google/genai';
 
-vi.mock('fs');
+vi.mock('fs', async () => {
+    const actual = await vi.importActual<typeof import('fs')>('fs');
+    return {
+        ...actual,
+        readFileSync: vi.fn(),
+        existsSync: vi.fn(),
+        statSync: vi.fn(),
+    };
+});
 
 describe('gemini-fixer', () => {
     const originalEnv = process.env;
@@ -27,6 +37,15 @@ describe('gemini-fixer', () => {
             expect(config.modelName).toBe('test-model');
         });
 
+        it('should load config from GEMINI_API_KEY when GOOGLE_API_KEY is missing', () => {
+            delete process.env.GOOGLE_API_KEY;
+            process.env.GEMINI_API_KEY = 'fallback-key';
+            process.env.GEMINI_MODEL = 'test-model';
+
+            const config = loadConfig();
+            expect(config.apiKey).toBe('fallback-key');
+        });
+
         it('should exit if API key is missing', () => {
             const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('exit'); });
             delete process.env.GOOGLE_API_KEY;
@@ -34,6 +53,47 @@ describe('gemini-fixer', () => {
 
             expect(() => loadConfig()).toThrow('exit');
             expect(exitSpy).toHaveBeenCalledWith(1);
+        });
+    });
+
+    describe('loadTasks', () => {
+        beforeEach(() => {
+            process.env.COMMENTS_FILE = 'comments.json';
+        });
+
+        it('should exit if COMMENTS_FILE is missing', () => {
+            const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('exit'); });
+            delete process.env.COMMENTS_FILE;
+            expect(() => loadTasks({ apiKey: 'key', modelName: 'model', repoRoot: 'root' })).toThrow('exit');
+        });
+
+        it('should filter out non-coderabbit comments and path traversal', () => {
+            const comments = [
+                { path: 'safe.ts', user: { login: 'coderabbitai[bot]' }, body: 'fix', diff_hunk: '@@' },
+                { path: 'other.ts', user: { login: 'human' }, body: 'fix', diff_hunk: '@@' },
+                { path: '../secret.ts', user: { login: 'coderabbitai[bot]' }, body: 'fix', diff_hunk: '@@' }
+            ];
+
+            vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(comments));
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true } as any);
+            // Mock readFileSync for the actual files too
+            vi.mocked(fs.readFileSync).mockImplementation((p: any) => {
+                if (p === 'comments.json') return JSON.stringify(comments);
+                return 'file content';
+            });
+
+            const tasks = loadTasks({ apiKey: 'key', modelName: 'model', repoRoot: 'root' });
+            expect(tasks).toHaveLength(1);
+            expect(tasks[0].filePath).toBe('safe.ts');
+        });
+
+        it('should exit if COMMENTS_FILE is invalid JSON', () => {
+            const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('exit'); });
+            vi.mocked(fs.readFileSync).mockReturnValue('invalid json');
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+
+            expect(() => loadTasks({ apiKey: 'key', modelName: 'model', repoRoot: 'root' })).toThrow('exit');
         });
     });
 

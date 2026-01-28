@@ -1,6 +1,7 @@
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * @fileoverview Gemini Fixer Script (Batch Mode)
@@ -204,13 +205,13 @@ ${fileContent}
  * @returns {Promise<string>} The generated fixed code.
  * @throws {Error} If generation fails after retries.
  */
-async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemInstruction: string, userPrompt: string, filePath: string): Promise<string> {
+export async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemInstruction: string, userPrompt: string, filePath: string): Promise<string> {
     const maxRetries = 3;
     let attempt = 0;
 
     while (attempt < maxRetries) {
         try {
-            const timeoutMs = 90000; // Increased timeout for potentially larger files/tasks
+            const timeoutMs = 90000;
             const generatePromise = genAI.models.generateContent({
                 model: modelName,
                 config: {
@@ -228,12 +229,19 @@ async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemIn
                 setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
             );
 
-            // Race the generate promise against the timeout
             const result = await Promise.race([generatePromise, timeoutPromise]) as GenerateContentResponse;
 
             // Result handling based on @google/genai structure
             const candidate = result.candidates?.[0];
-            let fixedCode = candidate?.content?.parts?.[0]?.text?.trim() || '';
+            let fixedCode = '';
+
+            if (candidate?.content?.parts) {
+                fixedCode = candidate.content.parts
+                    .map(part => part.text)
+                    .filter(Boolean)
+                    .join('')
+                    .trim();
+            }
 
             // Clean up potential markdown formatting if Gemini ignored the instruction
             if (fixedCode.startsWith('```')) {
@@ -354,6 +362,11 @@ export async function run(): Promise<void> {
 }
 
 // Only run if called directly
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('gemini-fixer.ts')) {
+const isMain = import.meta.url && (
+    process.argv[1]?.endsWith('gemini-fixer.ts') ||
+    path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
+);
+
+if (isMain) {
     run();
 }

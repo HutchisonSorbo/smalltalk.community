@@ -35,3 +35,8 @@ artifacts/superpowers/
 # Generated types
 next-env.d.ts
 *.tsbuildinfo
+
+# Temporary files and API dumps
+comments.json
+*.bak
+*.old

@@ -933,12 +933,15 @@ export class DatabaseStorage implements IStorage {
    * @returns List of gigs
    */
   async getGigsByBand(bandId: string, limit?: number, offset?: number): Promise<Gig[]> {
-    return db.select()
-      .from(gigs)
-      .where(eq(gigs.bandId, bandId))
-      .orderBy(gigs.date)
-      .limit(limit || 50)
-      .offset(offset || 0);
+    return this.withDbErrorHandling(
+      () => db.select()
+        .from(gigs)
+        .where(eq(gigs.bandId, bandId))
+        .orderBy(gigs.date)
+        .limit(limit || 50)
+        .offset(offset || 0),
+      'getGigsByBand'
+    );
   }
 
   /**
@@ -949,12 +952,15 @@ export class DatabaseStorage implements IStorage {
    * @returns List of gigs
    */
   async getGigsByMusician(musicianId: string, limit?: number, offset?: number): Promise<Gig[]> {
-    return db.select()
-      .from(gigs)
-      .where(eq(gigs.musicianId, musicianId))
-      .orderBy(gigs.date)
-      .limit(limit || 50)
-      .offset(offset || 0);
+    return this.withDbErrorHandling(
+      () => db.select()
+        .from(gigs)
+        .where(eq(gigs.musicianId, musicianId))
+        .orderBy(gigs.date)
+        .limit(limit || 50)
+        .offset(offset || 0),
+      'getGigsByMusician'
+    );
   }
 
   // Notifications
