@@ -10,7 +10,7 @@ exports.config = {
     /**
      * Array of application names.
      */
-    app_name: [process.env.NEW_RELIC_APP_NAME || 'smalltalk.community'],
+    app_name: [process.env.NEW_RELIC_APP_NAME],
     /**
      * Your New Relic license key.
      */
