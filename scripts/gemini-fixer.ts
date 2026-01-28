@@ -1,11 +1,12 @@
 import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * @fileoverview Gemini Fixer Script (Batch Mode)
  * 
- * Uses Google's Gemini 2.0 Flash model to automatically fix code based on 
+ * Uses Google's Gemini 3 Flash model to automatically fix code based on 
  * code review comments (e.g. from CodeRabbit).
  * 
  * Features:
@@ -15,7 +16,7 @@ import * as path from 'path';
  * - Linear processing to respect rate limits (implicit via awaiting)
  */
 
-const MODEL_NAME = 'gemini-2.0-flash';
+const MODEL_NAME = 'gemini-3-flash-preview';
 
 // Biome-ignore lint/suspicious/noControlCharactersInRegex: Needed for sanitizing LLM input
 const CONTROL_CHARS_REGEX = /[\x00-\x1F\x7F]/g;
@@ -47,7 +48,7 @@ interface Config {
  * Validates and loads configuration.
  * @returns {Config} The configuration object.
  */
-function loadConfig(): Config {
+export function loadConfig(): Config {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
         console.error('Missing required environment variable: GOOGLE_API_KEY or GEMINI_API_KEY');
@@ -63,7 +64,7 @@ function loadConfig(): Config {
  * @param {Config} config - The configuration object.
  * @returns {FileTask[]} An array of tasks, where each task corresponds to a file and its comments.
  */
-function loadTasks(config: Config): FileTask[] {
+export function loadTasks(config: Config): FileTask[] {
     const commentsFile = process.env.COMMENTS_FILE;
     if (!commentsFile) {
         console.error('Missing required environment variable: COMMENTS_FILE');
@@ -159,7 +160,7 @@ function sanitizeInput(str: string): string {
 /**
  * Constructs the prompts for Gemini.
  */
-function buildPrompt(task: FileTask): { systemInstruction: string; userPrompt: string } {
+export function buildPrompt(task: FileTask): { systemInstruction: string; userPrompt: string } {
     const { filePath, fileContent, comments } = task;
 
     const sanitizedFilePath = sanitizeInput(filePath);
@@ -174,12 +175,13 @@ ${sanitizeInput(c.diff_hunk)}
     const systemInstruction = `You are an expert software engineer adhering to Australian English standards.
 Your task is to fix the code in the provided file based on the code review comments.
 STRICT RULES:
-1. Return ONLY the corrected code for the entire file.
-2. Do not add markdown backticks or explanations.
-3. Maintain WCAG 2.2 AA accessibility standards.
-4. Ensure data isolation (RLS) is preserved.
-5. Address ALL listed issues in a single pass.
-6. If the comments are not actionable or unsafe, return the original file content.`;
+1. Always use Australian English spelling (e.g., utilise instead of utilize, organisation instead of organization).
+2. Return ONLY the corrected code for the entire file.
+3. Do not add markdown backticks or explanations.
+4. Maintain WCAG 2.2 AA accessibility standards.
+5. Ensure data isolation (RLS) is preserved.
+6. Address ALL listed issues in a single pass.
+7. If the comments are not actionable or unsafe, return the original file content.`;
 
     const userPrompt = `
 CONTEXT:
@@ -203,13 +205,13 @@ ${fileContent}
  * @returns {Promise<string>} The generated fixed code.
  * @throws {Error} If generation fails after retries.
  */
-async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemInstruction: string, userPrompt: string, filePath: string): Promise<string> {
+export async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemInstruction: string, userPrompt: string, filePath: string): Promise<string> {
     const maxRetries = 3;
     let attempt = 0;
 
     while (attempt < maxRetries) {
         try {
-            const timeoutMs = 90000; // Increased timeout for potentially larger files/tasks
+            const timeoutMs = 90000;
             const generatePromise = genAI.models.generateContent({
                 model: modelName,
                 config: {
@@ -227,12 +229,19 @@ async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemIn
                 setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
             );
 
-            // Race the generate promise against the timeout
             const result = await Promise.race([generatePromise, timeoutPromise]) as GenerateContentResponse;
 
             // Result handling based on @google/genai structure
             const candidate = result.candidates?.[0];
-            let fixedCode = candidate?.content?.parts?.[0]?.text?.trim() || '';
+            let fixedCode = '';
+
+            if (candidate?.content?.parts) {
+                fixedCode = candidate.content.parts
+                    .map(part => part.text)
+                    .filter(Boolean)
+                    .join('')
+                    .trim();
+            }
 
             // Clean up potential markdown formatting if Gemini ignored the instruction
             if (fixedCode.startsWith('```')) {
@@ -262,7 +271,7 @@ async function generateWithRetry(genAI: GoogleGenAI, modelName: string, systemIn
  * @throws {Error} If Gemini returned an empty response.
  * @throws {Error} If the fixed code is suspiciously short compared to the original.
  */
-function validateOutput(fixedCode: string, originalContent: string): void {
+export function validateOutput(fixedCode: string, originalContent: string): void {
     if (!fixedCode) {
         throw new Error('Gemini returned empty response.');
     }
@@ -304,7 +313,7 @@ function writeWithBackup(fixedCode: string, task: FileTask): void {
 /**
  * Main execution function.
  */
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
     try {
         const config = loadConfig();
         const tasks = loadTasks(config);
@@ -315,6 +324,8 @@ async function run(): Promise<void> {
             return;
         }
 
+        const iterationCount = process.env.ITERATION_COUNT || '1';
+        console.log(`--- Gemini Fixer Iteration ${iterationCount} ---`);
         console.log(`Found ${tasks.length} files to process.`);
 
         let failureCount = 0;
@@ -350,4 +361,12 @@ async function run(): Promise<void> {
     }
 }
 
-run();
+// Only run if called directly
+const isMain = import.meta.url && (
+    process.argv[1]?.endsWith('gemini-fixer.ts') ||
+    path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
+);
+
+if (isMain) {
+    run();
+}

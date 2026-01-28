@@ -1,3 +1,4 @@
+# NOTE: This workflow is DEPRECATED in favour of gemini-fix-loop.yml which handles iterative fixes and rate limiting.
 name: '🤖 Gemini Auto-Fixer'
 
 on:

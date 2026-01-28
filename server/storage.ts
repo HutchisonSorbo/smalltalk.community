@@ -933,12 +933,15 @@ export class DatabaseStorage implements IStorage {
    * @returns List of gigs
    */
   async getGigsByBand(bandId: string, limit?: number, offset?: number): Promise<Gig[]> {
-    return db.select()
-      .from(gigs)
-      .where(eq(gigs.bandId, bandId))
-      .orderBy(gigs.date)
-      .limit(limit || 50)
-      .offset(offset || 0);
+    return this.withDbErrorHandling(
+      () => db.select()
+        .from(gigs)
+        .where(eq(gigs.bandId, bandId))
+        .orderBy(gigs.date)
+        .limit(limit || 50)
+        .offset(offset || 0),
+      'getGigsByBand'
+    );
   }
 
   /**
@@ -949,12 +952,15 @@ export class DatabaseStorage implements IStorage {
    * @returns List of gigs
    */
   async getGigsByMusician(musicianId: string, limit?: number, offset?: number): Promise<Gig[]> {
-    return db.select()
-      .from(gigs)
-      .where(eq(gigs.musicianId, musicianId))
-      .orderBy(gigs.date)
-      .limit(limit || 50)
-      .offset(offset || 0);
+    return this.withDbErrorHandling(
+      () => db.select()
+        .from(gigs)
+        .where(eq(gigs.musicianId, musicianId))
+        .orderBy(gigs.date)
+        .limit(limit || 50)
+        .offset(offset || 0),
+      'getGigsByMusician'
+    );
   }
 
   // Notifications
@@ -1098,8 +1104,8 @@ export class DatabaseStorage implements IStorage {
 
   // Admin/System
   async migrateUserId(oldId: string, newId: string): Promise<void> {
-    // Log IDs securely for diagnostics, do not expose in error
-    console.debug(`[migrateUserId] Attempted migration: old=${oldId}, new=${newId}`);
+    // Audit log without PII
+    console.debug(`[migrateUserId] Attempted migration of user records`);
     throw new Error("migrateUserId not implemented");
   }
 
@@ -1182,3 +1188,4 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+

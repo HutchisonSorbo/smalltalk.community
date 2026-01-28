@@ -1,0 +1,133 @@
+name: '🤖 Gemini Auto-Fixer (Loop)'
+
+on:
+  pull_request_review_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request Number'
+        required: true
+        type: string
+      iteration:
+        description: 'Current Iteration'
+        required: false
+        default: '1'
+        type: string
+      scheduled_at:
+        description: 'Scheduled execution time (Unix timestamp)'
+        required: false
+        default: '0'
+        type: string
+
+concurrency:
+  group: gemini-fix-loop-${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write # Needed to re-trigger workflow_dispatch
+
+jobs:
+  fix-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.comment.user.login == 'coderabbitai[bot]' &&
+       github.event.comment.in_reply_to_id == null &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.event.pull_request.head.ref }}
+          token: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Cooldown (Rate Limit Protection)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.scheduled_at != '0'
+        run: |
+          CURRENT_TIME=$(date +%s)
+          SCHEDULED_TIME="${{ github.event.inputs.scheduled_at }}"
+          WAIT_TIME=$((SCHEDULED_TIME - CURRENT_TIME))
+          if [ "$WAIT_TIME" -gt 0 ]; then
+            echo "Waiting $WAIT_TIME seconds until scheduled execution time..."
+            sleep "$WAIT_TIME"
+          else
+            echo "Scheduled time already passed. Proceeding..."
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch all active comments
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+        run: |
+          gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" --paginate > comments.json
+
+      - name: Run Gemini Fixer
+        id: fixer
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: 'gemini-3-flash-preview'
+          COMMENTS_FILE: 'comments.json'
+          ITERATION_COUNT: ${{ github.event.inputs.iteration || '1' }}
+        run: |
+          # The script should exit 0. We'll check if changes were made via git.
+          npx tsx scripts/gemini-fixer.ts
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and Push Fix
+        if: steps.fixer.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || github.event.pull_request.head.ref }}
+        run: |
+          git config --global user.name "Gemini Fixer [bot]"
+          git config --global user.email "gemini-fixer@smalltalk.community"
+          git add .
+          CHANGED_FILES=$(git diff --name-only --cached | wc -l)
+          git commit -m "fix: iterative Gemini fix (Iteration ${{ github.event.inputs.iteration || '1' }}) - $CHANGED_FILES files"
+          git push origin -- "$BRANCH_NAME"
+
+      - name: Handle Loop and Rate Limits
+        if: steps.fixer.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+          CURRENT_ITERATION: ${{ github.event.inputs.iteration || '1' }}
+          MAX_ITERATIONS: 5
+          COOLDOWN_MINUTES: 25
+        run: |
+          if [ "$CURRENT_ITERATION" -lt "$MAX_ITERATIONS" ]; then
+            NEXT_ITERATION=$((CURRENT_ITERATION + 1))
+            echo "Scheduling next iteration: $NEXT_ITERATION"
+            
+            # Calculate scheduled time for the NEXT run
+            COOLDOWN_SECONDS=$((COOLDOWN_MINUTES * 60))
+            SCHEDULED_AT=$(($(date +%s) + COOLDOWN_SECONDS))
+            
+            # Re-trigger via workflow_dispatch immediately.
+            # The next run will handle the sleep.
+            gh workflow run gemini-fix-loop.yml \
+              -f pr_number="$PR_NUMBER" \
+              -f iteration="$NEXT_ITERATION" \
+              -f scheduled_at="$SCHEDULED_AT" \
+              --repo "${{ github.repository }}"
+          else
+            echo "Max iterations reached ($MAX_ITERATIONS). Stopping loop."
+            gh pr comment "$PR_NUMBER" --body "🤖 Gemini has completed 5 iterations of auto-fixes. Please review the remaining comments manually."
+          fi
