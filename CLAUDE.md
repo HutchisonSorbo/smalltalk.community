@@ -35,7 +35,7 @@ Before writing code, you **MUST** read:
 
 ```javascript
 // ✅ CORRECT
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 
 // ❌ WRONG - DEPRECATED
 import { GoogleGenerativeAI } from '@google/generative-ai';
