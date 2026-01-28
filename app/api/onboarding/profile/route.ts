@@ -13,7 +13,7 @@ import {
 import { eq } from "drizzle-orm";
 import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
 
-// Use service role for database updates that might require admin privilegies or bypassing RLS if needed (though we use Drizzle so we bypass RLS mostly unless using Postgres directly via Supabase client)
+// Use service role for database updates that might require admin privileges or bypassing RLS if needed (though we use Drizzle so we bypass RLS mostly unless using Postgres directly via Supabase client)
 // We use Drizzle for DB, so we don't need Supabase Sudo client strictly, but we need to verify the user from the Request headers/Supabase token.
 // Actually, in App Router, we should use createServerClient from @supabase/ssr usually.
 // But we are sticking to simple verification for now or assuming middleware passed user.
@@ -51,14 +51,14 @@ export async function POST(req: Request) {
         // We can get the session from headers if we forward them, or just use the token
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
         }
 
         const token = authHeader.replace('Bearer ', '');
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
         if (authError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
         }
 
         // 2. Parse Body
@@ -80,7 +80,11 @@ export async function POST(req: Request) {
         }
 
         // 3.1 Handle Date of Birth / Age Verification for OAuth users
-        let userUpdates: any = {};
+        let userUpdates: Partial<{
+            dateOfBirth: Date;
+            isMinor: boolean;
+            messagePrivacy: string;
+        }> = {};
 
         if (profileData.dateOfBirth) {
             const dob = new Date(profileData.dateOfBirth);
@@ -169,11 +173,11 @@ export async function POST(req: Request) {
                     });
                 }
             } else {
-                // Organization
+                // Organisation
                 // Create Org
                 const [org] = await tx.insert(organisations).values({
-                    name: userRec.organisationName || "New Organization",
-                    slug: generateSlug(userRec.organisationName || "New Organization"),
+                    name: userRec.organisationName || "New Organisation",
+                    slug: generateSlug(userRec.organisationName || "New Organisation"),
                     description: profileData.bio, // Mapping bio to description
                     logoUrl: profileData.profileImageUrl,
                     // location and type are not in organisations schema
