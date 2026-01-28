@@ -1098,8 +1098,8 @@ export class DatabaseStorage implements IStorage {
 
   // Admin/System
   async migrateUserId(oldId: string, newId: string): Promise<void> {
-    // Log IDs securely for diagnostics, do not expose in error
-    console.debug(`[migrateUserId] Attempted migration: old=${oldId}, new=${newId}`);
+    // Audit log without PII
+    console.debug(`[migrateUserId] Attempted migration of user records`);
     throw new Error("migrateUserId not implemented");
   }
 
@@ -1182,3 +1182,4 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+
