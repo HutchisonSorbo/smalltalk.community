@@ -30,6 +30,9 @@ const nextConfig = {
 
         // Image processing
         'sharp',
+
+        // Observability
+        'newrelic',
     ],
     typescript: {
         ignoreBuildErrors: false, // Ensure we still catch TS errors
