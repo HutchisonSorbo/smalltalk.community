@@ -117,7 +117,8 @@ export async function POST(req: Request) {
         // If Individual -> check userType -> insert into musicianProfiles or professionalProfiles
 
         // Transaction to ensure atomicity
-        await db.transaction(async (tx: any) => {
+        type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+        await db.transaction(async (tx: DbTx) => {
             const accType = userRec.accountType;
             const uType = userRec.userType;
 
