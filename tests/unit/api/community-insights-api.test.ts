@@ -153,5 +153,25 @@ describe('Community Insights API', () => {
             // Should return 400 or 500 depending on error handling
             expect([400, 500]).toContain(response.status);
         });
+
+        it('should accept valid request with required parameters', async () => {
+            process.env.GEMINI_API_KEY = 'test-key';
+
+            const request = new NextRequest('http://localhost/api/community-insights', {
+                method: 'POST',
+                body: JSON.stringify({
+                    query: 'What is the population?',
+                    tenantId: validTenantId,
+                }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const response = await POST(request);
+            // Should pass validation and reach AI generation (mocked)
+            expect(response.status).toBe(200);
+
+            const data = await response.json();
+            expect(data.query).toBe('What is the population?');
+        });
     });
 });
