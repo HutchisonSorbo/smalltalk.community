@@ -1137,7 +1137,15 @@ export const organisationMembers = pgTable("organisation_members", {
   role: varchar("role", { length: 50 }).default("viewer"), // 'admin', 'coordinator', 'viewer'
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
-  pgPolicy("org_members_read", { for: "select", to: "authenticated", using: sql`true` }), // Simplification: authenticated users can see membership? Or restrict to org members? Sticking to simpler for now.
+  pgPolicy("org_members_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+    )`
+  }),
   index("org_members_org_idx").on(table.organisationId),
   index("org_members_user_idx").on(table.userId),
 ]);
