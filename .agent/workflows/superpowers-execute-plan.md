@@ -115,6 +115,6 @@ At the end:
 4) **MANDATORY**: Push changes using `gh` CLI.
    - You MUST create a NEW branch + PR if one does not exist for this specific plan.
    - Do NOT recycle old branches unless you are specifically fixing a PR that is already open.
-   - Example: `git checkout -b feature/my-new-feature` -> `gh pr create`
+   - Example: `git checkout -b feat/my-new-feature` -> `gh pr create`
 
 Stop after completing the finish step.

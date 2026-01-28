@@ -191,8 +191,8 @@ export interface IStorage {
   // Gigs
   createGig(gig: InsertGig): Promise<Gig>;
   getGigs(filters?: GigFilters): Promise<Gig[]>;
-  getGigsByBand(bandId: string): Promise<Gig[]>;
-  getGigsByMusician(musicianId: string): Promise<Gig[]>;
+  getGigsByBand(bandId: string, limit?: number, offset?: number): Promise<Gig[]>;
+  getGigsByMusician(musicianId: string, limit?: number, offset?: number): Promise<Gig[]>;
 
   // Security
   checkRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise<boolean>;
@@ -900,6 +900,12 @@ export class DatabaseStorage implements IStorage {
         conditions.push(gte(gigs.date, now));
       } else if (filters.date === 'past') {
         conditions.push(lt(gigs.date, now));
+      } else if (filters.date === 'today') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        conditions.push(and(gte(gigs.date, today), lt(gigs.date, tomorrow))!);
       }
     }
     if (filters?.genre) {
@@ -919,55 +925,144 @@ export class DatabaseStorage implements IStorage {
     return conditions;
   }
 
-  async getGigsByBand(bandId: string): Promise<Gig[]> {
-    return db.select().from(gigs).where(eq(gigs.bandId, bandId)).orderBy(gigs.date);
+  /**
+   * Get gigs for a specific band (paginated)
+   * @param bandId The ID of the band
+   * @param limit Optional limit (default 50)
+   * @param offset Optional offset (default 0)
+   * @returns List of gigs
+   */
+  async getGigsByBand(bandId: string, limit?: number, offset?: number): Promise<Gig[]> {
+    return db.select()
+      .from(gigs)
+      .where(eq(gigs.bandId, bandId))
+      .orderBy(gigs.date)
+      .limit(limit || 50)
+      .offset(offset || 0);
   }
 
-  async getGigsByMusician(musicianId: string): Promise<Gig[]> {
-    return db.select().from(gigs).where(eq(gigs.musicianId, musicianId)).orderBy(gigs.date);
+  /**
+   * Get gigs for a specific musician (paginated)
+   * @param musicianId The ID of the musician
+   * @param limit Optional limit (default 50)
+   * @param offset Optional offset (default 0)
+   * @returns List of gigs
+   */
+  async getGigsByMusician(musicianId: string, limit?: number, offset?: number): Promise<Gig[]> {
+    return db.select()
+      .from(gigs)
+      .where(eq(gigs.musicianId, musicianId))
+      .orderBy(gigs.date)
+      .limit(limit || 50)
+      .offset(offset || 0);
   }
 
   // Notifications
+  /**
+   * Get notifications for a user
+   * @param userId The User ID
+   * @returns List of notifications
+   */
   async getNotifications(userId: string): Promise<Notification[]> {
-    return db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt));
+    return this.withDbErrorHandling(
+      () => db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt)),
+      `getNotifications`
+    );
   }
 
+  /**
+   * Get count of unread notifications
+   * @param userId The User ID
+   * @returns Count of unread notifications
+   */
   async getUnreadNotificationCount(userId: string): Promise<number> {
-    const result = await db.select({ count: sql<number>`count(*)::int` }).from(notifications).where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
-    return result[0]?.count || 0;
+    return this.withDbErrorHandling(async () => {
+      const result = await db.select({ count: sql<number>`count(*)::int` }).from(notifications).where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      return result[0]?.count || 0;
+    }, `getUnreadNotificationCount`);
   }
 
+  /**
+   * Create a new notification
+   * @param notification The notification data
+   * @returns The created notification
+   */
   async createNotification(notification: InsertNotification): Promise<Notification> {
-    const [created] = await db.insert(notifications).values(notification).returning();
-    return created;
+    return this.withDbErrorHandling(async () => {
+      const [created] = await db.insert(notifications).values(notification).returning();
+      return created;
+    }, 'createNotification');
   }
 
+  /**
+   * Mark a notification as read
+   * @param id The Notification ID
+   */
   async markNotificationAsRead(id: string): Promise<void> {
-    await db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id));
+    return this.withDbErrorHandling(
+      () => db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id)).then(),
+      `markNotificationAsRead`
+    );
   }
 
+  /**
+   * Mark all notifications as read for a user
+   * @param userId The User ID
+   */
   async markAllNotificationsAsRead(userId: string): Promise<void> {
-    await db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId));
+    return this.withDbErrorHandling(
+      () => db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId)).then(),
+      `markAllNotificationsAsRead`
+    );
   }
 
   // Contact Requests
+  /**
+   * Create a contact request
+   * @param request The contact request data
+   * @returns The created contact request
+   */
   async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
-    const [created] = await db.insert(contactRequests).values(request).returning();
-    return created;
+    return this.withDbErrorHandling(async () => {
+      const [created] = await db.insert(contactRequests).values(request).returning();
+      return created;
+    }, 'createContactRequest');
   }
 
+  /**
+   * Get a contact request between two users
+   * @param requesterId The requester ID
+   * @param recipientId The recipient ID
+   * @returns The contact request or undefined
+   */
   async getContactRequest(requesterId: string, recipientId: string): Promise<ContactRequest | undefined> {
-    const [request] = await db.select().from(contactRequests).where(and(eq(contactRequests.requesterId, requesterId), eq(contactRequests.recipientId, recipientId)));
-    return request;
+    return this.withDbErrorHandling(async () => {
+      const [request] = await db.select().from(contactRequests).where(and(eq(contactRequests.requesterId, requesterId), eq(contactRequests.recipientId, recipientId)));
+      return request;
+    }, 'getContactRequest');
   }
 
+  /**
+   * Get a contact request by ID
+   * @param id The contact request ID
+   * @returns The contact request or undefined
+   */
   async getContactRequestById(id: string): Promise<ContactRequest | undefined> {
-    const [request] = await db.select().from(contactRequests).where(eq(contactRequests.id, id));
-    return request;
+    return this.withDbErrorHandling(async () => {
+      const [request] = await db.select().from(contactRequests).where(eq(contactRequests.id, id));
+      return request;
+    }, 'getContactRequestById');
   }
 
+  /**
+   * Update a contact request status
+   * @param id The contact request ID
+   * @param status The new status
+   */
   async updateContactRequestStatus(id: string, status: ContactRequestStatus): Promise<void> {
-    await db.update(contactRequests).set({ status }).where(eq(contactRequests.id, id));
+    return this.withDbErrorHandling(async () => {
+      await db.update(contactRequests).set({ status }).where(eq(contactRequests.id, id));
+    }, 'updateContactRequestStatus');
   }
 
   // Security
@@ -1003,7 +1098,18 @@ export class DatabaseStorage implements IStorage {
 
   // Admin/System
   async migrateUserId(oldId: string, newId: string): Promise<void> {
-    console.warn(`Migrating user ${oldId} to ${newId} - Not fully implemented`);
+    // Log IDs securely for diagnostics, do not expose in error
+    console.debug(`[migrateUserId] Attempted migration: old=${oldId}, new=${newId}`);
+    throw new Error("migrateUserId not implemented");
+  }
+
+  private async withDbErrorHandling<T>(operation: () => Promise<T>, context: string): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      console.error(`Database operation failed in ${context}:`, error);
+      throw error;
+    }
   }
 
   async updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined> {
@@ -1033,6 +1139,9 @@ export class DatabaseStorage implements IStorage {
     const key = `${targetType}|${targetId}`;
     const cached = this._ratingCache.get(key);
     if (cached && Date.now() - cached.timestamp < this._CACHE_TTL) {
+      // LRU: Move to end (most recently used)
+      this._ratingCache.delete(key);
+      this._ratingCache.set(key, cached);
       return cached.data;
     }
 
@@ -1050,7 +1159,9 @@ export class DatabaseStorage implements IStorage {
     };
 
     if (this._ratingCache.size >= this._CACHE_MAX_SIZE) {
-      this._ratingCache.clear();
+      // LRU Eviction: Remove oldest accessed (first key in Map)
+      const oldestKey = this._ratingCache.keys().next().value;
+      if (oldestKey) this._ratingCache.delete(oldestKey);
     }
     this._ratingCache.set(key, { data, timestamp: Date.now() });
 
