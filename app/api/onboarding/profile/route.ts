@@ -7,7 +7,8 @@ import {
     professionalProfiles,
     organisations,
     organisationMembers,
-    userOnboardingResponses
+    userOnboardingResponses,
+    userPrivacySettings
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
@@ -78,6 +79,34 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
+        // 3.1 Handle Date of Birth / Age Verification for OAuth users
+        let userUpdates: any = {};
+
+        if (profileData.dateOfBirth) {
+            const dob = new Date(profileData.dateOfBirth);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            if (age < 13) {
+                return NextResponse.json({
+                    error: "You must be at least 13 years old to use this platform."
+                }, { status: 400 });
+            }
+
+            userUpdates.dateOfBirth = dob;
+            const isMinor = age < 18;
+            userUpdates.isMinor = isMinor;
+
+            // Enforce privacy for minors
+            if (isMinor) {
+                userUpdates.messagePrivacy = 'verified_only';
+            }
+        }
+
         // 4. Update Profile based on type
         // Use validation:
         // If Org -> insert into organisations
@@ -94,6 +123,28 @@ export async function POST(req: Request) {
                 questionKey: "profile_setup",
                 response: profileData
             });
+
+            // Enforce strict privacy defaults for minors
+            if (userUpdates.isMinor) {
+                await tx.insert(userPrivacySettings).values({
+                    userId,
+                    profileVisibility: 'private',
+                    showRealName: false,
+                    showLocation: false,
+                    showAge: false,
+                    allowEmailLookup: false,
+                    defaultPostVisibility: 'community'
+                }).onConflictDoUpdate({
+                    target: userPrivacySettings.userId,
+                    set: {
+                        profileVisibility: 'private',
+                        showRealName: false,
+                        showLocation: false,
+                        showAge: false,
+                        allowEmailLookup: false
+                    }
+                });
+            }
 
             if (accType === 'Individual') {
                 if (uType === 'professional') {
@@ -139,6 +190,7 @@ export async function POST(req: Request) {
             // 5. Update User Onboarding Step
             // If they just finished Profile, they are now at Step 2 (Intent).
             await tx.update(users).set({
+                ...userUpdates,
                 onboardingStep: ONBOARDING_STEPS.INTENT,
                 profileCompletionPercentage: PROFILE_COMPLETION_STAGES.PROFILE_SETUP_DONE
             }).where(eq(users.id, userId));
