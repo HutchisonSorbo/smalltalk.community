@@ -112,6 +112,9 @@ At the end:
    - Follow-ups (if any)
    - Manual validation steps (if applicable)
 3) Confirm the artifacts exist by listing `artifacts/superpowers/`.
-4) **MANDATORY**: Push changes using `gh` CLI (e.g., `gh pr create` or `gh pr merge`, or `git push` if on a PR branch).
+4) **MANDATORY**: Push changes using `gh` CLI.
+   - You MUST create a NEW branch + PR if one does not exist for this specific plan.
+   - Do NOT recycle old branches unless you are specifically fixing a PR that is already open.
+   - Example: `git checkout -b feature/my-new-feature` -> `gh pr create`
 
 Stop after completing the finish step.

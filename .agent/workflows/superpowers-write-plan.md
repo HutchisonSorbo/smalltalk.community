@@ -66,7 +66,9 @@ Before planning, verify skills from brainstorm and check for additional skills:
 
 ## Push (mandatory)
 
-(Instructions to push changes using `gh cli` after verified completion)
+(Instructions to create a NEW branch and push changes using `gh cli` after verified completion)
+(Do NOT use an existing branch unless specifically correcting that branch's PR)
+(Example: `git checkout -b feature/my-new-feature` -> `gh pr create`)
 
 ## Persist (mandatory)
 
