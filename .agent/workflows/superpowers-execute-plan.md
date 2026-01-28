@@ -112,5 +112,6 @@ At the end:
    - Follow-ups (if any)
    - Manual validation steps (if applicable)
 3) Confirm the artifacts exist by listing `artifacts/superpowers/`.
+4) **MANDATORY**: Push changes using `gh` CLI (e.g., `gh pr create` or `gh pr merge`, or `git push` if on a PR branch).
 
 Stop after completing the finish step.

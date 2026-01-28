@@ -7,6 +7,7 @@ import { Providers } from "@/app/providers";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityContext";
 import { SkipToContent } from "@/components/SkipToContent";
 import { AccessibilityScript } from "@/components/shared/AccessibilityScript";
+import { NewRelicScript } from "@/components/shared/NewRelicScript";
 import { WorkInProgressBanner } from "@/components/shared/WorkInProgressBanner";
 
 
@@ -34,6 +35,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <head>
                 <AccessibilityScript />
+                <NewRelicScript />
             </head>
             <body className={inter.className} suppressHydrationWarning>
                 <Providers>
