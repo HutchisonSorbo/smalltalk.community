@@ -153,7 +153,7 @@ export function loadTasks(config: Config): FileTask[] {
 function sanitizeInput(str: string): string {
     if (!str) return '';
     return str.replace(CONTROL_CHARS_REGEX, '')
-        .replace(/```/g, "'''") // neutralize block escapes
+        .replace(/```/g, "'''") // Neutralise block escapes
         .slice(0, 10000); // Limit length
 }
 
@@ -362,11 +362,7 @@ export async function run(): Promise<void> {
 }
 
 // Only run if called directly
-const isMain = import.meta.url && (
-    process.argv[1]?.endsWith('gemini-fixer.ts') ||
-    path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
-);
-
-if (isMain) {
+const scriptPath = process.argv[1] ? new URL(`file://${process.argv[1]}`).href : '';
+if (import.meta.url === scriptPath) {
     run();
 }

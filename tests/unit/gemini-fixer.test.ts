@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
-import { loadConfig, validateOutput, buildPrompt, loadTasks, run } from '../../scripts/gemini-fixer';
+import { loadConfig, validateOutput, buildPrompt, loadTasks } from '../../scripts/gemini-fixer';
 
 vi.mock('fs', async () => {
     const actual = await vi.importActual<typeof import('fs')>('fs');
