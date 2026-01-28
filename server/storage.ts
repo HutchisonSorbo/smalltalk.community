@@ -900,6 +900,12 @@ export class DatabaseStorage implements IStorage {
         conditions.push(gte(gigs.date, now));
       } else if (filters.date === 'past') {
         conditions.push(lt(gigs.date, now));
+      } else if (filters.date === 'today') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        conditions.push(and(gte(gigs.date, today), lt(gigs.date, tomorrow))!);
       }
     }
     if (filters?.genre) {
@@ -929,25 +935,38 @@ export class DatabaseStorage implements IStorage {
 
   // Notifications
   async getNotifications(userId: string): Promise<Notification[]> {
-    return db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt));
+    return this.withDbErrorHandling(
+      () => db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt)),
+      `getNotifications(userId=${userId})`
+    );
   }
 
   async getUnreadNotificationCount(userId: string): Promise<number> {
-    const result = await db.select({ count: sql<number>`count(*)::int` }).from(notifications).where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
-    return result[0]?.count || 0;
+    return this.withDbErrorHandling(async () => {
+      const result = await db.select({ count: sql<number>`count(*)::int` }).from(notifications).where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      return result[0]?.count || 0;
+    }, `getUnreadNotificationCount(userId=${userId})`);
   }
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
-    const [created] = await db.insert(notifications).values(notification).returning();
-    return created;
+    return this.withDbErrorHandling(async () => {
+      const [created] = await db.insert(notifications).values(notification).returning();
+      return created;
+    }, 'createNotification');
   }
 
   async markNotificationAsRead(id: string): Promise<void> {
-    await db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id));
+    return this.withDbErrorHandling(
+      () => db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id)).then(),
+      `markNotificationAsRead(id=${id})`
+    );
   }
 
   async markAllNotificationsAsRead(userId: string): Promise<void> {
-    await db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId));
+    return this.withDbErrorHandling(
+      () => db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId)).then(),
+      `markAllNotificationsAsRead(userId=${userId})`
+    );
   }
 
   // Contact Requests
@@ -1003,7 +1022,16 @@ export class DatabaseStorage implements IStorage {
 
   // Admin/System
   async migrateUserId(oldId: string, newId: string): Promise<void> {
-    console.warn(`Migrating user ${oldId} to ${newId} - Not fully implemented`);
+    throw new Error(`migrateUserId not implemented. Attempted validation: old=${oldId}, new=${newId}`);
+  }
+
+  private async withDbErrorHandling<T>(operation: () => Promise<T>, context: string): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      console.error(`Database operation failed in ${context}:`, error);
+      throw error;
+    }
   }
 
   async updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined> {
