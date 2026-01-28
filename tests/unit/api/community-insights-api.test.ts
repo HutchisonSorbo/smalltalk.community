@@ -33,7 +33,7 @@ vi.mock('@/lib/supabase-server', () => ({
 }));
 
 vi.mock('@/lib/communityos/tenant-context', () => ({
-    verifyTenantAccess: vi.fn().mockResolvedValue(true),
+    verifyTenantAccess: vi.fn().mockResolvedValue({ hasAccess: true }),
 }));
 
 vi.mock('@/lib/abs-api', () => ({
@@ -49,6 +49,7 @@ import { POST } from '@/app/api/community-insights/route';
 
 describe('Community Insights API', () => {
     const originalEnv = process.env;
+    const validTenantId = '00000000-0000-0000-0000-000000000000';
 
     beforeEach(() => {
         process.env = { ...originalEnv };
@@ -63,7 +64,7 @@ describe('Community Insights API', () => {
         it('should return 400 for missing query parameter', async () => {
             const request = new NextRequest('http://localhost/api/community-insights', {
                 method: 'POST',
-                body: JSON.stringify({ tenantId: 'test-tenant' }),
+                body: JSON.stringify({ tenantId: validTenantId }),
                 headers: { 'Content-Type': 'application/json' },
             });
 
@@ -93,7 +94,7 @@ describe('Community Insights API', () => {
                 method: 'POST',
                 body: JSON.stringify({
                     query: 'What is the population?',
-                    tenantId: 'test-tenant',
+                    tenantId: validTenantId,
                     postcode: '123', // Invalid: must be exactly 4 digits
                 }),
                 headers: { 'Content-Type': 'application/json' },
@@ -111,7 +112,7 @@ describe('Community Insights API', () => {
                 method: 'POST',
                 body: JSON.stringify({
                     query: 'What is the population?',
-                    tenantId: 'test-tenant',
+                    tenantId: validTenantId,
                     postcode: 'ABCD', // Invalid: must be digits only
                 }),
                 headers: { 'Content-Type': 'application/json' },
@@ -129,7 +130,7 @@ describe('Community Insights API', () => {
                 method: 'POST',
                 body: JSON.stringify({
                     query: '',
-                    tenantId: 'test-tenant',
+                    tenantId: validTenantId,
                 }),
                 headers: { 'Content-Type': 'application/json' },
             });
