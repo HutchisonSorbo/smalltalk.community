@@ -1,7 +1,16 @@
 import * as Sentry from "@sentry/nextjs";
 
+/**
+ * Registers runtime-specific instrumentation and monitoring hooks.
+ */
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Prevent New Relic crash if app name is missing
+    if (!process.env.NEW_RELIC_APP_NAME) {
+      console.warn('[instrumentation] NEW_RELIC_APP_NAME not set, defaulting to "smalltalk.community"');
+      process.env.NEW_RELIC_APP_NAME = 'smalltalk.community';
+    }
+
     await import("./sentry.server.config");
     await import("newrelic");
   }
@@ -11,4 +20,7 @@ export async function register() {
   }
 }
 
+/**
+ * Captures and reports request errors to Sentry.
+ */
 export const onRequestError = Sentry.captureRequestError;

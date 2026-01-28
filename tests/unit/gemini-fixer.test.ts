@@ -108,10 +108,16 @@ describe('gemini-fixer', () => {
             expect(() => validateOutput('', 'code')).toThrow('Gemini returned empty response.');
         });
 
-        it('should throw for suspiciously short code', () => {
-            const original = 'a'.repeat(100);
-            const fixed = 'a';
-            expect(() => validateOutput(fixed, original)).toThrow('Validation failed: Fixed code is suspiciously short.');
+        it('should throw for suspiciously short code (threshold > 500 chars)', () => {
+            const original = 'a'.repeat(600);
+            const fixed = 'a'.repeat(200); // 33% < 50%
+            expect(() => validateOutput(fixed, original)).toThrow(/suspiciously short/);
+        });
+
+        it('should throw if critical export keywords are removed', () => {
+            const original = 'export class DatabaseStorage { }';
+            const fixed = 'class DatabaseStorage { }';
+            expect(() => validateOutput(fixed, original)).toThrow(/missing critical keyword/);
         });
     });
 

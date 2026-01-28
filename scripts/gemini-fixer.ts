@@ -277,8 +277,20 @@ export function validateOutput(fixedCode: string, originalContent: string): void
     }
 
     // 1. Sanity check: Size comparison
-    if (fixedCode.length < originalContent.length * 0.1 && originalContent.length > 50) {
-        throw new Error('Validation failed: Fixed code is suspiciously short.');
+    // If the file is reasonably large, the fix shouldn't delete more than 50% of it 
+    // unless the file was mostly comments/boilerplate which is unlikely for storage.ts
+    const threshold = originalContent.length > 500 ? 0.5 : 0.1;
+    if (fixedCode.length < originalContent.length * threshold && originalContent.length > 50) {
+        throw new Error(`Validation failed: Fixed code is suspiciously short (${fixedCode.length} vs ${originalContent.length}).`);
+    }
+
+    // 2. Heuristic check: Presence of critical entry points
+    // If the original file had 'export async function' or 'export class', the fixed one probably should too.
+    const criticalKeywords = ['export async function', 'export class', 'export const POST', 'export const GET'];
+    for (const keyword of criticalKeywords) {
+        if (originalContent.includes(keyword) && !fixedCode.includes(keyword)) {
+            throw new Error(`Validation failed: Fixed code is missing critical keyword "${keyword}" found in original.`);
+        }
     }
 }
 

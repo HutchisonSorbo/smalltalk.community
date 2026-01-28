@@ -886,3 +886,306 @@ export class DatabaseStorage implements IStorage {
       .limit(filters?.limit || 50)
       .offset(filters?.offset || 0);
   }
+
+  private _buildGigFilters(filters?: GigFilters): SQL[] {
+    const conditions: SQL[] = [];
+    if (!filters) return conditions;
+
+    if (filters?.location) {
+      conditions.push(ilike(gigs.location, `%${this._escapeLikeString(filters.location)}%`));
+    }
+    if (filters?.date && filters.date !== 'all') {
+      const now = new Date();
+      if (filters.date === 'upcoming') {
+        conditions.push(gte(gigs.date, now));
+      } else if (filters.date === 'past') {
+        conditions.push(lt(gigs.date, now));
+      } else if (filters.date === 'today') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        conditions.push(and(gte(gigs.date, today), lt(gigs.date, tomorrow))!);
+      }
+    }
+    if (filters?.genre) {
+      conditions.push(eq(gigs.genre, filters.genre));
+    }
+    if (filters?.bandId) {
+      conditions.push(eq(gigs.bandId, filters.bandId));
+    }
+    if (filters?.searchQuery) {
+      const query = `%${this._escapeLikeString(filters.searchQuery)}%`;
+      conditions.push(or(
+        ilike(gigs.title, query),
+        ilike(gigs.description, query),
+        ilike(gigs.location, query)
+      )!);
+    }
+    return conditions;
+  }
+
+  /**
+   * Get gigs for a specific band (paginated)
+   * @param bandId The ID of the band
+   * @param limit Optional limit (default 50)
+   * @param offset Optional offset (default 0)
+   * @returns List of gigs
+   */
+  async getGigsByBand(bandId: string, limit?: number, offset?: number): Promise<Gig[]> {
+    return this.withDbErrorHandling(
+      () => db.select()
+        .from(gigs)
+        .where(eq(gigs.bandId, bandId))
+        .orderBy(gigs.date)
+        .limit(limit || 50)
+        .offset(offset || 0),
+      'getGigsByBand'
+    );
+  }
+
+  /**
+   * Get gigs for a specific musician (paginated)
+   * @param musicianId The ID of the musician
+   * @param limit Optional limit (default 50)
+   * @param offset Optional offset (default 0)
+   * @returns List of gigs
+   */
+  async getGigsByMusician(musicianId: string, limit?: number, offset?: number): Promise<Gig[]> {
+    return this.withDbErrorHandling(
+      () => db.select()
+        .from(gigs)
+        .where(eq(gigs.musicianId, musicianId))
+        .orderBy(gigs.date)
+        .limit(limit || 50)
+        .offset(offset || 0),
+      'getGigsByMusician'
+    );
+  }
+
+  // Notifications
+  /**
+   * Get notifications for a user
+   * @param userId The User ID
+   * @returns List of notifications
+   */
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return this.withDbErrorHandling(
+      () => db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt)),
+      `getNotifications`
+    );
+  }
+
+  /**
+   * Get count of unread notifications
+   * @param userId The User ID
+   * @returns Count of unread notifications
+   */
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    return this.withDbErrorHandling(async () => {
+      const result = await db.select({ count: sql<number>`count(*)::int` }).from(notifications).where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      return result[0]?.count || 0;
+    }, `getUnreadNotificationCount`);
+  }
+
+  /**
+   * Create a new notification
+   * @param notification The notification data
+   * @returns The created notification
+   */
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    return this.withDbErrorHandling(async () => {
+      const [created] = await db.insert(notifications).values(notification).returning();
+      return created;
+    }, 'createNotification');
+  }
+
+  /**
+   * Mark a notification as read
+   * @param id The Notification ID
+   */
+  async markNotificationAsRead(id: string): Promise<void> {
+    return this.withDbErrorHandling(
+      () => db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id)).then(),
+      `markNotificationAsRead`
+    );
+  }
+
+  /**
+   * Mark all notifications as read for a user
+   * @param userId The User ID
+   */
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    return this.withDbErrorHandling(
+      () => db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId)).then(),
+      `markAllNotificationsAsRead`
+    );
+  }
+
+  // Contact Requests
+  /**
+   * Create a contact request
+   * @param request The contact request data
+   * @returns The created contact request
+   */
+  async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
+    return this.withDbErrorHandling(async () => {
+      const [created] = await db.insert(contactRequests).values(request).returning();
+      return created;
+    }, 'createContactRequest');
+  }
+
+  /**
+   * Get a contact request between two users
+   * @param requesterId The requester ID
+   * @param recipientId The recipient ID
+   * @returns The contact request or undefined
+   */
+  async getContactRequest(requesterId: string, recipientId: string): Promise<ContactRequest | undefined> {
+    return this.withDbErrorHandling(async () => {
+      const [request] = await db.select().from(contactRequests).where(and(eq(contactRequests.requesterId, requesterId), eq(contactRequests.recipientId, recipientId)));
+      return request;
+    }, 'getContactRequest');
+  }
+
+  /**
+   * Get a contact request by ID
+   * @param id The contact request ID
+   * @returns The contact request or undefined
+   */
+  async getContactRequestById(id: string): Promise<ContactRequest | undefined> {
+    return this.withDbErrorHandling(async () => {
+      const [request] = await db.select().from(contactRequests).where(eq(contactRequests.id, id));
+      return request;
+    }, 'getContactRequestById');
+  }
+
+  /**
+   * Update a contact request status
+   * @param id The contact request ID
+   * @param status The new status
+   */
+  async updateContactRequestStatus(id: string, status: ContactRequestStatus): Promise<void> {
+    return this.withDbErrorHandling(async () => {
+      await db.update(contactRequests).set({ status }).where(eq(contactRequests.id, id));
+    }, 'updateContactRequestStatus');
+  }
+
+  // Security
+  async checkRateLimit(userId: string, type: string, limit: number, windowSeconds: number): Promise<boolean> {
+    const now = new Date();
+    const windowStart = new Date(now.getTime() - windowSeconds * 1000);
+
+    const [record] = await db
+      .insert(rateLimits)
+      .values({
+        userId,
+        type,
+        hits: 1,
+        windowStart: now,
+      })
+      .onConflictDoUpdate({
+        target: [rateLimits.userId, rateLimits.type],
+        set: {
+          hits: sql`CASE WHEN rate_limits.window_start > ${windowStart} THEN rate_limits.hits + 1 ELSE 1 END`,
+          windowStart: sql`CASE WHEN rate_limits.window_start > ${windowStart} THEN rate_limits.window_start ELSE ${now} END`,
+        },
+      })
+      .returning();
+
+    return record.hits <= limit;
+  }
+
+  // Reports
+  async createReport(report: InsertReport): Promise<Report> {
+    const [created] = await db.insert(reports).values(report).returning();
+    return created;
+  }
+
+  // Admin/System
+  async migrateUserId(oldId: string, newId: string): Promise<void> {
+    // Audit log without PII
+    console.debug(`[migrateUserId] Attempted migration of user records`);
+    throw new Error("migrateUserId not implemented");
+  }
+
+  private async withDbErrorHandling<T>(operation: () => Promise<T>, context: string): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      console.error(`Database operation failed in ${context}:`, error);
+      throw error;
+    }
+  }
+
+  async updateReview(id: string, review: Partial<InsertReview>): Promise<Review | undefined> {
+    const [updated] = await db
+      .update(reviews)
+      .set({ ...review, updatedAt: new Date() })
+      .where(eq(reviews.id, id))
+      .returning();
+    if (updated) {
+      this._invalidateRatingCache(updated.targetType, updated.targetId);
+    }
+    return updated;
+  }
+
+  async deleteReview(id: string): Promise<boolean> {
+    const [deleted] = await db
+      .delete(reviews)
+      .where(eq(reviews.id, id))
+      .returning();
+    if (deleted) {
+      this._invalidateRatingCache(deleted.targetType, deleted.targetId);
+    }
+    return !!deleted;
+  }
+
+  async getAverageRating(targetType: string, targetId: string): Promise<{ average: number; count: number }> {
+    const key = `${targetType}|${targetId}`;
+    const cached = this._ratingCache.get(key);
+    if (cached && Date.now() - cached.timestamp < this._CACHE_TTL) {
+      // LRU: Move to end (most recently used)
+      this._ratingCache.delete(key);
+      this._ratingCache.set(key, cached);
+      return cached.data;
+    }
+
+    const result = await db
+      .select({
+        average: sql<number>`avg(${reviews.rating})::float`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(reviews)
+      .where(and(eq(reviews.targetType, targetType), eq(reviews.targetId, targetId)));
+
+    const data = {
+      average: result[0]?.average || 0,
+      count: result[0]?.count || 0,
+    };
+
+    if (this._ratingCache.size >= this._CACHE_MAX_SIZE) {
+      // LRU Eviction: Remove oldest accessed (first key in Map)
+      const oldestKey = this._ratingCache.keys().next().value;
+      if (oldestKey) this._ratingCache.delete(oldestKey);
+    }
+    this._ratingCache.set(key, { data, timestamp: Date.now() });
+
+    return data;
+  }
+
+  async hasUserReviewed(userId: string, targetType: string, targetId: string): Promise<boolean> {
+    const [existing] = await db
+      .select()
+      .from(reviews)
+      .where(and(
+        eq(reviews.reviewerId, userId),
+        eq(reviews.targetType, targetType),
+        eq(reviews.targetId, targetId)
+      ));
+    return !!existing;
+  }
+}
+
+export const storage = new DatabaseStorage();
+
