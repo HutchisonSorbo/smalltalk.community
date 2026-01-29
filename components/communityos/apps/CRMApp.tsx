@@ -5,9 +5,10 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
+import { moderateContent } from "@/lib/utils/moderation";
 
 interface Interaction {
     id: string;
@@ -28,45 +29,9 @@ interface Contact {
     interactions?: Interaction[];
 }
 
-/**
- * Content moderation and sanitisation helper.
- * Applies keyword filtering, PII redaction, and HTML entity encoding.
- */
-const moderateText = (text: string): string => {
-    if (!text) return "";
-    
-    let sanitized = text.trim();
-    
-    // 1. Keyword Filter (Example implementation)
-    const bannedKeywords = [/badword/gi, /unsafecontent/gi];
-    for (const pattern of bannedKeywords) {
-        sanitized = sanitized.replace(pattern, "****");
-    }
-
-    // 2. PII Redaction (Example implementation for emails)
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    sanitized = sanitized.replace(emailRegex, "[PII REDACTED]");
-
-    // 3. HTML Entity Encoding
-    sanitized = sanitized
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-
-    // 4. AI Safety Check simulation
-    if (sanitized.toLowerCase().includes("rejection_trigger")) {
-        console.error("Content rejected by safety check");
-        return "";
-    }
-
-    return sanitized;
-};
 
 export function CRMApp() {
     const { tenant, isLoading } = useTenant();
-    const modalRef = useRef<HTMLDivElement>(null);
 
     const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
         useDittoSync<Contact>({
@@ -79,17 +44,6 @@ export function CRMApp() {
     const [formData, setFormData] = useState<Partial<Contact>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [newInteraction, setNewInteraction] = useState({ type: "note", content: "" });
-
-    // Accessibility: Focus trap for modal
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && viewingContact) {
-                setViewingContact(null);
-            }
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [viewingContact]);
 
     if (isLoading) {
         return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
@@ -104,11 +58,11 @@ export function CRMApp() {
     }
 
     const handleSave = () => {
-        const firstName = moderateText(formData.firstName || "");
-        const lastName = moderateText(formData.lastName || "");
+        const firstName = (formData.firstName || "").trim();
+        const lastName = (formData.lastName || "").trim();
         const email = (formData.email || "").trim();
         const phone = (formData.phone || "").trim();
-        const segments = (formData.segments || []).map(s => moderateText(s)).filter(Boolean);
+        const segments = (formData.segments || []).map(s => s.trim()).filter(Boolean);
 
         const errors: Record<string, string> = {};
 
@@ -122,11 +76,6 @@ export function CRMApp() {
         if (phone && !/^[0-9+().\s-]{7,}$/.test(phone)) {
             errors.phone = "Please enter a valid phone number";
         }
-
-        const allowedStatuses = ["active", "inactive", "pending"] as const;
-        const status = allowedStatuses.includes(formData.status as any)
-            ? (formData.status as "active" | "inactive" | "pending")
-            : "active";
 
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
@@ -143,7 +92,7 @@ export function CRMApp() {
             lastName,
             email,
             phone,
-            status,
+            status: (formData.status as "active" | "inactive" | "pending") || "active",
             lastContacted: new Date().toISOString(),
             segments,
             interactions: existingContact?.interactions || [],
@@ -156,13 +105,12 @@ export function CRMApp() {
 
     const addInteraction = (contactId: string) => {
         const contact = contacts.find(c => c.id === contactId);
-        const content = moderateText(newInteraction.content || "");
-        
+        const content = (newInteraction.content || "").trim();
         if (contact && content) {
             const interaction: Interaction = {
                 id: crypto.randomUUID(),
                 type: newInteraction.type as Interaction["type"],
-                content,
+                content: moderateContent(content),
                 createdAt: new Date().toISOString()
             };
 
@@ -215,10 +163,7 @@ export function CRMApp() {
                                 type="text"
                                 title="First Name"
                                 value={formData.firstName || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, firstName: e.target.value });
-                                    if (formErrors.firstName) setFormErrors({ ...formErrors, firstName: "" });
-                                }}
+                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.firstName ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
                             {formErrors.firstName && <p className="mt-1 text-xs text-red-500">{formErrors.firstName}</p>}
@@ -230,10 +175,7 @@ export function CRMApp() {
                                 type="text"
                                 title="Last Name"
                                 value={formData.lastName || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, lastName: e.target.value });
-                                    if (formErrors.lastName) setFormErrors({ ...formErrors, lastName: "" });
-                                }}
+                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.lastName ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
                             {formErrors.lastName && <p className="mt-1 text-xs text-red-500">{formErrors.lastName}</p>}
@@ -245,10 +187,7 @@ export function CRMApp() {
                                 type="email"
                                 title="Email Address"
                                 value={formData.email || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, email: e.target.value });
-                                    if (formErrors.email) setFormErrors({ ...formErrors, email: "" });
-                                }}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.email ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
                             {formErrors.email && <p className="mt-1 text-xs text-red-500">{formErrors.email}</p>}
@@ -260,10 +199,7 @@ export function CRMApp() {
                                 type="text"
                                 title="Phone Number"
                                 value={formData.phone || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, phone: e.target.value });
-                                    if (formErrors.phone) setFormErrors({ ...formErrors, phone: "" });
-                                }}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.phone ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
                             {formErrors.phone && <p className="mt-1 text-xs text-red-500">{formErrors.phone}</p>}
@@ -304,16 +240,11 @@ export function CRMApp() {
             )}
 
             {viewingContact && (
-                <div 
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="modal-title"
-                >
-                    <div ref={modalRef} className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
                         <div className="mb-4 flex items-center justify-between border-b pb-4">
-                            <h3 id="modal-title" className="text-xl font-bold truncate">
-                                {moderateText(viewingContact.firstName)} {moderateText(viewingContact.lastName)}
+                            <h3 className="text-xl font-bold truncate">
+                                {moderateContent(viewingContact.firstName)} {moderateContent(viewingContact.lastName)}
                             </h3>
                             <button
                                 type="button"
@@ -327,14 +258,14 @@ export function CRMApp() {
                         </div>
 
                         <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
-                            <div className="truncate"><span className="font-semibold">Email:</span> {moderateText(viewingContact.email)}</div>
-                            <div className="truncate"><span className="font-semibold">Phone:</span> {moderateText(viewingContact.phone)}</div>
+                            <div className="truncate"><span className="font-semibold">Email:</span> {moderateContent(viewingContact.email)}</div>
+                            <div className="truncate"><span className="font-semibold">Phone:</span> {moderateContent(viewingContact.phone)}</div>
                             <div className="col-span-2">
                                 <span className="font-semibold">Segments:</span>
                                 <div className="mt-1 flex flex-wrap gap-1">
                                     {viewingContact.segments?.map((s, idx) => (
                                         <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                            {moderateText(s)}
+                                            {moderateContent(s)}
                                         </span>
                                     ))}
                                 </div>
@@ -350,7 +281,7 @@ export function CRMApp() {
                                     className="rounded border p-2 text-sm dark:bg-gray-700"
                                     title="Interaction Type"
                                     value={newInteraction.type}
-                                    onChange={e => setNewInteraction({ ...newInteraction, type: e.target.value as Interaction["type"] })}
+                                    onChange={e => setNewInteraction({ ...newInteraction, type: e.target.value })}
                                 >
                                     <option value="note">Note</option>
                                     <option value="email">Email</option>
@@ -382,7 +313,7 @@ export function CRMApp() {
                                             <span className="uppercase font-bold">{i.type}</span>
                                             <span>{new Date(i.createdAt).toLocaleString()}</span>
                                         </div>
-                                        <p className="line-clamp-3">{moderateText(i.content)}</p>
+                                        <p className="line-clamp-3">{moderateContent(i.content)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -417,15 +348,15 @@ export function CRMApp() {
                                             onClick={() => setViewingContact(contact)}
                                             className="block max-w-[12rem] truncate text-left font-medium text-gray-900 hover:underline dark:text-white"
                                         >
-                                            {moderateText(contact.firstName)} {moderateText(contact.lastName)}
+                                            {moderateContent(contact.firstName)} {moderateContent(contact.lastName)}
                                         </button>
-                                        <div className="max-w-[14rem] truncate text-xs text-gray-500">{moderateText(contact.email)}</div>
+                                        <div className="max-w-[14rem] truncate text-xs text-gray-500">{moderateContent(contact.email)}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-wrap gap-1">
                                             {contact.segments?.map((s, idx) => (
                                                 <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                                    {moderateText(s)}
+                                                    {moderateContent(s)}
                                                 </span>
                                             ))}
                                         </div>

@@ -1,17 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { moderateContent } from "@/lib/utils/moderation";
 
 /**
- * Placeholder hook for content moderation.
- * Currently returns the content as-is but provides the expected interface for consumers.
+ * Hook for content moderation.
+ * Utilises the shared moderation pipeline to ensure data safety.
  */
 export function useModeration(content: string) {
     const [moderatedContent, setModeratedContent] = useState(content);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        setModeratedContent(content);
+        setIsLoading(true);
+        // We can make this async if we ever use an external API
+        const result = moderateContent(content);
+        setModeratedContent(result);
+        setIsLoading(false);
     }, [content]);
 
     return { moderatedContent, isLoading };

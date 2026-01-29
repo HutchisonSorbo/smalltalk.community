@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { useModeration } from "@/hooks/use-moderation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Shield, AlertCircle, CheckCircle2, Info } from "lucide-react";
 import { saveVCSSStatus } from "@/lib/communityos/actions";
+import { useToast } from "@/hooks/use-toast";
 
 interface VCSSStandard {
     id: number;
@@ -30,7 +31,10 @@ const INITIAL_STANDARDS: VCSSStandard[] = [
     { id: 11, title: "Standard 11: Implementation of Child Safety Policy", description: "Policies and procedures document how the organisation is safe for children and young people.", completed: false },
 ];
 
-function SafeguardingHeader({ moderatedTenantName }: { moderatedTenantName: string }) {
+/**
+ * Subcomponent: Header section for the Safeguarding Centre
+ */
+function SafeguardingHeader({ tenantName }: { tenantName: string }) {
     return (
         <div className="flex items-center justify-between">
             <div>
@@ -39,20 +43,25 @@ function SafeguardingHeader({ moderatedTenantName }: { moderatedTenantName: stri
                     Safeguarding Centre
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                    Manage Victorian Child Safe Standards (VCSS) compliance for {moderatedTenantName}.
+                    Manage Victorian Child Safe Standards (VCSS) compliance for {tenantName}.
                 </p>
             </div>
         </div>
     );
 }
 
-function SafeguardingProgress({ progress }: { progress: number }) {
+/**
+ * Subcomponent: Compliance Progress Overview
+ */
+function ComplianceOverview({ progress }: { progress: number }) {
     return (
         <Card className="border-primary/20 bg-primary/5">
             <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center justify-between">
                     Overall Compliance Progress
-                    <span className="text-primary">{progress}%</span>
+                    <output className="text-primary font-bold" aria-live="polite">
+                        {progress}%
+                    </output>
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -66,38 +75,44 @@ function SafeguardingProgress({ progress }: { progress: number }) {
     );
 }
 
-function StandardsList({ standards, onToggle }: { standards: VCSSStandard[], onToggle: (id: number) => void }) {
+/**
+ * Subcomponent: Individual Checklist Item
+ */
+function VCSSItem({
+    standard,
+    onToggle
+}: {
+    standard: VCSSStandard,
+    onToggle: (id: number) => void
+}) {
+    const id = `std-${standard.id}`;
     return (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {standards.map((standard) => (
-                <Card key={standard.id} className={`transition-colors ${standard.completed ? 'border-green-200 bg-green-50/30' : 'border-gray-200'}`}>
-                    <CardHeader className="p-4 flex flex-row items-start gap-4 space-y-0">
-                        <Checkbox
-                            id={`std-${standard.id}`}
-                            checked={standard.completed}
-                            onCheckedChange={() => onToggle(standard.id)}
-                            className="mt-1"
-                        />
-                        <div className="space-y-1">
-                            <label
-                                htmlFor={`std-${standard.id}`}
-                                className="text-sm font-semibold leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                                {standard.title}
-                            </label>
-                            <CardDescription className="text-xs">
-                                {standard.description}
-                            </CardDescription>
-                        </div>
-                        {standard.completed ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" aria-hidden="true" />
-                        ) : (
-                            <AlertCircle className="h-5 w-5 text-yellow-500 ml-auto shrink-0" aria-hidden="true" />
-                        )}
-                    </CardHeader>
-                </Card>
-            ))}
-        </div>
+        <Card className={`transition-colors ${standard.completed ? 'border-green-200 bg-green-50/30' : 'border-gray-200'}`}>
+            <CardHeader className="p-4 flex flex-row items-start gap-4 space-y-0">
+                <Checkbox
+                    id={id}
+                    checked={standard.completed}
+                    onCheckedChange={() => onToggle(standard.id)}
+                    className="mt-1"
+                />
+                <div className="space-y-1">
+                    <label
+                        htmlFor={id}
+                        className="text-sm font-semibold leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                        {standard.title}
+                    </label>
+                    <CardDescription className="text-xs">
+                        {standard.description}
+                    </CardDescription>
+                </div>
+                {standard.completed ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" aria-hidden="true" />
+                ) : (
+                    <AlertCircle className="h-5 w-5 text-yellow-500 ml-auto shrink-0" aria-hidden="true" />
+                )}
+            </CardHeader>
+        </Card>
     );
 }
 
@@ -105,15 +120,18 @@ export function SafeguardingCentre() {
     const { tenant, isLoading: isTenantLoading } = useTenant();
     const { moderatedContent: moderatedTenantName, isLoading: isModerationLoading } = useModeration(tenant?.name || "");
     const [standards, setStandards] = useState<VCSSStandard[]>(INITIAL_STANDARDS);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (tenant?.vcssStatus) {
             try {
-                const persistedStandards = typeof tenant.vcssStatus === 'string'
-                    ? JSON.parse(tenant.vcssStatus)
-                    : tenant.vcssStatus;
-                
-                if (Array.isArray(persistedStandards) && persistedStandards.length > 0) {
+                const persistedStandards = Array.isArray(tenant.vcssStatus)
+                    ? tenant.vcssStatus
+                    : typeof tenant.vcssStatus === 'string'
+                        ? JSON.parse(tenant.vcssStatus)
+                        : [];
+
+                if (persistedStandards.length > 0) {
                     setStandards(persistedStandards);
                 }
             } catch (error) {
@@ -121,6 +139,32 @@ export function SafeguardingCentre() {
             }
         }
     }, [tenant]);
+
+    const toggleStandard = useCallback(async (id: number) => {
+        const previousStandards = [...standards];
+        const updatedStandards = standards.map(s => s.id === id ? { ...s, completed: !s.completed } : s);
+
+        // Optimistic UI update
+        setStandards(updatedStandards);
+
+        if (tenant?.id) {
+            try {
+                const result = await saveVCSSStatus(tenant.id, updatedStandards);
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                console.error("Failed to persist VCSS progress:", error);
+                // Rollback on failure
+                setStandards(previousStandards);
+                toast({
+                    title: "Update Failed",
+                    description: "Weren't able to save your progress. Please check your connection.",
+                    variant: "destructive",
+                });
+            }
+        }
+    }, [standards, tenant?.id, toast]);
 
     if (isTenantLoading || (tenant && isModerationLoading)) {
         return (
@@ -142,31 +186,20 @@ export function SafeguardingCentre() {
     const completedCount = standards.filter(s => s.completed).length;
     const progress = Math.round((completedCount / standards.length) * 100);
 
-    const toggleStandard = async (id: number) => {
-        const previousStandards = [...standards];
-        const updatedStandards = standards.map(s => s.id === id ? { ...s, completed: !s.completed } : s);
-        
-        setStandards(updatedStandards);
-
-        if (tenant?.id) {
-            try {
-                await saveVCSSStatus(tenant.id, updatedStandards);
-            } catch (error) {
-                console.error("Failed to persist VCSS progress", { 
-                    tenantId: tenant.id, 
-                    standardId: id, 
-                    error 
-                });
-                setStandards(previousStandards);
-            }
-        }
-    };
-
     return (
         <div className="space-y-6 max-w-full">
-            <SafeguardingHeader moderatedTenantName={moderatedTenantName} />
-            <SafeguardingProgress progress={progress} />
-            <StandardsList standards={standards} onToggle={toggleStandard} />
+            <SafeguardingHeader tenantName={moderatedTenantName} />
+            <ComplianceOverview progress={progress} />
+
+            <div className="grid gap-4">
+                {standards.map((standard) => (
+                    <VCSSItem
+                        key={standard.id}
+                        standard={standard}
+                        onToggle={toggleStandard}
+                    />
+                ))}
+            </div>
         </div>
     );
 }

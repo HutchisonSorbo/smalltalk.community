@@ -120,6 +120,8 @@ export async function upsertPortfolioItem(userId: string, data: {
             }
         }
 
+        const authUserId = await validateUser(userId);
+
         const values = {
             title,
             description,

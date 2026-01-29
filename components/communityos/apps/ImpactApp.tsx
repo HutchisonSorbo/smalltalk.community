@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -26,6 +25,7 @@ const DATA_SKILLS = [
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#ec4899"];
 
+
 function LoadingState() {
     return (
         <div className="p-4 space-y-4 animate-pulse">
@@ -47,22 +47,7 @@ function ErrorState() {
 }
 
 function ImpactHeader({ name }: { name: string }) {
-    const [moderatedName, setModeratedName] = useState(name);
-
-    useEffect(() => {
-        let isMounted = true;
-        moderateContent(name)
-            .then((result) => {
-                if (isMounted) setModeratedName(result);
-            })
-            .catch(() => {
-                if (isMounted) setModeratedName("[Content unavailable]");
-            });
-        return () => {
-            isMounted = false;
-        };
-    }, [name]);
-
+    const moderatedName = moderateContent(name);
     return (
         <div className="flex items-center justify-between">
             <div>
@@ -95,7 +80,7 @@ function KPICards() {
     ];
 
     return (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {stats.map((stat, idx) => (
                 <Card key={idx}>
                     <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
@@ -121,11 +106,7 @@ function ChartsGrid() {
                     <CardDescription>Monthly engagement across all programs</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div
-                        className="h-80 w-full"
-                        role="img"
-                        aria-label="Bar chart showing monthly program participation growth comparing existing and new members"
-                    >
+                    <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={DATA_PARTICIPATION}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -146,14 +127,19 @@ function ChartsGrid() {
                     <CardDescription>Breakdown of skills gained by users</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div
-                        className="h-80 w-full"
-                        role="img"
-                        aria-label="Pie chart showing the percentage breakdown of top skills developed by community members"
-                    >
+                    <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                                <Pie data={DATA_SKILLS} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                                <Pie
+                                    data={DATA_SKILLS}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={100}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    aria-label="Skills distribution chart"
+                                >
                                     {DATA_SKILLS.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
@@ -164,7 +150,7 @@ function ChartsGrid() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </div >
     );
 }
 

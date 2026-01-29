@@ -1107,7 +1107,7 @@ export const organisations = pgTable("organisations", {
   website: varchar("website", { length: 255 }),
   logoUrl: varchar("logo_url"),
   isVerified: boolean("is_verified").default(false),
-  vcssStatus: varchar("vcss_status", { length: 50 }).default("not_started"), // 'not_started', 'in_progress', 'compliant', 'needs_review'
+  vcssStatus: jsonb("vcss_status").default([]), // Array of VCSSStandard objects
   lastSafeguardingAudit: timestamp("last_safeguarding_audit"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -1651,6 +1651,7 @@ export const tenants = pgTable("tenants", {
   testimonials: jsonb("testimonials").$type<Testimonial[]>().default([]),
   ctaButtons: jsonb("cta_buttons").$type<CtaButton[]>().default([]),
   upcomingEvents: jsonb("upcoming_events").$type<UpcomingEvent[]>().default([]),
+  vcssStatus: jsonb("vcss_status").default([]), // Array of VCSSStandard objects
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

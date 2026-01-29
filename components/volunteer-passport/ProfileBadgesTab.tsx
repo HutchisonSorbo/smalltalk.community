@@ -6,21 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Award, Search, Info } from "lucide-react";
 import { getUserBadges } from "@/app/volunteer-passport/actions/profile-actions";
 import { safeUrl } from "@/lib/utils";
-import { moderateText } from "@/lib/moderation";
+import { moderateContent } from "@/lib/utils/moderation";
 
-/**
- * Normalises and moderates user-generated content for display safety.
- */
-const getModeratedContent = (text: string | null | undefined): string => {
-    if (!text) return "";
-    try {
-        const moderated = moderateText(text);
-        return moderated.trim();
-    } catch (error) {
-        console.error("[ProfileBadgesTab] Moderation error:", error);
-        return text.trim();
-    }
-};
 
 function BadgesHeader({ searchQuery, setSearchQuery }: { searchQuery: string, setSearchQuery: (val: string) => void }) {
     return (
@@ -56,8 +43,8 @@ function EmptyBadgesPlaceholder() {
 
 function BadgeCard({ badge, onViewCriteria }: { badge: any, onViewCriteria: (badge: any) => void }) {
     const sanitizedImageUrl = badge.imageUrl ? safeUrl(badge.imageUrl) : null;
-    const moderatedName = getModeratedContent(badge.name);
-    const moderatedDescription = getModeratedContent(badge.description);
+    const moderatedName = moderateContent(badge.name);
+    const moderatedDescription = moderateContent(badge.description);
 
     return (
         <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -129,7 +116,7 @@ export function ProfileBadgesTab({ userId }: { userId: string }) {
         badge.description?.toLowerCase().includes(normalisedQuery)
     );
 
-    if (isLoading) return <output className="p-12 text-center animate-pulse block w-full">Loading badges...</output>;
+    if (isLoading) return <div className="p-12 text-center animate-pulse" role="status">Loading badges...</div>;
 
     return (
         <div className="space-y-6 max-w-full">
@@ -141,10 +128,10 @@ export function ProfileBadgesTab({ userId }: { userId: string }) {
                     {badges.length === 0 ? <EmptyBadgesPlaceholder /> : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {filteredBadges.map((badge) => (
-                                <BadgeCard 
-                                    key={badge.id} 
-                                    badge={badge} 
-                                    onViewCriteria={(b) => console.log("Viewing criteria for:", b.name, b.criteria)} 
+                                <BadgeCard
+                                    key={badge.id}
+                                    badge={badge}
+                                    onViewCriteria={(b) => console.log("Viewing criteria for:", b.name, b.criteria)}
                                 />
                             ))}
                             {filteredBadges.length === 0 && (

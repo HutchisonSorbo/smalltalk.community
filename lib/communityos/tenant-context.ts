@@ -56,6 +56,7 @@ export type PublicTenant = Pick<
     | "contactPhone"
     | "address"
     | "isPublic"
+    | "vcssStatus"
 > & {
     impactStats: ImpactStat[];
     programs: Program[];
@@ -108,6 +109,7 @@ export async function getPublicTenantByCode(code: string): Promise<PublicTenant 
         "contact_phone",
         "address",
         "is_public",
+        "vcss_status",
         "impact_stats",
         "programs",
         "team_members",
@@ -163,6 +165,7 @@ function mapDbRowToPublicTenant(data: any): PublicTenant {
         contactPhone: data.contact_phone ?? null,
         address: data?.address ?? null,
         isPublic: !!data?.is_public,
+        vcssStatus: data?.vcss_status ?? [],
         impactStats: Array.isArray(data?.impact_stats) ? data.impact_stats : [],
         programs: Array.isArray(data?.programs) ? data.programs : [],
         teamMembers: Array.isArray(data?.team_members) ? data.team_members : [],
