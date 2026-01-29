@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 
 const MODEL_NAME = 'gemini-3-flash-preview';
 
-// Biome-ignore lint/suspicious/noControlCharactersInRegex: Needed for sanitizing LLM input
+// Biome-ignore lint/suspicious/noControlCharactersInRegex: Needed for sanitising LLM input
 const CONTROL_CHARS_REGEX = /[\x00-\x1F\x7F]/g;
 
 interface Comment {
@@ -148,12 +148,12 @@ export function loadTasks(config: Config): FileTask[] {
 }
 
 /**
- * Sanitizes input strings to prevent prompt injection.
+ * Sanitises input strings to prevent prompt injection.
  */
-function sanitizeInput(str: string): string {
+function sanitiseInput(str: string): string {
     if (!str) return '';
     return str.replace(CONTROL_CHARS_REGEX, '')
-        .replace(/```/g, "'''") // neutralize block escapes
+        .replace(/```/g, "'''") // Neutralise block escapes
         .slice(0, 10000); // Limit length
 }
 
@@ -163,12 +163,12 @@ function sanitizeInput(str: string): string {
 export function buildPrompt(task: FileTask): { systemInstruction: string; userPrompt: string } {
     const { filePath, fileContent, comments } = task;
 
-    const sanitizedFilePath = sanitizeInput(filePath);
+    const sanitisedFilePath = sanitiseInput(filePath);
     const issues = comments.map((c, i) => {
         return `ISSUE #${i + 1}:
-Comment: ${sanitizeInput(c.body)}
+Comment: ${sanitiseInput(c.body)}
 Diff Context:
-${sanitizeInput(c.diff_hunk)}
+${sanitiseInput(c.diff_hunk)}
 `;
     }).join('\n');
 
@@ -185,7 +185,7 @@ STRICT RULES:
 
     const userPrompt = `
 CONTEXT:
-File Path: ${sanitizedFilePath}
+File Path: ${sanitisedFilePath}
 Review Comments:
 ${issues}
 
@@ -277,8 +277,20 @@ export function validateOutput(fixedCode: string, originalContent: string): void
     }
 
     // 1. Sanity check: Size comparison
-    if (fixedCode.length < originalContent.length * 0.1 && originalContent.length > 50) {
-        throw new Error('Validation failed: Fixed code is suspiciously short.');
+    // If the file is reasonably large, the fix shouldn't delete more than 50% of it 
+    // unless the file was mostly comments/boilerplate which is unlikely for storage.ts
+    const threshold = originalContent.length > 500 ? 0.5 : 0.1;
+    if (fixedCode.length < originalContent.length * threshold && originalContent.length > 50) {
+        throw new Error(`Validation failed: Fixed code is suspiciously short (${fixedCode.length} vs ${originalContent.length}).`);
+    }
+
+    // 2. Heuristic check: Presence of critical entry points
+    // If the original file had 'export async function' or 'export class', the fixed one probably should too.
+    const criticalKeywords = ['export async function', 'export class', 'export const POST', 'export const GET'];
+    for (const keyword of criticalKeywords) {
+        if (originalContent.includes(keyword) && !fixedCode.includes(keyword)) {
+            throw new Error(`Validation failed: Fixed code is missing critical keyword "${keyword}" found in original.`);
+        }
     }
 }
 
@@ -362,11 +374,7 @@ export async function run(): Promise<void> {
 }
 
 // Only run if called directly
-const isMain = import.meta.url && (
-    process.argv[1]?.endsWith('gemini-fixer.ts') ||
-    path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
-);
-
-if (isMain) {
+const scriptPath = process.argv[1] ? path.resolve(process.argv[1]) : '';
+if (scriptPath && fileURLToPath(import.meta.url) === scriptPath) {
     run();
 }

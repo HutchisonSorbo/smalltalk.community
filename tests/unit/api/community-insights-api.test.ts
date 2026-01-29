@@ -10,7 +10,7 @@ import { NextRequest } from 'next/server';
 vi.mock('@/lib/ai-config', () => ({
     getAIClient: vi.fn(),
     AI_MODEL_CONFIG: { model: 'test-model', generationConfig: {} },
-    SAFETY_SETTINGS: { adult: [] }
+    SAFETY_SETTINGS: { adult: [], teen: [] }
 }));
 
 vi.mock('@/lib/supabase-server', () => ({
@@ -22,6 +22,16 @@ vi.mock('@/lib/supabase-server', () => ({
                     error: null,
                 }),
             },
+            from: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                    eq: vi.fn().mockReturnValue({
+                        single: vi.fn().mockResolvedValue({
+                            data: { age_group: 'adult' },
+                            error: null,
+                        }),
+                    }),
+                }),
+            }),
         })
     ),
 }));

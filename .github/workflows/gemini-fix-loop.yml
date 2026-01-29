@@ -122,11 +122,15 @@ jobs:
             
             # Re-trigger via workflow_dispatch immediately.
             # The next run will handle the sleep.
-            gh workflow run gemini-fix-loop.yml \
+            if ! gh workflow run gemini-fix-loop.yml \
               -f pr_number="$PR_NUMBER" \
               -f iteration="$NEXT_ITERATION" \
               -f scheduled_at="$SCHEDULED_AT" \
-              --repo "${{ github.repository }}"
+              --repo "${{ github.repository }}"; then
+              echo "::warning::Failed to trigger next iteration"
+              gh pr comment "$PR_NUMBER" --body "⚠️ Gemini fixer loop interrupted at iteration $CURRENT_ITERATION. Please re-run manually." \
+                || echo "::error::Failed to post interruption comment to PR"
+            fi
           else
             echo "Max iterations reached ($MAX_ITERATIONS). Stopping loop."
             gh pr comment "$PR_NUMBER" --body "🤖 Gemini has completed 5 iterations of auto-fixes. Please review the remaining comments manually."
