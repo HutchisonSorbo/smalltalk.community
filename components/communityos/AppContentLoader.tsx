@@ -118,6 +118,21 @@ const InventoryApp = dynamic(
     { loading: () => <AppLoadingSkeleton />, ssr: false }
 );
 
+const ImpactApp = dynamic(
+    () => import("./apps/ImpactApp").then((m) => ({ default: m.ImpactApp })),
+    { loading: () => <AppLoadingSkeleton />, ssr: false }
+);
+
+const SafeguardingCentre = dynamic(
+    () => import("./apps/SafeguardingCentre").then((m) => ({ default: m.SafeguardingCentre })),
+    { loading: () => <AppLoadingSkeleton />, ssr: false }
+);
+
+const WorkflowApp = dynamic(
+    () => import("./apps/WorkflowApp").then((m) => ({ default: m.WorkflowApp })),
+    { loading: () => <AppLoadingSkeleton />, ssr: false }
+);
+
 const GenericCommunityApp = dynamic(
     () => import("./apps/GenericCommunityApp").then((m) => ({ default: m.GenericCommunityApp })),
     { loading: () => <AppLoadingSkeleton />, ssr: false }
@@ -169,6 +184,12 @@ export function AppContentLoader({ appId }: AppContentLoaderProps): React.ReactE
             case "assets":
             case "inventory":
                 return <InventoryApp />;
+            case "impact":
+                return <ImpactApp />;
+            case "safeguarding":
+                return <SafeguardingCentre />;
+            case "workflow":
+                return <WorkflowApp />;
             default: {
                 // Use GenericCommunityApp for all other apps
                 const app = communityOSApps.find((a) => a.id === appId);

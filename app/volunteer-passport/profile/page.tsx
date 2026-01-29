@@ -1,9 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VolunteerProfileForm } from "@/components/volunteer-passport/VolunteerProfileForm";
+import { ProfilePassportTab } from "@/components/volunteer-passport/ProfilePassportTab";
+import { ProfileBadgesTab } from "@/components/volunteer-passport/ProfileBadgesTab";
+import { ProfilePortfolioTab } from "@/components/volunteer-passport/ProfilePortfolioTab";
 import { getVolunteerProfile } from "@/app/volunteer-passport/actions/volunteer";
+import { User, ShieldCheck, Award, Briefcase } from "lucide-react";
 
 export default async function VolunteerProfilePage() {
     const profile = await getVolunteerProfile();
+    const userId = profile?.user?.id || "";
 
     const initialData = profile ? {
         headline: profile.headline || "",
@@ -13,19 +19,56 @@ export default async function VolunteerProfilePage() {
     } : undefined;
 
     return (
-        <div className="space-y-6 max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold">My Volunteer Profile</h1>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Profile Details</CardTitle>
-                    <CardDescription>Update your public profile information.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <VolunteerProfileForm initialData={initialData} />
-                </CardContent>
-            </Card>
+        <div className="space-y-6 max-w-4xl mx-auto px-4 py-8">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold tracking-tight">Passport & Profile</h1>
+                <p className="text-muted-foreground">Manage your digital identity, skills, and community impact.</p>
+            </div>
+
+            <Tabs defaultValue="profile" className="w-full">
+                <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:flex mb-8">
+                    <TabsTrigger value="profile" className="flex gap-2">
+                        <User className="h-4 w-4" />
+                        <span className="hidden sm:inline">Profile</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="passport" className="flex gap-2">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span className="hidden sm:inline">Passport</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="badges" className="flex gap-2">
+                        <Award className="h-4 w-4" />
+                        <span className="hidden sm:inline">Badges</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="portfolio" className="flex gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        <span className="hidden sm:inline">Portfolio</span>
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="profile">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <VolunteerProfileForm initialData={initialData} />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="passport">
+                    <ProfilePassportTab
+                        verificationStatus={profile?.user?.isEmailVerified ? "verified" : "pending"}
+                        vcssChecked={false}
+                        identityVerified={false}
+                    />
+                </TabsContent>
+
+                <TabsContent value="badges">
+                    <ProfileBadgesTab userId={userId} />
+                </TabsContent>
+
+                <TabsContent value="portfolio">
+                    <ProfilePortfolioTab userId={userId} />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
-
-// CodeRabbit Audit Trigger
