@@ -60,6 +60,29 @@ export function loadConfig(): Config {
 }
 
 /**
+ * Loads project context from mandatory files.
+ * @param {Config} config - The configuration object.
+ * @returns {string} The collected project context.
+ */
+function loadProjectContext(config: Config): string {
+    const files = ['CLAUDE.md', 'DEVELOPMENT_STANDARDS.md'];
+    let context = '';
+    for (const file of files) {
+        const filePath = path.resolve(config.repoRoot, file);
+        try {
+            if (fs.existsSync(filePath)) {
+                context += `\n--- START ${file} ---\n`;
+                context += fs.readFileSync(filePath, 'utf-8');
+                context += `\n--- END ${file} ---\n`;
+            }
+        } catch (err) {
+            console.warn(`Failed to read project context file ${file}: ${err}`);
+        }
+    }
+    return context;
+}
+
+/**
  * Loads comments and prepares tasks grouped by file.
  * @param {Config} config - The configuration object.
  * @returns {FileTask[]} An array of tasks, where each task corresponds to a file and its comments.
@@ -159,8 +182,11 @@ function sanitiseInput(str: string): string {
 
 /**
  * Constructs the prompts for Gemini.
+ * @param {FileTask} task - The file task containing path, content, and comments.
+ * @param {string} projectContext - The project context loaded from CLAUDE.md and DEVELOPMENT_STANDARDS.md.
+ * @returns {{ systemInstruction: string; userPrompt: string }} The system and user prompts.
  */
-export function buildPrompt(task: FileTask): { systemInstruction: string; userPrompt: string } {
+export function buildPrompt(task: FileTask, projectContext: string): { systemInstruction: string; userPrompt: string } {
     const { filePath, fileContent, comments } = task;
 
     const sanitisedFilePath = sanitiseInput(filePath);
@@ -181,7 +207,10 @@ STRICT RULES:
 4. Maintain WCAG 2.2 AA accessibility standards.
 5. Ensure data isolation (RLS) is preserved.
 6. Address ALL listed issues in a single pass.
-7. If the comments are not actionable or unsafe, return the original file content.`;
+7. If the comments are not actionable or unsafe, return the original file content.
+
+PROJECT CONTEXT:
+${projectContext}`;
 
     const userPrompt = `
 CONTEXT:
@@ -328,6 +357,7 @@ function writeWithBackup(fixedCode: string, task: FileTask): void {
 export async function run(): Promise<void> {
     try {
         const config = loadConfig();
+        const projectContext = loadProjectContext(config);
         const tasks = loadTasks(config);
         const genAI = new GoogleGenAI({ apiKey: config.apiKey });
 
@@ -345,7 +375,7 @@ export async function run(): Promise<void> {
         for (const task of tasks) {
             console.log(`Processing ${task.filePath} with ${task.comments.length} comments...`);
             try {
-                const { systemInstruction, userPrompt } = buildPrompt(task);
+                const { systemInstruction, userPrompt } = buildPrompt(task, projectContext);
                 const fixedCode = await generateWithRetry(genAI, config.modelName, systemInstruction, userPrompt, task.filePath);
 
                 validateOutput(fixedCode, task.fileContent);

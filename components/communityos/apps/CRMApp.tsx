@@ -62,7 +62,7 @@ export function CRMApp() {
         content: ""
     });
 
-    // Simple focus trap logic for modal accessibility
+    // Focus trap logic for modal accessibility
     useEffect(() => {
         if (viewingContact && modalRef.current) {
             const focusableElements = modalRef.current.querySelectorAll(
@@ -94,7 +94,7 @@ export function CRMApp() {
     }, [viewingContact]);
 
     if (isLoading) {
-        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" aria-hidden="true" /></div>;
     }
 
     if (!tenant) {
@@ -116,10 +116,7 @@ export function CRMApp() {
         if (!firstName || !lastName) {
             errors.firstName = !firstName ? "First name is required" : "";
             errors.lastName = !lastName ? "Last name is required" : "";
-            if (!firstName || !lastName) {
-                // Surface specific message for missing names as per requirement
-                errors.general = "First and last name are required";
-            }
+            errors.general = "First and last name are required";
         }
         
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -130,7 +127,7 @@ export function CRMApp() {
             errors.phone = "Please enter a valid phone number";
         }
 
-        if (Object.keys(errors).filter(k => errors[k]).length > 0) {
+        if (Object.keys(errors).length > 0 && Object.values(errors).some(v => v !== "")) {
             setFormErrors(errors);
             return;
         }
@@ -164,11 +161,17 @@ export function CRMApp() {
     const addInteraction = (contactId: string) => {
         const contact = contacts.find(c => c.id === contactId);
         const content = newInteraction.content.trim();
+        
+        const allowedTypes = ["note", "email", "call", "meeting"] as const;
+        const interactionType = allowedTypes.includes(newInteraction.type as any)
+            ? (newInteraction.type as Interaction["type"])
+            : "note";
+
         if (contact && content) {
             const interaction: Interaction = {
                 id: crypto.randomUUID(),
-                type: newInteraction.type as Interaction["type"],
-                content: content, // moderateText applied during render
+                type: interactionType,
+                content: content,
                 createdAt: new Date().toISOString()
             };
 
@@ -179,7 +182,6 @@ export function CRMApp() {
             };
 
             upsertDocument(contactId, updatedContact);
-            // Sync modal state immediately
             setViewingContact(updatedContact);
             setNewInteraction({ type: "note", content: "" });
         }
@@ -194,7 +196,7 @@ export function CRMApp() {
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-500"}`} />
+                        <div className={`h-2 w-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-500"}`} aria-hidden="true" />
                         <span className="text-xs text-gray-500">{isOnline ? "Online Syncing" : "Offline Mode"}</span>
                     </div>
                     <button
@@ -214,7 +216,7 @@ export function CRMApp() {
             {isEditing && (
                 <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold">{isEditing === "new" ? "New Contact" : "Edit Contact"}</h3>
-                    {formErrors.general && <p className="mb-4 text-sm text-red-600">{formErrors.general}</p>}
+                    {formErrors.general && <p className="mb-4 text-sm text-red-600" role="alert">{formErrors.general}</p>}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
@@ -229,7 +231,7 @@ export function CRMApp() {
                                 }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
-                            {formErrors.firstName && <p className="mt-1 text-xs text-red-600">{formErrors.firstName}</p>}
+                            {formErrors.firstName && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.firstName}</p>}
                         </div>
                         <div>
                             <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
@@ -244,7 +246,7 @@ export function CRMApp() {
                                 }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
-                            {formErrors.lastName && <p className="mt-1 text-xs text-red-600">{formErrors.lastName}</p>}
+                            {formErrors.lastName && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.lastName}</p>}
                         </div>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
@@ -259,7 +261,7 @@ export function CRMApp() {
                                 }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
-                            {formErrors.email && <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>}
+                            {formErrors.email && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.email}</p>}
                         </div>
                         <div>
                             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
@@ -274,7 +276,7 @@ export function CRMApp() {
                                 }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
-                            {formErrors.phone && <p className="mt-1 text-xs text-red-600">{formErrors.phone}</p>}
+                            {formErrors.phone && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.phone}</p>}
                         </div>
                         <div className="sm:col-span-2">
                             <label htmlFor="segments" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Segments (comma separated)</label>
@@ -393,10 +395,10 @@ export function CRMApp() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-900/50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">

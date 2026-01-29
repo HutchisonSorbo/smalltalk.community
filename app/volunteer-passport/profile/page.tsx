@@ -18,7 +18,7 @@ type ProfileTabsProps = {
     emailVerified: boolean;
 };
 
-export function ProfileTabs({ initialData, userId, emailVerified }: ProfileTabsProps) {
+function ProfileTabs({ initialData, userId, emailVerified }: ProfileTabsProps) {
     return (
         <Tabs defaultValue="profile" className="w-full">
             <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:flex mb-8" aria-label="Profile navigation">
