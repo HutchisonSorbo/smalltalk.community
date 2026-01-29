@@ -123,6 +123,7 @@ jobs:
             # Re-trigger via workflow_dispatch immediately.
             # The next run will handle the sleep.
             if ! gh workflow run gemini-fix-loop.yml \
+              --ref "$BRANCH_NAME" \
               -f pr_number="$PR_NUMBER" \
               -f iteration="$NEXT_ITERATION" \
               -f scheduled_at="$SCHEDULED_AT" \
