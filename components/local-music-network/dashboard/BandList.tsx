@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Users, MapPin, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,9 +61,11 @@ export function BandList({ bands, isLoading }: BandListProps) {
                             <div className="flex items-start gap-4">
                                 <div className="w-24 h-24 rounded-md bg-muted overflow-hidden shrink-0">
                                     {band.profileImageUrl ? (
-                                        <img
+                                        <Image
                                             src={band.profileImageUrl}
                                             alt={band.name}
+                                            width={96}
+                                            height={96}
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (

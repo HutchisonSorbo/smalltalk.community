@@ -3,7 +3,7 @@
 **Date**: 29-01-2026
 **Auditor**: Jules (Senior Security Engineer)
 
----
+## 1. Executive Summary
 
 ## 1. Executive Summary
 

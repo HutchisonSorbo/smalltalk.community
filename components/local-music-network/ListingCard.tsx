@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,10 +28,12 @@ export function ListingCard({ listing }: ListingCardProps) {
       <Card className="hover-elevate cursor-pointer h-full transition-transform duration-200 overflow-hidden" data-testid={`card-listing-${listing.id}`}>
         <div className="aspect-[4/3] bg-muted relative">
           {listing.imageUrls && listing.imageUrls.length > 0 ? (
-            <img
+            <Image
               src={listing.imageUrls[0]}
               alt={listing.title}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
