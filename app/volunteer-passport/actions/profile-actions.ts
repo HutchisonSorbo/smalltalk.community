@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-server";
 import { db } from "@/server/db";
 import { badges, userBadges, portfolioItems } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -122,7 +122,7 @@ export async function upsertPortfolioItem(userId: string, data: {
         // Normalise and further validate the URL protocol
         let validatedMediaUrl: string | undefined;
         const rawUrl = validatedData.url || validatedData.mediaUrl;
-        
+
         if (rawUrl) {
             try {
                 const parsedUrl = new URL(rawUrl);
@@ -159,9 +159,9 @@ export async function upsertPortfolioItem(userId: string, data: {
         return { success: true };
     } catch (error) {
         console.error("[upsertPortfolioItem] Error:", error);
-        return { 
-            success: false, 
-            error: error instanceof Error ? error.message : "Something went wrong. Please try again." 
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : "Something went wrong. Please try again."
         };
     }
 }
@@ -175,14 +175,14 @@ export async function deletePortfolioItem(userId: string, itemId: string) {
         await db
             .delete(portfolioItems)
             .where(and(eq(portfolioItems.id, itemId), eq(portfolioItems.userId, authUserId)));
-            
+
         revalidatePath("/volunteer-passport/profile");
         return { success: true };
     } catch (error) {
         console.error("[deletePortfolioItem] Error:", error);
-        return { 
-            success: false, 
-            error: "Something went wrong. Please try again." 
+        return {
+            success: false,
+            error: "Something went wrong. Please try again."
         };
     }
 }
