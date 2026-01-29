@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { useModeration } from "@/hooks/use-moderation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Shield, AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { saveVCSSStatus } from "@/lib/communityos/actions";
 
 interface VCSSStandard {
     id: number;
@@ -34,6 +35,22 @@ export function SafeguardingCentre() {
     const { moderatedContent: moderatedTenantName, isLoading: isModerationLoading } = useModeration(tenant?.name || "");
     const [standards, setStandards] = useState<VCSSStandard[]>(INITIAL_STANDARDS);
 
+    useEffect(() => {
+        if (tenant?.vcssStatus) {
+            try {
+                const persistedStandards = typeof tenant.vcssStatus === 'string'
+                    ? JSON.parse(tenant.vcssStatus)
+                    : tenant.vcssStatus;
+                
+                if (Array.isArray(persistedStandards) && persistedStandards.length > 0) {
+                    setStandards(persistedStandards);
+                }
+            } catch (error) {
+                console.error("Failed to parse persisted VCSS status:", error);
+            }
+        }
+    }, [tenant]);
+
     if (isTenantLoading || (tenant && isModerationLoading)) {
         return <div className="p-4 space-y-4">
             <div className="h-8 w-64 bg-gray-200 animate-pulse rounded" />
@@ -52,8 +69,17 @@ export function SafeguardingCentre() {
     const completedCount = standards.filter(s => s.completed).length;
     const progress = Math.round((completedCount / standards.length) * 100);
 
-    const toggleStandard = (id: number) => {
-        setStandards(prev => prev.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
+    const toggleStandard = async (id: number) => {
+        const updatedStandards = standards.map(s => s.id === id ? { ...s, completed: !s.completed } : s);
+        setStandards(updatedStandards);
+
+        if (tenant?.id) {
+            try {
+                await saveVCSSStatus(tenant.id, updatedStandards);
+            } catch (error) {
+                console.error("Failed to persist VCSS progress:", error);
+            }
+        }
     };
 
     return (
@@ -61,7 +87,7 @@ export function SafeguardingCentre() {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Shield className="h-6 w-6 text-primary" />
+                        <Shield className="h-6 w-6 text-primary" aria-hidden="true" />
                         Safeguarding Centre
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -80,7 +106,7 @@ export function SafeguardingCentre() {
                 <CardContent>
                     <Progress value={progress} className="h-2" aria-label="Overall compliance progress" />
                     <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                        <Info className="h-3 w-3" />
+                        <Info className="h-3 w-3" aria-hidden="true" />
                         Complete all 11 standards to achieve full compliance certification.
                     </p>
                 </CardContent>
@@ -108,9 +134,9 @@ export function SafeguardingCentre() {
                                 </CardDescription>
                             </div>
                             {standard.completed ? (
-                                <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" />
+                                <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" aria-hidden="true" />
                             ) : (
-                                <AlertCircle className="h-5 w-5 text-yellow-500 ml-auto shrink-0" />
+                                <AlertCircle className="h-5 w-5 text-yellow-500 ml-auto shrink-0" aria-hidden="true" />
                             )}
                         </CardHeader>
                     </Card>

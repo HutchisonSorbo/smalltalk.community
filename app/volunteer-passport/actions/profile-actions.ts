@@ -10,21 +10,31 @@ import { revalidatePath } from "next/cache";
  * Gets the authenticated user ID or throws if not authenticated
  */
 async function getAuthenticatedUserId(): Promise<string> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorised");
-    return user.id;
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Unauthorised");
+        return user.id;
+    } catch (error) {
+        console.error("[getAuthenticatedUserId] Error:", error);
+        throw error;
+    }
 }
 
 /**
  * Validates that the provided userId matches the authenticated user
  */
 async function validateUser(userId: string): Promise<string> {
-    const authUserId = await getAuthenticatedUserId();
-    if (authUserId !== userId) {
-        throw new Error("Unauthorised access to user data");
+    try {
+        const authUserId = await getAuthenticatedUserId();
+        if (authUserId !== userId) {
+            throw new Error("Unauthorised access to user data");
+        }
+        return authUserId;
+    } catch (error) {
+        console.error(`[validateUser] Error for userId=${userId}:`, error);
+        throw error;
     }
-    return authUserId;
 }
 
 /**
@@ -71,7 +81,7 @@ export async function getPortfolioItems(userId: string) {
 }
 
 /**
- * Adds or updates a portfolio item
+ * Adds or updates a portfolio item with input validation and sanitisation
  */
 export async function upsertPortfolioItem(userId: string, data: {
     id?: string;
@@ -82,12 +92,35 @@ export async function upsertPortfolioItem(userId: string, data: {
     mediaUrl?: string;
 }) {
     try {
-        const authUserId = await validateUser(userId);
+        // Input validation and sanitisation
+        const title = data.title?.trim();
+        if (!title) throw new Error("Title is required");
+        if (title.length > 255) throw new Error("Title is too long (max 255 characters)");
+
+        const description = data.description?.trim();
+        if (description && description.length > 2000) throw new Error("Description is too long (max 2000 characters)");
+
+        const allowedTypes = new Set(["link", "document", "media"]);
+        if (!allowedTypes.has(data.type)) throw new Error("Invalid media type");
+
+        let validatedMediaUrl: string | undefined;
+        const rawUrl = data.url || data.mediaUrl;
+        if (rawUrl) {
+            try {
+                const parsedUrl = new URL(rawUrl);
+                if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+                    throw new Error("Unsafe URL protocol");
+                }
+                validatedMediaUrl = parsedUrl.toString();
+            } catch {
+                throw new Error("Invalid URL format");
+            }
+        }
 
         const values = {
-            title: data.title,
-            description: data.description,
-            mediaUrl: data.url || data.mediaUrl,
+            title,
+            description,
+            mediaUrl: validatedMediaUrl,
             mediaType: data.type,
             updatedAt: new Date(),
         };
@@ -107,7 +140,7 @@ export async function upsertPortfolioItem(userId: string, data: {
         return { success: true };
     } catch (error) {
         console.error("[upsertPortfolioItem] Error:", error);
-        return { success: false, error: "Failed to save portfolio item" };
+        return { success: false, error: error instanceof Error ? error.message : "Failed to save portfolio item" };
     }
 }
 
