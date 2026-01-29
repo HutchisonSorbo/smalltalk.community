@@ -7,13 +7,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { getABSDemographics, type ABSDemographics } from "@/lib/abs-api";
 import { getOSMAmenities, type OSMAmenities } from "@/lib/osm-api";
 import { createClient } from "@/lib/supabase-server";
 import { verifyTenantAccess } from "@/lib/communityos/tenant-context";
-import { logAuditEvent } from "@/lib/audit-log";
+import { getAIClient, AI_MODEL_CONFIG, SAFETY_SETTINGS } from "@/lib/ai-config";
 
 // Request validation schema
 const requestSchema = z.object({
@@ -33,19 +32,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 // In-memory rate limiting (consider Redis for production)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
-export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 204,
-        headers: {
-            "Access-Control-Allow-Origin": "*", // or specific origin
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-    });
-}
-
 export async function POST(request: NextRequest) {
-    let auditContext: { userId?: string; tenantId?: string } = {};
     try {
         // Parse and validate request body
         const body = await request.json();
@@ -70,10 +57,19 @@ export async function POST(request: NextRequest) {
 
         // Verify tenant access
         const { hasAccess } = await verifyTenantAccess(user.id, tenantId);
-        auditContext = { userId: user.id, tenantId };
         if (!hasAccess) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
+
+        // Fetch user profile to determine age-appropriate safety settings
+        // Data isolation is preserved via RLS and explicit id filtering
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("age_group")
+            .eq("id", user.id)
+            .single();
+
+        const isTeen = profile?.age_group === "teen";
 
         // Rate limiting
         const rateLimitKey = `insights:${user.id}`;
@@ -110,9 +106,11 @@ export async function POST(request: NextRequest) {
         // Build context for AI
         const context = buildAIContext(demographics, amenities);
 
-        // Check for Gemini API key
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
+        // Get AI Client using centralised config
+        const genAI = getAIClient();
+
+        if (!genAI) {
+            console.warn("[Community Insights] API Key (GOOGLE_API_KEY or GEMINI_API_KEY) not set");
             // Return helpful message with context data if available
             const contextSummary = demographics
                 ? `Based on available data for ${demographics.locality} (${demographics.postcode}): Population: ${demographics.population.toLocaleString()}, Median Age: ${demographics.medianAge}`
@@ -131,13 +129,9 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Generate AI insights
-        const genAI = new GoogleGenAI({ apiKey });
-        const model = "gemini-1.5-flash";
-
-        const prompt = `You are a helpful community insights assistant for a non-profit organization. 
+        const prompt = `You are a helpful community insights assistant for a non-profit organisation. 
 Answer the following question about the community, using the provided context data.
-Be concise, helpful, and focused on actionable insights for community organizations.
+Be concise, helpful, and focused on actionable insights for community organisations.
 If you don't have enough data to answer accurately, say so.
 
 USER QUESTION: ${query}
@@ -147,9 +141,13 @@ ${context}
 
 Provide a helpful, informative response focused on community development and planning.`;
 
-        // Use explicit content structure for better compatibility and error handling
+        // Generate AI insights with appropriate safety settings based on age group
         const response = await genAI.models.generateContent({
-            model,
+            model: AI_MODEL_CONFIG.model,
+            config: {
+                ...AI_MODEL_CONFIG.generationConfig,
+                safetySettings: isTeen ? SAFETY_SETTINGS.teen : SAFETY_SETTINGS.adult,
+            },
             contents: [
                 {
                     role: "user",
@@ -160,7 +158,20 @@ Provide a helpful, informative response focused on community development and pla
             ],
         });
 
-        const insights = response.text ?? "Unable to generate insights.";
+        // Robust parsing of the response
+        let insights = "";
+        const candidate = response.candidates?.[0];
+        if (candidate?.content?.parts) {
+            insights = candidate.content.parts
+                .map(part => part.text)
+                .filter(Boolean)
+                .join('')
+                .trim();
+        }
+
+        if (!insights) {
+            insights = "Unable to generate insights.";
+        }
 
         return NextResponse.json({
             query,
@@ -172,25 +183,19 @@ Provide a helpful, informative response focused on community development and pla
                 amenities: amenities ? "OpenStreetMap" : null,
             },
         });
-    } catch (error: any) {
-        console.error("Community Insights API error:", error);
-        try {
-            await logAuditEvent({
-                action: "community_insights_error",
-                userId: auditContext.userId ?? null,
-                tenantId: auditContext.tenantId ?? null,
-                metadata: { message: String(error?.message ?? error) },
-            });
-        } catch (logError) {
-            console.error("Failed to write audit log:", logError);
-        }
+    } catch (error: unknown) {
+        console.error("[Community Insights] API error:", error);
 
-        // Check for specific Google AI errors if possible, or just log details
-        if (error.status) {
-             console.error(`Status: ${error.status}`);
-        }
-        if (error.message) {
-             console.error(`Message: ${error.message}`);
+        // Log detailed error information for debugging
+        if (error instanceof Error) {
+            console.error(`[Community Insights] Error name: ${error.name}`);
+            console.error(`[Community Insights] Error message: ${error.message}`);
+            if ("status" in error && typeof error.status === "number") {
+                console.error(`[Community Insights] HTTP status: ${error.status}`);
+            }
+            if ("code" in error && typeof error.code === "string") {
+                console.error(`[Community Insights] Error code: ${error.code}`);
+            }
         }
 
         return NextResponse.json(

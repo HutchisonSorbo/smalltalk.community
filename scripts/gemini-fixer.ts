@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 
 const MODEL_NAME = 'gemini-3-flash-preview';
 
-// Biome-ignore lint/suspicious/noControlCharactersInRegex: Needed for sanitizing LLM input
+// Biome-ignore lint/suspicious/noControlCharactersInRegex: Needed for sanitising LLM input
 const CONTROL_CHARS_REGEX = /[\x00-\x1F\x7F]/g;
 
 interface Comment {
@@ -148,9 +148,9 @@ export function loadTasks(config: Config): FileTask[] {
 }
 
 /**
- * Sanitizes input strings to prevent prompt injection.
+ * Sanitises input strings to prevent prompt injection.
  */
-function sanitizeInput(str: string): string {
+function sanitiseInput(str: string): string {
     if (!str) return '';
     return str.replace(CONTROL_CHARS_REGEX, '')
         .replace(/```/g, "'''") // Neutralise block escapes
@@ -163,12 +163,12 @@ function sanitizeInput(str: string): string {
 export function buildPrompt(task: FileTask): { systemInstruction: string; userPrompt: string } {
     const { filePath, fileContent, comments } = task;
 
-    const sanitizedFilePath = sanitizeInput(filePath);
+    const sanitisedFilePath = sanitiseInput(filePath);
     const issues = comments.map((c, i) => {
         return `ISSUE #${i + 1}:
-Comment: ${sanitizeInput(c.body)}
+Comment: ${sanitiseInput(c.body)}
 Diff Context:
-${sanitizeInput(c.diff_hunk)}
+${sanitiseInput(c.diff_hunk)}
 `;
     }).join('\n');
 
@@ -185,7 +185,7 @@ STRICT RULES:
 
     const userPrompt = `
 CONTEXT:
-File Path: ${sanitizedFilePath}
+File Path: ${sanitisedFilePath}
 Review Comments:
 ${issues}
 
@@ -374,7 +374,7 @@ export async function run(): Promise<void> {
 }
 
 // Only run if called directly
-const scriptPath = process.argv[1] ? new URL(`file://${process.argv[1]}`).href : '';
-if (import.meta.url === scriptPath) {
+const scriptPath = process.argv[1] ? path.resolve(process.argv[1]) : '';
+if (scriptPath && fileURLToPath(import.meta.url) === scriptPath) {
     run();
 }

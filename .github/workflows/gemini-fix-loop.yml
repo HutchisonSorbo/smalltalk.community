@@ -128,7 +128,8 @@ jobs:
               -f scheduled_at="$SCHEDULED_AT" \
               --repo "${{ github.repository }}"; then
               echo "::warning::Failed to trigger next iteration"
-              gh pr comment "$PR_NUMBER" --body "⚠️ Gemini fixer loop interrupted at iteration $CURRENT_ITERATION. Please re-run manually."
+              gh pr comment "$PR_NUMBER" --body "⚠️ Gemini fixer loop interrupted at iteration $CURRENT_ITERATION. Please re-run manually." \
+                || echo "::error::Failed to post interruption comment to PR"
             fi
           else
             echo "Max iterations reached ($MAX_ITERATIONS). Stopping loop."
