@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-server";
 import { db } from "@/server/db";
 import { badges, userBadges, portfolioItems } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -83,7 +83,7 @@ export async function upsertPortfolioItem(userId: string, data: {
 }) {
     try {
         const authUserId = await validateUser(userId);
-        
+
         const values = {
             title: data.title,
             description: data.description,

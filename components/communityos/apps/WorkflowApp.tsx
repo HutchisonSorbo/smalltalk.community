@@ -58,7 +58,7 @@ export function WorkflowApp() {
         const name = sanitizeText(newWorkflow.name ?? "");
         const trigger = sanitizeText(newWorkflow.trigger ?? "");
         const action = sanitizeText(newWorkflow.action ?? "");
-        
+
         if (name && trigger && action) {
             try {
                 const workflowId = crypto.randomUUID();
@@ -70,7 +70,7 @@ export function WorkflowApp() {
                     id: workflowId,
                     isActive: true
                 } as Workflow);
-                
+
                 setIsAdding(false);
                 setNewWorkflow({
                     name: "",
@@ -216,7 +216,7 @@ export function WorkflowApp() {
                         const moderatedName = sanitizeText(workflow.name ?? "");
                         const moderatedTrigger = sanitizeText(workflow.trigger ?? "");
                         const moderatedAction = sanitizeText(workflow.action ?? "");
-                        
+
                         return (
                             <Card key={workflow.id} className={workflow.isActive ? 'border-l-4 border-l-yellow-500' : 'opacity-60'}>
                                 <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">

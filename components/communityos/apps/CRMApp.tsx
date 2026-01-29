@@ -241,8 +241,9 @@ export function CRMApp() {
                             <button
                                 type="button"
                                 aria-label="Close contact details"
+                                title="Close"
                                 onClick={() => setViewingContact(null)}
-                                className="text-gray-500 hover:text-gray-700"
+                                className="text-gray-500 hover:text-gray-700 h-8 w-8 flex items-center justify-center rounded-md transition-colors hover:bg-gray-100"
                             >
                                 ✕
                             </button>
@@ -291,6 +292,7 @@ export function CRMApp() {
                                     type="button"
                                     onClick={() => addInteraction(viewingContact.id)}
                                     className="rounded bg-primary px-4 text-sm text-white"
+                                    aria-label="Log interaction"
                                 >
                                     Log
                                 </button>

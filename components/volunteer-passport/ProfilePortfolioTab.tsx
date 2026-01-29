@@ -156,18 +156,18 @@ export function ProfilePortfolioTab({ userId }: { userId: string }) {
                                     <div>
                                         <CardTitle className="text-sm">{item.title}</CardTitle>
                                         {item.url && (
-                                            <a 
-                                                href={safeUrl(item.url)} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
+                                            <a
+                                                href={safeUrl(item.url)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="text-[10px] text-primary hover:underline flex items-center gap-1"
                                             >
-                                                {(() => { 
-                                                    try { 
-                                                        return new URL(item.url).hostname; 
-                                                    } catch { 
-                                                        return item.url; 
-                                                    } 
+                                                {(() => {
+                                                    try {
+                                                        return new URL(item.url).hostname;
+                                                    } catch {
+                                                        return item.url;
+                                                    }
                                                 })()} <ExternalLink className="h-2 w-2" />
                                             </a>
                                         )}
@@ -178,6 +178,7 @@ export function ProfilePortfolioTab({ userId }: { userId: string }) {
                                     onClick={() => handleDelete(item.id)}
                                     className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                     title="Delete Item"
+                                    aria-label={`Delete portfolio item: ${item.title}`}
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </button>

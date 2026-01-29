@@ -45,7 +45,7 @@ export function ImpactApp() {
         );
     }
 
-    const moderatedName = tenant.name;
+    const moderatedName = tenant.name?.length > 50 ? `${tenant.name.substring(0, 50)}...` : tenant.name;
 
     return (
         <div className="space-y-6 max-w-full">
@@ -63,7 +63,7 @@ export function ImpactApp() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                         <CardTitle className="text-sm font-medium">Total Participants</CardTitle>
