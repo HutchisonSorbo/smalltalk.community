@@ -51,6 +51,18 @@ Document in `artifacts/superpowers/execution.md`:
 - Skills verified
 - Any new skills discovered
 
+## Pre-Execution Semantic Check (Mandatory)
+
+Before implementing any code changes, use GrepAI to perform a final semantic validation of the local environment and dependencies. This reduces the risk of regressions by ensuring you understand the call chains and data flows related to your proposed changes.
+
+```bash
+# Validate local context and call chains
+./bin/grepai search "specific_change_context"
+./bin/grepai trace "impacted_function_or_class"
+```
+
+Document your findings in `artifacts/superpowers/execution.md`.
+
 ## Skills to apply as needed
 
 Read and apply these skills when relevant:
