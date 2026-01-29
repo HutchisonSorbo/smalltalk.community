@@ -212,6 +212,11 @@ STRICT RULES:
 5. Address ALL listed issues in a single pass.
 6. If the comments are not actionable or unsafe, return the original file content.
 
+META-CONTEXT (OSS PLAN):
+- You are running on an Open Source plan with strict rate limits (2 reviews/hour). 
+- Your fix MUST be robust to avoid unnecessary back-and-forth which burns rate limits.
+- If you are unsure, err on the side of caution/safety.
+
 RESPONSE FORMAT:
 You must provide your response in exactly the following XML-tagged format:
 <thought_process>

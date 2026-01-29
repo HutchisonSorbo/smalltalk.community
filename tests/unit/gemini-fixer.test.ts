@@ -135,8 +135,8 @@ describe('gemini-fixer', () => {
                 }]
             };
 
-            const { systemInstruction } = buildPrompt(task);
-            expect(systemInstruction).toContain('Australian English standards');
+            const { systemInstruction } = buildPrompt(task, 'DUMMY CONTEXT');
+            expect(systemInstruction).toContain('Australian English spelling');
             expect(systemInstruction).toContain('organisation');
             expect(systemInstruction).toContain('utilise');
         });
