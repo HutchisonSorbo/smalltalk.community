@@ -65,7 +65,7 @@ export function loadConfig(): Config {
  * @returns {string} The collected project context.
  */
 function loadProjectContext(config: Config): string {
-    const files = ['CLAUDE.md', 'DEVELOPMENT_STANDARDS.md'];
+    const files = ['CLAUDE.md', 'DEVELOPMENT_STANDARDS.md', 'INCIDENT_RESPONSE.md'];
     let context = '';
     for (const file of files) {
         const filePath = path.resolve(config.repoRoot, file);
@@ -211,6 +211,11 @@ STRICT RULES:
 4. Apply robust error handling (try/catch on all async) and input validation (Zod).
 5. Address ALL listed issues in a single pass.
 6. If the comments are not actionable or unsafe, return the original file content.
+
+META-CONTEXT (OSS PLAN):
+- You are running on an Open Source plan with strict rate limits (2 reviews/hour). 
+- Your fix MUST be robust to avoid unnecessary back-and-forth which burns rate limits.
+- If you are unsure, err on the side of caution/safety.
 
 RESPONSE FORMAT:
 You must provide your response in exactly the following XML-tagged format:
