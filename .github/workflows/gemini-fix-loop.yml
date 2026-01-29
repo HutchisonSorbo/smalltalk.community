@@ -133,5 +133,6 @@ jobs:
             fi
           else
             echo "Max iterations reached ($MAX_ITERATIONS). Stopping loop."
-            gh pr comment "$PR_NUMBER" --body "🤖 Gemini has completed 5 iterations of auto-fixes. Please review the remaining comments manually."
+            gh pr comment "$PR_NUMBER" --body "🤖 Gemini has completed 5 iterations of auto-fixes. Please review the remaining comments manually." \
+              || echo "::error::Failed to post completion comment to PR"
           fi
