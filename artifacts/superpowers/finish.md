@@ -4,7 +4,7 @@
 
 ### volunteer-passport
 
-- [MODIFY] [profile-actions.ts](file:///home/ryan/Documents/Projects/smalltalk.community/app/volunteer-passport/actions/profile-actions.ts)
+- [MODIFY] [profile-actions.ts](app/volunteer-passport/actions/profile-actions.ts)
   - Corrected import path for `createClient` from `@/lib/supabase/server` to `@/lib/supabase-server`.
 
 ## Verification Results

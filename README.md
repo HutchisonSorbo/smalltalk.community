@@ -1,8 +1,8 @@
-<div align="center">
-
 # grepai
 
-### grep for the AI era
+<div align="center">
+
+## grep for the AI era
 
 [![Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1067661&theme=light)](https://www.producthunt.com/products/grepai)
 
@@ -10,7 +10,7 @@
 [![Downloads](https://img.shields.io/github/downloads/yoanbernabeu/grepai/total?style=flat&logo=github)](https://github.com/yoanbernabeu/grepai/releases)
 [![Go](https://github.com/yoanbernabeu/grepai/actions/workflows/ci.yml/badge.svg)](https://github.com/yoanbernabeu/grepai/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yoanbernabeu/grepai)](https://goreportcard.com/report/github.com/yoanbernabeu/grepai)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Licence: MIT](https://img.shields.io/badge/Licence-MIT-yellow.svg)](LICENSE)
 
 **Search code by meaning, not just text.**
 
@@ -36,16 +36,19 @@
 ## Installation
 
 **Homebrew (macOS):**
+
 ```bash
 brew install yoanbernabeu/tap/grepai
 ```
 
 **Linux/macOS:**
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/yoanbernabeu/grepai/main/install.sh | sh
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 irm https://raw.githubusercontent.com/yoanbernabeu/grepai/main/install.ps1 | iex
 ```
@@ -53,6 +56,7 @@ irm https://raw.githubusercontent.com/yoanbernabeu/grepai/main/install.ps1 | iex
 Requires an embedding provider — [Ollama](https://ollama.ai) (default), [LM Studio](https://lmstudio.ai), or OpenAI.
 
 **Ollama (recommended):**
+
 ```bash
 ollama pull nomic-embed-text
 ```
@@ -60,7 +64,7 @@ ollama pull nomic-embed-text
 ## Quick Start
 
 ```bash
-grepai init                        # Initialize in your project
+grepai init                        # Initialise in your project
 grepai watch                       # Start indexing daemon
 grepai search "error handling"     # Search semantically
 grepai trace callers "Login"       # Find who calls a function
@@ -70,10 +74,8 @@ grepai trace callers "Login"       # Find who calls a function
 
 > *"I just hit my limit and it took 13% of my max5 plan just to read my codebase. I am very, very excited about your new tool."*
 > — u/911pleasehold on [r/ClaudeAI](https://www.reddit.com/r/ClaudeAI/comments/1qiv0d3/open_source_i_reduced_claude_code_input_tokens_by/) (280K+ views)
-
 > *"It works great! Takes 5 minutes to install. Crazy!"*
 > — [@LesSaleGeek](https://x.com/LesSaleGeek/status/2010335803604611124) on X
-
 > *"The results are incredible!"*
 > — [Kenny Nguyen](https://www.linkedin.com/feed/update/urn:li:activity:7419451883293061120?commentUrn=urn%3Ali%3Acomment%3A%28activity%3A7419451883293061120%2C7419464457388453888%29) on LinkedIn
 
@@ -82,7 +84,7 @@ grepai trace callers "Login"       # Find who calls a function
 `grep` was built in 1973 for exact text matching. Modern codebases need semantic understanding.
 
 | | `grep` / `ripgrep` | `grepai` |
-|---|---|---|
+| --- | --- | --- |
 | **Search** | Exact text / regex | Semantic understanding |
 | **Query** | `"func.*Login"` | `"user authentication flow"` |
 | **Finds** | Pattern matches | Conceptually related code |
@@ -98,6 +100,6 @@ Full docs, guides, and blog:
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## License
+## Licence
 
-[MIT License](LICENSE) - Yoan Bernabeu 2026
+[MIT Licence](LICENSE) - Yoan Bernabeu 2026
