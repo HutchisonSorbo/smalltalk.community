@@ -1354,7 +1354,7 @@ export const userBadges = pgTable("user_badges", {
   isPublic: boolean("is_public").default(true),
 }, (table) => [
   pgPolicy("user_badges_read", { for: "select", to: "public", using: sql`${table.isPublic} = true or ${table.userId} = ( (select auth.uid()) )::text` }),
-  pgPolicy("user_badges_self_update", { for: "update", to: "authenticated", using: sql`${table.userId} = ( (select auth.uid()) )::text` }),
+  pgPolicy("user_badges_self_update", { for: "update", to: "authenticated", using: sql`${table.userId} = ( (select auth.uid()) )::text`, withCheck: sql`${table.userId} = ( (select auth.uid()) )::text` }),
   index("user_badges_user_idx").on(table.userId),
   index("user_badges_badge_idx").on(table.badgeId),
 ]);

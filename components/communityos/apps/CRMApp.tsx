@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /**
  * Validation Schemas
@@ -64,7 +65,6 @@ const moderateText = (text: string | undefined): string => {
 
 export function CRMApp() {
     const { tenant, isLoading } = useTenant();
-    const modalRef = useRef<HTMLDivElement>(null);
 
     const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
         useDittoSync<Contact>({
@@ -78,38 +78,7 @@ export function CRMApp() {
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [newInteraction, setNewInteraction] = useState({ type: "note", content: "" });
 
-    /**
-     * Focus trap logic for contact details modal
-     */
-    useEffect(() => {
-        if (!viewingContact) return;
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setViewingContact(null);
-            if (e.key !== "Tab" || !modalRef.current) return;
-
-            const focusableElements = modalRef.current.querySelectorAll(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
-            const firstElement = focusableElements[0] as HTMLElement;
-            const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-            if (e.shiftKey) {
-                if (document.activeElement === firstElement) {
-                    lastElement.focus();
-                    e.preventDefault();
-                }
-            } else {
-                if (document.activeElement === lastElement) {
-                    firstElement.focus();
-                    e.preventDefault();
-                }
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [viewingContact]);
 
     if (isLoading) {
         return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
@@ -123,10 +92,12 @@ export function CRMApp() {
         );
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         try {
             const validationResult = contactSchema.safeParse({
                 ...formData,
+                email: formData.email ?? "",
+                phone: formData.phone ?? "",
                 status: formData.status || "active",
                 segments: formData.segments || []
             });
@@ -156,16 +127,16 @@ export function CRMApp() {
                 interactions: existingContact?.interactions || [],
             };
 
-            upsertDocument(id, updatedContact);
+            await upsertDocument(id, updatedContact);
             setIsEditing(null);
             setFormData({});
             setFormErrors({});
         } catch (error) {
-            console.error("Failed to save contact:", error);
+            console.error("Failed to save contact:", { contactId: isEditing, error });
         }
     };
 
-    const addInteraction = (contactId: string) => {
+    const addInteraction = async (contactId: string) => {
         try {
             const validationResult = interactionSchema.safeParse(newInteraction);
             if (!validationResult.success) return;
@@ -186,11 +157,11 @@ export function CRMApp() {
                 lastContacted: interaction.createdAt
             };
 
-            upsertDocument(contactId, updatedContact);
+            await upsertDocument(contactId, updatedContact);
             setViewingContact(updatedContact);
             setNewInteraction({ type: "note", content: "" });
         } catch (error) {
-            console.error("Failed to add interaction:", error);
+            console.error("Failed to add interaction:", { contactId, error });
         }
     };
 
@@ -302,93 +273,80 @@ export function CRMApp() {
                 </div>
             )}
 
-            {viewingContact && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation">
-                    <div 
-                        ref={modalRef}
-                        className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="modal-title"
-                    >
-                        <div className="mb-4 flex items-center justify-between border-b pb-4">
-                            <h3 id="modal-title" className="text-xl font-bold truncate">
-                                {moderateText(viewingContact.firstName)} {moderateText(viewingContact.lastName)}
-                            </h3>
-                            <button
-                                type="button"
-                                aria-label="Close contact details"
-                                title="Close"
-                                onClick={() => setViewingContact(null)}
-                                className="text-gray-500 hover:text-gray-700 h-8 w-8 flex items-center justify-center rounded-md transition-colors hover:bg-gray-100"
-                            >
-                                ✕
-                            </button>
-                        </div>
+            <Dialog open={!!viewingContact} onOpenChange={(open) => !open && setViewingContact(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {viewingContact && `${moderateText(viewingContact.firstName)} ${moderateText(viewingContact.lastName)}`}
+                        </DialogTitle>
+                    </DialogHeader>
 
-                        <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
-                            <div className="truncate"><span className="font-semibold">Email:</span> {moderateText(viewingContact.email)}</div>
-                            <div className="truncate"><span className="font-semibold">Phone:</span> {moderateText(viewingContact.phone)}</div>
-                            <div className="col-span-2">
-                                <span className="font-semibold">Segments:</span>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                    {viewingContact.segments?.map((s, idx) => (
-                                        <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                            {moderateText(s)}
-                                        </span>
+                    {viewingContact && (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="truncate"><span className="font-semibold">Email:</span> {moderateText(viewingContact.email)}</div>
+                                <div className="truncate"><span className="font-semibold">Phone:</span> {moderateText(viewingContact.phone)}</div>
+                                <div className="col-span-2">
+                                    <span className="font-semibold">Segments:</span>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {viewingContact.segments?.map((s, idx) => (
+                                            <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                {moderateText(s)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <h4 className="mb-3 font-semibold">Interaction Log</h4>
+                                <div className="mb-4 flex gap-2">
+                                    <label htmlFor="interaction-type" className="sr-only">Interaction type</label>
+                                    <select
+                                        id="interaction-type"
+                                        className="rounded border p-2 text-sm dark:bg-gray-700"
+                                        value={newInteraction.type}
+                                        onChange={e => setNewInteraction({ ...newInteraction, type: e.target.value })}
+                                    >
+                                        <option value="note">Note</option>
+                                        <option value="email">Email</option>
+                                        <option value="call">Call</option>
+                                        <option value="meeting">Meeting</option>
+                                    </select>
+                                    <label htmlFor="interaction-content" className="sr-only">Interaction details</label>
+                                    <input
+                                        id="interaction-content"
+                                        type="text"
+                                        className="flex-1 rounded border p-2 text-sm dark:bg-gray-700"
+                                        placeholder="Add a note or log an interaction..."
+                                        value={newInteraction.content}
+                                        onChange={e => setNewInteraction({ ...newInteraction, content: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => addInteraction(viewingContact.id)}
+                                        className="rounded bg-primary px-4 text-sm text-white"
+                                        aria-label="Log interaction"
+                                    >
+                                        Log
+                                    </button>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto space-y-3">
+                                    {viewingContact.interactions?.map(i => (
+                                        <div key={i.id} className="rounded border bg-gray-50 p-3 text-sm dark:bg-gray-900/50">
+                                            <div className="mb-1 flex justify-between text-[10px] text-gray-500">
+                                                <span className="uppercase font-bold">{moderateText(i.type)}</span>
+                                                <span>{new Date(i.createdAt).toLocaleString()}</span>
+                                            </div>
+                                            <p className="line-clamp-3">{moderateText(i.content)}</p>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-
-                        <div className="mb-4 border-t pt-4">
-                            <h4 className="mb-3 font-semibold">Interaction Log</h4>
-                            <div className="mb-4 flex gap-2">
-                                <label htmlFor="interaction-type" className="sr-only">Interaction type</label>
-                                <select
-                                    id="interaction-type"
-                                    className="rounded border p-2 text-sm dark:bg-gray-700"
-                                    value={newInteraction.type}
-                                    onChange={e => setNewInteraction({ ...newInteraction, type: e.target.value })}
-                                >
-                                    <option value="note">Note</option>
-                                    <option value="email">Email</option>
-                                    <option value="call">Call</option>
-                                    <option value="meeting">Meeting</option>
-                                </select>
-                                <label htmlFor="interaction-content" className="sr-only">Interaction details</label>
-                                <input
-                                    id="interaction-content"
-                                    type="text"
-                                    className="flex-1 rounded border p-2 text-sm dark:bg-gray-700"
-                                    placeholder="Add a note or log an interaction..."
-                                    value={newInteraction.content}
-                                    onChange={e => setNewInteraction({ ...newInteraction, content: e.target.value })}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => addInteraction(viewingContact.id)}
-                                    className="rounded bg-primary px-4 text-sm text-white"
-                                    aria-label="Log interaction"
-                                >
-                                    Log
-                                </button>
-                            </div>
-                            <div className="max-h-60 overflow-y-auto space-y-3">
-                                {viewingContact.interactions?.map(i => (
-                                    <div key={i.id} className="rounded border bg-gray-50 p-3 text-sm dark:bg-gray-900/50">
-                                        <div className="mb-1 flex justify-between text-[10px] text-gray-500">
-                                            <span className="uppercase font-bold">{moderateText(i.type)}</span>
-                                            <span>{new Date(i.createdAt).toLocaleString()}</span>
-                                        </div>
-                                        <p className="line-clamp-3">{moderateText(i.content)}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <div className="overflow-x-auto rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -451,7 +409,13 @@ export function CRMApp() {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => deleteDocument(contact.id)}
+                                            onClick={async () => {
+                                                try {
+                                                    await deleteDocument(contact.id);
+                                                } catch (error) {
+                                                    console.error("Failed to delete contact:", { contactId: contact.id, error });
+                                                }
+                                            }}
                                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                         >
                                             Delete
