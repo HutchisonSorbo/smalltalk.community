@@ -39,10 +39,33 @@ chmod +x "$FULL_PATH"
 # Check if installed
 if [ -f "$FULL_PATH" ]; then
     echo "GrepAI installed successfully to $FULL_PATH"
-    "$FULL_PATH" --version
+    "$FULL_PATH" version
 else
     echo "Installation failed."
     exit 1
+fi
+
+echo "Checking for Ollama..."
+if ! command -v ollama &> /dev/null; then
+    echo "⚠️  Ollama is not installed."
+    echo "To install (recommended): curl -fsSL https://ollama.com/install.sh | sh"
+    echo "This will install Ollama and set up a systemd service to ensure it runs on boot."
+else
+    echo "✅ Ollama found."
+    # Check if service is active
+    if systemctl is-active --quiet ollama; then
+         echo "✅ Ollama service is running."
+         echo "Checking for embedding model (nomic-embed-text)..."
+         if ! ollama list | grep -q "nomic-embed-text"; then
+             echo "⚠️  Embedding model missing. Pulling now..."
+             ollama pull nomic-embed-text
+         else
+             echo "✅ Embedding model ready."
+         fi
+    else
+         echo "⚠️  Ollama service is NOT running."
+         echo "Start it with: sudo systemctl start ollama"
+    fi
 fi
 
 echo "Done."

@@ -8,7 +8,7 @@ Successfully integrated GrepAI configuration and helper scripts into the reposit
 
 - **Scripts**:
   - Added `scripts/setup-grepai.sh` to facilitate local binary installation (sudo-free).
-  - Verified functionality by installing to `./bin/`.
+  - Added Ollama and embedding model health checks.
 - **Config**:
   - Created `.grepai/config.yaml` with Ollama as default provider and sensible ignore rules.
   - Configured storage to use local GOB file.
@@ -20,9 +20,14 @@ Successfully integrated GrepAI configuration and helper scripts into the reposit
 
 - **Verified**:
   - Script downloads and installs `grepai` binary correctly.
-  - `grepai init` logic reverse-engineered to produce valid config.
-  - `grepai status` recognizes the project (though index is empty without running embedding model).
-  - `grepai search` runs (confirms binary functional).
+  - `grepai version` confirmed as valid command.
+  - Script detects `ollama` status and provides installation guidance.
+  - `grepai status` recognizes the project (Provider: Ollama).
+
+## Gemini & Ollama Setup
+
+- **Gemini**: Can be used via OpenAI-compatible endpoint. Set `provider: openai` and `endpoint: https://generativelanguage.googleapis.com/v1beta/openai` in `.grepai/config.yaml`.
+- **Ollama**: Installer (`curl -fsSL https://ollama.com/install.sh | sh`) automatically sets up a `systemd` service for persistence across reboots.
 
 ## Actions
 
