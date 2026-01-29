@@ -5,10 +5,27 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { z } from "zod";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
-import { moderateContent } from "@/lib/utils/moderation";
+
+/**
+ * Validation Schemas
+ */
+const contactSchema = z.object({
+    firstName: z.string().min(1, "First name is required").trim(),
+    lastName: z.string().min(1, "Last name is required").trim(),
+    email: z.string().email("Please enter a valid email address").or(z.literal("")).transform(v => v.trim()),
+    phone: z.string().regex(/^[0-9+().\s-]{7,}$/, "Please enter a valid phone number").or(z.literal("")).transform(v => v.trim()),
+    status: z.enum(["active", "inactive", "pending"]),
+    segments: z.array(z.string()).optional(),
+});
+
+const interactionSchema = z.object({
+    type: z.enum(["note", "email", "call", "meeting"]),
+    content: z.string().min(1, "Interaction content cannot be empty").trim(),
+});
 
 interface Interaction {
     id: string;
@@ -29,9 +46,25 @@ interface Contact {
     interactions?: Interaction[];
 }
 
+/**
+ * Robust text moderation and sanitisation helper.
+ * Implements basic HTML entity encoding and trimming.
+ */
+const moderateText = (text: string | undefined): string => {
+    if (!text) return "";
+    const trimmed = text.trim();
+    // Encode HTML entities to prevent XSS (OWASP A05)
+    return trimmed
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
 
 export function CRMApp() {
     const { tenant, isLoading } = useTenant();
+    const modalRef = useRef<HTMLDivElement>(null);
 
     const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
         useDittoSync<Contact>({
@@ -44,6 +77,39 @@ export function CRMApp() {
     const [formData, setFormData] = useState<Partial<Contact>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [newInteraction, setNewInteraction] = useState({ type: "note", content: "" });
+
+    /**
+     * Focus trap logic for contact details modal
+     */
+    useEffect(() => {
+        if (!viewingContact) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setViewingContact(null);
+            if (e.key !== "Tab" || !modalRef.current) return;
+
+            const focusableElements = modalRef.current.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0] as HTMLElement;
+            const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+            if (e.shiftKey) {
+                if (document.activeElement === firstElement) {
+                    lastElement.focus();
+                    e.preventDefault();
+                }
+            } else {
+                if (document.activeElement === lastElement) {
+                    firstElement.focus();
+                    e.preventDefault();
+                }
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [viewingContact]);
 
     if (isLoading) {
         return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
@@ -58,63 +124,63 @@ export function CRMApp() {
     }
 
     const handleSave = () => {
-        const firstName = (formData.firstName || "").trim();
-        const lastName = (formData.lastName || "").trim();
-        const email = (formData.email || "").trim();
-        const phone = (formData.phone || "").trim();
-        const segments = (formData.segments || []).map(s => s.trim()).filter(Boolean);
+        try {
+            const validationResult = contactSchema.safeParse({
+                ...formData,
+                status: formData.status || "active",
+                segments: formData.segments || []
+            });
 
-        const errors: Record<string, string> = {};
+            if (!validationResult.success) {
+                const errors: Record<string, string> = {};
+                validationResult.error.issues.forEach((issue) => {
+                    if (issue.path[0]) errors[issue.path[0] as string] = issue.message;
+                });
+                setFormErrors(errors);
+                return;
+            }
 
-        if (!firstName) errors.firstName = "First name is required";
-        if (!lastName) errors.lastName = "Last name is required";
+            const validatedData = validationResult.data;
+            const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
+            const existingContact = contacts.find(c => c.id === id);
 
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            errors.email = "Please enter a valid email address";
+            const updatedContact: Contact = {
+                id,
+                firstName: validatedData.firstName,
+                lastName: validatedData.lastName,
+                email: validatedData.email,
+                phone: validatedData.phone,
+                status: validatedData.status,
+                lastContacted: new Date().toISOString(),
+                segments: validatedData.segments,
+                interactions: existingContact?.interactions || [],
+            };
+
+            upsertDocument(id, updatedContact);
+            setIsEditing(null);
+            setFormData({});
+            setFormErrors({});
+        } catch (error) {
+            console.error("Failed to save contact:", error);
         }
-
-        if (phone && !/^[0-9+().\s-]{7,}$/.test(phone)) {
-            errors.phone = "Please enter a valid phone number";
-        }
-
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-
-        setFormErrors({});
-        const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
-        const existingContact = contacts.find(c => c.id === id);
-
-        const updatedContact: Contact = {
-            id,
-            firstName,
-            lastName,
-            email,
-            phone,
-            status: (formData.status as "active" | "inactive" | "pending") || "active",
-            lastContacted: new Date().toISOString(),
-            segments,
-            interactions: existingContact?.interactions || [],
-        };
-
-        upsertDocument(id, updatedContact);
-        setIsEditing(null);
-        setFormData({});
     };
 
     const addInteraction = (contactId: string) => {
-        const contact = contacts.find(c => c.id === contactId);
-        const content = (newInteraction.content || "").trim();
-        if (contact && content) {
+        try {
+            const validationResult = interactionSchema.safeParse(newInteraction);
+            if (!validationResult.success) return;
+
+            const contact = contacts.find(c => c.id === contactId);
+            if (!contact) return;
+
             const interaction: Interaction = {
                 id: crypto.randomUUID(),
-                type: newInteraction.type as Interaction["type"],
-                content: moderateContent(content),
+                type: validationResult.data.type,
+                content: validationResult.data.content,
                 createdAt: new Date().toISOString()
             };
 
-            const updatedContact = {
+            const updatedContact: Contact = {
                 ...contact,
                 interactions: [interaction, ...(contact.interactions || [])],
                 lastContacted: interaction.createdAt
@@ -123,11 +189,13 @@ export function CRMApp() {
             upsertDocument(contactId, updatedContact);
             setViewingContact(updatedContact);
             setNewInteraction({ type: "note", content: "" });
+        } catch (error) {
+            console.error("Failed to add interaction:", error);
         }
     };
 
     return (
-        <div className="space-y-6 max-w-full">
+        <div className="space-y-6 max-w-full" aria-hidden={viewingContact ? "true" : "false"}>
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">CRM Pro</h2>
@@ -161,7 +229,6 @@ export function CRMApp() {
                             <input
                                 id="firstName"
                                 type="text"
-                                title="First Name"
                                 value={formData.firstName || ""}
                                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.firstName ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
@@ -173,7 +240,6 @@ export function CRMApp() {
                             <input
                                 id="lastName"
                                 type="text"
-                                title="Last Name"
                                 value={formData.lastName || ""}
                                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.lastName ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
@@ -185,7 +251,6 @@ export function CRMApp() {
                             <input
                                 id="email"
                                 type="email"
-                                title="Email Address"
                                 value={formData.email || ""}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.email ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
@@ -197,7 +262,6 @@ export function CRMApp() {
                             <input
                                 id="phone"
                                 type="text"
-                                title="Phone Number"
                                 value={formData.phone || ""}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                 className={`mt-1 block w-full rounded-md border ${formErrors.phone ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
@@ -209,7 +273,6 @@ export function CRMApp() {
                             <input
                                 id="segments"
                                 type="text"
-                                title="Segments"
                                 placeholder="Volunteer, Donor, Mental Health Support"
                                 value={formData.segments?.join(", ") || ""}
                                 onChange={(e) => setFormData({ ...formData, segments: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
@@ -240,11 +303,17 @@ export function CRMApp() {
             )}
 
             {viewingContact && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation">
+                    <div 
+                        ref={modalRef}
+                        className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="modal-title"
+                    >
                         <div className="mb-4 flex items-center justify-between border-b pb-4">
-                            <h3 className="text-xl font-bold truncate">
-                                {moderateContent(viewingContact.firstName)} {moderateContent(viewingContact.lastName)}
+                            <h3 id="modal-title" className="text-xl font-bold truncate">
+                                {moderateText(viewingContact.firstName)} {moderateText(viewingContact.lastName)}
                             </h3>
                             <button
                                 type="button"
@@ -258,14 +327,14 @@ export function CRMApp() {
                         </div>
 
                         <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
-                            <div className="truncate"><span className="font-semibold">Email:</span> {moderateContent(viewingContact.email)}</div>
-                            <div className="truncate"><span className="font-semibold">Phone:</span> {moderateContent(viewingContact.phone)}</div>
+                            <div className="truncate"><span className="font-semibold">Email:</span> {moderateText(viewingContact.email)}</div>
+                            <div className="truncate"><span className="font-semibold">Phone:</span> {moderateText(viewingContact.phone)}</div>
                             <div className="col-span-2">
                                 <span className="font-semibold">Segments:</span>
                                 <div className="mt-1 flex flex-wrap gap-1">
                                     {viewingContact.segments?.map((s, idx) => (
                                         <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                            {moderateContent(s)}
+                                            {moderateText(s)}
                                         </span>
                                     ))}
                                 </div>
@@ -279,7 +348,6 @@ export function CRMApp() {
                                 <select
                                     id="interaction-type"
                                     className="rounded border p-2 text-sm dark:bg-gray-700"
-                                    title="Interaction Type"
                                     value={newInteraction.type}
                                     onChange={e => setNewInteraction({ ...newInteraction, type: e.target.value })}
                                 >
@@ -310,10 +378,10 @@ export function CRMApp() {
                                 {viewingContact.interactions?.map(i => (
                                     <div key={i.id} className="rounded border bg-gray-50 p-3 text-sm dark:bg-gray-900/50">
                                         <div className="mb-1 flex justify-between text-[10px] text-gray-500">
-                                            <span className="uppercase font-bold">{i.type}</span>
+                                            <span className="uppercase font-bold">{moderateText(i.type)}</span>
                                             <span>{new Date(i.createdAt).toLocaleString()}</span>
                                         </div>
-                                        <p className="line-clamp-3">{moderateContent(i.content)}</p>
+                                        <p className="line-clamp-3">{moderateText(i.content)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -326,10 +394,10 @@ export function CRMApp() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-900/50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Segments</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Segments</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
@@ -348,15 +416,15 @@ export function CRMApp() {
                                             onClick={() => setViewingContact(contact)}
                                             className="block max-w-[12rem] truncate text-left font-medium text-gray-900 hover:underline dark:text-white"
                                         >
-                                            {moderateContent(contact.firstName)} {moderateContent(contact.lastName)}
+                                            {moderateText(contact.firstName)} {moderateText(contact.lastName)}
                                         </button>
-                                        <div className="max-w-[14rem] truncate text-xs text-gray-500">{moderateContent(contact.email)}</div>
+                                        <div className="max-w-[14rem] truncate text-xs text-gray-500">{moderateText(contact.email)}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-wrap gap-1">
                                             {contact.segments?.map((s, idx) => (
                                                 <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                                    {moderateContent(s)}
+                                                    {moderateText(s)}
                                                 </span>
                                             ))}
                                         </div>

@@ -1,23 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { moderateContent } from "@/lib/utils/moderation";
 
 /**
- * Hook for content moderation.
+ * Hook for content moderation. 
  * Utilises the shared moderation pipeline to ensure data safety.
+ * @param content - Raw content string to moderate
+ * @returns Object containing moderatedContent: string and isLoading: boolean
  */
 export function useModeration(content: string) {
-    const [moderatedContent, setModeratedContent] = useState(content);
-    const [isLoading, setIsLoading] = useState(false);
+    // Compute moderated content synchronously via useMemo to avoid hydration flashes
+    // and misleading loading states for purely synchronous logic.
+    const moderatedContent = useMemo(() => moderateContent(content), [content]);
 
-    useEffect(() => {
-        setIsLoading(true);
-        // We can make this async if we ever use an external API
-        const result = moderateContent(content);
-        setModeratedContent(result);
-        setIsLoading(false);
-    }, [content]);
-
-    return { moderatedContent, isLoading };
+    return { moderatedContent, isLoading: false };
 }

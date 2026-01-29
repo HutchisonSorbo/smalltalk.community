@@ -1353,8 +1353,8 @@ export const userBadges = pgTable("user_badges", {
   evidenceUrl: varchar("evidence_url"),
   isPublic: boolean("is_public").default(true),
 }, (table) => [
-  pgPolicy("user_badges_read", { for: "select", to: "public", using: sql`is_public = true or userId = ( (select auth.uid()) )::text` }),
-  pgPolicy("user_badges_self_update", { for: "update", to: "authenticated", using: sql`userId = ( (select auth.uid()) )::text` }),
+  pgPolicy("user_badges_read", { for: "select", to: "public", using: sql`${table.isPublic} = true or ${table.userId} = ( (select auth.uid()) )::text` }),
+  pgPolicy("user_badges_self_update", { for: "update", to: "authenticated", using: sql`${table.userId} = ( (select auth.uid()) )::text` }),
   index("user_badges_user_idx").on(table.userId),
   index("user_badges_badge_idx").on(table.badgeId),
 ]);
@@ -1383,8 +1383,8 @@ export const portfolioItems = pgTable("portfolio_items", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  pgPolicy("portfolio_public_read", { for: "select", to: "public", using: sql`is_public = true or userId = ( (select auth.uid()) )::text` }),
-  pgPolicy("portfolio_self_all", { for: "all", to: "authenticated", using: sql`userId = ( (select auth.uid()) )::text` }),
+  pgPolicy("portfolio_public_read", { for: "select", to: "public", using: sql`${table.isPublic} = true or ${table.userId} = ( (select auth.uid()) )::text` }),
+  pgPolicy("portfolio_self_all", { for: "all", to: "authenticated", using: sql`${table.userId} = ( (select auth.uid()) )::text`, withCheck: sql`${table.userId} = ( (select auth.uid()) )::text` }),
   index("portfolio_user_idx").on(table.userId),
 ]);
 

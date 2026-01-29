@@ -83,8 +83,8 @@ const eventSchema = z.array(z.object({
 
 const vcssSchema = z.array(z.object({
     id: z.number(),
-    title: z.string(),
-    description: z.string(),
+    title: z.string().transform(sanitizeText),
+    description: z.string().transform(sanitizeText),
     completed: z.boolean()
 })).max(11);
 
