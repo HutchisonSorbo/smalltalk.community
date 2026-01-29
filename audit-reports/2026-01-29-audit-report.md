@@ -9,6 +9,7 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 
 **Key Actions**:
 - Verified Next.js/React versions are patched against recent CVEs.
+- Updated Next.js version references in `next.config.mjs` comments to match the installed version (`16.1.5`).
 - Confirmed correct Google GenAI SDK usage.
 - Enabled AVIF image format in `next.config.mjs` for improved compression and performance in regional areas.
 - Verified strict age gating (13+) and privacy defaults for minors.
@@ -24,7 +25,7 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 | Security & Supply Chain | ✅ Pass | SDK correct, Secrets safe, Next.js patched. |
 | Regulatory & Safety | ✅ Pass | Age limits enforced, Privacy defaults correct. |
 | Accessibility | ✅ Pass | `next/image` used, accessibility providers present. |
-| Performance | ✅ Pass | AVIF format enabled for regional bandwidth optimization. |
+| Performance | ✅ Pass | AVIF format enabled for regional bandwidth optimisation. |
 
 ---
 
@@ -32,7 +33,7 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 
 ### 3.1 Security & Supply Chain
 
-- **Next.js Version**: `16.1.5` (Safe). Patched against CVE-2026-23864.
+- **Next.js Version**: `16.1.5` (Safe). Patched against CVE-2026-23864. Configuration comments have been updated to reflect this version.
 - **SDK Compliance**: `@google/genai` is used correctly in `lib/ai-config.ts`. `@google/generative-ai` is not present in dependencies.
 - **Secrets**: No exposed `NEXT_PUBLIC_` secrets detected.
 - **Supabase RLS**: RLS policies are defined in `shared/schema.ts` for all tables.
@@ -53,7 +54,8 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 
 This PR (`audit-fix`) includes:
 1.  **Configuration**: Enabled AVIF image format in `next.config.mjs`.
-2.  **Documentation**: This audit report.
+2.  **Configuration**: Updated Next.js version reference in `next.config.mjs` comments for accuracy.
+3.  **Documentation**: This audit report.
 
 ---
 
