@@ -1,35 +1,24 @@
-# GrepAI Integration Summary
+# Finish - Fix Production Build Error
 
-## Overview
+## Summary of Changes
 
-Successfully integrated GrepAI configuration and helper scripts into the repository to enable semantic code search and call graph analysis.
+### volunteer-passport
 
-## Changes
+- [MODIFY] [profile-actions.ts](app/volunteer-passport/actions/profile-actions.ts)
+  - Corrected import path for `createClient` from `@/lib/supabase/server` to `@/lib/supabase-server`.
 
-- **Scripts**:
-  - Added `scripts/setup-grepai.sh` to facilitate local binary installation (sudo-free).
-  - Added Ollama and embedding model health checks.
-- **Config**:
-  - Created `.grepai/config.yaml` with Ollama as default provider and sensible ignore rules.
-  - Configured storage to use local GOB file.
-- **Git**: Updated `.gitignore` to exclude `.grepai` index and local binaries.
-- **Documentation**: Updated `DEVELOPMENT_STANDARDS.md` with usage instructions.
-- **Workflows**: Updated `brainstorm`, `write-plan`, and `execute-plan` workflows to utilize GrepAI.
+## Verification Results
 
-## Verification
+### Automated Tests
 
-- **Verified**:
-  - Script downloads and installs `grepai` binary correctly.
-  - `grepai version` confirmed as valid command.
-  - Script detects `ollama` status and provides installation guidance.
-  - `grepai status` recognizes the project (Provider: Ollama).
+- **Command**: `npm run build`
+- **Result**: PASS (Build created successfully).
+- **Note**: `npm run typecheck` fails due to a pre-existing, unrelated error in `tests/unit/lib/tenant-context.test.ts`. This error does not block the production build as per current CI/CD outcomes, but the import fix itself resolves the primary blocker.
 
-## Gemini & Ollama Setup
+## Follow-ups
 
-- **Gemini**: Can be used via OpenAI-compatible endpoint. Set `provider: openai` and `endpoint: https://generativelanguage.googleapis.com/v1beta/openai` in `.grepai/config.yaml`.
-- **Ollama**: Installer (`curl -fsSL https://ollama.com/install.sh | sh`) automatically sets up a `systemd` service for persistence across reboots.
+- Address the `vcssStatus` property mismatch in `tests/unit/lib/tenant-context.test.ts` to restore green `typecheck`.
 
-## Actions
+## Manual Validation
 
-- Merged PR #114 (will be updated with fix commits).
-- Developers can run `./scripts/setup-grepai.sh` -> `./bin/grepai watch` to start indexing.
+- N/A (Build verification is sufficient for this infrastructure fix).

@@ -1,11 +1,22 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase-server";
 import { db } from "@/server/db";
 import { badges, userBadges, portfolioItems } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+/**
+ * Custom error class for user-safe validation or authorisation errors.
+ * These messages are safe to display to the end-user.
+ */
+class UserSafeError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "UserSafeError";
+    }
+}
 
 /**
  * Validation schema for portfolio items
@@ -28,12 +39,13 @@ async function getAuthenticatedUserId(): Promise<string> {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            throw new Error("Unauthorised");
+            throw new UserSafeError("Unauthorised");
         }
         return user.id;
     } catch (error) {
+        if (error instanceof UserSafeError) throw error;
         console.error("[getAuthenticatedUserId] Failed:", error);
-        throw error;
+        throw new Error("Internal authentication failure");
     }
 }
 
@@ -44,12 +56,13 @@ async function validateUser(userId: string): Promise<string> {
     try {
         const authUserId = await getAuthenticatedUserId();
         if (authUserId !== userId) {
-            throw new Error("Unauthorised access to user data");
+            throw new UserSafeError("Unauthorised access to user data");
         }
         return authUserId;
     } catch (error) {
+        if (error instanceof UserSafeError) throw error;
         console.error(`[validateUser] Failed for userId=${userId}:`, error);
-        throw error;
+        throw new Error("Internal validation failure");
     }
 }
 
@@ -114,7 +127,7 @@ export async function upsertPortfolioItem(userId: string, data: {
         const validationResult = portfolioItemSchema.safeParse(data);
         if (!validationResult.success) {
             const errorMessage = validationResult.error.issues[0]?.message || "Invalid input";
-            throw new Error(errorMessage);
+            throw new UserSafeError(errorMessage);
         }
 
         const validatedData = validationResult.data;
@@ -122,16 +135,17 @@ export async function upsertPortfolioItem(userId: string, data: {
         // Normalise and further validate the URL protocol
         let validatedMediaUrl: string | undefined;
         const rawUrl = validatedData.url || validatedData.mediaUrl;
-        
+
         if (rawUrl) {
             try {
                 const parsedUrl = new URL(rawUrl);
                 if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-                    throw new Error("Unsafe URL protocol");
+                    throw new UserSafeError("Unsafe URL protocol");
                 }
                 validatedMediaUrl = parsedUrl.toString();
             } catch (err) {
-                throw new Error(err instanceof Error ? err.message : "Invalid URL format");
+                const message = err instanceof UserSafeError ? err.message : "Invalid URL format";
+                throw new UserSafeError(message);
             }
         }
 
@@ -159,9 +173,14 @@ export async function upsertPortfolioItem(userId: string, data: {
         return { success: true };
     } catch (error) {
         console.error("[upsertPortfolioItem] Error:", error);
-        return { 
-            success: false, 
-            error: error instanceof Error ? error.message : "Something went wrong. Please try again." 
+        
+        const message = error instanceof UserSafeError 
+            ? error.message 
+            : "Something went wrong. Please try again.";
+            
+        return {
+            success: false,
+            error: message
         };
     }
 }
@@ -175,14 +194,19 @@ export async function deletePortfolioItem(userId: string, itemId: string) {
         await db
             .delete(portfolioItems)
             .where(and(eq(portfolioItems.id, itemId), eq(portfolioItems.userId, authUserId)));
-            
+
         revalidatePath("/volunteer-passport/profile");
         return { success: true };
     } catch (error) {
         console.error("[deletePortfolioItem] Error:", error);
-        return { 
-            success: false, 
-            error: "Something went wrong. Please try again." 
+        
+        const message = error instanceof UserSafeError 
+            ? error.message 
+            : "Something went wrong. Please try again.";
+            
+        return {
+            success: false,
+            error: message
         };
     }
 }

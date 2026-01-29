@@ -4,7 +4,7 @@ embedder:
     model: nomic-embed-text
     endpoint: http://localhost:11434
     dimensions: 768
-    parallelism: 0
+    parallelism: 4
 store:
     backend: gob
 chunking:
@@ -12,6 +12,7 @@ chunking:
     overlap: 50
 watch:
     debounce_ms: 500
+    last_index_time: 2026-01-29T21:19:39.556286959+11:00
 search:
     boost:
         enabled: true
