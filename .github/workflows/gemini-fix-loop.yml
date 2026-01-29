@@ -36,7 +36,7 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' ||
       (github.event.review.user.login == 'coderabbitai[bot]' &&
-       github.event.review.state == 'commented' && 
+       contains(fromJSON('["commented","changes_requested","approved"]'), github.event.review.state) && 
        github.event.pull_request.head.repo.full_name == github.repository)
     steps:
       - name: Checkout repository

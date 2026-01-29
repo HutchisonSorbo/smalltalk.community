@@ -65,7 +65,7 @@ export function loadConfig(): Config {
  * @returns {string} The collected project context.
  */
 function loadProjectContext(config: Config): string {
-    const files = ['CLAUDE.md', 'DEVELOPMENT_STANDARDS.md'];
+    const files = ['CLAUDE.md', 'DEVELOPMENT_STANDARDS.md', 'INCIDENT_RESPONSE.md'];
     let context = '';
     for (const file of files) {
         const filePath = path.resolve(config.repoRoot, file);
