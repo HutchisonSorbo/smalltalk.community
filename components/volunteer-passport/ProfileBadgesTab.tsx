@@ -6,13 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Award, Search, Info } from "lucide-react";
 import { getUserBadges } from "@/app/volunteer-passport/actions/profile-actions";
 import { safeUrl } from "@/lib/utils";
+import { moderateText } from "@/lib/moderation";
 
 /**
- * Moderate user-generated content for display safety.
+ * Normalises and moderates user-generated content for display safety.
  */
-const moderateContent = (text: string | null | undefined): string => {
+const getModeratedContent = (text: string | null | undefined): string => {
     if (!text) return "";
-    return text.trim();
+    try {
+        const moderated = moderateText(text);
+        return moderated.trim();
+    } catch (error) {
+        console.error("[ProfileBadgesTab] Moderation error:", error);
+        return text.trim();
+    }
 };
 
 function BadgesHeader({ searchQuery, setSearchQuery }: { searchQuery: string, setSearchQuery: (val: string) => void }) {
@@ -49,8 +56,8 @@ function EmptyBadgesPlaceholder() {
 
 function BadgeCard({ badge, onViewCriteria }: { badge: any, onViewCriteria: (badge: any) => void }) {
     const sanitizedImageUrl = badge.imageUrl ? safeUrl(badge.imageUrl) : null;
-    const moderatedName = moderateContent(badge.name);
-    const moderatedDescription = moderateContent(badge.description);
+    const moderatedName = getModeratedContent(badge.name);
+    const moderatedDescription = getModeratedContent(badge.description);
 
     return (
         <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -122,7 +129,7 @@ export function ProfileBadgesTab({ userId }: { userId: string }) {
         badge.description?.toLowerCase().includes(normalisedQuery)
     );
 
-    if (isLoading) return <div className="p-12 text-center animate-pulse" role="status">Loading badges...</div>;
+    if (isLoading) return <output className="p-12 text-center animate-pulse block w-full">Loading badges...</output>;
 
     return (
         <div className="space-y-6 max-w-full">

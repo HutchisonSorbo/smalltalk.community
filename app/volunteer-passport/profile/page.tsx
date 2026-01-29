@@ -78,7 +78,7 @@ export default async function VolunteerProfilePage() {
 
     if (!profile?.user?.id) {
         return (
-            <output className="p-8 text-center block w-full" role="status" aria-live="polite">
+            <output className="p-8 text-center block w-full" aria-live="polite">
                 <p>Please complete your profile setup to continue.</p>
             </output>
         );

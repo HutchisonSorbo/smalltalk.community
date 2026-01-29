@@ -30,6 +30,77 @@ const INITIAL_STANDARDS: VCSSStandard[] = [
     { id: 11, title: "Standard 11: Implementation of Child Safety Policy", description: "Policies and procedures document how the organisation is safe for children and young people.", completed: false },
 ];
 
+function SafeguardingHeader({ moderatedTenantName }: { moderatedTenantName: string }) {
+    return (
+        <div className="flex items-center justify-between">
+            <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Shield className="h-6 w-6 text-primary" aria-hidden="true" />
+                    Safeguarding Centre
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                    Manage Victorian Child Safe Standards (VCSS) compliance for {moderatedTenantName}.
+                </p>
+            </div>
+        </div>
+    );
+}
+
+function SafeguardingProgress({ progress }: { progress: number }) {
+    return (
+        <Card className="border-primary/20 bg-primary/5">
+            <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center justify-between">
+                    Overall Compliance Progress
+                    <span className="text-primary">{progress}%</span>
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Progress value={progress} className="h-2" aria-label="Overall compliance progress" />
+                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <Info className="h-3 w-3" aria-hidden="true" />
+                    Complete all 11 standards to achieve full compliance certification.
+                </p>
+            </CardContent>
+        </Card>
+    );
+}
+
+function StandardsList({ standards, onToggle }: { standards: VCSSStandard[], onToggle: (id: number) => void }) {
+    return (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {standards.map((standard) => (
+                <Card key={standard.id} className={`transition-colors ${standard.completed ? 'border-green-200 bg-green-50/30' : 'border-gray-200'}`}>
+                    <CardHeader className="p-4 flex flex-row items-start gap-4 space-y-0">
+                        <Checkbox
+                            id={`std-${standard.id}`}
+                            checked={standard.completed}
+                            onCheckedChange={() => onToggle(standard.id)}
+                            className="mt-1"
+                        />
+                        <div className="space-y-1">
+                            <label
+                                htmlFor={`std-${standard.id}`}
+                                className="text-sm font-semibold leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                {standard.title}
+                            </label>
+                            <CardDescription className="text-xs">
+                                {standard.description}
+                            </CardDescription>
+                        </div>
+                        {standard.completed ? (
+                            <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" aria-hidden="true" />
+                        ) : (
+                            <AlertCircle className="h-5 w-5 text-yellow-500 ml-auto shrink-0" aria-hidden="true" />
+                        )}
+                    </CardHeader>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
 export function SafeguardingCentre() {
     const { tenant, isLoading: isTenantLoading } = useTenant();
     const { moderatedContent: moderatedTenantName, isLoading: isModerationLoading } = useModeration(tenant?.name || "");
@@ -52,10 +123,12 @@ export function SafeguardingCentre() {
     }, [tenant]);
 
     if (isTenantLoading || (tenant && isModerationLoading)) {
-        return <div className="p-4 space-y-4">
-            <div className="h-8 w-64 bg-gray-200 animate-pulse rounded" />
-            <div className="h-32 w-full bg-gray-100 animate-pulse rounded" />
-        </div>;
+        return (
+            <div className="p-4 space-y-4">
+                <div className="h-8 w-64 bg-gray-200 animate-pulse rounded" />
+                <div className="h-32 w-full bg-gray-100 animate-pulse rounded" />
+            </div>
+        );
     }
 
     if (!tenant) {
@@ -70,78 +143,30 @@ export function SafeguardingCentre() {
     const progress = Math.round((completedCount / standards.length) * 100);
 
     const toggleStandard = async (id: number) => {
+        const previousStandards = [...standards];
         const updatedStandards = standards.map(s => s.id === id ? { ...s, completed: !s.completed } : s);
+        
         setStandards(updatedStandards);
 
         if (tenant?.id) {
             try {
                 await saveVCSSStatus(tenant.id, updatedStandards);
             } catch (error) {
-                console.error("Failed to persist VCSS progress:", error);
+                console.error("Failed to persist VCSS progress", { 
+                    tenantId: tenant.id, 
+                    standardId: id, 
+                    error 
+                });
+                setStandards(previousStandards);
             }
         }
     };
 
     return (
         <div className="space-y-6 max-w-full">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Shield className="h-6 w-6 text-primary" aria-hidden="true" />
-                        Safeguarding Centre
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Manage Victorian Child Safe Standards (VCSS) compliance for {moderatedTenantName}.
-                    </p>
-                </div>
-            </div>
-
-            <Card className="border-primary/20 bg-primary/5">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center justify-between">
-                        Overall Compliance Progress
-                        <span className="text-primary">{progress}%</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Progress value={progress} className="h-2" aria-label="Overall compliance progress" />
-                    <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                        <Info className="h-3 w-3" aria-hidden="true" />
-                        Complete all 11 standards to achieve full compliance certification.
-                    </p>
-                </CardContent>
-            </Card>
-
-            <div className="grid gap-4">
-                {standards.map((standard) => (
-                    <Card key={standard.id} className={`transition-colors ${standard.completed ? 'border-green-200 bg-green-50/30' : 'border-gray-200'}`}>
-                        <CardHeader className="p-4 flex flex-row items-start gap-4 space-y-0">
-                            <Checkbox
-                                id={`std-${standard.id}`}
-                                checked={standard.completed}
-                                onCheckedChange={() => toggleStandard(standard.id)}
-                                className="mt-1"
-                            />
-                            <div className="space-y-1">
-                                <label
-                                    htmlFor={`std-${standard.id}`}
-                                    className="text-sm font-semibold leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                    {standard.title}
-                                </label>
-                                <CardDescription className="text-xs">
-                                    {standard.description}
-                                </CardDescription>
-                            </div>
-                            {standard.completed ? (
-                                <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" aria-hidden="true" />
-                            ) : (
-                                <AlertCircle className="h-5 w-5 text-yellow-500 ml-auto shrink-0" aria-hidden="true" />
-                            )}
-                        </CardHeader>
-                    </Card>
-                ))}
-            </div>
+            <SafeguardingHeader moderatedTenantName={moderatedTenantName} />
+            <SafeguardingProgress progress={progress} />
+            <StandardsList standards={standards} onToggle={toggleStandard} />
         </div>
     );
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase-server";
+import { createClient } from "@/lib/supabase/server";
 import { db } from "@/server/db";
 import { badges, userBadges, portfolioItems } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -16,7 +16,7 @@ async function getAuthenticatedUserId(): Promise<string> {
         if (!user) throw new Error("Unauthorised");
         return user.id;
     } catch (error) {
-        console.error("[getAuthenticatedUserId] Error:", error);
+        console.error("[getAuthenticatedUserId] Failed:", error);
         throw error;
     }
 }
@@ -32,7 +32,7 @@ async function validateUser(userId: string): Promise<string> {
         }
         return authUserId;
     } catch (error) {
-        console.error(`[validateUser] Error for userId=${userId}:`, error);
+        console.error(`[validateUser] Failed for userId=${userId}:`, error);
         throw error;
     }
 }
@@ -92,6 +92,8 @@ export async function upsertPortfolioItem(userId: string, data: {
     mediaUrl?: string;
 }) {
     try {
+        const authUserId = await validateUser(userId);
+
         // Input validation and sanitisation
         const title = data.title?.trim();
         if (!title) throw new Error("Title is required");
@@ -104,6 +106,7 @@ export async function upsertPortfolioItem(userId: string, data: {
         if (!allowedTypes.has(data.type)) throw new Error("Invalid media type");
 
         let validatedMediaUrl: string | undefined;
+        // Normalise and validate the URL
         const rawUrl = data.url || data.mediaUrl;
         if (rawUrl) {
             try {
@@ -136,6 +139,7 @@ export async function upsertPortfolioItem(userId: string, data: {
                 userId: authUserId,
             });
         }
+
         revalidatePath("/volunteer-passport/profile");
         return { success: true };
     } catch (error) {
@@ -153,6 +157,7 @@ export async function deletePortfolioItem(userId: string, itemId: string) {
         await db
             .delete(portfolioItems)
             .where(and(eq(portfolioItems.id, itemId), eq(portfolioItems.userId, authUserId)));
+            
         revalidatePath("/volunteer-passport/profile");
         return { success: true };
     } catch (error) {

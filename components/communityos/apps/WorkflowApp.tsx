@@ -83,6 +83,7 @@ export function WorkflowApp() {
                 });
                 setWorkflowError(null);
             } catch (err) {
+                console.error(`[WorkflowApp] Failed to save workflow "${name}":`, err);
                 setWorkflowError("Failed to save the workflow. Please try again.");
             }
         } else {
@@ -98,6 +99,7 @@ export function WorkflowApp() {
             });
             setWorkflowError(null);
         } catch (err) {
+            console.error(`[WorkflowApp] Failed to toggle workflow status for "${workflow.name}" (${workflow.id}):`, err);
             setWorkflowError("Failed to update workflow status.");
         }
     };
@@ -107,6 +109,7 @@ export function WorkflowApp() {
             await deleteDocument(id);
             setWorkflowError(null);
         } catch (err) {
+            console.error(`[WorkflowApp] Failed to delete workflow ${id}:`, err);
             setWorkflowError("Failed to delete the workflow.");
         }
     };
@@ -243,7 +246,7 @@ export function WorkflowApp() {
                                         <Switch
                                             checked={workflow.isActive}
                                             onCheckedChange={() => toggleWorkflow(workflow)}
-                                            aria-label={`Toggle ${moderatedName}`}
+                                            aria-label={`Toggle status for ${moderatedName}`}
                                         />
                                         <button
                                             type="button"

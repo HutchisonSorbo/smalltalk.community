@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { TrendingUp, Users, Clock, Award, Filter } from "lucide-react";
+import { moderateContent } from "@/lib/utils/moderation";
 
 const DATA_PARTICIPATION = [
     { month: "Jan", baseline: 45, growth: 12 },
@@ -23,18 +25,6 @@ const DATA_SKILLS = [
 ];
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#ec4899"];
-
-function moderateText(text: string): string {
-    if (!text) return "";
-    // Truncate to prevent layout break, then apply simple sanitisation
-    const truncated = text.length > 50 ? `${text.substring(0, 50)}...` : text;
-    const flaggedWords = [/badword/gi];
-    let moderated = truncated;
-    flaggedWords.forEach(pattern => {
-        moderated = moderated.replace(pattern, "[sanitised]");
-    });
-    return moderated;
-}
 
 function LoadingState() {
     return (
@@ -57,7 +47,22 @@ function ErrorState() {
 }
 
 function ImpactHeader({ name }: { name: string }) {
-    const moderatedName = moderateText(name);
+    const [moderatedName, setModeratedName] = useState(name);
+
+    useEffect(() => {
+        let isMounted = true;
+        moderateContent(name)
+            .then((result) => {
+                if (isMounted) setModeratedName(result);
+            })
+            .catch(() => {
+                if (isMounted) setModeratedName("[Content unavailable]");
+            });
+        return () => {
+            isMounted = false;
+        };
+    }, [name]);
+
     return (
         <div className="flex items-center justify-between">
             <div>
@@ -90,7 +95,7 @@ function KPICards() {
     ];
 
     return (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {stats.map((stat, idx) => (
                 <Card key={idx}>
                     <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
@@ -116,7 +121,11 @@ function ChartsGrid() {
                     <CardDescription>Monthly engagement across all programs</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-80 w-full">
+                    <div
+                        className="h-80 w-full"
+                        role="img"
+                        aria-label="Bar chart showing monthly program participation growth comparing existing and new members"
+                    >
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={DATA_PARTICIPATION}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -137,7 +146,11 @@ function ChartsGrid() {
                     <CardDescription>Breakdown of skills gained by users</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-80 w-full">
+                    <div
+                        className="h-80 w-full"
+                        role="img"
+                        aria-label="Pie chart showing the percentage breakdown of top skills developed by community members"
+                    >
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie data={DATA_SKILLS} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">

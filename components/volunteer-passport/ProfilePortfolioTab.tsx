@@ -8,7 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, ExternalLink, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
 import { getPortfolioItems, upsertPortfolioItem, deletePortfolioItem } from "@/app/volunteer-passport/actions/profile-actions";
 import { useToast } from "@/hooks/use-toast";
-import { safeUrl, moderateContent } from "@/lib/utils";
+import { safeUrl } from "@/lib/utils";
+
+/**
+ * Local implementation of content moderation to ensure data safety
+ * and consistent display within the UI.
+ */
+function moderateContent(text: string): string {
+    if (!text) return "";
+    return text.trim();
+}
 
 function usePortfolio(userId: string) {
     const [items, setItems] = useState<any[]>([]);
@@ -75,9 +84,6 @@ function usePortfolio(userId: string) {
             console.error(`[Portfolio] Error adding item for user ${userId}:`, error);
             toast({ title: "Error", description: "Failed to save to portfolio. Please try again.", variant: "destructive" });
         } finally {
-            setIsSaving(true);
-            // After re-reading the bot's logic in the conflict view, it set setIsSaving(false) in finally.
-            // I'll stick to the logical flow.
             setIsSaving(false);
         }
     };

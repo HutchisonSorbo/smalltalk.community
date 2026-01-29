@@ -10,7 +10,7 @@
 
 1. **Date Verification**:
    - Run `date` in the terminal.
-   - Compare the system date with the provided threshold: {date} (format DD-MM-YYYY).
+   - Compare the system date with the provided threshold: **{date} (format DD-MM-YYYY)**.
    - If they do not match, flag the discrepancy in the Executive Summary but continue using the system date as the source of truth for the report.
    - Responses must treat non-DD-MM-YYYY inputs as invalid and convert/normalise them or flag them before using the system date.
 
@@ -85,6 +85,6 @@ Structure your final output as a clear Markdown report:
 ## Critical Reminders
 
 - Use **Australian English** strictly (e.g., utilise, prioritised, organisation).
-- Date format for {date} must always be DD-MM-YYYY.
+- Date format for **{date} (format DD-MM-YYYY)** must be strictly followed.
 - Never expose `SUPABASE_SERVICE_ROLE_KEY`.
 - If a teen safety issue is suspected, escalate to Child Safety Officer immediately without deleting data.
