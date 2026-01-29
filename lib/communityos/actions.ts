@@ -81,6 +81,13 @@ const eventSchema = z.array(z.object({
     url: z.string().url().optional().or(z.literal("")),
 })).max(100);
 
+const vcssSchema = z.array(z.object({
+    id: z.number(),
+    title: z.string().transform(sanitizeText),
+    description: z.string().transform(sanitizeText),
+    completed: z.boolean()
+})).max(11);
+
 const colorRegex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
 const socialLinkValue = z.string().regex(/^https?:\/\//, "Must be a valid HTTP/HTTPS URL").optional().nullable().or(z.literal(""));
@@ -394,5 +401,36 @@ export async function updateTenantEvents(
     } catch (err) {
         console.error(`[updateTenantEvents] database error for tenant ${tenantId}:`, err);
         return { success: false, error: "Failed to update upcoming events" };
+    }
+}
+
+/**
+ * Save Victorian Child Safe Standards (VCSS) status
+ */
+export async function saveVCSSStatus(
+    tenantId: string,
+    standards: any
+): Promise<ActionResult> {
+    const auth = await verifyAdmin(tenantId);
+    if (!auth.success) return auth;
+
+    const result = vcssSchema.safeParse(standards);
+    if (!result.success) {
+        return { success: false, error: "Validation failed: " + result.error.errors[0].message };
+    }
+
+    try {
+        await db.update(tenants)
+            .set({
+                vcssStatus: result.data,
+                updatedAt: new Date()
+            })
+            .where(eq(tenants.id, tenantId));
+
+        revalidatePath(`/communityos/${tenantId}/safeguarding`);
+        return { success: true, data: null };
+    } catch (err) {
+        console.error(`[saveVCSSStatus] database error for tenant ${tenantId}:`, err);
+        return { success: false, error: "Failed to save VCSS status" };
     }
 }

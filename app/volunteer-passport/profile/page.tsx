@@ -18,10 +18,14 @@ type ProfileTabsProps = {
     emailVerified: boolean;
 };
 
-function ProfileTabs({ initialData, userId, emailVerified }: ProfileTabsProps) {
+/**
+ * ProfileTabs handles the tabbed navigation for the volunteer profile.
+ * Extracted to maintain the 50-line limit for the main page component.
+ */
+export function ProfileTabs({ initialData, userId, emailVerified }: ProfileTabsProps) {
     return (
         <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:flex mb-8" aria-label="Profile navigation">
+            <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:flex mb-8">
                 <TabsTrigger value="profile" className="flex gap-2">
                     <User className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden sm:inline">Profile</span>
@@ -67,6 +71,10 @@ function ProfileTabs({ initialData, userId, emailVerified }: ProfileTabsProps) {
     );
 }
 
+/**
+ * VolunteerProfilePage is the main entry point for the volunteer passport profile.
+ * It fetches the profile data and handles the layout.
+ */
 export default async function VolunteerProfilePage() {
     let profile;
     try {
@@ -85,8 +93,6 @@ export default async function VolunteerProfilePage() {
     }
 
     const userId = profile.user.id;
-    const emailVerified = Boolean(profile.user.emailVerified);
-
     const initialData = {
         headline: profile.headline || "",
         bio: profile.bio || "",
@@ -101,10 +107,10 @@ export default async function VolunteerProfilePage() {
                 <p className="text-muted-foreground">Manage your digital identity, skills, and community impact.</p>
             </div>
 
-            <ProfileTabs 
-                initialData={initialData} 
-                userId={userId} 
-                emailVerified={emailVerified} 
+            <ProfileTabs
+                initialData={initialData}
+                userId={userId}
+                emailVerified={!!profile.user.emailVerified}
             />
         </div>
     );

@@ -1107,6 +1107,8 @@ export const organisations = pgTable("organisations", {
   website: varchar("website", { length: 255 }),
   logoUrl: varchar("logo_url"),
   isVerified: boolean("is_verified").default(false),
+  vcssStatus: jsonb("vcss_status").default([]), // Array of VCSSStandard objects
+  lastSafeguardingAudit: timestamp("last_safeguarding_audit"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -1318,6 +1320,84 @@ export const insertVolunteerApplicationSchema = createInsertSchema(volunteerAppl
 
 export type InsertVolunteerApplication = z.infer<typeof insertVolunteerApplicationSchema>;
 export type VolunteerApplication = typeof volunteerApplications.$inferSelect;
+
+// Badges (Open Badges Compatible)
+export const badges = pgTable("badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  imageUrl: varchar("image_url"),
+  issuerId: varchar("issuer_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  criteria: text("criteria"),
+  category: varchar("category", { length: 100 }), // 'skill', 'participation', 'achievement'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("badges_public_read", { for: "select", to: "public", using: sql`true` }),
+  index("badges_issuer_idx").on(table.issuerId),
+]);
+
+export const badgesRelations = relations(badges, ({ one, many }) => ({
+  issuer: one(organisations, {
+    fields: [badges.issuerId],
+    references: [organisations.id],
+  }),
+  userBadges: many(userBadges),
+}));
+
+export const userBadges = pgTable("user_badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  badgeId: varchar("badge_id").notNull().references(() => badges.id, { onDelete: "cascade" }),
+  awardedAt: timestamp("awarded_at").defaultNow(),
+  evidenceUrl: varchar("evidence_url"),
+  isPublic: boolean("is_public").default(true),
+}, (table) => [
+  pgPolicy("user_badges_read", { for: "select", to: "public", using: sql`${table.isPublic} = true or ${table.userId} = ( (select auth.uid()) )::text` }),
+  pgPolicy("user_badges_self_update", { for: "update", to: "authenticated", using: sql`${table.userId} = ( (select auth.uid()) )::text`, withCheck: sql`${table.userId} = ( (select auth.uid()) )::text` }),
+  index("user_badges_user_idx").on(table.userId),
+  index("user_badges_badge_idx").on(table.badgeId),
+]);
+
+export const userBadgesRelations = relations(userBadges, ({ one }) => ({
+  user: one(users, {
+    fields: [userBadges.userId],
+    references: [users.id],
+  }),
+  badge: one(badges, {
+    fields: [userBadges.badgeId],
+    references: [badges.id],
+  }),
+}));
+
+// Portfolio Items
+export const portfolioItems = pgTable("portfolio_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  mediaUrl: varchar("media_url"),
+  mediaType: varchar("media_type", { length: 50 }), // 'image', 'video', 'pdf', 'link'
+  isPublic: boolean("is_public").default(true),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  pgPolicy("portfolio_public_read", { for: "select", to: "public", using: sql`${table.isPublic} = true or ${table.userId} = ( (select auth.uid()) )::text` }),
+  pgPolicy("portfolio_self_all", { for: "all", to: "authenticated", using: sql`${table.userId} = ( (select auth.uid()) )::text`, withCheck: sql`${table.userId} = ( (select auth.uid()) )::text` }),
+  index("portfolio_user_idx").on(table.userId),
+]);
+
+export const portfolioItemsRelations = relations(portfolioItems, ({ one }) => ({
+  user: one(users, {
+    fields: [portfolioItems.userId],
+    references: [users.id],
+  }),
+}));
+
+export type Badge = typeof badges.$inferSelect;
+export type UserBadge = typeof userBadges.$inferSelect;
+export type PortfolioItem = typeof portfolioItems.$inferSelect;
 
 
 // ------------------------------------------------------------------
@@ -1571,6 +1651,7 @@ export const tenants = pgTable("tenants", {
   testimonials: jsonb("testimonials").$type<Testimonial[]>().default([]),
   ctaButtons: jsonb("cta_buttons").$type<CtaButton[]>().default([]),
   upcomingEvents: jsonb("upcoming_events").$type<UpcomingEvent[]>().default([]),
+  vcssStatus: jsonb("vcss_status").default([]), // Array of VCSSStandard objects
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

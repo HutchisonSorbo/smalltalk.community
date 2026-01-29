@@ -5,9 +5,28 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { z } from "zod";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+/**
+ * Validation Schemas
+ */
+const contactSchema = z.object({
+    firstName: z.string().min(1, "First name is required").trim(),
+    lastName: z.string().min(1, "Last name is required").trim(),
+    email: z.string().email("Please enter a valid email address").or(z.literal("")).transform(v => v.trim()),
+    phone: z.string().regex(/^[0-9+().\s-]{7,}$/, "Please enter a valid phone number").or(z.literal("")).transform(v => v.trim()),
+    status: z.enum(["active", "inactive", "pending"]),
+    segments: z.array(z.string()).optional(),
+});
+
+const interactionSchema = z.object({
+    type: z.enum(["note", "email", "call", "meeting"]),
+    content: z.string().min(1, "Interaction content cannot be empty").trim(),
+});
 
 interface Interaction {
     id: string;
@@ -29,12 +48,13 @@ interface Contact {
 }
 
 /**
- * Content moderation and sanitisation helper.
- * Applies HTML entity encoding and basic trimming.
+ * Robust text moderation and sanitisation helper.
+ * Implements basic HTML entity encoding and trimming.
  */
-const moderateText = (text: string): string => {
+const moderateText = (text: string | undefined): string => {
     if (!text) return "";
     const trimmed = text.trim();
+    // Encode HTML entities to prevent XSS (OWASP A05)
     return trimmed
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -45,7 +65,6 @@ const moderateText = (text: string): string => {
 
 export function CRMApp() {
     const { tenant, isLoading } = useTenant();
-    const modalRef = useRef<HTMLDivElement>(null);
 
     const { documents: contacts, upsertDocument, deleteDocument, isOnline } =
         useDittoSync<Contact>({
@@ -57,44 +76,12 @@ export function CRMApp() {
     const [viewingContact, setViewingContact] = useState<Contact | null>(null);
     const [formData, setFormData] = useState<Partial<Contact>>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-    const [newInteraction, setNewInteraction] = useState<{ type: string; content: string }>({
-        type: "note",
-        content: ""
-    });
+    const [newInteraction, setNewInteraction] = useState({ type: "note", content: "" });
 
-    // Focus trap logic for modal accessibility
-    useEffect(() => {
-        if (viewingContact && modalRef.current) {
-            const focusableElements = modalRef.current.querySelectorAll(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
-            const firstElement = focusableElements[0] as HTMLElement;
-            firstElement?.focus();
 
-            const handleKeyDown = (e: KeyboardEvent) => {
-                if (e.key !== "Tab") return;
-                const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-                if (e.shiftKey) {
-                    if (document.activeElement === firstElement) {
-                        lastElement.focus();
-                        e.preventDefault();
-                    }
-                } else {
-                    if (document.activeElement === lastElement) {
-                        firstElement.focus();
-                        e.preventDefault();
-                    }
-                }
-            };
-
-            document.addEventListener("keydown", handleKeyDown);
-            return () => document.removeEventListener("keydown", handleKeyDown);
-        }
-    }, [viewingContact]);
 
     if (isLoading) {
-        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" aria-hidden="true" /></div>;
+        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
     }
 
     if (!tenant) {
@@ -105,73 +92,62 @@ export function CRMApp() {
         );
     }
 
-    const handleSave = () => {
-        const firstName = (formData.firstName || "").trim();
-        const lastName = (formData.lastName || "").trim();
-        const email = (formData.email || "").trim();
-        const phone = (formData.phone || "").trim();
-        const segments = (formData.segments || []).map(s => s.trim()).filter(Boolean);
+    const handleSave = async () => {
+        try {
+            const validationResult = contactSchema.safeParse({
+                ...formData,
+                email: formData.email ?? "",
+                phone: formData.phone ?? "",
+                status: formData.status || "active",
+                segments: formData.segments || []
+            });
 
-        const errors: Record<string, string> = {};
-        if (!firstName || !lastName) {
-            errors.firstName = !firstName ? "First name is required" : "";
-            errors.lastName = !lastName ? "Last name is required" : "";
-            errors.general = "First and last name are required";
+            if (!validationResult.success) {
+                const errors: Record<string, string> = {};
+                validationResult.error.issues.forEach((issue) => {
+                    if (issue.path[0]) errors[issue.path[0] as string] = issue.message;
+                });
+                setFormErrors(errors);
+                return;
+            }
+
+            const validatedData = validationResult.data;
+            const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
+            const existingContact = contacts.find(c => c.id === id);
+
+            const updatedContact: Contact = {
+                id,
+                firstName: validatedData.firstName,
+                lastName: validatedData.lastName,
+                email: validatedData.email,
+                phone: validatedData.phone,
+                status: validatedData.status,
+                lastContacted: new Date().toISOString(),
+                segments: validatedData.segments,
+                interactions: existingContact?.interactions || [],
+            };
+
+            await upsertDocument(id, updatedContact);
+            setIsEditing(null);
+            setFormData({});
+            setFormErrors({});
+        } catch (error) {
+            console.error("Failed to save contact:", { contactId: isEditing, error });
         }
-        
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            errors.email = "Please enter a valid email address";
-        }
-        
-        if (phone && !/^[0-9+().\s-]{7,}$/.test(phone)) {
-            errors.phone = "Please enter a valid phone number";
-        }
-
-        if (Object.keys(errors).length > 0 && Object.values(errors).some(v => v !== "")) {
-            setFormErrors(errors);
-            return;
-        }
-
-        setFormErrors({});
-        const allowedStatuses = ["active", "inactive", "pending"] as const;
-        const status = allowedStatuses.includes(formData.status as any) 
-            ? (formData.status as "active" | "inactive" | "pending") 
-            : "active";
-
-        const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
-        const existingContact = contacts.find(c => c.id === id);
-
-        const contactData: Contact = {
-            id,
-            firstName,
-            lastName,
-            email,
-            phone,
-            status,
-            lastContacted: new Date().toISOString(),
-            segments,
-            interactions: existingContact?.interactions || [],
-        };
-
-        upsertDocument(id, contactData);
-        setIsEditing(null);
-        setFormData({});
     };
 
-    const addInteraction = (contactId: string) => {
-        const contact = contacts.find(c => c.id === contactId);
-        const content = newInteraction.content.trim();
-        
-        const allowedTypes = ["note", "email", "call", "meeting"] as const;
-        const interactionType = allowedTypes.includes(newInteraction.type as any)
-            ? (newInteraction.type as Interaction["type"])
-            : "note";
+    const addInteraction = async (contactId: string) => {
+        try {
+            const validationResult = interactionSchema.safeParse(newInteraction);
+            if (!validationResult.success) return;
 
-        if (contact && content) {
+            const contact = contacts.find(c => c.id === contactId);
+            if (!contact) return;
+
             const interaction: Interaction = {
                 id: crypto.randomUUID(),
-                type: interactionType,
-                content: content,
+                type: validationResult.data.type,
+                content: validationResult.data.content,
                 createdAt: new Date().toISOString()
             };
 
@@ -181,29 +157,31 @@ export function CRMApp() {
                 lastContacted: interaction.createdAt
             };
 
-            upsertDocument(contactId, updatedContact);
+            await upsertDocument(contactId, updatedContact);
             setViewingContact(updatedContact);
             setNewInteraction({ type: "note", content: "" });
+        } catch (error) {
+            console.error("Failed to add interaction:", { contactId, error });
         }
     };
 
     return (
-        <div className="space-y-6 max-w-full">
+        <div className="space-y-6 max-w-full" aria-hidden={viewingContact ? "true" : "false"}>
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">CRM</h2>
-                    <p className="text-gray-600 dark:text-gray-400">Manage your community contacts and relationships.</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">CRM Pro</h2>
+                    <p className="text-gray-600 dark:text-gray-400">Manage community relationships with interaction logs and segments.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-500"}`} aria-hidden="true" />
+                        <div className={`h-2 w-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-500"}`} />
                         <span className="text-xs text-gray-500">{isOnline ? "Online Syncing" : "Offline Mode"}</span>
                     </div>
                     <button
                         type="button"
                         onClick={() => {
                             setIsEditing("new");
-                            setFormData({ status: "active" });
+                            setFormData({ status: "active", segments: [] });
                             setFormErrors({});
                         }}
                         className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
@@ -216,75 +194,57 @@ export function CRMApp() {
             {isEditing && (
                 <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold">{isEditing === "new" ? "New Contact" : "Edit Contact"}</h3>
-                    {formErrors.general && <p className="mb-4 text-sm text-red-600" role="alert">{formErrors.general}</p>}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
                             <input
                                 id="firstName"
                                 type="text"
-                                title="First Name"
                                 value={formData.firstName || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, firstName: e.target.value });
-                                    if (formErrors.firstName || formErrors.general) setFormErrors({});
-                                }}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
+                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                className={`mt-1 block w-full rounded-md border ${formErrors.firstName ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
-                            {formErrors.firstName && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.firstName}</p>}
+                            {formErrors.firstName && <p className="mt-1 text-xs text-red-500">{formErrors.firstName}</p>}
                         </div>
                         <div>
                             <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
                             <input
                                 id="lastName"
                                 type="text"
-                                title="Last Name"
                                 value={formData.lastName || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, lastName: e.target.value });
-                                    if (formErrors.lastName || formErrors.general) setFormErrors({});
-                                }}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
+                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                className={`mt-1 block w-full rounded-md border ${formErrors.lastName ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
-                            {formErrors.lastName && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.lastName}</p>}
+                            {formErrors.lastName && <p className="mt-1 text-xs text-red-500">{formErrors.lastName}</p>}
                         </div>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                             <input
                                 id="email"
                                 type="email"
-                                title="Email Address"
                                 value={formData.email || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, email: e.target.value });
-                                    if (formErrors.email) setFormErrors({});
-                                }}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className={`mt-1 block w-full rounded-md border ${formErrors.email ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
-                            {formErrors.email && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.email}</p>}
+                            {formErrors.email && <p className="mt-1 text-xs text-red-500">{formErrors.email}</p>}
                         </div>
                         <div>
                             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
                             <input
                                 id="phone"
                                 type="text"
-                                title="Phone Number"
                                 value={formData.phone || ""}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, phone: e.target.value });
-                                    if (formErrors.phone) setFormErrors({});
-                                }}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                className={`mt-1 block w-full rounded-md border ${formErrors.phone ? "border-red-500" : "border-gray-300"} px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm`}
                             />
-                            {formErrors.phone && <p className="mt-1 text-xs text-red-600" role="alert">{formErrors.phone}</p>}
+                            {formErrors.phone && <p className="mt-1 text-xs text-red-500">{formErrors.phone}</p>}
                         </div>
                         <div className="sm:col-span-2">
                             <label htmlFor="segments" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Segments (comma separated)</label>
                             <input
                                 id="segments"
                                 type="text"
-                                title="Segments"
-                                placeholder="Volunteer, Donor, Support"
+                                placeholder="Volunteer, Donor, Mental Health Support"
                                 value={formData.segments?.join(", ") || ""}
                                 onChange={(e) => setFormData({ ...formData, segments: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
@@ -294,7 +254,10 @@ export function CRMApp() {
                     <div className="mt-6 flex justify-end gap-3">
                         <button
                             type="button"
-                            onClick={() => setIsEditing(null)}
+                            onClick={() => {
+                                setIsEditing(null);
+                                setFormErrors({});
+                            }}
                             className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                         >
                             Cancel
@@ -310,93 +273,87 @@ export function CRMApp() {
                 </div>
             )}
 
-            {viewingContact && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="view-contact-title">
-                    <div ref={modalRef} className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
-                        <div className="mb-4 flex items-center justify-between border-b pb-4">
-                            <h3 id="view-contact-title" className="text-xl font-bold truncate">
-                                {moderateText(viewingContact.firstName)} {moderateText(viewingContact.lastName)}
-                            </h3>
-                            <button
-                                type="button"
-                                aria-label="Close contact details"
-                                onClick={() => setViewingContact(null)}
-                                className="text-gray-500 hover:text-gray-700"
-                            >
-                                ✕
-                            </button>
-                        </div>
+            <Dialog open={!!viewingContact} onOpenChange={(open) => !open && setViewingContact(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {viewingContact && `${moderateText(viewingContact.firstName)} ${moderateText(viewingContact.lastName)}`}
+                        </DialogTitle>
+                    </DialogHeader>
 
-                        <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
-                            <div className="truncate"><span className="font-semibold">Email:</span> {moderateText(viewingContact.email)}</div>
-                            <div className="truncate"><span className="font-semibold">Phone:</span> {moderateText(viewingContact.phone)}</div>
-                            <div className="col-span-2">
-                                <span className="font-semibold">Segments:</span>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                    {viewingContact.segments?.map((s, idx) => (
-                                        <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                            {moderateText(s)}
-                                        </span>
+                    {viewingContact && (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="truncate"><span className="font-semibold">Email:</span> {moderateText(viewingContact.email)}</div>
+                                <div className="truncate"><span className="font-semibold">Phone:</span> {moderateText(viewingContact.phone)}</div>
+                                <div className="col-span-2">
+                                    <span className="font-semibold">Segments:</span>
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        {viewingContact.segments?.map((s, idx) => (
+                                            <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                {moderateText(s)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <h4 className="mb-3 font-semibold">Interaction Log</h4>
+                                <div className="mb-4 flex gap-2">
+                                    <label htmlFor="interaction-type" className="sr-only">Interaction type</label>
+                                    <select
+                                        id="interaction-type"
+                                        className="rounded border p-2 text-sm dark:bg-gray-700"
+                                        value={newInteraction.type}
+                                        onChange={e => setNewInteraction({ ...newInteraction, type: e.target.value })}
+                                    >
+                                        <option value="note">Note</option>
+                                        <option value="email">Email</option>
+                                        <option value="call">Call</option>
+                                        <option value="meeting">Meeting</option>
+                                    </select>
+                                    <label htmlFor="interaction-content" className="sr-only">Interaction details</label>
+                                    <input
+                                        id="interaction-content"
+                                        type="text"
+                                        className="flex-1 rounded border p-2 text-sm dark:bg-gray-700"
+                                        placeholder="Add a note or log an interaction..."
+                                        value={newInteraction.content}
+                                        onChange={e => setNewInteraction({ ...newInteraction, content: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => addInteraction(viewingContact.id)}
+                                        className="rounded bg-primary px-4 text-sm text-white"
+                                        aria-label="Log interaction"
+                                    >
+                                        Log
+                                    </button>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto space-y-3">
+                                    {viewingContact.interactions?.map(i => (
+                                        <div key={i.id} className="rounded border bg-gray-50 p-3 text-sm dark:bg-gray-900/50">
+                                            <div className="mb-1 flex justify-between text-[10px] text-gray-500">
+                                                <span className="uppercase font-bold">{moderateText(i.type)}</span>
+                                                <span>{new Date(i.createdAt).toLocaleString()}</span>
+                                            </div>
+                                            <p className="line-clamp-3">{moderateText(i.content)}</p>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-
-                        <div className="mb-4 border-t pt-4">
-                            <h4 className="mb-3 font-semibold">Interaction Log</h4>
-                            <div className="mb-4 flex gap-2">
-                                <label htmlFor="interaction-type" className="sr-only">Interaction type</label>
-                                <select
-                                    id="interaction-type"
-                                    className="rounded border p-2 text-sm dark:bg-gray-700"
-                                    title="Interaction Type"
-                                    value={newInteraction.type}
-                                    onChange={e => setNewInteraction({ ...newInteraction, type: e.target.value })}
-                                >
-                                    <option value="note">Note</option>
-                                    <option value="email">Email</option>
-                                    <option value="call">Call</option>
-                                    <option value="meeting">Meeting</option>
-                                </select>
-                                <label htmlFor="interaction-content" className="sr-only">Interaction details</label>
-                                <input
-                                    id="interaction-content"
-                                    type="text"
-                                    className="flex-1 rounded border p-2 text-sm dark:bg-gray-700"
-                                    placeholder="Add a note..."
-                                    value={newInteraction.content}
-                                    onChange={e => setNewInteraction({ ...newInteraction, content: e.target.value })}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => addInteraction(viewingContact.id)}
-                                    className="rounded bg-primary px-4 text-sm text-white"
-                                >
-                                    Log
-                                </button>
-                            </div>
-                            <div className="max-h-60 overflow-y-auto space-y-3">
-                                {viewingContact.interactions?.map(i => (
-                                    <div key={i.id} className="rounded border bg-gray-50 p-3 text-sm dark:bg-gray-900/50">
-                                        <div className="mb-1 flex justify-between text-[10px] text-gray-500">
-                                            <span className="uppercase font-bold">{i.type}</span>
-                                            <span>{new Date(i.createdAt).toLocaleString()}</span>
-                                        </div>
-                                        <p>{moderateText(i.content)}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <div className="overflow-x-auto rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-900/50">
                         <tr>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Segments</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                             <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
                         </tr>
@@ -411,17 +368,24 @@ export function CRMApp() {
                         ) : (
                             contacts.map((contact) => (
                                 <tr key={contact.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                    <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white">
+                                    <td className="whitespace-nowrap px-6 py-4">
                                         <button
                                             type="button"
                                             onClick={() => setViewingContact(contact)}
-                                            className="hover:underline text-left"
+                                            className="block max-w-[12rem] truncate text-left font-medium text-gray-900 hover:underline dark:text-white"
                                         >
                                             {moderateText(contact.firstName)} {moderateText(contact.lastName)}
                                         </button>
+                                        <div className="max-w-[14rem] truncate text-xs text-gray-500">{moderateText(contact.email)}</div>
                                     </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-gray-600 dark:text-gray-400">
-                                        {moderateText(contact.email)}
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-1">
+                                            {contact.segments?.map((s, idx) => (
+                                                <span key={`${s}-${idx}`} className="max-w-[8rem] truncate rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                    {moderateText(s)}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4">
                                         <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${contact.status === "active" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
@@ -445,7 +409,13 @@ export function CRMApp() {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => deleteDocument(contact.id)}
+                                            onClick={async () => {
+                                                try {
+                                                    await deleteDocument(contact.id);
+                                                } catch (error) {
+                                                    console.error("Failed to delete contact:", { contactId: contact.id, error });
+                                                }
+                                            }}
                                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                         >
                                             Delete

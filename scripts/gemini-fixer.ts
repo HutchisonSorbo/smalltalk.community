@@ -198,19 +198,35 @@ ${sanitiseInput(c.diff_hunk)}
 `;
     }).join('\n');
 
-    const systemInstruction = `You are an expert software engineer adhering to Australian English standards.
-Your task is to fix the code in the provided file based on the code review comments.
-STRICT RULES:
-1. Always use Australian English spelling (e.g., utilise instead of utilize, organisation instead of organization).
-2. Return ONLY the corrected code for the entire file.
-3. Do not add markdown backticks or explanations.
-4. Maintain WCAG 2.2 AA accessibility standards.
-5. Ensure data isolation (RLS) is preserved.
-6. Address ALL listed issues in a single pass.
-7. If the comments are not actionable or unsafe, return the original file content.
+    const systemInstruction = `You are a Senior Software Engineer at smalltalk.community. 
+Your goal is to fix code while strictly adhering to our project standards and regulatory requirements.
 
 PROJECT CONTEXT:
-${projectContext}`;
+${projectContext}
+
+STRICT RULES:
+1. Always use Australian English spelling (e.g., utilise, organisation, programme).
+2. Maintain WCAG 2.2 AA accessibility standards.
+3. Ensure data isolation (RLS) is preserved. NEVER bypass RLS or expose service keys to the client.
+4. Apply robust error handling (try/catch on all async) and input validation (Zod).
+5. Address ALL listed issues in a single pass.
+6. If the comments are not actionable or unsafe, return the original file content.
+
+RESPONSE FORMAT:
+You must provide your response in exactly the following XML-tagged format:
+<thought_process>
+- Analyse the requested changes.
+- Identify potential security, accessibility, or compliance risks.
+- Plan the implementation.
+</thought_process>
+<self_critique>
+- Review your planned changes against project standards (CLAUDE.md, DEVELOPMENT_STANDARDS.md).
+- Specifically check for Australian English, WCAG compliance, and RLS preservation.
+</self_critique>
+<fixed_code>
+[The entire corrected source code for the file]
+</fixed_code>
+`;
 
     const userPrompt = `
 CONTEXT:
@@ -262,20 +278,55 @@ export async function generateWithRetry(genAI: GoogleGenAI, modelName: string, s
 
             // Result handling based on @google/genai structure
             const candidate = result.candidates?.[0];
-            let fixedCode = '';
+            let fullOutput = '';
 
             if (candidate?.content?.parts) {
-                fixedCode = candidate.content.parts
+                fullOutput = candidate.content.parts
                     .map(part => part.text)
                     .filter(Boolean)
                     .join('')
                     .trim();
             }
 
+            // Extract thought process and critique for logging
+            const thoughtProcess = fullOutput.match(/<thought_process>([\s\S]*?)<\/thought_process>/)?.[1]?.trim();
+            const selfCritique = fullOutput.match(/<self_critique>([\s\S]*?)<\/self_critique>/)?.[1]?.trim();
+
+            if (thoughtProcess) {
+                console.log(`[THOUGHT PROCESS for ${filePath}]:\n${thoughtProcess}\n`);
+            }
+            if (selfCritique) {
+                console.log(`[SELF-CRITIQUE for ${filePath}]:\n${selfCritique}\n`);
+            }
+
+            // Support summary logging for PR comments
+            const summaryFile = process.env.SUMMARY_FILE;
+            if (summaryFile) {
+                try {
+                    const summaryContent = `\n### 🤖 Senior AI Insights: ${filePath}\n\n<details>\n<summary>View Thought Process</summary>\n\n${thoughtProcess || 'No details provided.'}\n\n</details>\n\n<details>\n<summary>View Self-Critique</summary>\n\n${selfCritique || 'No details provided.'}\n\n</details>\n\n---\n`;
+                    fs.appendFileSync(summaryFile, summaryContent);
+                } catch (summaryErr) {
+                    console.warn(`Failed to write to summary file: ${summaryErr}`);
+                }
+            }
+
+            // Extract fixed code
+            let fixedCode = fullOutput.match(/<fixed_code>([\s\S]*?)<\/fixed_code>/)?.[1]?.trim() || '';
+
+            // Fallback: If the model didn't use tags but returned something, check if it's just code
+            if (!fixedCode && fullOutput && !fullOutput.includes('<fixed_code>')) {
+                fixedCode = fullOutput;
+            }
+
             // Clean up potential markdown formatting if Gemini ignored the instruction
             if (fixedCode.startsWith('```')) {
                 const lines = fixedCode.split('\n');
-                fixedCode = lines.slice(1, -1).join('\n');
+                // Remove first line (backticks) and last line (backticks)
+                if (lines[lines.length - 1].trim().startsWith('```')) {
+                    fixedCode = lines.slice(1, -1).join('\n');
+                } else {
+                    fixedCode = lines.slice(1).join('\n');
+                }
             }
 
             return fixedCode;
@@ -319,6 +370,24 @@ export function validateOutput(fixedCode: string, originalContent: string): void
     for (const keyword of criticalKeywords) {
         if (originalContent.includes(keyword) && !fixedCode.includes(keyword)) {
             throw new Error(`Validation failed: Fixed code is missing critical keyword "${keyword}" found in original.`);
+        }
+    }
+
+    // 3. Seniority check: Australian English spelling (utilise vs utilize)
+    const usEnglishMistakes = ['utilize', 'organization', 'realize', 'behavior'];
+    const usFound = usEnglishMistakes.filter(m =>
+        fixedCode.toLowerCase().includes(m) && !originalContent.toLowerCase().includes(m)
+    );
+    if (usFound.length > 0) {
+        console.warn(`[SENIORITY WARNING]: US English spelling detected in fix: ${usFound.join(', ')}`);
+        // We don't throw here to avoid blocking valid fixes, but we log it.
+    }
+
+    // 4. Critical pattern check: Deprecated SDKs or obvious security red flags
+    const redFlags = ['@google/generative-ai', 'NEXT_PUBLIC_SUPABASE_SERVICE_KEY'];
+    for (const flag of redFlags) {
+        if (fixedCode.includes(flag) && !originalContent.includes(flag)) {
+            throw new Error(`Validation failed: Fix introduced a critical red flag: "${flag}"`);
         }
     }
 }
@@ -368,6 +437,7 @@ export async function run(): Promise<void> {
 
         const iterationCount = process.env.ITERATION_COUNT || '1';
         console.log(`--- Gemini Fixer Iteration ${iterationCount} ---`);
+
         console.log(`Found ${tasks.length} files to process.`);
 
         let failureCount = 0;
