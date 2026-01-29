@@ -36,7 +36,7 @@ export function WorkflowApp() {
         isActive: true
     });
 
-    const sanitizeText = (value: string, max = 120) =>
+    const sanitiseText = (value: string, max = 120) =>
         value.replace(/[^\w\s.,-]/g, "").trim().slice(0, max);
 
     if (isLoading) {
@@ -55,9 +55,10 @@ export function WorkflowApp() {
     }
 
     const handleAdd = async () => {
-        const name = sanitizeText(newWorkflow.name ?? "");
-        const trigger = sanitizeText(newWorkflow.trigger ?? "");
-        const action = sanitizeText(newWorkflow.action ?? "");
+        const name = sanitiseText(newWorkflow.name ?? "");
+        const trigger = sanitiseText(newWorkflow.trigger ?? "");
+        const action = sanitiseText(newWorkflow.action ?? "");
+        const description = sanitiseText(newWorkflow.description ?? "", 240);
         
         if (name && trigger && action) {
             try {
@@ -67,6 +68,7 @@ export function WorkflowApp() {
                     name,
                     trigger,
                     action,
+                    description,
                     id: workflowId,
                     isActive: true
                 } as Workflow);
@@ -213,9 +215,9 @@ export function WorkflowApp() {
                     </div>
                 ) : (
                     workflows.map(workflow => {
-                        const moderatedName = sanitizeText(workflow.name ?? "");
-                        const moderatedTrigger = sanitizeText(workflow.trigger ?? "");
-                        const moderatedAction = sanitizeText(workflow.action ?? "");
+                        const moderatedName = sanitiseText(workflow.name ?? "");
+                        const moderatedTrigger = sanitiseText(workflow.trigger ?? "");
+                        const moderatedAction = sanitiseText(workflow.action ?? "");
                         
                         return (
                             <Card key={workflow.id} className={workflow.isActive ? 'border-l-4 border-l-yellow-500' : 'opacity-60'}>
