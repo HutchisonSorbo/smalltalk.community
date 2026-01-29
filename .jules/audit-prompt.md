@@ -85,6 +85,6 @@ Structure your final output as a clear Markdown report:
 ## Critical Reminders
 
 - Use **Australian English** strictly (e.g., utilise, prioritised, organisation).
-- Date format for **{date} (format DD-MM-YYYY)** must be strictly followed.
+- The date format for **{date} (format DD-MM-YYYY)** must be strictly followed; treat non-compliant inputs as invalid and normalise them.
 - Never expose `SUPABASE_SERVICE_ROLE_KEY`.
 - If a teen safety issue is suspected, escalate to Child Safety Officer immediately without deleting data.

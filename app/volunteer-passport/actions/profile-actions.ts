@@ -5,6 +5,20 @@ import { db } from "@/server/db";
 import { badges, userBadges, portfolioItems } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+/**
+ * Validation schema for portfolio items
+ */
+const portfolioItemSchema = z.object({
+    title: z.string().trim().min(1, "Title is required").max(255, "Title is too long (max 255 characters)"),
+    description: z.string().trim().max(2000, "Description is too long (max 2000 characters)").optional(),
+    type: z.enum(["link", "document", "media"], {
+        errorMap: () => ({ message: "Invalid media type" }),
+    }),
+    url: z.string().url("Invalid URL format").optional().or(z.literal("")),
+    mediaUrl: z.string().url("Invalid URL format").optional().or(z.literal("")),
+});
 
 /**
  * Gets the authenticated user ID or throws if not authenticated
@@ -13,7 +27,9 @@ async function getAuthenticatedUserId(): Promise<string> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Unauthorised");
+        if (!user) {
+            throw new Error("Unauthorised");
+        }
         return user.id;
     } catch (error) {
         console.error("[getAuthenticatedUserId] Failed:", error);
@@ -94,20 +110,19 @@ export async function upsertPortfolioItem(userId: string, data: {
     try {
         const authUserId = await validateUser(userId);
 
-        // Input validation and sanitisation
-        const title = data.title?.trim();
-        if (!title) throw new Error("Title is required");
-        if (title.length > 255) throw new Error("Title is too long (max 255 characters)");
+        // Input validation and sanitisation using Zod
+        const validationResult = portfolioItemSchema.safeParse(data);
+        if (!validationResult.success) {
+            const errorMessage = validationResult.error.issues[0]?.message || "Invalid input";
+            throw new Error(errorMessage);
+        }
 
-        const description = data.description?.trim();
-        if (description && description.length > 2000) throw new Error("Description is too long (max 2000 characters)");
+        const validatedData = validationResult.data;
 
-        const allowedTypes = new Set(["link", "document", "media"]);
-        if (!allowedTypes.has(data.type)) throw new Error("Invalid media type");
-
+        // Normalise and further validate the URL protocol
         let validatedMediaUrl: string | undefined;
-        // Normalise and validate the URL
-        const rawUrl = data.url || data.mediaUrl;
+        const rawUrl = validatedData.url || validatedData.mediaUrl;
+        
         if (rawUrl) {
             try {
                 const parsedUrl = new URL(rawUrl);
@@ -115,18 +130,16 @@ export async function upsertPortfolioItem(userId: string, data: {
                     throw new Error("Unsafe URL protocol");
                 }
                 validatedMediaUrl = parsedUrl.toString();
-            } catch {
-                throw new Error("Invalid URL format");
+            } catch (err) {
+                throw new Error(err instanceof Error ? err.message : "Invalid URL format");
             }
         }
 
-        const authUserId = await validateUser(userId);
-
         const values = {
-            title,
-            description,
-            mediaUrl: validatedMediaUrl,
-            mediaType: data.type,
+            title: validatedData.title,
+            description: validatedData.description || null,
+            mediaUrl: validatedMediaUrl || null,
+            mediaType: validatedData.type,
             updatedAt: new Date(),
         };
 
@@ -146,7 +159,10 @@ export async function upsertPortfolioItem(userId: string, data: {
         return { success: true };
     } catch (error) {
         console.error("[upsertPortfolioItem] Error:", error);
-        return { success: false, error: error instanceof Error ? error.message : "Failed to save portfolio item" };
+        return { 
+            success: false, 
+            error: error instanceof Error ? error.message : "Something went wrong. Please try again." 
+        };
     }
 }
 
@@ -164,6 +180,9 @@ export async function deletePortfolioItem(userId: string, itemId: string) {
         return { success: true };
     } catch (error) {
         console.error("[deletePortfolioItem] Error:", error);
-        return { success: false, error: "Failed to delete portfolio item" };
+        return { 
+            success: false, 
+            error: "Something went wrong. Please try again." 
+        };
     }
 }

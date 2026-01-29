@@ -40,15 +40,17 @@ export function WorkflowApp() {
         value.replace(/[^\w\s.,-]/g, "").trim().slice(0, max);
 
     if (isLoading) {
-        return <div className="p-4 space-y-4 animate-pulse">
-            <div className="h-8 w-64 bg-gray-200 rounded" />
-            <div className="h-40 bg-gray-100 rounded" />
-        </div>;
+        return (
+            <div className="p-4 space-y-4 animate-pulse max-w-full">
+                <div className="h-8 w-64 bg-gray-200 rounded" />
+                <div className="h-40 bg-gray-100 rounded" />
+            </div>
+        );
     }
 
     if (!tenant) {
         return (
-            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
+            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50 max-w-full">
                 <p>Unable to load Workflow Automation - Organisation context not available.</p>
             </div>
         );
@@ -104,12 +106,12 @@ export function WorkflowApp() {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: string, name: string) => {
         try {
             await deleteDocument(id);
             setWorkflowError(null);
         } catch (err) {
-            console.error(`[WorkflowApp] Failed to delete workflow ${id}:`, err);
+            console.error(`[WorkflowApp] Failed to delete workflow "${name}" (${id}):`, err);
             setWorkflowError("Failed to delete the workflow.");
         }
     };
@@ -133,7 +135,7 @@ export function WorkflowApp() {
                         type="button"
                         onClick={() => setIsAdding(true)}
                         className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 flex items-center gap-2"
-                        aria-label="Add a new workflow automation"
+                        aria-label="Create a new workflow automation"
                     >
                         <Plus className="h-4 w-4" />
                         New Workflow
@@ -155,7 +157,7 @@ export function WorkflowApp() {
                         <CardDescription>Define a trigger and an automated action.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <label htmlFor="workflow-name" className="text-sm font-medium">Workflow Name</label>
                                 <input
@@ -196,11 +198,11 @@ export function WorkflowApp() {
                                     <option>Create Record in Records App</option>
                                 </select>
                             </div>
-                            <div className="flex items-end pb-1">
+                            <div className="flex items-end pb-1 md:col-span-3">
                                 <button
                                     type="button"
                                     onClick={handleAdd}
-                                    className="w-full rounded bg-primary py-2 text-sm text-white"
+                                    className="w-full rounded bg-primary py-2 text-sm text-white hover:bg-primary/90 transition-colors"
                                     aria-label="Submit new workflow"
                                 >
                                     Create Workflow
@@ -225,8 +227,8 @@ export function WorkflowApp() {
                         return (
                             <Card key={workflow.id} className={workflow.isActive ? 'border-l-4 border-l-yellow-500' : 'opacity-60'}>
                                 <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-2 rounded-full ${workflow.isActive ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'}`}>
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className={`p-2 rounded-full flex-shrink-0 ${workflow.isActive ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'}`}>
                                             <Zap className="h-5 w-5" />
                                         </div>
                                         <div className="min-w-0">
@@ -236,7 +238,7 @@ export function WorkflowApp() {
                                             </CardDescription>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-4 flex-shrink-0">
                                         <div className="text-right mr-4 hidden sm:block">
                                             <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Status</p>
                                             <p className={`text-xs ${workflow.isActive ? 'text-green-600' : 'text-gray-400'}`}>
@@ -250,8 +252,8 @@ export function WorkflowApp() {
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => handleDelete(workflow.id)}
-                                            className="text-gray-400 hover:text-red-500"
+                                            onClick={() => handleDelete(workflow.id, moderatedName)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors"
                                             title="Delete Workflow"
                                             aria-label={`Delete workflow ${moderatedName}`}
                                         >

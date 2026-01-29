@@ -6,15 +6,40 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, ShieldAlert, Fingerprint, FileCheck } from "lucide-react";
 
 interface ProfilePassportTabProps {
-    verificationStatus?: string; // 'verified', 'pending', 'unverified'
+    verificationStatus?: "verified" | "pending" | "unverified";
     vcssChecked?: boolean;
     identityVerified?: boolean;
 }
 
+/**
+ * Displays the current passport status badge with appropriate accessibility labels.
+ */
+export function PassportStatusBadge({ status }: { status: "verified" | "pending" | "unverified" }) {
+    if (status === "verified") {
+        return (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex gap-1">
+                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                Verified Passport
+            </Badge>
+        );
+    }
+    return (
+        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+            Pending Verification
+        </Badge>
+    );
+}
+
+/**
+ * Component for Identity Verification status display.
+ */
 export function IdentityVerificationCard({ identityVerified }: { identityVerified: boolean }) {
     return (
         <div className="flex items-start gap-3 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <Fingerprint className={`h-5 w-5 mt-0.5 ${identityVerified ? "text-green-600" : "text-gray-400"}`} aria-hidden="true" />
+            <Fingerprint 
+                className={`h-5 w-5 mt-0.5 ${identityVerified ? "text-green-600" : "text-gray-400"}`} 
+                aria-hidden="true" 
+            />
             <div>
                 <p className="text-sm font-semibold">Identity Verification</p>
                 <p className="text-xs text-muted-foreground">Government ID check and KYC.</p>
@@ -26,10 +51,16 @@ export function IdentityVerificationCard({ identityVerified }: { identityVerifie
     );
 }
 
+/**
+ * Component for Safeguarding/VCSS status display.
+ */
 export function SafeguardingCard({ vcssChecked }: { vcssChecked: boolean }) {
     return (
         <div className="flex items-start gap-3 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <ShieldAlert className={`h-5 w-5 mt-0.5 ${vcssChecked ? "text-green-600" : "text-gray-400"}`} aria-hidden="true" />
+            <ShieldAlert 
+                className={`h-5 w-5 mt-0.5 ${vcssChecked ? "text-green-600" : "text-gray-400"}`} 
+                aria-hidden="true" 
+            />
             <div>
                 <p className="text-sm font-semibold">Safeguarding Check (VCSS)</p>
                 <p className="text-xs text-muted-foreground">Victorian Child Safe Standards compliance.</p>
@@ -41,6 +72,9 @@ export function SafeguardingCard({ vcssChecked }: { vcssChecked: boolean }) {
     );
 }
 
+/**
+ * Displays the list of active checks and endorsements.
+ */
 export function ActiveChecksPanel() {
     return (
         <div className="p-4 border-l-4 border-primary bg-primary/5 rounded-r-lg space-y-2">
@@ -57,6 +91,9 @@ export function ActiveChecksPanel() {
     );
 }
 
+/**
+ * Privacy and Visibility configuration card.
+ */
 export function PrivacyVisibilityCard() {
     return (
         <Card>
@@ -73,6 +110,10 @@ export function PrivacyVisibilityCard() {
     );
 }
 
+/**
+ * Main Profile Passport Tab component.
+ * Refactored to stay under 50 lines per function.
+ */
 export function ProfilePassportTab({
     verificationStatus = "unverified",
     vcssChecked = false,
@@ -87,16 +128,7 @@ export function ProfilePassportTab({
                             <CardTitle>Digital Identity Passport</CardTitle>
                             <CardDescription>Your verified credentials and safeguarding status.</CardDescription>
                         </div>
-                        {verificationStatus === "verified" ? (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex gap-1">
-                                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                                Verified Passport
-                            </Badge>
-                        ) : (
-                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                                Pending Verification
-                            </Badge>
-                        )}
+                        <PassportStatusBadge status={verificationStatus} />
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">

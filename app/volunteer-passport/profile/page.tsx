@@ -18,6 +18,10 @@ type ProfileTabsProps = {
     emailVerified: boolean;
 };
 
+/**
+ * ProfileTabs handles the tabbed navigation for the volunteer profile.
+ * Extracted to maintain the 50-line limit for the main page component.
+ */
 export function ProfileTabs({ initialData, userId, emailVerified }: ProfileTabsProps) {
     return (
         <Tabs defaultValue="profile" className="w-full">
@@ -67,6 +71,10 @@ export function ProfileTabs({ initialData, userId, emailVerified }: ProfileTabsP
     );
 }
 
+/**
+ * VolunteerProfilePage is the main entry point for the volunteer passport profile.
+ * It fetches the profile data and handles the layout.
+ */
 export default async function VolunteerProfilePage() {
     let profile;
     try {

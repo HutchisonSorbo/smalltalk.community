@@ -11,6 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { safeUrl } from "@/lib/utils";
 import { moderateContent } from "@/lib/utils/moderation";
 
+/**
+ * Hook to manage portfolio state and operations
+ */
 function usePortfolio(userId: string) {
     const [items, setItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +47,7 @@ function usePortfolio(userId: string) {
     const handleAdd = async () => {
         const trimmedTitle = newItem.title.trim();
         const trimmedDesc = newItem.description.trim();
+        const trimmedUrl = newItem.url.trim();
         const allowedTypes = ["link", "document", "media"];
 
         if (!trimmedTitle) {
@@ -51,7 +55,16 @@ function usePortfolio(userId: string) {
             return;
         }
 
-        const sanitisedUrl = newItem.url.trim() ? safeUrl(newItem.url.trim()) : "";
+        const sanitisedUrl = trimmedUrl ? safeUrl(trimmedUrl) : "";
+        if (trimmedUrl && !sanitisedUrl) {
+            toast({ 
+                title: "Validation Error", 
+                description: "Please enter a valid URL (e.g., https://example.com).", 
+                variant: "destructive" 
+            });
+            return;
+        }
+
         const validatedType = allowedTypes.includes(newItem.type) ? newItem.type : "link";
 
         setIsSaving(true);
@@ -76,9 +89,6 @@ function usePortfolio(userId: string) {
             console.error(`[Portfolio] Error adding item for user ${userId}:`, error);
             toast({ title: "Error", description: "Failed to save to portfolio. Please try again.", variant: "destructive" });
         } finally {
-            setIsSaving(true);
-            // After re-reading the bot's logic in the conflict view, it set setIsSaving(false) in finally.
-            // I'll stick to the logical flow.
             setIsSaving(false);
         }
     };
@@ -101,6 +111,9 @@ function usePortfolio(userId: string) {
     return { items, isLoading, isSaving, isAdding, setIsAdding, newItem, setNewItem, handleAdd, handleDelete, load };
 }
 
+/**
+ * Header component for the portfolio tab
+ */
 function PortfolioHeader({ isAdding, onToggle }: { isAdding: boolean; onToggle: () => void }) {
     return (
         <div className="flex items-center justify-between">
@@ -116,6 +129,9 @@ function PortfolioHeader({ isAdding, onToggle }: { isAdding: boolean; onToggle: 
     );
 }
 
+/**
+ * Form to create a new portfolio item
+ */
 function PortfolioForm({ newItem, setNewItem, onSave, isSaving }: { newItem: any; setNewItem: (val: any) => void; onSave: () => void; isSaving: boolean }) {
     return (
         <Card className="border-primary/20 bg-primary/5">
@@ -178,6 +194,9 @@ function PortfolioForm({ newItem, setNewItem, onSave, isSaving }: { newItem: any
     );
 }
 
+/**
+ * Individual portfolio item display card
+ */
 function PortfolioItem({ item, onDelete }: { item: any; onDelete: () => void }) {
     const moderatedTitle = moderateContent(item.title);
     const moderatedDesc = item.description ? moderateContent(item.description) : "";
@@ -192,7 +211,7 @@ function PortfolioItem({ item, onDelete }: { item: any; onDelete: () => void }) 
                                 <ExternalLink className="h-4 w-4" />}
                     </div>
                     <div className="min-w-0">
-                        <CardTitle className="text-sm truncate">{moderatedTitle}</CardTitle>
+                        <CardTitle className="text-sm truncate" title={moderatedTitle}>{moderatedTitle}</CardTitle>
                         {item.url && (
                             <a
                                 href={safeUrl(item.url)}
@@ -204,7 +223,7 @@ function PortfolioItem({ item, onDelete }: { item: any; onDelete: () => void }) 
                                     try {
                                         return new URL(item.url).hostname;
                                     } catch {
-                                        return "View Link";
+                                        return "View link";
                                     }
                                 })()} <ExternalLink className="h-2 w-2" />
                             </a>
@@ -230,6 +249,9 @@ function PortfolioItem({ item, onDelete }: { item: any; onDelete: () => void }) 
     );
 }
 
+/**
+ * List of portfolio items or empty state
+ */
 function PortfolioList({ items, onDelete }: { items: any[]; onDelete: (id: string) => void }) {
     if (items.length === 0) {
         return (
@@ -248,6 +270,9 @@ function PortfolioList({ items, onDelete }: { items: any[]; onDelete: (id: strin
     );
 }
 
+/**
+ * Main ProfilePortfolioTab component
+ */
 export function ProfilePortfolioTab({ userId }: { userId: string }) {
     const portfolio = usePortfolio(userId);
 

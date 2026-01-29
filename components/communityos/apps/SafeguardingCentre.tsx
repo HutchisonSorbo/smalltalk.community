@@ -122,21 +122,30 @@ export function SafeguardingCentre() {
     const [standards, setStandards] = useState<VCSSStandard[]>(INITIAL_STANDARDS);
     const { toast } = useToast();
 
+    // Fetch and sync VCSS status when tenant changes
     useEffect(() => {
-        if (tenant?.vcssStatus) {
+        if (!tenant) return;
+
+        let resetNeeded = true;
+        if (tenant.vcssStatus) {
             try {
-                const persistedStandards = Array.isArray(tenant.vcssStatus)
+                const persisted = Array.isArray(tenant.vcssStatus)
                     ? tenant.vcssStatus
                     : typeof tenant.vcssStatus === 'string'
                         ? JSON.parse(tenant.vcssStatus)
                         : [];
 
-                if (persistedStandards.length > 0) {
-                    setStandards(persistedStandards);
+                if (Array.isArray(persisted) && persisted.length > 0) {
+                    setStandards(persisted);
+                    resetNeeded = false;
                 }
             } catch (error) {
                 console.error("Failed to parse persisted VCSS status:", error);
             }
+        }
+        
+        if (resetNeeded) {
+            setStandards(INITIAL_STANDARDS);
         }
     }, [tenant]);
 
@@ -150,16 +159,19 @@ export function SafeguardingCentre() {
         if (tenant?.id) {
             try {
                 const result = await saveVCSSStatus(tenant.id, updatedStandards);
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
+                if (!result.success) throw new Error(result.error);
             } catch (error) {
-                console.error("Failed to persist VCSS progress:", error);
+                console.error("Failed to persist VCSS progress", { 
+                    tenantId: tenant.id, 
+                    standardId: id, 
+                    error: error instanceof Error ? error.message : "Unknown error" 
+                });
+                
                 // Rollback on failure
                 setStandards(previousStandards);
                 toast({
                     title: "Update Failed",
-                    description: "Weren't able to save your progress. Please check your connection.",
+                    description: "We were unable to save your progress. Please check your connection.",
                     variant: "destructive",
                 });
             }
@@ -191,7 +203,7 @@ export function SafeguardingCentre() {
             <SafeguardingHeader tenantName={moderatedTenantName} />
             <ComplianceOverview progress={progress} />
 
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {standards.map((standard) => (
                     <VCSSItem
                         key={standard.id}

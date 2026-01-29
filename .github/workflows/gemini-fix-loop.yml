@@ -80,14 +80,20 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: 'gemini-3-flash-preview'
           COMMENTS_FILE: 'comments.json'
+          SUMMARY_FILE: 'fix_summary.md'
           ITERATION_COUNT: ${{ github.event.inputs.iteration || '1' }}
+          GH_TOKEN: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || secrets.GITHUB_TOKEN }}
         run: |
-          # The script should exit 0. We'll check if changes were made via git.
+          echo "## 🤖 Gemini Senior AI Analysis (Iteration ${{ env.ITERATION_COUNT }})" > fix_summary.md
           npx tsx scripts/gemini-fixer.ts
           if git diff --quiet; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
+            # Post the summary as a PR comment if something was actually added to the summary
+            if [ -f fix_summary.md ] && [ $(wc -c < fix_summary.md) -gt 50 ]; then
+               gh pr comment "${{ github.event.inputs.pr_number || github.event.pull_request.number }}" --body-file fix_summary.md || echo "Failed to post PR comment"
+            fi
           fi
 
       - name: Commit and Push Fix

@@ -8,7 +8,9 @@ import { getUserBadges } from "@/app/volunteer-passport/actions/profile-actions"
 import { safeUrl } from "@/lib/utils";
 import { moderateContent } from "@/lib/utils/moderation";
 
-
+/**
+ * Sub-component for the search and header section.
+ */
 function BadgesHeader({ searchQuery, setSearchQuery }: { searchQuery: string, setSearchQuery: (val: string) => void }) {
     return (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -31,6 +33,9 @@ function BadgesHeader({ searchQuery, setSearchQuery }: { searchQuery: string, se
     );
 }
 
+/**
+ * Sub-component for when no badges exist for the user.
+ */
 function EmptyBadgesPlaceholder() {
     return (
         <div className="text-center py-12 border-2 border-dashed rounded-lg bg-gray-50 dark:bg-gray-800/50">
@@ -41,10 +46,13 @@ function EmptyBadgesPlaceholder() {
     );
 }
 
+/**
+ * Sub-component for an individual badge card.
+ */
 function BadgeCard({ badge, onViewCriteria }: { badge: any, onViewCriteria: (badge: any) => void }) {
     const sanitizedImageUrl = badge.imageUrl ? safeUrl(badge.imageUrl) : null;
-    const moderatedName = moderateContent(badge.name);
-    const moderatedDescription = moderateContent(badge.description);
+    const moderatedName = moderateContent(badge.name) || "Untitled Badge";
+    const moderatedDescription = moderateContent(badge.description) || "No description provided.";
 
     return (
         <Card className="overflow-hidden hover:shadow-md transition-shadow">
@@ -64,7 +72,7 @@ function BadgeCard({ badge, onViewCriteria }: { badge: any, onViewCriteria: (bad
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">{moderatedDescription}</p>
                 <div className="pt-2 flex items-center justify-between text-[10px] text-gray-500">
-                    <span>Issued: {new Date(badge.issuedAt).toLocaleDateString()}</span>
+                    <span>Issued: {new Date(badge.issuedAt).toLocaleDateString('en-AU')}</span>
                     <button
                         type="button"
                         onClick={() => onViewCriteria(badge)}
@@ -79,6 +87,9 @@ function BadgeCard({ badge, onViewCriteria }: { badge: any, onViewCriteria: (bad
     );
 }
 
+/**
+ * Sub-component for information about Open Badges compatibility.
+ */
 function OpenBadgesInfo() {
     return (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 flex gap-4 items-start">
@@ -91,6 +102,9 @@ function OpenBadgesInfo() {
     );
 }
 
+/**
+ * Tab component for displaying user badges with search and moderation.
+ */
 export function ProfileBadgesTab({ userId }: { userId: string }) {
     const [badges, setBadges] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -110,13 +124,26 @@ export function ProfileBadgesTab({ userId }: { userId: string }) {
         load();
     }, [userId]);
 
+    // Input sanitisation and normalisation for search
     const normalisedQuery = searchQuery.trim().slice(0, 100).toLowerCase();
+    
     const filteredBadges = badges.filter((badge) =>
         badge.name?.toLowerCase().includes(normalisedQuery) ||
         badge.description?.toLowerCase().includes(normalisedQuery)
     );
 
-    if (isLoading) return <div className="p-12 text-center animate-pulse" role="status">Loading badges...</div>;
+    if (isLoading) {
+        return (
+            <output className="p-12 text-center animate-pulse block w-full" aria-live="polite">
+                Loading badges...
+            </output>
+        );
+    }
+
+    const handleViewCriteria = (badge: any) => {
+        // Implementation for viewing badge criteria (e.g. modal or navigation)
+        console.log("Viewing criteria for:", badge.name, badge.criteria);
+    };
 
     return (
         <div className="space-y-6 max-w-full">
@@ -125,17 +152,21 @@ export function ProfileBadgesTab({ userId }: { userId: string }) {
                     <BadgesHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
                 </CardHeader>
                 <CardContent>
-                    {badges.length === 0 ? <EmptyBadgesPlaceholder /> : (
+                    {badges.length === 0 ? (
+                        <EmptyBadgesPlaceholder />
+                    ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {filteredBadges.map((badge) => (
                                 <BadgeCard
                                     key={badge.id}
                                     badge={badge}
-                                    onViewCriteria={(b) => console.log("Viewing criteria for:", b.name, b.criteria)}
+                                    onViewCriteria={handleViewCriteria}
                                 />
                             ))}
                             {filteredBadges.length === 0 && (
-                                <p className="text-sm text-muted-foreground text-center py-8 col-span-full">No badges found matching your search.</p>
+                                <div className="text-center py-12 col-span-full">
+                                    <p className="text-sm text-muted-foreground">No badges found matching your search.</p>
+                                </div>
                             )}
                         </div>
                     )}
