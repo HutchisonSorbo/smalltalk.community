@@ -45,25 +45,6 @@ interface Config {
 }
 
 /**
- * Loads project context from mandatory files.
- * @param {Config} config - The configuration object.
- * @returns {string} The collected project context.
- */
-function loadProjectContext(config: Config): string {
-    const files = ['CLAUDE.md', 'DEVELOPMENT_STANDARDS.md'];
-    let context = '';
-    for (const file of files) {
-        const filePath = path.resolve(config.repoRoot, file);
-        if (fs.existsSync(filePath)) {
-            context += `\n--- START ${file} ---\n`;
-            context += fs.readFileSync(filePath, 'utf-8');
-            context += `\n--- END ${file} ---\n`;
-        }
-    }
-    return context;
-}
-
-/**
  * Validates and loads configuration.
  * @returns {Config} The configuration object.
  */
@@ -76,6 +57,29 @@ export function loadConfig(): Config {
     const modelName = process.env.GEMINI_MODEL || MODEL_NAME;
     const repoRoot = process.cwd();
     return { apiKey, modelName, repoRoot };
+}
+
+/**
+ * Loads project context from mandatory files.
+ * @param {Config} config - The configuration object.
+ * @returns {string} The collected project context.
+ */
+function loadProjectContext(config: Config): string {
+    const files = ['CLAUDE.md', 'DEVELOPMENT_STANDARDS.md'];
+    let context = '';
+    for (const file of files) {
+        const filePath = path.resolve(config.repoRoot, file);
+        try {
+            if (fs.existsSync(filePath)) {
+                context += `\n--- START ${file} ---\n`;
+                context += fs.readFileSync(filePath, 'utf-8');
+                context += `\n--- END ${file} ---\n`;
+            }
+        } catch (err) {
+            console.warn(`Failed to read project context file ${file}: ${err}`);
+        }
+    }
+    return context;
 }
 
 /**
@@ -178,6 +182,9 @@ function sanitiseInput(str: string): string {
 
 /**
  * Constructs the prompts for Gemini.
+ * @param {FileTask} task - The file task containing path, content, and comments.
+ * @param {string} projectContext - The project context loaded from CLAUDE.md and DEVELOPMENT_STANDARDS.md.
+ * @returns {{ systemInstruction: string; userPrompt: string }} The system and user prompts.
  */
 export function buildPrompt(task: FileTask, projectContext: string): { systemInstruction: string; userPrompt: string } {
     const { filePath, fileContent, comments } = task;
@@ -419,6 +426,7 @@ function writeWithBackup(fixedCode: string, task: FileTask): void {
 export async function run(): Promise<void> {
     try {
         const config = loadConfig();
+        const projectContext = loadProjectContext(config);
         const tasks = loadTasks(config);
         const genAI = new GoogleGenAI({ apiKey: config.apiKey });
 
@@ -429,9 +437,6 @@ export async function run(): Promise<void> {
 
         const iterationCount = process.env.ITERATION_COUNT || '1';
         console.log(`--- Gemini Fixer Iteration ${iterationCount} ---`);
-
-        console.log('Loading project context...');
-        const projectContext = loadProjectContext(config);
 
         console.log(`Found ${tasks.length} files to process.`);
 

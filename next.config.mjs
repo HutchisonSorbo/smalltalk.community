@@ -115,9 +115,9 @@ const nextConfig = {
     },
     experimental: {
         optimizePackageImports: ['lucide-react', 'react-icons'],
-        outputFileTracingIncludes: {
-            '*': ['./newrelic.js'],
-        },
+    },
+    outputFileTracingIncludes: {
+        '*': ['./newrelic.js'],
     },
     outputFileTracingExcludes: {
         '*': [
