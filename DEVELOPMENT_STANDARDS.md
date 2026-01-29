@@ -422,7 +422,37 @@ Before every commit:
 
 ---
 
-## Contacts
+---
+
+## 10. Tools
+
+### GrepAI (Relationship-Based Code Search)
+
+GrepAI provides semantic code search and call graph analysis to help you understand the codebase.
+
+**Installation**:
+Run the setup script to install `grepai` to `./bin/`:
+
+```bash
+./scripts/setup-grepai.sh
+```
+
+**Usage**:
+
+```bash
+# Search for concepts (not just keywords)
+./bin/grepai search "how is authentication handled?"
+
+# Trace a function call graph
+./bin/grepai trace "handleLogin"
+```
+
+**AI Integration (MCP)**:
+GrepAI acts as an MCP server. Configure your IDE (Cursor, Windsurf, etc.) to point to the local `grepai` binary with arguments `["mcp-serve"]`.
+
+---
+
+## 11. Contacts
 
 | Role | Person | Contact |
 |------|--------|---------|
