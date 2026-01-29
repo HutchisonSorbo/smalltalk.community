@@ -5,25 +5,32 @@
 
 ## 1. Executive Summary
 
+## 1. Executive Summary
+
 A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repository. The system status is **HEALTHY** with minor remediation actions taken. Critical security controls (RLS, SDK compliance, Age gating) are fully operational.
 
 **Key Actions**:
+
 - Verified Next.js version is patched against recent CVEs.
 - Confirmed correct Google GenAI SDK usage.
 - Refactored UI components to use `next/image` for performance and accessibility.
 - Identified a potential bug in image upload routing.
+
+---
 
 ## 2. Compliance Score
 
 **Overall Score**: **98%**
 
 | Category | Status | Notes |
-| -------- | ------ | ----- |
+| :--- | :--- | :--- |
 | Security & Supply Chain | ✅ Pass | SDK correct, Secrets safe, Next.js patched. |
 | Regulatory & Safety | ✅ Pass | Age limits enforced, Privacy defaults correct. |
 | Accessibility | ⚠️ Remedied | `<img>` tags replaced with `next/image` in key components. |
 | Performance | ✅ Pass | Optimised image loading implemented. |
 | Functional | ⚠️ Warning | Potential mismatch in upload API route. |
+
+---
 
 ## 3. Detailed Findings
 
@@ -48,16 +55,27 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 ### 3.4 Functional Issues
 
 - **Issue**: `components/local-music-network/ImageUpload.tsx` fetches `/api/upload`, but the route appears to be located at `app/local-music-network/api/upload/route.ts` (implied path `/local-music-network/api/upload`).
-- **Recommendation**: Create a tracking issue to investigate and update `ImageUpload.tsx` to point to the correct endpoint or verify global route existence. (Marked as P3 - Low Priority for this audit scope).
+- **Recommendation**: Update `ImageUpload.tsx` to point to the correct endpoint or verify global route existence. (Marked as P3 - Low Priority for this audit scope).
+
+---
 
 ## 4. PR Requirements
 
 This PR (`audit-fix`) includes:
+
 1.  **Refactor**: `BandList.tsx` uses `next/image`.
 2.  **Refactor**: `ListingCard.tsx` uses `next/image`.
 3.  **Documentation**: This audit report.
 
+---
+
 ## 5. Next Steps
 
 - Verify `next.config.mjs` allows image domains for user uploads if they differ from Supabase/Unsplash.
-- Investigate and fix the `/api/upload` route path via a dedicated tracking issue.
+- Investigate and fix the `/api/upload` route path.
+- Create a tracking GitHub issue for the upload route mismatch.
+
+---
+
+**Audit Performed By**: Automated Script (Gemini Agent)
+**Report Finalised**: 29/01/2026, 06:45:00 am AEDT
