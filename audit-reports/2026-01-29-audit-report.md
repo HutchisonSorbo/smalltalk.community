@@ -5,7 +5,7 @@
 
 ## 1. Executive Summary
 
-A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repository. The system status is **HEALTHY**. Critical security controls (RLS, SDK compliance, Age gating) are operational. Performance optimization was improved by enabling AVIF image formats.
+A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repository. The system status is **HEALTHY**. Critical security controls (RLS, SDK compliance, Age gating) are operational. Performance optimisation was improved by enabling AVIF image formats.
 
 **Key Actions**:
 - Verified Next.js/React versions are patched against recent CVEs.
@@ -45,7 +45,7 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 
 ### 3.3 Accessibility & Performance
 
-- **Optimization**: Added `formats: ['image/avif', 'image/webp']` to `next.config.mjs` to serve smaller images to compatible browsers, benefiting users with limited bandwidth.
+- **Optimisation**: Added `formats: ['image/avif', 'image/webp']` to `next.config.mjs` to serve smaller images to compatible browsers, benefiting users with limited bandwidth.
 
 ---
 

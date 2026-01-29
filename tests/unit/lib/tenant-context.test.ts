@@ -77,6 +77,7 @@ describe('getPublicTenantByCode', () => {
             testimonials: [],
             ctas: [],
             events: [],
+            vcssStatus: [],
         };
 
         // Setup mock chain
