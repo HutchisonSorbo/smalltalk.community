@@ -27,24 +27,22 @@ mkdir -p "$INSTALL_DIR"
 # Note: Since we want to be safe and "project local", let's try to fetch the release directly if we can default to that.
 # However, to replicate the user's manual experience, running the official installer is the standard way.
 
-echo "Running official installer..."
-curl -fsSL https://raw.githubusercontent.com/yoanbernabeu/grepai/main/scripts/install.sh | bash
+echo "Downloading binary directly to avoid sudo..."
+DOWNLOAD_URL="https://github.com/yoanbernabeu/grepai/releases/download/v0.24.1/grepai_0.24.1_linux_amd64.tar.gz"
+
+curl -L -o grepai.tar.gz "$DOWNLOAD_URL"
+tar -xzf grepai.tar.gz
+mv grepai "$INSTALL_DIR/"
+rm grepai.tar.gz
+chmod +x "$FULL_PATH"
 
 # Check if installed
-if command -v grepai &> /dev/null; then
-    echo "GrepAI installed successfully!"
-    grepai --version
+if [ -f "$FULL_PATH" ]; then
+    echo "GrepAI installed successfully to $FULL_PATH"
+    "$FULL_PATH" --version
 else
-    echo "GrepAI installation might have failed or is not in PATH."
-    # Try adding to PATH for this session
-    export PATH=$HOME/.local/bin:$PATH
-    if command -v grepai &> /dev/null; then
-        echo "Found grepai in ~/.local/bin"
-        grepai --version
-    else
-        echo "Could not find grepai."
-        exit 1
-    fi
+    echo "Installation failed."
+    exit 1
 fi
 
 echo "Done."

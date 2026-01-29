@@ -27,8 +27,14 @@ Before brainstorming, check for applicable skills:
    git clone --depth 1 https://github.com/rmyndharis/antigravity-skills.git /tmp/antigravity-skills 2>/dev/null || git -C /tmp/antigravity-skills pull --ff-only
    ```
 
-2. Search catalog for relevant keywords
-3. Note applicable skills for inclusion in output
+2. Run GrepAI to discover relevant code (optional):
+
+   ```bash
+   ./bin/grepai search "{{input}}"
+   ```
+
+3. Search catalog for relevant keywords
+4. Note applicable skills for inclusion in output
 
 ## Output sections (use exactly)
 

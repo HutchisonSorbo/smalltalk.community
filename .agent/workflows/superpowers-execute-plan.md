@@ -57,6 +57,7 @@ Read and apply these skills when relevant:
 
 - `superpowers-tdd` (preferred)
 - `superpowers-debug` (if issues occur)
+- `grep/grepai` (use `./bin/grepai search "query"` for semantic search)
 - `superpowers-review`
 - `superpowers-finish`
 
