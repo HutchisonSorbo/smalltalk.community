@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, ExternalLink, FileText, Video, Image as ImageIcon, Loader2 } from "lucide-react";
 import { getPortfolioItems, upsertPortfolioItem, deletePortfolioItem } from "@/app/volunteer-passport/actions/profile-actions";
 import { useToast } from "@/hooks/use-toast";
+import { safeUrl } from "@/lib/utils";
 
 export function ProfilePortfolioTab({ userId }: { userId: string }) {
     const [items, setItems] = useState<any[]>([]);
@@ -85,8 +86,9 @@ export function ProfilePortfolioTab({ userId }: { userId: string }) {
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-medium">Title</label>
+                                <label htmlFor="portfolio-title" className="text-xs font-medium">Title</label>
                                 <Input
+                                    id="portfolio-title"
                                     placeholder="Project name or achievement"
                                     className="text-xs"
                                     value={newItem.title}
@@ -94,8 +96,9 @@ export function ProfilePortfolioTab({ userId }: { userId: string }) {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-medium">Type</label>
+                                <label htmlFor="portfolio-type" className="text-xs font-medium">Type</label>
                                 <select
+                                    id="portfolio-type"
                                     className="w-full rounded border p-2 text-xs dark:bg-gray-800"
                                     value={newItem.type}
                                     onChange={e => setNewItem({ ...newItem, type: e.target.value })}
@@ -108,8 +111,9 @@ export function ProfilePortfolioTab({ userId }: { userId: string }) {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-medium">URL (Optional)</label>
+                            <label htmlFor="portfolio-url" className="text-xs font-medium">URL (Optional)</label>
                             <Input
+                                id="portfolio-url"
                                 placeholder="https://..."
                                 className="text-xs"
                                 value={newItem.url}
@@ -117,8 +121,9 @@ export function ProfilePortfolioTab({ userId }: { userId: string }) {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-medium">Description</label>
+                            <label htmlFor="portfolio-description" className="text-xs font-medium">Description</label>
                             <Textarea
+                                id="portfolio-description"
                                 placeholder="Briefly explain this item..."
                                 className="text-xs h-20"
                                 value={newItem.description}
@@ -151,13 +156,25 @@ export function ProfilePortfolioTab({ userId }: { userId: string }) {
                                     <div>
                                         <CardTitle className="text-sm">{item.title}</CardTitle>
                                         {item.url && (
-                                            <a href={item.url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline flex items-center gap-1">
-                                                {new URL(item.url).hostname} <ExternalLink className="h-2 w-2" />
+                                            <a 
+                                                href={safeUrl(item.url)} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="text-[10px] text-primary hover:underline flex items-center gap-1"
+                                            >
+                                                {(() => { 
+                                                    try { 
+                                                        return new URL(item.url).hostname; 
+                                                    } catch { 
+                                                        return item.url; 
+                                                    } 
+                                                })()} <ExternalLink className="h-2 w-2" />
                                             </a>
                                         )}
                                     </div>
                                 </div>
                                 <button
+                                    type="button"
                                     onClick={() => handleDelete(item.id)}
                                     className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                     title="Delete Item"

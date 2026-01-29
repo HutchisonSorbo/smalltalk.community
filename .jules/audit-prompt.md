@@ -10,8 +10,9 @@
 
 1. **Date Verification**:
    - Run `date` in the terminal.
-   - Compare the system date with the provided threshold: **{date}**.
+   - Compare the system date with the provided threshold: **{date} (format DD-MM-YYYY)**.
    - If they do not match, flag the discrepancy in the Executive Summary but continue using the system date as the source of truth for the report.
+   - Responses must treat non-DD-MM-YYYY inputs as invalid and convert/normalise them or flag them before using the system date.
 
 2. **Real-Time Intelligence Gathering**:
    - Perform a web search for: "latest Next.js security vulnerabilities January 2026", "Supabase RLS bypass techniques 2026", and "Australian Privacy Act 2024 compliance updates".
@@ -44,7 +45,7 @@ Perform the following checks based on repository standards:
 
 ### 2.2 Regulatory & Community Safety
 
-- **Age Limits**: Search for age validation logic. Ensure the minimum age is **13**. Reject any "child" categorization or parental consent systems.
+- **Age Limits**: Search for age validation logic. Ensure the minimum age is **13**. Reject any "child" categorisation or parental consent systems.
 - **Child Safe Standards**: Verify moderation filters are active for all user-generated content, especially for the 13–17 age group.
 - **AU Privacy Act 2024**: Ensure PII is handled according to Australian standards, with clear isolation between tenants.
 
@@ -84,6 +85,6 @@ Structure your final output as a clear Markdown report:
 ## Critical Reminders
 
 - Use **Australian English** strictly (e.g., utilise, prioritised, organisation).
-- Date format must always be **DD-MM-YYYY**.
+- Date format for **{date}** must always be **DD-MM-YYYY**.
 - Never expose `SUPABASE_SERVICE_ROLE_KEY`.
 - If a teen safety issue is suspected, escalate to Child Safety Officer immediately without deleting data.

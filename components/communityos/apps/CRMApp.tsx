@@ -28,6 +28,14 @@ interface Contact {
     interactions?: Interaction[];
 }
 
+/**
+ * Basic text moderation and sanitisation helper
+ */
+const moderateText = (text: string): string => {
+    if (!text) return "";
+    return text.trim();
+};
+
 export function CRMApp() {
     const { tenant, isLoading } = useTenant();
 
@@ -57,49 +65,69 @@ export function CRMApp() {
     }
 
     const handleSave = () => {
-        if (formData.firstName && formData.lastName) {
-            const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
-            const existingContact = contacts.find(c => c.id === id);
+        const firstName = (formData.firstName || "").trim();
+        const lastName = (formData.lastName || "").trim();
+        const email = (formData.email || "").trim();
+        const phone = (formData.phone || "").trim();
+        const segments = (formData.segments || []).map(s => s.trim()).filter(Boolean);
 
-            upsertDocument(
-                id,
-                {
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
-                    email: formData.email || "",
-                    phone: formData.phone || "",
-                    status: formData.status || "active",
-                    lastContacted: new Date().toISOString(),
-                    segments: formData.segments || existingContact?.segments || [],
-                    interactions: existingContact?.interactions || [],
-                } as Contact
-            );
-            setIsEditing(null);
-            setFormData({});
+        if (!firstName || !lastName) {
+            return;
         }
+
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return;
+        }
+
+        if (phone && !/^[0-9+().\s-]{7,}$/.test(phone)) {
+            return;
+        }
+
+        const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
+        const existingContact = contacts.find(c => c.id === id);
+
+        upsertDocument(
+            id,
+            {
+                firstName,
+                lastName,
+                email,
+                phone,
+                status: (formData.status as "active" | "inactive" | "pending") || "active",
+                lastContacted: new Date().toISOString(),
+                segments,
+                interactions: existingContact?.interactions || [],
+            } as Contact
+        );
+        setIsEditing(null);
+        setFormData({});
     };
 
     const addInteraction = (contactId: string) => {
         const contact = contacts.find(c => c.id === contactId);
-        if (contact && newInteraction.content) {
+        const content = newInteraction.content.trim();
+        if (contact && content) {
             const interaction: Interaction = {
                 id: crypto.randomUUID(),
-                type: newInteraction.type as any,
-                content: newInteraction.content,
+                type: newInteraction.type as Interaction["type"],
+                content: moderateText(content),
                 createdAt: new Date().toISOString()
             };
 
-            upsertDocument(contactId, {
+            const updatedContact = {
                 ...contact,
                 interactions: [interaction, ...(contact.interactions || [])],
                 lastContacted: interaction.createdAt
-            });
+            };
+
+            upsertDocument(contactId, updatedContact);
+            setViewingContact(updatedContact);
             setNewInteraction({ type: "note", content: "" });
         }
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-full">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">CRM Pro</h2>
@@ -111,6 +139,7 @@ export function CRMApp() {
                         <span className="text-xs text-gray-500">{isOnline ? "Online Syncing" : "Offline Mode"}</span>
                     </div>
                     <button
+                        type="button"
                         onClick={() => {
                             setIsEditing("new");
                             setFormData({ status: "active", segments: [] });
@@ -127,8 +156,9 @@ export function CRMApp() {
                     <h3 className="mb-4 text-lg font-semibold">{isEditing === "new" ? "New Contact" : "Edit Contact"}</h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
+                            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
                             <input
+                                id="firstName"
                                 type="text"
                                 title="First Name"
                                 value={formData.firstName || ""}
@@ -137,8 +167,9 @@ export function CRMApp() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
+                            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
                             <input
+                                id="lastName"
                                 type="text"
                                 title="Last Name"
                                 value={formData.lastName || ""}
@@ -147,8 +178,9 @@ export function CRMApp() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                             <input
+                                id="email"
                                 type="email"
                                 title="Email Address"
                                 value={formData.email || ""}
@@ -157,8 +189,9 @@ export function CRMApp() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
                             <input
+                                id="phone"
                                 type="text"
                                 title="Phone Number"
                                 value={formData.phone || ""}
@@ -167,8 +200,9 @@ export function CRMApp() {
                             />
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Segments (comma separated)</label>
+                            <label htmlFor="segments" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Segments (comma separated)</label>
                             <input
+                                id="segments"
                                 type="text"
                                 title="Segments"
                                 placeholder="Volunteer, Donor, Mental Health Support"
@@ -180,12 +214,14 @@ export function CRMApp() {
                     </div>
                     <div className="mt-6 flex justify-end gap-3">
                         <button
+                            type="button"
                             onClick={() => setIsEditing(null)}
                             className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                         >
                             Cancel
                         </button>
                         <button
+                            type="button"
                             onClick={handleSave}
                             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
                         >
@@ -199,18 +235,29 @@ export function CRMApp() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
                         <div className="mb-4 flex items-center justify-between border-b pb-4">
-                            <h3 className="text-xl font-bold">{viewingContact.firstName} {viewingContact.lastName}</h3>
-                            <button onClick={() => setViewingContact(null)} className="text-gray-500 hover:text-gray-700">✕</button>
+                            <h3 className="text-xl font-bold truncate">
+                                {moderateText(viewingContact.firstName)} {moderateText(viewingContact.lastName)}
+                            </h3>
+                            <button
+                                type="button"
+                                aria-label="Close contact details"
+                                onClick={() => setViewingContact(null)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                ✕
+                            </button>
                         </div>
 
                         <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
-                            <div><span className="font-semibold">Email:</span> {viewingContact.email}</div>
-                            <div><span className="font-semibold">Phone:</span> {viewingContact.phone}</div>
+                            <div className="truncate"><span className="font-semibold">Email:</span> {moderateText(viewingContact.email)}</div>
+                            <div className="truncate"><span className="font-semibold">Phone:</span> {moderateText(viewingContact.phone)}</div>
                             <div className="col-span-2">
                                 <span className="font-semibold">Segments:</span>
                                 <div className="mt-1 flex flex-wrap gap-1">
                                     {viewingContact.segments?.map(s => (
-                                        <span key={s} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{s}</span>
+                                        <span key={s} className="max-w-[8rem] truncate rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                            {moderateText(s)}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
@@ -219,7 +266,9 @@ export function CRMApp() {
                         <div className="mb-4 border-t pt-4">
                             <h4 className="mb-3 font-semibold">Interaction Log</h4>
                             <div className="mb-4 flex gap-2">
+                                <label htmlFor="interaction-type" className="sr-only">Interaction type</label>
                                 <select
+                                    id="interaction-type"
                                     className="rounded border p-2 text-sm dark:bg-gray-700"
                                     title="Interaction Type"
                                     value={newInteraction.type}
@@ -229,7 +278,9 @@ export function CRMApp() {
                                     <option value="email">Email</option>
                                     <option value="call">Call</option>
                                 </select>
+                                <label htmlFor="interaction-content" className="sr-only">Interaction details</label>
                                 <input
+                                    id="interaction-content"
                                     type="text"
                                     className="flex-1 rounded border p-2 text-sm dark:bg-gray-700"
                                     placeholder="Add a note or log an interaction..."
@@ -237,6 +288,7 @@ export function CRMApp() {
                                     onChange={e => setNewInteraction({ ...newInteraction, content: e.target.value })}
                                 />
                                 <button
+                                    type="button"
                                     onClick={() => addInteraction(viewingContact.id)}
                                     className="rounded bg-primary px-4 text-sm text-white"
                                 >
@@ -250,7 +302,7 @@ export function CRMApp() {
                                             <span className="uppercase font-bold">{i.type}</span>
                                             <span>{new Date(i.createdAt).toLocaleString()}</span>
                                         </div>
-                                        <p>{i.content}</p>
+                                        <p className="line-clamp-3">{moderateText(i.content)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -259,7 +311,7 @@ export function CRMApp() {
                 </div>
             )}
 
-            <div className="overflow-hidden rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="overflow-x-auto rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-900/50">
                         <tr>
@@ -281,17 +333,20 @@ export function CRMApp() {
                                 <tr key={contact.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                     <td className="whitespace-nowrap px-6 py-4">
                                         <button
+                                            type="button"
                                             onClick={() => setViewingContact(contact)}
-                                            className="font-medium text-gray-900 hover:underline dark:text-white"
+                                            className="block max-w-[12rem] truncate font-medium text-gray-900 hover:underline dark:text-white"
                                         >
-                                            {contact.firstName} {contact.lastName}
+                                            {moderateText(contact.firstName)} {moderateText(contact.lastName)}
                                         </button>
-                                        <div className="text-xs text-gray-500">{contact.email}</div>
+                                        <div className="max-w-[14rem] truncate text-xs text-gray-500">{moderateText(contact.email)}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-wrap gap-1">
                                             {contact.segments?.map(s => (
-                                                <span key={s} className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{s}</span>
+                                                <span key={s} className="max-w-[8rem] truncate rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                    {moderateText(s)}
+                                                </span>
                                             ))}
                                         </div>
                                     </td>
@@ -305,6 +360,7 @@ export function CRMApp() {
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 setIsEditing(contact.id);
                                                 setFormData(contact);
@@ -314,6 +370,7 @@ export function CRMApp() {
                                             Edit
                                         </button>
                                         <button
+                                            type="button"
                                             onClick={() => deleteDocument(contact.id)}
                                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                         >

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTenant } from "@/components/communityos/TenantProvider";
+import { useModeration } from "@/hooks/use-moderation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -29,10 +30,11 @@ const INITIAL_STANDARDS: VCSSStandard[] = [
 ];
 
 export function SafeguardingCentre() {
-    const { tenant, isLoading } = useTenant();
+    const { tenant, isLoading: isTenantLoading } = useTenant();
+    const { moderatedContent: moderatedTenantName, isLoading: isModerationLoading } = useModeration(tenant?.name || "");
     const [standards, setStandards] = useState<VCSSStandard[]>(INITIAL_STANDARDS);
 
-    if (isLoading) {
+    if (isTenantLoading || (tenant && isModerationLoading)) {
         return <div className="p-4 space-y-4">
             <div className="h-8 w-64 bg-gray-200 animate-pulse rounded" />
             <div className="h-32 w-full bg-gray-100 animate-pulse rounded" />
@@ -55,7 +57,7 @@ export function SafeguardingCentre() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-full">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -63,7 +65,7 @@ export function SafeguardingCentre() {
                         Safeguarding Centre
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                        Manage Victorian Child Safe Standards (VCSS) compliance for {tenant.name}.
+                        Manage Victorian Child Safe Standards (VCSS) compliance for {moderatedTenantName}.
                     </p>
                 </div>
             </div>
@@ -76,7 +78,7 @@ export function SafeguardingCentre() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Progress value={progress} className="h-2" />
+                    <Progress value={progress} className="h-2" aria-label="Overall compliance progress" />
                     <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
                         <Info className="h-3 w-3" />
                         Complete all 11 standards to achieve full compliance certification.

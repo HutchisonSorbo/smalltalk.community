@@ -45,23 +45,25 @@ export function ImpactApp() {
         );
     }
 
+    const moderatedName = tenant.name;
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-full">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <TrendingUp className="h-6 w-6 text-primary" />
                         Impact Reporting
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-400">Measure and share the impact of {tenant.name} on the community.</p>
+                    <p className="text-gray-600 dark:text-gray-400">Measure and share the impact of {moderatedName} on the community.</p>
                 </div>
-                <button className="flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
+                <button type="button" aria-label="Open filters" className="flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
                     <Filter className="h-4 w-4" />
                     Filters
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                         <CardTitle className="text-sm font-medium">Total Participants</CardTitle>

@@ -9,14 +9,23 @@ import { User, ShieldCheck, Award, Briefcase } from "lucide-react";
 
 export default async function VolunteerProfilePage() {
     const profile = await getVolunteerProfile();
-    const userId = profile?.user?.id || "";
 
-    const initialData = profile ? {
+    if (!profile?.user?.id) {
+        return (
+            <div className="p-8 text-center" role="status">
+                <p>Please complete your profile setup to continue.</p>
+            </div>
+        );
+    }
+
+    const userId = profile.user.id;
+
+    const initialData = {
         headline: profile.headline || "",
         bio: profile.bio || "",
         locationSuburb: profile.locationSuburb || "",
         locationPostcode: profile.locationPostcode || ""
-    } : undefined;
+    };
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto px-4 py-8">
@@ -28,19 +37,19 @@ export default async function VolunteerProfilePage() {
             <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:flex mb-8">
                     <TabsTrigger value="profile" className="flex gap-2">
-                        <User className="h-4 w-4" />
+                        <User className="h-4 w-4" aria-hidden="true" />
                         <span className="hidden sm:inline">Profile</span>
                     </TabsTrigger>
                     <TabsTrigger value="passport" className="flex gap-2">
-                        <ShieldCheck className="h-4 w-4" />
+                        <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                         <span className="hidden sm:inline">Passport</span>
                     </TabsTrigger>
                     <TabsTrigger value="badges" className="flex gap-2">
-                        <Award className="h-4 w-4" />
+                        <Award className="h-4 w-4" aria-hidden="true" />
                         <span className="hidden sm:inline">Badges</span>
                     </TabsTrigger>
                     <TabsTrigger value="portfolio" className="flex gap-2">
-                        <Briefcase className="h-4 w-4" />
+                        <Briefcase className="h-4 w-4" aria-hidden="true" />
                         <span className="hidden sm:inline">Portfolio</span>
                     </TabsTrigger>
                 </TabsList>
@@ -55,7 +64,7 @@ export default async function VolunteerProfilePage() {
 
                 <TabsContent value="passport">
                     <ProfilePassportTab
-                        verificationStatus={profile?.user?.isEmailVerified ? "verified" : "pending"}
+                        verificationStatus={profile.user.emailVerified ? "verified" : "pending"}
                         vcssChecked={false}
                         identityVerified={false}
                     />
