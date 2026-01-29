@@ -22,8 +22,8 @@ Before planning, verify skills from brainstorm and check for additional skills:
 ## Rules
 
 - DO NOT edit code.
-- You may read files to understand context, but produce the plan and then stop.
 - You can use `./bin/grepai search "query"` to find relevant code context.
+- **MANDATORY**: Utilize GrepAI search to verify all code context before finalizing plan steps.
 - Plan steps must be small (2–10 minutes each) and include verification commands.
 - **CHECKPOINT 2**: Verify skills from brainstorm, check for additional skills
 - **MANDATORY**: Include accessibility considerations for all UI changes
