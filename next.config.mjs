@@ -148,7 +148,7 @@ const nextConfig = {
  * 
  * Requirements for Turbopack source map support:
  * - @sentry/nextjs >= 10.13.0 (current: 10.32.1 ✓)
- * - next >= 15.4.1 (current: 16.1.2 ✓)
+ * - next >= 15.4.1 (current: 16.1.5 ✓)
  */
 export default withBotId(withSentryConfig(nextConfig, {
     // For all available options, see:
