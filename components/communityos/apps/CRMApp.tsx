@@ -62,7 +62,7 @@ export function CRMApp() {
         content: ""
     });
 
-    // Simple focus trap logic for modal
+    // Simple focus trap logic for modal accessibility
     useEffect(() => {
         if (viewingContact && modalRef.current) {
             const focusableElements = modalRef.current.querySelectorAll(
@@ -113,16 +113,24 @@ export function CRMApp() {
         const segments = (formData.segments || []).map(s => s.trim()).filter(Boolean);
 
         const errors: Record<string, string> = {};
-        if (!firstName) errors.firstName = "First name is required";
-        if (!lastName) errors.lastName = "Last name is required";
+        if (!firstName || !lastName) {
+            errors.firstName = !firstName ? "First name is required" : "";
+            errors.lastName = !lastName ? "Last name is required" : "";
+            if (!firstName || !lastName) {
+                // Surface specific message for missing names as per requirement
+                errors.general = "First and last name are required";
+            }
+        }
+        
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             errors.email = "Please enter a valid email address";
         }
+        
         if (phone && !/^[0-9+().\s-]{7,}$/.test(phone)) {
             errors.phone = "Please enter a valid phone number";
         }
 
-        if (Object.keys(errors).length > 0) {
+        if (Object.keys(errors).filter(k => errors[k]).length > 0) {
             setFormErrors(errors);
             return;
         }
@@ -160,17 +168,18 @@ export function CRMApp() {
             const interaction: Interaction = {
                 id: crypto.randomUUID(),
                 type: newInteraction.type as Interaction["type"],
-                content: moderateText(content),
+                content: content, // moderateText applied during render
                 createdAt: new Date().toISOString()
             };
 
-            const updatedContact = {
+            const updatedContact: Contact = {
                 ...contact,
                 interactions: [interaction, ...(contact.interactions || [])],
                 lastContacted: interaction.createdAt
             };
 
             upsertDocument(contactId, updatedContact);
+            // Sync modal state immediately
             setViewingContact(updatedContact);
             setNewInteraction({ type: "note", content: "" });
         }
@@ -205,6 +214,7 @@ export function CRMApp() {
             {isEditing && (
                 <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold">{isEditing === "new" ? "New Contact" : "Edit Contact"}</h3>
+                    {formErrors.general && <p className="mb-4 text-sm text-red-600">{formErrors.general}</p>}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
@@ -213,7 +223,10 @@ export function CRMApp() {
                                 type="text"
                                 title="First Name"
                                 value={formData.firstName || ""}
-                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, firstName: e.target.value });
+                                    if (formErrors.firstName || formErrors.general) setFormErrors({});
+                                }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
                             {formErrors.firstName && <p className="mt-1 text-xs text-red-600">{formErrors.firstName}</p>}
@@ -225,7 +238,10 @@ export function CRMApp() {
                                 type="text"
                                 title="Last Name"
                                 value={formData.lastName || ""}
-                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, lastName: e.target.value });
+                                    if (formErrors.lastName || formErrors.general) setFormErrors({});
+                                }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
                             {formErrors.lastName && <p className="mt-1 text-xs text-red-600">{formErrors.lastName}</p>}
@@ -237,7 +253,10 @@ export function CRMApp() {
                                 type="email"
                                 title="Email Address"
                                 value={formData.email || ""}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, email: e.target.value });
+                                    if (formErrors.email) setFormErrors({});
+                                }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
                             {formErrors.email && <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>}
@@ -249,7 +268,10 @@ export function CRMApp() {
                                 type="text"
                                 title="Phone Number"
                                 value={formData.phone || ""}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, phone: e.target.value });
+                                    if (formErrors.phone) setFormErrors({});
+                                }}
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
                             />
                             {formErrors.phone && <p className="mt-1 text-xs text-red-600">{formErrors.phone}</p>}
@@ -287,10 +309,10 @@ export function CRMApp() {
             )}
 
             {viewingContact && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="view-contact-title">
                     <div ref={modalRef} className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
                         <div className="mb-4 flex items-center justify-between border-b pb-4">
-                            <h3 className="text-xl font-bold truncate">
+                            <h3 id="view-contact-title" className="text-xl font-bold truncate">
                                 {moderateText(viewingContact.firstName)} {moderateText(viewingContact.lastName)}
                             </h3>
                             <button
