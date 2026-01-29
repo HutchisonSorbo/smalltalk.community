@@ -18,7 +18,7 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 **Overall Score**: **98%**
 
 | Category | Status | Notes |
-|----------|--------|-------|
+| -------- | ------ | ----- |
 | Security & Supply Chain | ✅ Pass | SDK correct, Secrets safe, Next.js patched. |
 | Regulatory & Safety | ✅ Pass | Age limits enforced, Privacy defaults correct. |
 | Accessibility | ⚠️ Remedied | `<img>` tags replaced with `next/image` in key components. |
@@ -48,7 +48,7 @@ A comprehensive Daily Deep Audit was performed on the `smalltalk.community` repo
 ### 3.4 Functional Issues
 
 - **Issue**: `components/local-music-network/ImageUpload.tsx` fetches `/api/upload`, but the route appears to be located at `app/local-music-network/api/upload/route.ts` (implied path `/local-music-network/api/upload`).
-- **Recommendation**: Update `ImageUpload.tsx` to point to the correct endpoint or verify global route existence. (Marked as P3 - Low Priority for this audit scope).
+- **Recommendation**: Create a tracking issue to investigate and update `ImageUpload.tsx` to point to the correct endpoint or verify global route existence. (Marked as P3 - Low Priority for this audit scope).
 
 ## 4. PR Requirements
 
@@ -60,4 +60,4 @@ This PR (`audit-fix`) includes:
 ## 5. Next Steps
 
 - Verify `next.config.mjs` allows image domains for user uploads if they differ from Supabase/Unsplash.
-- Investigate and fix the `/api/upload` route path.
+- Investigate and fix the `/api/upload` route path via a dedicated tracking issue.
