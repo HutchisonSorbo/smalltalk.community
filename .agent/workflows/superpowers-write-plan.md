@@ -19,10 +19,25 @@ Before planning, verify skills from brainstorm and check for additional skills:
 2. Run `/discover-skills` or check catalog for additional matches
 3. Document confirmed skills in plan output
 
+## Semantic Context Verification (Mandatory)
+
+Before proceeding to define plan steps, you MUST use GrepAI to verify the semantic context of the project. This ensures that the components, files, and patterns you intend to modify are accurately identified.
+
+```bash
+# Semantic search for relevant components/patterns
+./bin/grepai search "{{input}}"
+
+# Trace key symbols if necessary
+./bin/grepai trace "key_symbol_name"
+```
+
+Summarize findings in the "Known context" or "Assumptions" section of the plan.
+
 ## Rules
 
 - DO NOT edit code.
-- You may read files to understand context, but produce the plan and then stop.
+- You can use `./bin/grepai search "query"` to find relevant code context.
+- **MANDATORY**: Utilize GrepAI search to verify all code context before finalizing plan steps.
 - Plan steps must be small (2–10 minutes each) and include verification commands.
 - **CHECKPOINT 2**: Verify skills from brainstorm, check for additional skills
 - **MANDATORY**: Include accessibility considerations for all UI changes
