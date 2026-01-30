@@ -38,6 +38,7 @@ export default defineConfig({
     "onboarding*",
     "tenants",
     "tenant_*",
-    "admin_*"
+    "admin_*",
+    "crm_*"
   ],
 });

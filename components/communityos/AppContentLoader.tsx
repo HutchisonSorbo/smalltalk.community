@@ -104,7 +104,7 @@ function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; reset
 }
 
 const CRMApp = dynamic(
-    () => import("./apps/CRMApp").then((m) => ({ default: m.CRMApp })),
+    () => import("./apps/CRMProApp").then((m) => ({ default: m.CRMProApp })),
     { loading: () => <AppLoadingSkeleton />, ssr: false }
 );
 

@@ -11,6 +11,7 @@ import {
   boolean,
   pgPolicy,
   uniqueIndex,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1822,4 +1823,287 @@ export type InsertActivityLog = typeof activityLogs.$inferInsert;
 
 export type TenantInvite = typeof tenantInvites.$inferSelect;
 export type InsertTenantInvite = typeof tenantInvites.$inferInsert;
+
+// CRM Pro - Pipeline Management
+export const crmPipelines = pgTable("crm_pipelines", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("crm_pipelines_org_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+    )`
+  }),
+  pgPolicy("crm_pipelines_admin_all", {
+    for: "all",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+      and om.role in ('admin', 'coordinator')
+    )`,
+    withCheck: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+      and om.role in ('admin', 'coordinator')
+    )`
+  }),
+  pgPolicy("crm_pipelines_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("crm_pipelines_organisation_id_idx").on(table.organisationId),
+]);
+
+export const crmPipelineStages = pgTable("crm_pipeline_stages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pipelineId: varchar("pipeline_id").notNull().references(() => crmPipelines.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  position: integer("position").notNull().default(0),
+  color: varchar("color", { length: 7 }).default("#4F46E5"),
+}, (table) => [
+  pgPolicy("crm_pipeline_stages_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from crm_pipelines p
+      where p.id = ${table.pipelineId}
+      and exists (
+        select 1 from organisation_members om
+        where om.organisation_id = p.organisation_id
+        and om.user_id = (select auth.uid())
+      )
+    )`
+  }),
+  pgPolicy("crm_pipeline_stages_admin_all", {
+    for: "all",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from crm_pipelines p
+      where p.id = ${table.pipelineId}
+      and exists (
+        select 1 from organisation_members om
+        where om.organisation_id = p.organisation_id
+        and om.user_id = (select auth.uid())
+        and om.role in ('admin', 'coordinator')
+      )
+    )`,
+    withCheck: sql`exists (
+      select 1 from crm_pipelines p
+      where p.id = ${table.pipelineId}
+      and exists (
+        select 1 from organisation_members om
+        where om.organisation_id = p.organisation_id
+        and om.user_id = (select auth.uid())
+        and om.role in ('admin', 'coordinator')
+      )
+    )`
+  }),
+  pgPolicy("crm_pipeline_stages_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("crm_pipeline_stages_pipeline_id_idx").on(table.pipelineId),
+]);
+
+// CRM Pro - Contact Management
+export const crmContacts = pgTable("crm_contacts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  type: varchar("type", { length: 20 }).notNull().default("individual"), // 'individual', 'organisation'
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("crm_contacts_org_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+    )`
+  }),
+  pgPolicy("crm_contacts_admin_all", {
+    for: "all",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+      and om.role in ('admin', 'coordinator')
+    )`,
+    withCheck: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+      and om.role in ('admin', 'coordinator')
+    )`
+  }),
+  pgPolicy("crm_contacts_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("crm_contacts_organisation_id_idx").on(table.organisationId),
+  index("crm_contacts_email_idx").on(table.email),
+]);
+
+// CRM Pro - Deal Tracking
+export const crmDeals = pgTable("crm_deals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  contactId: varchar("contact_id").references(() => crmContacts.id, { onDelete: "set null" }),
+  pipelineStageId: varchar("pipeline_stage_id").notNull().references(() => crmPipelineStages.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  value: numeric("value", { precision: 12, scale: 2 }).default("0"),
+  probability: integer("probability").default(0),
+  expectedCloseDate: timestamp("expected_close_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("crm_deals_org_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+    )`
+  }),
+  pgPolicy("crm_deals_admin_all", {
+    for: "all",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+      and om.role in ('admin', 'coordinator')
+    )`,
+    withCheck: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+      and om.role in ('admin', 'coordinator')
+    )`
+  }),
+  pgPolicy("crm_deals_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("crm_deals_organisation_id_idx").on(table.organisationId),
+  index("crm_deals_pipeline_stage_id_idx").on(table.pipelineStageId),
+  index("crm_deals_contact_id_idx").on(table.contactId),
+]);
+
+// CRM Pro - Activity & Audit Trail
+export const crmActivityLog = pgTable("crm_activity_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  organisationId: varchar("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  dealId: varchar("deal_id").references(() => crmDeals.id, { onDelete: "set null" }),
+  contactId: varchar("contact_id").references(() => crmContacts.id, { onDelete: "set null" }),
+  action: varchar("action", { length: 100 }).notNull(), // 'stage_changed', 'contact_created', etc.
+  details: jsonb("details").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  pgPolicy("crm_activity_log_org_read", {
+    for: "select",
+    to: "authenticated",
+    using: sql`exists (
+      select 1 from organisation_members om
+      where om.organisation_id = ${table.organisationId}
+      and om.user_id = (select auth.uid())
+    )`
+  }),
+  pgPolicy("crm_activity_log_service_all", { for: "all", to: "service_role", using: sql`true`, withCheck: sql`true` }),
+  index("crm_activity_log_organisation_id_idx").on(table.organisationId),
+  index("crm_activity_log_deal_id_idx").on(table.dealId),
+  index("crm_activity_log_contact_id_idx").on(table.contactId),
+]);
+
+// Relations
+export const crmPipelinesRelations = relations(crmPipelines, ({ one, many }) => ({
+  organisation: one(organisations, {
+    fields: [crmPipelines.organisationId],
+    references: [organisations.id],
+  }),
+  stages: many(crmPipelineStages),
+}));
+
+export const crmPipelineStagesRelations = relations(crmPipelineStages, ({ one, many }) => ({
+  pipeline: one(crmPipelines, {
+    fields: [crmPipelineStages.pipelineId],
+    references: [crmPipelines.id],
+  }),
+  deals: many(crmDeals),
+}));
+
+export const crmContactsRelations = relations(crmContacts, ({ one, many }) => ({
+  organisation: one(organisations, {
+    fields: [crmContacts.organisationId],
+    references: [organisations.id],
+  }),
+  deals: many(crmDeals),
+}));
+
+export const crmDealsRelations = relations(crmDeals, ({ one }) => ({
+  organisation: one(organisations, {
+    fields: [crmDeals.organisationId],
+    references: [organisations.id],
+  }),
+  contact: one(crmContacts, {
+    fields: [crmDeals.contactId],
+    references: [crmContacts.id],
+  }),
+  stage: one(crmPipelineStages, {
+    fields: [crmDeals.pipelineStageId],
+    references: [crmPipelineStages.id],
+  }),
+}));
+
+export const crmActivityLogRelations = relations(crmActivityLog, ({ one }) => ({
+  organisation: one(organisations, {
+    fields: [crmActivityLog.organisationId],
+    references: [organisations.id],
+  }),
+  user: one(users, {
+    fields: [crmActivityLog.userId],
+    references: [users.id],
+  }),
+  deal: one(crmDeals, {
+    fields: [crmActivityLog.dealId],
+    references: [crmDeals.id],
+  }),
+  contact: one(crmContacts, {
+    fields: [crmActivityLog.contactId],
+    references: [crmContacts.id],
+  }),
+}));
+
+// Zod Schemas
+export const insertCrmPipelineSchema = createInsertSchema(crmPipelines).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCrmPipelineStageSchema = createInsertSchema(crmPipelineStages).omit({ id: true });
+export const insertCrmContactSchema = createInsertSchema(crmContacts).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCrmDealSchema = createInsertSchema(crmDeals).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCrmActivityLogSchema = createInsertSchema(crmActivityLog).omit({ id: true, createdAt: true });
+
+// Types
+export type CrmPipeline = typeof crmPipelines.$inferSelect;
+export type InsertCrmPipeline = typeof crmPipelines.$inferInsert;
+
+export type CrmPipelineStage = typeof crmPipelineStages.$inferSelect;
+export type InsertCrmPipelineStage = typeof crmPipelineStages.$inferInsert;
+
+export type CrmContact = typeof crmContacts.$inferSelect;
+export type InsertCrmContact = typeof crmContacts.$inferInsert;
+
+export type CrmDeal = typeof crmDeals.$inferSelect;
+export type InsertCrmDeal = typeof crmDeals.$inferInsert;
+
+export type CrmActivityLog = typeof crmActivityLog.$inferSelect;
+export type InsertCrmActivityLog = typeof crmActivityLog.$inferInsert;
+
 
