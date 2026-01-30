@@ -71,6 +71,15 @@ export function COSDataTable<T extends { id: string | number }>({
         return result;
     }, [data, searchTerm, sortKey, sortOrder]);
 
+    // Reset to page 1 when filtered data changes
+    const prevFilteredLength = React.useRef(filteredData.length);
+    React.useEffect(() => {
+        if (filteredData.length !== prevFilteredLength.current) {
+            setCurrentPage(1);
+            prevFilteredLength.current = filteredData.length;
+        }
+    }, [filteredData.length]);
+
     const totalPages = Math.ceil(filteredData.length / pageSize);
     const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -102,11 +111,11 @@ export function COSDataTable<T extends { id: string | number }>({
                 )}
 
                 <div className="flex gap-2 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border bg-background text-sm font-medium hover:bg-muted transition-colors">
+                    <button type="button" className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border bg-background text-sm font-medium hover:bg-muted transition-colors">
                         <Filter className="h-4 w-4" />
                         <span>Filter</span>
                     </button>
-                    <button className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border bg-background text-sm font-medium hover:bg-muted transition-colors">
+                    <button type="button" className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border bg-background text-sm font-medium hover:bg-muted transition-colors">
                         <Download className="h-4 w-4" />
                         <span>Export</span>
                     </button>
@@ -160,8 +169,17 @@ export function COSDataTable<T extends { id: string | number }>({
                                 <tr
                                     key={item.id}
                                     onClick={() => onRowClick?.(item)}
+                                    onKeyDown={(e) => {
+                                        if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {
+                                            e.preventDefault();
+                                            onRowClick(item);
+                                        }
+                                    }}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    role="row"
                                     className={cn(
-                                        "border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer group",
+                                        "border-b last:border-0 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                                        onRowClick && "cursor-pointer",
                                         selectedIds.has(item.id) && "bg-primary/5"
                                     )}
                                 >
@@ -185,16 +203,19 @@ export function COSDataTable<T extends { id: string | number }>({
                                         <td
                                             key={String(col.key)}
                                             className={cn(
-                                                "px-4 py-4 text-sm font-medium",
+                                                "px-4 py-4 text-sm font-medium max-w-[200px] truncate",
                                                 col.hideOnMobile && "hidden md:table-cell"
                                             )}
                                         >
-                                            {col.render ? col.render(item) : String(item[col.key])}
+                                            <span className="truncate block">
+                                                {col.render ? col.render(item) : String(item[col.key] ?? '')}
+                                            </span>
                                         </td>
                                     ))}
                                     <td className="px-4 py-4 text-right">
                                         <button
-                                            className="p-1.5 hover:bg-muted rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                            type="button"
+                                            className="p-1.5 hover:bg-muted rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
                                             aria-label="Item actions"
                                         >
                                             <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -228,6 +249,7 @@ export function COSDataTable<T extends { id: string | number }>({
                     </p>
                     <div className="flex items-center gap-1">
                         <button
+                            type="button"
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
                             className="p-1.5 rounded-lg border hover:bg-muted disabled:opacity-50 transition-colors"
@@ -236,20 +258,31 @@ export function COSDataTable<T extends { id: string | number }>({
                             <ChevronLeft className="h-4 w-4" />
                         </button>
                         <div className="flex items-center gap-1">
-                            {[...Array(totalPages)].map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={cn(
-                                        "min-w-[32px] h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all",
-                                        currentPage === i + 1 ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-muted"
-                                    )}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
+                            {[...Array(Math.min(totalPages, 5))].map((_, i) => {
+                                // Show first few pages, and add ellipsis if needed
+                                const pageNum = i + 1;
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        type="button"
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={cn(
+                                            "min-w-[32px] h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all",
+                                            currentPage === pageNum ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-muted"
+                                        )}
+                                        aria-label={`Page ${pageNum}`}
+                                        aria-current={currentPage === pageNum ? "page" : undefined}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                            {totalPages > 5 && (
+                                <span className="px-2 text-muted-foreground">...</span>
+                            )}
                         </div>
                         <button
+                            type="button"
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
                             className="p-1.5 rounded-lg border hover:bg-muted disabled:opacity-50 transition-colors"

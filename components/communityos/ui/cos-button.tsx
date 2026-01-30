@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { tokens } from "@/lib/design-system/tokens";
 import { Loader2 } from "lucide-react";
 
 interface COSButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { tokens } from "@/lib/design-system/tokens";
 
 interface COSCardProps extends React.HTMLAttributes<HTMLDivElement> {
     variant?: 'default' | 'glass' | 'outlined' | 'elevated';

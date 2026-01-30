@@ -24,6 +24,9 @@ import { Download, Upload, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { parseCsv, generateCsv, mapCsvToContacts } from "@/lib/communityos/csv-utils";
 
+/** Maximum file size for CSV imports (5MB) */
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
 interface Contact {
     id: string;
     firstName: string;
@@ -37,6 +40,19 @@ interface CRMImportExportProps {
     onImport: (contacts: Omit<Contact, "id">[]) => Promise<void>;
 }
 
+/**
+ * Reusable utility to trigger a file download
+ */
+function downloadFile(content: string, filename: string, mimeType: string): void {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
 export function CRMImportExport({ contacts, onImport }: CRMImportExportProps) {
     return (
         <div className="flex items-center gap-2">
@@ -48,25 +64,28 @@ export function CRMImportExport({ contacts, onImport }: CRMImportExportProps) {
 
 function CRMExportDialog({ contacts }: { contacts: Contact[] }) {
     const handleExport = () => {
-        const csv = generateCsv(contacts as unknown as Record<string, unknown>[], [
+        // Map contacts to plain objects for CSV generation
+        const exportData = contacts.map((c) => ({
+            firstName: c.firstName,
+            lastName: c.lastName,
+            email: c.email,
+            phone: c.phone,
+        }));
+
+        const csv = generateCsv(exportData, [
             { key: "firstName", header: "First Name" },
             { key: "lastName", header: "Last Name" },
             { key: "email", header: "Email" },
             { key: "phone", header: "Phone" },
         ]);
 
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `crm-contacts-${new Date().toISOString().slice(0, 10)}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
+        const filename = `crm-contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+        downloadFile(csv, filename, "text/csv;charset=utf-8;");
         toast.success(`Exported ${contacts.length} contacts`);
     };
 
     return (
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={contacts.length === 0}>
+        <Button type="button" variant="outline" size="sm" onClick={handleExport} disabled={contacts.length === 0}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
         </Button>
@@ -92,27 +111,47 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
 
-        setFile(selectedFile);
-        const text = await selectedFile.text();
-        const result = parseCsv(text);
+        // Validate file size
+        if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+            toast.error(`File too large. Maximum size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB`);
+            return;
+        }
 
-        setHeaders(result.headers);
-        setRows(result.rows);
-        setErrors(result.errors);
+        // Validate file type
+        if (!selectedFile.name.toLowerCase().endsWith(".csv")) {
+            toast.error("Please select a CSV file");
+            return;
+        }
 
-        // Auto-map common header names
-        const autoMap = { firstName: "", lastName: "", email: "", phone: "" };
-        result.headers.forEach((h) => {
-            const lower = h.toLowerCase();
-            if (lower.includes("first") && lower.includes("name")) autoMap.firstName = h;
-            if (lower.includes("last") && lower.includes("name")) autoMap.lastName = h;
-            if (lower.includes("email")) autoMap.email = h;
-            if (lower.includes("phone") || lower.includes("mobile")) autoMap.phone = h;
-        });
-        setMapping(autoMap);
+        try {
+            setFile(selectedFile);
+            const text = await selectedFile.text();
+            const result = parseCsv(text);
 
-        if (result.rows.length > 0) {
-            setStep("map");
+            setHeaders(result.headers);
+            setRows(result.rows);
+            setErrors(result.errors);
+
+            // Auto-map common header names
+            const autoMap = { firstName: "", lastName: "", email: "", phone: "" };
+            result.headers.forEach((h) => {
+                const lower = h.toLowerCase();
+                if (lower.includes("first") && lower.includes("name")) autoMap.firstName = h;
+                if (lower.includes("last") && lower.includes("name")) autoMap.lastName = h;
+                if (lower.includes("email")) autoMap.email = h;
+                if (lower.includes("phone") || lower.includes("mobile")) autoMap.phone = h;
+            });
+            setMapping(autoMap);
+
+            if (result.rows.length > 0) {
+                setStep("map");
+            } else {
+                toast.error("No data rows found in the CSV file");
+            }
+        } catch (err) {
+            console.error("CRMImportDialog: handleFileChange failed", err);
+            toast.error("Failed to read the CSV file. Please check the format.");
+            setFile(null);
         }
     };
 
@@ -144,7 +183,7 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
     return (
         <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetState(); }}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button type="button" variant="outline" size="sm">
                     <Upload className="mr-2 h-4 w-4" />
                     Import CSV
                 </Button>
@@ -168,6 +207,9 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
                             accept=".csv"
                             onChange={handleFileChange}
                         />
+                        <p className="text-xs text-muted-foreground">
+                            Maximum file size: {MAX_FILE_SIZE_BYTES / 1024 / 1024}MB
+                        </p>
                     </div>
                 )}
 
@@ -216,14 +258,14 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
 
                 <DialogFooter>
                     {step === "map" && (
-                        <Button onClick={() => setStep("preview")} disabled={!mapping.email}>
+                        <Button type="button" onClick={() => setStep("preview")} disabled={!mapping.email}>
                             Continue
                         </Button>
                     )}
                     {step === "preview" && (
                         <>
-                            <Button variant="outline" onClick={() => setStep("map")}>Back</Button>
-                            <Button onClick={handleImport} disabled={isImporting}>
+                            <Button type="button" variant="outline" onClick={() => setStep("map")}>Back</Button>
+                            <Button type="button" onClick={handleImport} disabled={isImporting}>
                                 {isImporting ? "Importing..." : "Import"}
                             </Button>
                         </>

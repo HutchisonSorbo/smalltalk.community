@@ -4,31 +4,13 @@ import * as React from "react";
 import { CRMContactCard } from "./crm-contact-card";
 import { COSSwipeable } from "../ui/cos-swipeable";
 import { Phone, Mail } from "lucide-react";
-
-interface Contact {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string | null;
-    phone: string | null;
-    type: string | null;
-    metadata: any;
-    createdAt: Date | null;
-}
-
-interface Props {
-    contact: Contact;
-    onClick?: () => void;
-    className?: string;
-    isSelected?: boolean;
-    onToggleSelection?: (id: string, selected: boolean) => void;
-}
+import type { CrmContactCardProps } from "@/types/crm";
 
 /**
  * Wrapper for CRMContactCard with swipe-to-action gestures on mobile.
  * Swipe right to call, swipe left to email.
  */
-export function CRMSwipeableContactCard({ contact, onClick, className, isSelected, onToggleSelection }: Props) {
+export function CRMSwipeableContactCard({ contact, onClick, className, isSelected, onToggleSelection }: CrmContactCardProps) {
     const handleCall = () => {
         if (contact.phone) {
             window.location.href = `tel:${contact.phone}`;

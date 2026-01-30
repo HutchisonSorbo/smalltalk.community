@@ -4,12 +4,10 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Archive, Tag, Mail, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { CRMBulkAction, CRMBulkActionsProps } from "@/types/crm";
 
-interface CRMBulkActionsProps {
-    selectedCount: number;
-    onClear: () => void;
-    onAction: (action: string) => void;
-}
+// Re-export types for backwards compatibility
+export type { CRMBulkAction, CRMBulkActionsProps };
 
 export function CRMBulkActions({ selectedCount, onClear, onAction }: CRMBulkActionsProps) {
     if (selectedCount === 0) return null;
@@ -19,10 +17,12 @@ export function CRMBulkActions({ selectedCount, onClear, onAction }: CRMBulkActi
             <div className="flex items-center gap-4 rounded-full border bg-background/95 p-2 pr-4 shadow-2xl backdrop-blur-md ring-1 ring-black/5">
                 <div className="flex items-center gap-2 border-r pr-4 pl-2">
                     <Button
+                        type="button"
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 rounded-full hover:bg-muted"
                         onClick={onClear}
+                        aria-label="Clear selection"
                     >
                         <X className="h-4 w-4" />
                     </Button>
@@ -33,6 +33,7 @@ export function CRMBulkActions({ selectedCount, onClear, onAction }: CRMBulkActi
 
                 <div className="flex items-center gap-1">
                     <Button
+                        type="button"
                         variant="ghost"
                         size="sm"
                         className="h-9 px-3 hover:text-primary transition-colors"
@@ -42,6 +43,7 @@ export function CRMBulkActions({ selectedCount, onClear, onAction }: CRMBulkActi
                         Email
                     </Button>
                     <Button
+                        type="button"
                         variant="ghost"
                         size="sm"
                         className="h-9 px-3 hover:text-primary transition-colors"
@@ -51,6 +53,7 @@ export function CRMBulkActions({ selectedCount, onClear, onAction }: CRMBulkActi
                         Tag
                     </Button>
                     <Button
+                        type="button"
                         variant="ghost"
                         size="sm"
                         className="h-9 px-3 hover:text-primary transition-colors"
@@ -60,6 +63,7 @@ export function CRMBulkActions({ selectedCount, onClear, onAction }: CRMBulkActi
                         Archive
                     </Button>
                     <Button
+                        type="button"
                         variant="ghost"
                         size="sm"
                         className="h-9 px-3 text-destructive hover:bg-destructive/10 transition-colors"

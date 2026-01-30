@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import { COSTimeline } from "../ui/cos-timeline";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isValid } from "date-fns";
 import { COSEmptyState } from "../ui/cos-empty-state";
 import { Clock } from "lucide-react";
+import type { CrmActivityLog } from "@/shared/schema";
 
 interface CRMActivityTimelineProps {
-    logs: any[];
+    logs: CrmActivityLog[];
     isLoading?: boolean;
 }
 
@@ -27,22 +28,33 @@ export function CRMActivityTimeline({ logs, isLoading }: CRMActivityTimelineProp
     }
 
     const timelineItems = logs.map((log) => {
-        let title = log.action.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
+        const title = log.action.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
         let description = "";
 
         if (log.action === "stage_changed") {
             description = `Moved to new stage.`;
         } else if (log.action === "deal_created") {
-            description = `New deal created: ${log.details?.title || "Untitled"}`;
+            const details = log.details as { title?: string } | null;
+            description = `New deal created: ${details?.title || "Untitled"}`;
         } else if (log.action === "contact_created") {
-            description = `New contact added: ${log.details?.name || "Unknown"}`;
+            const details = log.details as { name?: string } | null;
+            description = `New contact added: ${details?.name || "Unknown"}`;
+        }
+
+        // Safely parse and validate the date
+        let timestamp = "Unknown date";
+        if (log.createdAt) {
+            const date = new Date(log.createdAt);
+            if (isValid(date)) {
+                timestamp = formatDistanceToNow(date, { addSuffix: true });
+            }
         }
 
         return {
             id: log.id,
             title,
             description,
-            timestamp: formatDistanceToNow(new Date(log.createdAt), { addSuffix: true }),
+            timestamp,
             type: "system" as const,
         };
     });

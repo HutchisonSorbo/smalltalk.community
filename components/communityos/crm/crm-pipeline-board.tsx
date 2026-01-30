@@ -162,6 +162,10 @@ export function CRMPipelineBoard({
             setDeals((items) => {
                 const oldIndex = items.findIndex((i) => i.id === activeId);
                 const newIndex = items.findIndex((i) => i.id === overId);
+                // Guard against invalid indices
+                if (oldIndex === -1 || newIndex === -1) {
+                    return items;
+                }
                 return arrayMove(items, oldIndex, newIndex);
             });
         }
@@ -226,8 +230,10 @@ function StageColumn({ stage, deals, onDealClick, onAddDeal }: {
                     </span>
                 </div>
                 <button
+                    type="button"
                     onClick={() => onAddDeal?.(stage.id)}
                     className="p-1 hover:bg-muted rounded transition-colors"
+                    aria-label={`Add deal to ${stage.name}`}
                 >
                     <Plus className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -291,7 +297,7 @@ function DealCard({ deal, onClick, isOverlay }: { deal: Deal; onClick?: () => vo
         >
             <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-sm font-bold leading-tight">{deal.title}</h4>
+                    <h4 className="text-sm font-bold leading-tight truncate max-w-[200px]" title={deal.title}>{deal.title}</h4>
                     <DollarSign className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 </div>
 

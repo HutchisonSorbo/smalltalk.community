@@ -20,7 +20,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { DollarSign, Calendar, Info, Clock } from "lucide-react";
+import { DollarSign, Calendar } from "lucide-react";
+import { toast } from "sonner";
 
 interface Deal {
     id: string;
@@ -72,9 +73,31 @@ export function CRMDealDetailSheet({
         try {
             await onSave(formData as Deal);
             onClose();
+        } catch (err) {
+            console.error("CRMDealDetailSheet: handleSave failed", err);
+            toast.error("Failed to save deal. Please try again.");
         } finally {
             setIsSaving(false);
         }
+    };
+
+    /**
+     * Handle probability input change with proper null handling and clamping
+     */
+    const handleProbabilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value === "") {
+            setFormData({ ...formData, probability: null });
+            return;
+        }
+        const parsed = parseInt(value, 10);
+        if (Number.isNaN(parsed)) {
+            setFormData({ ...formData, probability: null });
+            return;
+        }
+        // Clamp between 0 and 100
+        const clamped = Math.max(0, Math.min(100, parsed));
+        setFormData({ ...formData, probability: clamped });
     };
 
     if (!deal && isOpen) return null;
@@ -140,8 +163,8 @@ export function CRMDealDetailSheet({
                                 type="number"
                                 min="0"
                                 max="100"
-                                value={formData.probability || ""}
-                                onChange={(e) => setFormData({ ...formData, probability: parseInt(e.target.value) || 0 })}
+                                value={formData.probability ?? ""}
+                                onChange={handleProbabilityChange}
                             />
                         </div>
                     </div>
@@ -175,6 +198,7 @@ export function CRMDealDetailSheet({
                 <SheetFooter className="flex-col sm:flex-row gap-3 pt-4">
                     {deal && onDelete && (
                         <Button
+                            type="button"
                             variant="ghost"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto"
                             onClick={() => onDelete(deal.id)}
@@ -182,8 +206,8 @@ export function CRMDealDetailSheet({
                             Delete Deal
                         </Button>
                     )}
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleSave} disabled={isSaving}>
+                    <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button type="button" onClick={handleSave} disabled={isSaving}>
                         {isSaving ? "Saving..." : "Save Deal"}
                     </Button>
                 </SheetFooter>

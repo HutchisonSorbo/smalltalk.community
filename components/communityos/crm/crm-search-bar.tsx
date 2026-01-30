@@ -6,6 +6,7 @@ import { Search, Loader2 } from "lucide-react";
 import { searchCrm } from "@/lib/communityos/crm-actions";
 import { useTenant } from "../TenantProvider";
 import { toast } from "sonner";
+import type { CrmSearchResults, CrmSearchContact, CrmSearchDeal } from "@/types/crm";
 
 interface CRMSearchBarProps {
     onResultSelect: (type: "contact" | "deal", id: string) => void;
@@ -14,7 +15,7 @@ interface CRMSearchBarProps {
 export function CRMSearchBar({ onResultSelect }: CRMSearchBarProps) {
     const { tenant } = useTenant();
     const [query, setQuery] = React.useState("");
-    const [results, setResults] = React.useState<{ contacts: any[]; deals: any[] } | null>(null);
+    const [results, setResults] = React.useState<CrmSearchResults | null>(null);
     const [isSearching, setIsSearching] = React.useState(false);
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -27,13 +28,22 @@ export function CRMSearchBar({ onResultSelect }: CRMSearchBarProps) {
 
         setIsSearching(true);
         setIsOpen(true);
-        const res = await searchCrm(tenant.id, q);
-        if (res.success) {
-            setResults(res.data);
-        } else {
-            toast.error(res.error);
+
+        try {
+            const res = await searchCrm(tenant.id, q);
+            if (res.success) {
+                setResults(res.data as CrmSearchResults);
+            } else {
+                toast.error(res.error ?? "Search failed");
+                setResults(null);
+            }
+        } catch (err) {
+            console.error("CRMSearchBar: handleSearch failed", err);
+            toast.error("Search failed");
+            setResults(null);
+        } finally {
+            setIsSearching(false);
         }
-        setIsSearching(false);
     }, [tenant?.id]);
 
     React.useEffect(() => {
@@ -60,9 +70,10 @@ export function CRMSearchBar({ onResultSelect }: CRMSearchBarProps) {
                     {results.contacts.length > 0 && (
                         <div className="mb-2">
                             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Contacts</p>
-                            {results.contacts.map((c) => (
+                            {results.contacts.map((c: CrmSearchContact) => (
                                 <button
                                     key={c.id}
+                                    type="button"
                                     className="flex w-full items-center px-2 py-1.5 text-sm hover:bg-muted rounded-md transition-colors"
                                     onClick={() => onResultSelect("contact", c.id)}
                                 >
@@ -74,9 +85,10 @@ export function CRMSearchBar({ onResultSelect }: CRMSearchBarProps) {
                     {results.deals.length > 0 && (
                         <div>
                             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Deals</p>
-                            {results.deals.map((d) => (
+                            {results.deals.map((d: CrmSearchDeal) => (
                                 <button
                                     key={d.id}
+                                    type="button"
                                     className="flex w-full items-center px-2 py-1.5 text-sm hover:bg-muted rounded-md transition-colors"
                                     onClick={() => onResultSelect("deal", d.id)}
                                 >

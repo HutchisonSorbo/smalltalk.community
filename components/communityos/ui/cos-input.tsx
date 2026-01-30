@@ -40,7 +40,7 @@ const COSInput = React.forwardRef<HTMLInputElement, COSInputProps>(
                         id={inputId}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        aria-invalid={error ? true : undefined}
+                        aria-invalid={!!error}
                         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
                         className={cn(
                             "flex h-12 w-full rounded-xl border bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-all",

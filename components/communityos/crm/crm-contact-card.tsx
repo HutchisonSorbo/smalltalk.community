@@ -3,31 +3,16 @@
 import * as React from "react";
 import { COSCard } from "../ui/cos-card";
 import { COSBadge } from "../ui/cos-badge";
-import { Mail, Phone, Calendar, Tag } from "lucide-react";
+import { Mail, Phone, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { CrmContactCardData, CrmContactCardProps } from "@/types/crm";
 
-interface Contact {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string | null;
-    phone: string | null;
-    type: string | null;
-    metadata: any;
-    createdAt: Date | null;
-}
+// Re-export types for backwards compatibility
+export type { CrmContactCardData, CrmContactCardProps };
 
-interface Props {
-    contact: Contact;
-    onClick?: () => void;
-    className?: string;
-    isSelected?: boolean;
-    onToggleSelection?: (id: string, selected: boolean) => void;
-}
-
-export function CRMContactCard({ contact, onClick, className, isSelected, onToggleSelection }: Props) {
+export function CRMContactCard({ contact, onClick, className, isSelected, onToggleSelection }: CrmContactCardProps) {
     const fullName = `${contact.firstName} ${contact.lastName}`.trim() || "Unnamed Contact";
-    const segments = contact.metadata?.segments || [];
+    const segments = contact.metadata?.segments ?? [];
 
     return (
         <COSCard
@@ -83,8 +68,8 @@ export function CRMContactCard({ contact, onClick, className, isSelected, onTogg
 
             {segments.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                    {segments.map((segment: string) => (
-                        <COSBadge key={segment} size="sm" variant="outline" className="bg-muted/30">
+                    {segments.map((segment: string, index: number) => (
+                        <COSBadge key={`${segment}-${index}`} size="sm" variant="outline" className="bg-muted/30">
                             {segment}
                         </COSBadge>
                     ))}

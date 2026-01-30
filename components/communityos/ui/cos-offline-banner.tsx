@@ -47,6 +47,7 @@ export function COSOfflineBanner() {
                             <span>You're offline. Changes will sync when you reconnect.</span>
                         </div>
                         <button
+                            type="button"
                             onClick={() => setDismissed(true)}
                             className="p-1 hover:bg-black/10 rounded-full transition-colors"
                             aria-label="Dismiss offline banner"
