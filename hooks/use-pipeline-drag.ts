@@ -113,10 +113,12 @@ export function usePipelineDrag({ organisationId, initialDeals, stages }: UsePip
         const stageChanged = originalDeal && newStageId !== originalDeal.pipelineStageId;
 
         // Optimistically update positions in local state if dropped in same stage but different position
-        if (activeIdStr !== overId) {
+        const overDeal = deals.find((d) => d.id === overId);
+        if (overDeal && activeIdStr !== overId) {
             setDeals((items) => {
                 const oldIndex = items.findIndex((i) => i.id === activeIdStr);
                 const newIndex = items.findIndex((i) => i.id === overId);
+                if (oldIndex < 0 || newIndex < 0) return items;
                 return arrayMove(items, oldIndex, newIndex);
             });
         }
@@ -131,7 +133,7 @@ export function usePipelineDrag({ organisationId, initialDeals, stages }: UsePip
                 } else {
                     toast.success("Deal stage updated");
                 }
-            } catch (err) {
+            } catch {
                 toast.error("Failed to update deal stage");
                 if (snapshot) setDeals(snapshot);
             }

@@ -12,7 +12,6 @@ interface COSPullToRefreshProps {
 
 const COSPullToRefresh = ({ onRefresh, children, className }: COSPullToRefreshProps) => {
     const [startY, setStartY] = React.useState(0);
-    const [currentY, setCurrentY] = React.useState(0);
     const [refreshing, setRefreshing] = React.useState(false);
     const [pullDist, setPullDist] = React.useState(0);
 
@@ -35,7 +34,6 @@ const COSPullToRefresh = ({ onRefresh, children, className }: COSPullToRefreshPr
 
         if (dist > 0) {
             setPullDist(Math.min(dist * 0.4, threshold + 20));
-            setCurrentY(y);
         }
     };
 

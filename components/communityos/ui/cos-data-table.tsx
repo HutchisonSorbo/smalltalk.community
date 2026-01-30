@@ -80,8 +80,8 @@ export function COSDataTable<T extends { id: string | number }>({
         }
     }, [filteredData.length]);
 
-    const totalPages = Math.ceil(filteredData.length / pageSize);
-    const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const totalPages = React.useMemo(() => Math.ceil(filteredData.length / pageSize), [filteredData.length, pageSize]);
+    const paginatedData = React.useMemo(() => filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize), [filteredData, currentPage, pageSize]);
 
     const toggleSort = (key: keyof T) => {
         if (sortKey === key) {
@@ -125,9 +125,9 @@ export function COSDataTable<T extends { id: string | number }>({
             {/* Table Container */}
             <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-muted/50 border-b">
+                    <table className="w-full text-left border-collapse" role="grid" aria-colcount={columns.length + (selectable ? 1 : 0)}>
+                        <thead role="rowgroup">
+                            <tr className="bg-muted/50 border-b" role="row">
                                 {selectable && (
                                     <th className="px-4 py-3 w-10">
                                         <input
@@ -147,6 +147,8 @@ export function COSDataTable<T extends { id: string | number }>({
                                 {columns.map((col) => (
                                     <th
                                         key={String(col.key)}
+                                        role="columnheader"
+                                        aria-sort={sortKey === col.key ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
                                         className={cn(
                                             "px-4 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors",
                                             col.hideOnMobile && "hidden md:table-cell"
@@ -164,10 +166,12 @@ export function COSDataTable<T extends { id: string | number }>({
                                 <th className="px-4 py-3 w-10"></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody role="rowgroup">
                             {paginatedData.map((item) => (
                                 <tr
                                     key={item.id}
+                                    role="row"
+                                    aria-selected={selectedIds.has(item.id) ? "true" : "false"}
                                     onClick={() => onRowClick?.(item)}
                                     onKeyDown={(e) => {
                                         if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {
@@ -234,7 +238,7 @@ export function COSDataTable<T extends { id: string | number }>({
                         </div>
                         <h3 className="text-lg font-bold mb-1">No matching results</h3>
                         <p className="text-sm text-muted-foreground max-w-xs">
-                            We couldn't find any results matching your search terms. Try adjusting your filters.
+                            We couldn&apos;t find any results matching your search terms. Try adjusting your filters.
                         </p>
                     </div>
                 )}

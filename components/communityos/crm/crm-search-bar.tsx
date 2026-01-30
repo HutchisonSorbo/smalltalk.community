@@ -5,7 +5,6 @@ import { COSInput } from "../ui/cos-input";
 import { Search, Loader2, User, DollarSign } from "lucide-react";
 import { useTenant } from "../TenantProvider";
 import { useDebouncedCrmSearch } from "@/hooks/use-debounced-crm-search";
-import { cn } from "@/lib/utils";
 import type { CrmSearchResults, CrmSearchContact, CrmSearchDeal } from "@/types/crm";
 
 interface CRMSearchBarProps {
@@ -62,7 +61,7 @@ function CrmSearchResultsDropdown({ results, onSelect }: DropdownProps) {
     const hasAnyResults = hasContacts || hasDeals;
 
     return (
-        <div className="absolute top-full z-50 mt-2 w-full rounded-xl border bg-background/95 backdrop-blur-sm p-2 shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 overflow-hidden">
+        <div className="absolute top-full z-50 mt-2 w-full rounded-xl border bg-background/95 backdrop-blur-sm p-2 shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 overflow-hidden" role="listbox" aria-label="Search results">
             <div className="max-h-[320px] overflow-y-auto pr-1">
                 {hasContacts && (
                     <div className="mb-3">
@@ -74,6 +73,8 @@ function CrmSearchResultsDropdown({ results, onSelect }: DropdownProps) {
                             <button
                                 key={c.id}
                                 type="button"
+                                role="option"
+                                aria-selected="false"
                                 className="flex w-full items-center px-3 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-all text-left group/item"
                                 onClick={() => onSelect("contact", c.id)}
                             >
@@ -94,6 +95,8 @@ function CrmSearchResultsDropdown({ results, onSelect }: DropdownProps) {
                             <button
                                 key={d.id}
                                 type="button"
+                                role="option"
+                                aria-selected="false"
                                 className="flex w-full items-center px-3 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-all text-left group/item"
                                 onClick={() => onSelect("deal", d.id)}
                             >

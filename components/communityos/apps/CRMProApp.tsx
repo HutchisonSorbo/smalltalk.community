@@ -8,7 +8,6 @@ import {
     getContacts,
     getDeals,
     createDeal,
-    createContact,
     createPipeline,
 } from "@/lib/communityos/crm-actions";
 import { CRMPipelineBoard } from "../crm/crm-pipeline-board";
@@ -73,7 +72,7 @@ export function CRMProApp() {
             if (contactsRes.success) {
                 setContacts(contactsRes.data);
             }
-        } catch (err) {
+        } catch {
             toast.error("Failed to load CRM data");
         } finally {
             setIsLoading(false);
@@ -86,8 +85,8 @@ export function CRMProApp() {
         try {
             const res = await getActivityLog(tenant.id);
             if (res.success) setActivityLogs(res.data);
-        } catch (err) {
-            console.error("[fetchActivity] error:", err);
+        } catch {
+            console.error("[fetchActivity] error:");
         } finally {
             setIsActivityLoading(false);
         }
@@ -103,7 +102,7 @@ export function CRMProApp() {
 
             if (stagesRes.success) setStages(stagesRes.data);
             if (dealsRes.success) setDeals(dealsRes.data);
-        } catch (err) {
+        } catch {
             toast.error("Failed to load pipeline data");
         }
     }, [tenant?.id, selectedPipelineId]);
@@ -263,7 +262,7 @@ export function CRMProApp() {
                         setActiveDeal({ pipelineStageId: stages[0]?.id });
                         setIsDealSheetOpen(true);
                     }}>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                         Add Deal
                     </Button>
                 </div>
@@ -273,11 +272,11 @@ export function CRMProApp() {
                 <div className="flex items-center justify-between border-b pb-4">
                     <TabsList className="bg-muted/50">
                         <TabsTrigger value="pipeline" className="data-[state=active]:bg-background">
-                            <BarChart3 className="mr-2 h-4 w-4" />
+                            <BarChart3 className="mr-2 h-4 w-4" aria-hidden="true" />
                             Pipeline
                         </TabsTrigger>
                         <TabsTrigger value="contacts" className="data-[state=active]:bg-background">
-                            <Users className="mr-2 h-4 w-4" />
+                            <Users className="mr-2 h-4 w-4" aria-hidden="true" />
                             Contacts
                         </TabsTrigger>
                         <TabsTrigger
@@ -285,7 +284,7 @@ export function CRMProApp() {
                             className="data-[state=active]:bg-background"
                             onClick={fetchActivity}
                         >
-                            <Clock className="mr-2 h-4 w-4" />
+                            <Clock className="mr-2 h-4 w-4" aria-hidden="true" />
                             Activity
                         </TabsTrigger>
                     </TabsList>

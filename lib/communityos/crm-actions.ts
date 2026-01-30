@@ -12,7 +12,6 @@ import {
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import { createClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 /**
  * Result pattern for server actions
@@ -95,18 +94,23 @@ async function verifyOrgAccess(
  * Verify if a stage belongs to an organisation
  */
 async function verifyStageOrg(organisationId: string, stageId: string): Promise<boolean> {
-    const [result] = await db
-        .select({ id: crmPipelineStages.id })
-        .from(crmPipelineStages)
-        .innerJoin(crmPipelines, eq(crmPipelineStages.pipelineId, crmPipelines.id))
-        .where(
-            and(
-                eq(crmPipelineStages.id, stageId),
-                eq(crmPipelines.organisationId, organisationId)
+    try {
+        const [result] = await db
+            .select({ id: crmPipelineStages.id })
+            .from(crmPipelineStages)
+            .innerJoin(crmPipelines, eq(crmPipelineStages.pipelineId, crmPipelines.id))
+            .where(
+                and(
+                    eq(crmPipelineStages.id, stageId),
+                    eq(crmPipelines.organisationId, organisationId)
+                )
             )
-        )
-        .limit(1);
-    return !!result;
+            .limit(1);
+        return !!result;
+    } catch (err) {
+        console.error("[verifyStageOrg] error:", err);
+        return false;
+    }
 }
 
 // --- Pipeline Actions ---
@@ -299,7 +303,7 @@ export async function createDeal(
                 contactId: data.contactId,
                 pipelineStageId: data.pipelineStageId,
                 title,
-                value: data.value?.toString() || "0",
+                value: Number.isFinite(Number(data.value)) ? Number(data.value).toString() : "0",
                 probability: Math.max(0, Math.min(100, parseInt(data.probability) || 0)),
                 expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : null,
                 notes: sanitizeInput(data.notes, 2000),
