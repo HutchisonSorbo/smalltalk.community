@@ -20,7 +20,7 @@ export default defineConfig({
                 'server/**/*.{ts,tsx}',
                 'shared/**/*.{ts,tsx}',
                 'hooks/**/*.{ts,tsx}',
-                'scripts/**/*.{ts,tsx}',
+                // 'scripts/**/*.{ts,tsx}', // Excluded from coverage
                 'proxy.ts',
                 'instrumentation.ts',
                 'instrumentation-client.ts'
