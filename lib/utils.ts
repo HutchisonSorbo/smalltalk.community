@@ -7,14 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Validates that a URL uses a safe protocol (http or https).
+ * Validates that a URL uses a safe protocol (http, https, mailto, or tel).
  * Returns the URL if safe, otherwise returns undefined.
  */
 export function safeUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
   try {
     const parsed = new URL(url);
-    const allowedProtocols = ["http:", "https:", "mailto:"];
+    const allowedProtocols = ["http:", "https:", "mailto:", "tel:"];
     if (allowedProtocols.includes(parsed.protocol)) {
       return parsed.toString();
     }

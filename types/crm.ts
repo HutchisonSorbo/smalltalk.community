@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Shared CRM type definitions
  * Provides type-safe interfaces for CRM components across the application
@@ -81,9 +79,10 @@ export interface CrmSearchResults {
  */
 export interface CrmPipelineStage {
     id: string;
+    pipelineId: string;
     name: string;
-    order: number;
-    colour: string | null;
+    position: number;
+    color: string | null;
 }
 
 /**
@@ -92,12 +91,39 @@ export interface CrmPipelineStage {
 export interface CrmDeal {
     id: string;
     title: string;
-    value: number | null;
+    value: string | null;
     probability: number | null;
     expectedCloseDate: Date | null;
     pipelineStageId: string;
     contactId: string | null;
     organisationId: string;
+    notes: string | null;
     createdAt: Date | null;
     updatedAt: Date | null;
+}
+
+/**
+ * Pipeline structure
+ */
+export interface CrmPipeline {
+    id: string;
+    organisationId: string;
+    name: string;
+    description: string | null;
+    createdAt: Date | null;
+    updatedAt: Date | null;
+}
+
+/**
+ * Activity log structure
+ */
+export interface CrmActivityLog {
+    id: string;
+    organisationId: string;
+    userId: string;
+    action: string;
+    dealId: string | null;
+    contactId: string | null;
+    details: Record<string, unknown> | null;
+    createdAt: Date | null;
 }

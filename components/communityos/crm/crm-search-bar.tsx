@@ -19,7 +19,9 @@ export function CRMSearchBar({ onResultSelect }: CRMSearchBarProps) {
     const [isSearching, setIsSearching] = React.useState(false);
     const [isOpen, setIsOpen] = React.useState(false);
 
-    const handleSearch = React.useCallback(async (q: string) => {
+    const handleSearch = React.useCallback(async (rawQuery: string) => {
+        // Normalise query: trim whitespace and limit length
+        const q = rawQuery.trim().slice(0, 100);
         if (!tenant?.id || q.length < 2) {
             setResults(null);
             setIsOpen(false);
@@ -74,10 +76,10 @@ export function CRMSearchBar({ onResultSelect }: CRMSearchBarProps) {
                                 <button
                                     key={c.id}
                                     type="button"
-                                    className="flex w-full items-center px-2 py-1.5 text-sm hover:bg-muted rounded-md transition-colors"
+                                    className="flex w-full items-center px-2 py-1.5 text-sm hover:bg-muted rounded-md transition-colors max-w-full"
                                     onClick={() => onResultSelect("contact", c.id)}
                                 >
-                                    {c.firstName} {c.lastName}
+                                    <span className="truncate">{c.firstName} {c.lastName}</span>
                                 </button>
                             ))}
                         </div>
@@ -89,10 +91,10 @@ export function CRMSearchBar({ onResultSelect }: CRMSearchBarProps) {
                                 <button
                                     key={d.id}
                                     type="button"
-                                    className="flex w-full items-center px-2 py-1.5 text-sm hover:bg-muted rounded-md transition-colors"
+                                    className="flex w-full items-center px-2 py-1.5 text-sm hover:bg-muted rounded-md transition-colors max-w-full"
                                     onClick={() => onResultSelect("deal", d.id)}
                                 >
-                                    {d.title}
+                                    <span className="truncate">{d.title}</span>
                                 </button>
                             ))}
                         </div>

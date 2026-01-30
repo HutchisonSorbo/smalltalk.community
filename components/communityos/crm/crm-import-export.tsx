@@ -31,8 +31,8 @@ interface Contact {
     id: string;
     firstName: string;
     lastName: string;
-    email: string;
-    phone: string;
+    email: string | null;
+    phone: string | null;
 }
 
 interface CRMImportExportProps {

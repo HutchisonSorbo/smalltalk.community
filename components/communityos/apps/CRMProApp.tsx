@@ -16,7 +16,7 @@ import { CRMDealDetailSheet } from "../crm/crm-deal-detail-sheet";
 import { CRMSwipeableContactCard } from "../crm/crm-swipeable-contact-card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Settings, Users, BarChart3, Loader2, Clock, Search } from "lucide-react";
+import { Plus, Settings, Users, BarChart3, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { COSEmptyState } from "../ui/cos-empty-state";
 import { CRMSearchBar } from "../crm/crm-search-bar";
@@ -24,15 +24,22 @@ import { CRMActivityTimeline } from "../crm/crm-activity-timeline";
 import { CRMBulkActions } from "../crm/crm-bulk-actions";
 import { CRMImportExport } from "../crm/crm-import-export";
 import { getActivityLog, bulkCreateContacts } from "@/lib/communityos/crm-actions";
+import type {
+    CrmPipeline,
+    CrmPipelineStage,
+    CrmDeal,
+    CrmContactCardData,
+    CrmActivityLog,
+} from "@/types/crm";
 
 export function CRMProApp() {
     const { tenant, isLoading: isTenantLoading } = useTenant();
-    const [pipelines, setPipelines] = React.useState<any[]>([]);
-    const [selectedPipelineId, setSelectedPipelineId] = React.useState<string | null>(null);
-    const [stages, setStages] = React.useState<any[]>([]);
-    const [deals, setDeals] = React.useState<any[]>([]);
-    const [contacts, setContacts] = React.useState<any[]>([]);
-    const [activityLogs, setActivityLogs] = React.useState<any[]>([]);
+    const [pipelines, setPipelines] = React.useState<CrmPipeline[]>([]);
+    const [selectedPipelineId, setSelectedPipelineId] = React.useState<CrmPipeline["id"] | null>(null);
+    const [stages, setStages] = React.useState<CrmPipelineStage[]>([]);
+    const [deals, setDeals] = React.useState<CrmDeal[]>([]);
+    const [contacts, setContacts] = React.useState<CrmContactCardData[]>([]);
+    const [activityLogs, setActivityLogs] = React.useState<CrmActivityLog[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const [isActivityLoading, setIsActivityLoading] = React.useState(false);
 
@@ -40,7 +47,7 @@ export function CRMProApp() {
     const [selectedContactIds, setSelectedContactIds] = React.useState<string[]>([]);
 
     // UI State
-    const [activeDeal, setActiveDeal] = React.useState<any | null>(null);
+    const [activeDeal, setActiveDeal] = React.useState<Partial<CrmDeal> | null>(null);
     const [isDealSheetOpen, setIsDealSheetOpen] = React.useState(false);
 
     const fetchData = React.useCallback(async () => {
@@ -71,9 +78,14 @@ export function CRMProApp() {
     const fetchActivity = React.useCallback(async () => {
         if (!tenant?.id) return;
         setIsActivityLoading(true);
-        const res = await getActivityLog(tenant.id);
-        if (res.success) setActivityLogs(res.data);
-        setIsActivityLoading(false);
+        try {
+            const res = await getActivityLog(tenant.id);
+            if (res.success) setActivityLogs(res.data);
+        } catch (err) {
+            console.error("[fetchActivity] error:", err);
+        } finally {
+            setIsActivityLoading(false);
+        }
     }, [tenant?.id]);
 
     const fetchDealsAndStages = React.useCallback(async () => {
@@ -104,12 +116,17 @@ export function CRMProApp() {
         const name = window.prompt("Enter pipeline name:");
         if (!name) return;
 
-        const res = await createPipeline(tenant.id, { name });
-        if (res.success) {
-            toast.success("Pipeline created");
-            fetchData();
-        } else {
-            toast.error(res.error);
+        try {
+            const res = await createPipeline(tenant.id, { name });
+            if (res.success) {
+                toast.success("Pipeline created");
+                fetchData();
+            } else {
+                toast.error(res.error);
+            }
+        } catch (err) {
+            console.error("[handleCreatePipeline] error:", err);
+            toast.error(`Failed to create pipeline: ${err instanceof Error ? err.message : "Unknown error"}`);
         }
     };
 
@@ -127,7 +144,7 @@ export function CRMProApp() {
         }
     };
 
-    const handleContactsImport = async (importedContacts: { firstName: string; lastName: string; email: string; phone: string }[]) => {
+    const handleContactsImport = async (importedContacts: { firstName: string; lastName: string; email: string | null; phone: string | null }[]) => {
         if (!tenant?.id) return;
         const result = await bulkCreateContacts(tenant.id, importedContacts);
         if (result.success) {
@@ -137,17 +154,22 @@ export function CRMProApp() {
         }
     };
 
-    const handleSaveDeal = async (dealData: any) => {
+    const handleSaveDeal = async (dealData: Partial<CrmDeal>) => {
         if (!tenant?.id) return;
 
-        // If it has an ID, we should update (not implemented updateDeal yet, but for now we follow the pattern)
-        // For simplicity in this demo implementation, let's assume create
-        const res = await createDeal(tenant.id, dealData);
-        if (res.success) {
-            toast.success("Deal saved");
-            fetchDealsAndStages();
-        } else {
-            toast.error(res.error);
+        try {
+            // If it has an ID, we should update (not implemented updateDeal yet, but for now we follow the pattern)
+            // For simplicity in this demo implementation, let's assume create
+            const res = await createDeal(tenant.id, dealData);
+            if (res.success) {
+                toast.success("Deal saved");
+                fetchDealsAndStages();
+            } else {
+                toast.error(res.error);
+            }
+        } catch (err) {
+            console.error("[handleSaveDeal] error:", err);
+            toast.error(`Failed to save deal: ${err instanceof Error ? err.message : "Unknown error"}`);
         }
     };
 
@@ -209,11 +231,11 @@ export function CRMProApp() {
                             }
                         }}
                     />
-                    <Button variant="outline" size="icon" title="Pipeline Settings">
+                    <Button type="button" variant="outline" size="icon" title="Pipeline Settings">
                         <Settings className="h-4 w-4" />
                     </Button>
                     <CRMImportExport contacts={contacts} onImport={handleContactsImport} />
-                    <Button onClick={() => {
+                    <Button type="button" onClick={() => {
                         setActiveDeal({ pipelineStageId: stages[0]?.id });
                         setIsDealSheetOpen(true);
                     }}>

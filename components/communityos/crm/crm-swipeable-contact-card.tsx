@@ -5,6 +5,7 @@ import { CRMContactCard } from "./crm-contact-card";
 import { COSSwipeable } from "../ui/cos-swipeable";
 import { Phone, Mail } from "lucide-react";
 import type { CrmContactCardProps } from "@/types/crm";
+import { safeUrl } from "@/lib/utils";
 
 /**
  * Wrapper for CRMContactCard with swipe-to-action gestures on mobile.
@@ -13,13 +14,15 @@ import type { CrmContactCardProps } from "@/types/crm";
 export function CRMSwipeableContactCard({ contact, onClick, className, isSelected, onToggleSelection }: CrmContactCardProps) {
     const handleCall = () => {
         if (contact.phone) {
-            window.location.href = `tel:${contact.phone}`;
+            const url = safeUrl(`tel:${contact.phone}`);
+            if (url) window.location.href = url;
         }
     };
 
     const handleEmail = () => {
         if (contact.email) {
-            window.location.href = `mailto:${contact.email}`;
+            const url = safeUrl(`mailto:${contact.email}`);
+            if (url) window.location.href = url;
         }
     };
 

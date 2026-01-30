@@ -434,7 +434,7 @@ export async function getPipelineStages(pipelineId: string): Promise<ActionResul
 
 export async function bulkCreateContacts(
     organisationId: string,
-    contacts: { firstName: string; lastName: string; email: string; phone: string }[]
+    contacts: { firstName: string; lastName: string; email: string | null; phone: string | null }[]
 ): Promise<ActionResult<{ createdCount: number }>> {
     const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator"]);
     if (!auth.success) return auth;

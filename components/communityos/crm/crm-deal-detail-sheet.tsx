@@ -24,7 +24,7 @@ import { DollarSign, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 interface Deal {
-    id: string;
+    id?: string;
     title: string;
     value: string | null;
     probability: number | null;
@@ -40,7 +40,7 @@ interface Stage {
 }
 
 interface Props {
-    deal: Deal | null;
+    deal: Partial<Deal> | null;
     stages: Stage[];
     isOpen: boolean;
     onClose: () => void;
@@ -48,14 +48,29 @@ interface Props {
     onDelete?: (dealId: string) => Promise<void>;
 }
 
-export function CRMDealDetailSheet({
-    deal,
-    stages,
-    isOpen,
-    onClose,
-    onSave,
-    onDelete
-}: Props) {
+/**
+ * Convert a Date to a local yyyy-mm-dd string for date input
+ */
+function toLocalDateString(date: Date | null | undefined): string {
+    if (!date) return "";
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Parse a yyyy-mm-dd string to a local Date (avoiding timezone shift)
+ */
+function parseLocalDateString(dateString: string): Date | null {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split("-").map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
+}
+
+export function CRMDealDetailSheet({ deal, stages, isOpen, onClose, onSave, onDelete }: Props) {
     const [formData, setFormData] = React.useState<Partial<Deal>>({});
     const [isSaving, setIsSaving] = React.useState(false);
 
@@ -81,9 +96,6 @@ export function CRMDealDetailSheet({
         }
     };
 
-    /**
-     * Handle probability input change with proper null handling and clamping
-     */
     const handleProbabilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (value === "") {
@@ -95,20 +107,29 @@ export function CRMDealDetailSheet({
             setFormData({ ...formData, probability: null });
             return;
         }
-        // Clamp between 0 and 100
         const clamped = Math.max(0, Math.min(100, parsed));
         setFormData({ ...formData, probability: clamped });
     };
 
-    if (!deal && isOpen) return null;
+    const handleDelete = () => {
+        if (!deal?.id || !onDelete) return;
+        if (window.confirm("Are you sure you want to delete this deal? This action cannot be undone.")) {
+            onDelete(deal.id);
+        }
+    };
+
+    // Only return null when sheet is closed, not when creating a new deal
+    if (!isOpen) return null;
+
+    const isNewDeal = !deal?.id;
 
     return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent className="sm:max-w-md overflow-y-auto">
                 <SheetHeader>
-                    <SheetTitle>{deal ? "Edit Deal" : "New Deal"}</SheetTitle>
+                    <SheetTitle>{isNewDeal ? "New Deal" : "Edit Deal"}</SheetTitle>
                     <SheetDescription>
-                        Update the details of this deal to track its progress.
+                        {isNewDeal ? "Create a new deal to track in your pipeline." : "Update the details of this deal to track its progress."}
                     </SheetDescription>
                 </SheetHeader>
 
@@ -177,8 +198,8 @@ export function CRMDealDetailSheet({
                                 id="closeDate"
                                 type="date"
                                 className="pl-9"
-                                value={formData.expectedCloseDate ? new Date(formData.expectedCloseDate).toISOString().split('T')[0] : ""}
-                                onChange={(e) => setFormData({ ...formData, expectedCloseDate: e.target.value ? new Date(e.target.value) : null })}
+                                value={toLocalDateString(formData.expectedCloseDate)}
+                                onChange={(e) => setFormData({ ...formData, expectedCloseDate: parseLocalDateString(e.target.value) })}
                             />
                         </div>
                     </div>
@@ -196,12 +217,12 @@ export function CRMDealDetailSheet({
                 </div>
 
                 <SheetFooter className="flex-col sm:flex-row gap-3 pt-4">
-                    {deal && onDelete && (
+                    {!isNewDeal && onDelete && (
                         <Button
                             type="button"
                             variant="ghost"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:mr-auto"
-                            onClick={() => onDelete(deal.id)}
+                            onClick={handleDelete}
                         >
                             Delete Deal
                         </Button>

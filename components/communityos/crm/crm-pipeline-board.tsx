@@ -10,6 +10,9 @@ import {
     useSensors,
     DragOverlay,
     defaultDropAnimationSideEffects,
+    DragStartEvent,
+    DragOverEvent,
+    DragEndEvent,
 } from "@dnd-kit/core";
 import {
     arrayMove,
@@ -76,16 +79,16 @@ export function CRMPipelineBoard({
         })
     );
 
-    const handleDragStart = (event: any) => {
-        setActiveId(event.active.id);
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
     };
 
-    const handleDragOver = (event: any) => {
+    const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
         if (!over) return;
 
-        const activeId = active.id;
-        const overId = over.id;
+        const activeId = active.id as string;
+        const overId = over.id as string;
 
         if (activeId === overId) return;
 
@@ -98,7 +101,7 @@ export function CRMPipelineBoard({
         if (isOverColumn && activeDeal.pipelineStageId !== overId) {
             setDeals((prev) => {
                 return prev.map((d) =>
-                    d.id === activeId ? { ...d, pipelineStageId: overId as string } : d
+                    d.id === activeId ? { ...d, pipelineStageId: overId } : d
                 );
             });
             return;
@@ -115,23 +118,23 @@ export function CRMPipelineBoard({
         }
     };
 
-    const handleDragEnd = async (event: any) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveId(null);
 
         if (!over) return;
 
-        const activeId = active.id;
-        const overId = over.id;
+        const activeIdStr = active.id as string;
+        const overId = over.id as string;
 
-        const activeDeal = deals.find((d) => d.id === activeId);
+        const activeDeal = deals.find((d) => d.id === activeIdStr);
         if (!activeDeal) return;
 
         let newStageId = activeDeal.pipelineStageId;
 
         // Check if we dropped on a column/stage ID directly
         if (stages.some(s => s.id === overId)) {
-            newStageId = overId as string;
+            newStageId = overId;
         } else {
             // Check if we dropped on another deal
             const overDeal = deals.find(d => d.id === overId);
@@ -141,10 +144,10 @@ export function CRMPipelineBoard({
         }
 
         // Persist change if stage changed
-        const originalDeal = initialDeals.find(d => d.id === activeId);
+        const originalDeal = initialDeals.find(d => d.id === activeIdStr);
         if (originalDeal && newStageId !== originalDeal.pipelineStageId) {
             try {
-                const result = await updateDealStage(organisationId, activeId as string, newStageId);
+                const result = await updateDealStage(organisationId, activeIdStr, newStageId);
                 if (!result.success) {
                     toast.error(result.error);
                     // Revert state
@@ -158,9 +161,9 @@ export function CRMPipelineBoard({
             }
         }
 
-        if (activeId !== overId) {
+        if (activeIdStr !== overId) {
             setDeals((items) => {
-                const oldIndex = items.findIndex((i) => i.id === activeId);
+                const oldIndex = items.findIndex((i) => i.id === activeIdStr);
                 const newIndex = items.findIndex((i) => i.id === overId);
                 // Guard against invalid indices
                 if (oldIndex === -1 || newIndex === -1) {
@@ -199,12 +202,10 @@ export function CRMPipelineBoard({
                     },
                 }),
             }}>
-                {activeId ? (
-                    <DealCard
-                        deal={deals.find((d) => d.id === activeId)!}
-                        isOverlay
-                    />
-                ) : null}
+                {activeId ? (() => {
+                    const activeDeal = deals.find((d) => d.id === activeId);
+                    return activeDeal ? <DealCard deal={activeDeal} isOverlay /> : null;
+                })() : null}
             </DragOverlay>
         </DndContext>
     );
