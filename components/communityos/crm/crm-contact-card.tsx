@@ -40,9 +40,9 @@ export function CRMContactCard({ contact, onClick, className, isSelected, onTogg
                 </div>
             )}
             <div className="flex items-start justify-between">
-                <div>
-                    <h4 className="font-bold text-base">{fullName}</h4>
-                    <p className="text-xs text-muted-foreground uppercase tracking-tight font-medium">
+                <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-base truncate" title={fullName}>{fullName}</h4>
+                    <p className="text-xs text-muted-foreground uppercase tracking-tight font-medium truncate">
                         {contact.type || "individual"}
                     </p>
                 </div>
@@ -59,9 +59,9 @@ export function CRMContactCard({ contact, onClick, className, isSelected, onTogg
                     </div>
                 )}
                 {contact.phone && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="h-3.5 w-3.5" />
-                        <span>{contact.phone}</span>
+                    <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+                        <Phone className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{contact.phone}</span>
                     </div>
                 )}
             </div>
@@ -69,16 +69,22 @@ export function CRMContactCard({ contact, onClick, className, isSelected, onTogg
             {segments.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
                     {segments.map((segment: string, index: number) => (
-                        <COSBadge key={`${segment}-${index}`} size="sm" variant="outline" className="bg-muted/30">
-                            {segment}
+                        <COSBadge key={`${segment}-${index}`} size="sm" variant="outline" className="bg-muted/30 max-w-[120px]">
+                            <span className="truncate">{segment}</span>
                         </COSBadge>
                     ))}
                 </div>
             )}
 
             <div className="flex items-center gap-2 pt-3 border-t text-[10px] text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                <span>Added {contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : "n/a"}</span>
+                <Calendar className="h-3 w-3 shrink-0" />
+                <span className="truncate">
+                    Added {(() => {
+                        if (!contact.createdAt) return "n/a";
+                        const date = new Date(contact.createdAt);
+                        return isNaN(date.getTime()) ? "Invalid date" : date.toLocaleDateString();
+                    })()}
+                </span>
             </div>
         </COSCard>
     );

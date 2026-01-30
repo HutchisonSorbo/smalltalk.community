@@ -22,6 +22,14 @@ export type ActionResult<T = any> =
     | { success: false; error: string };
 
 /**
+ * Basic input validation and sanitisation
+ */
+function sanitizeInput(text: string | unknown, maxLength = 255): string {
+    if (typeof text !== "string") return "";
+    return text.trim().slice(0, maxLength);
+}
+
+/**
  * Audit log helper for CRM actions
  */
 async function logCrmAction(params: {
@@ -43,7 +51,6 @@ async function logCrmAction(params: {
         });
     } catch (err) {
         console.error("[logCrmAction] failed:", err);
-        // Don't throw, we don't want to break the main action if logging fails
     }
 }
 
@@ -84,6 +91,24 @@ async function verifyOrgAccess(
     }
 }
 
+/**
+ * Verify if a stage belongs to an organisation
+ */
+async function verifyStageOrg(organisationId: string, stageId: string): Promise<boolean> {
+    const [result] = await db
+        .select({ id: crmPipelineStages.id })
+        .from(crmPipelineStages)
+        .innerJoin(crmPipelines, eq(crmPipelineStages.pipelineId, crmPipelines.id))
+        .where(
+            and(
+                eq(crmPipelineStages.id, stageId),
+                eq(crmPipelines.organisationId, organisationId)
+            )
+        )
+        .limit(1);
+    return !!result;
+}
+
 // --- Pipeline Actions ---
 
 export async function getPipelines(organisationId: string): Promise<ActionResult> {
@@ -111,18 +136,20 @@ export async function createPipeline(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
+    const name = sanitizeInput(data.name);
+    if (!name) return { success: false, error: "Pipeline name is required" };
+
     try {
         const [pipeline] = await db.transaction(async (tx: any) => {
             const [p] = await tx
                 .insert(crmPipelines)
                 .values({
                     organisationId,
-                    name: data.name,
-                    description: data.description,
+                    name,
+                    description: sanitizeInput(data.description, 1000),
                 })
                 .returning();
 
-            // Create default stages
             const defaultStages = [
                 { name: "Lead", position: 0, color: "#94A3B8" },
                 { name: "Qualified", position: 1, color: "#60A5FA" },
@@ -184,16 +211,23 @@ export async function createContact(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
+    const firstName = sanitizeInput(data.firstName);
+    const lastName = sanitizeInput(data.lastName);
+
+    if (!firstName || !lastName) {
+        return { success: false, error: "First and last name are required" };
+    }
+
     try {
         const [contact] = await db
             .insert(crmContacts)
             .values({
                 organisationId,
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                phone: data.phone,
-                type: data.type || "individual",
+                firstName,
+                lastName,
+                email: sanitizeInput(data.email),
+                phone: sanitizeInput(data.phone, 20),
+                type: data.type === "organisation" ? "organisation" : "individual",
                 metadata: data.metadata || {},
             })
             .returning();
@@ -222,7 +256,7 @@ export async function getDeals(organisationId: string, pipelineId: string): Prom
 
     try {
         const deals = await db
-            .select()
+            .select({ deal: crmDeals })
             .from(crmDeals)
             .innerJoin(crmPipelineStages, eq(crmDeals.pipelineStageId, crmPipelineStages.id))
             .where(
@@ -233,10 +267,7 @@ export async function getDeals(organisationId: string, pipelineId: string): Prom
             )
             .orderBy(desc(crmDeals.createdAt));
 
-        // Format to clear out the join wrapper
-        const formattedDeals = deals.map(({ crm_deals }: any) => crm_deals);
-
-        return { success: true, data: formattedDeals };
+        return { success: true, data: deals.map((d: any) => d.deal) };
     } catch (err) {
         console.error("[getDeals] error:", err);
         return { success: false, error: "Failed to fetch deals" };
@@ -250,6 +281,16 @@ export async function createDeal(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
+    const title = sanitizeInput(data.title);
+    if (!title) return { success: false, error: "Deal title is required" };
+
+    if (!data.pipelineStageId) return { success: false, error: "Pipeline stage is required" };
+
+    // Verify stage belongs to org
+    if (!(await verifyStageOrg(organisationId, data.pipelineStageId))) {
+        return { success: false, error: "Invalid pipeline stage" };
+    }
+
     try {
         const [deal] = await db
             .insert(crmDeals)
@@ -257,11 +298,11 @@ export async function createDeal(
                 organisationId,
                 contactId: data.contactId,
                 pipelineStageId: data.pipelineStageId,
-                title: data.title,
-                value: data.value?.toString(),
-                probability: data.probability,
+                title,
+                value: data.value?.toString() || "0",
+                probability: Math.max(0, Math.min(100, parseInt(data.probability) || 0)),
                 expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : null,
-                notes: data.notes,
+                notes: sanitizeInput(data.notes, 2000),
             })
             .returning();
 
@@ -290,11 +331,15 @@ export async function updateDealStage(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
+    if (!(await verifyStageOrg(organisationId, newStageId))) {
+        return { success: false, error: "Invalid pipeline stage" };
+    }
+
     try {
         const [oldDeal] = await db
             .select()
             .from(crmDeals)
-            .where(eq(crmDeals.id, dealId))
+            .where(and(eq(crmDeals.id, dealId), eq(crmDeals.organisationId, organisationId)))
             .limit(1);
 
         if (!oldDeal) {
@@ -307,7 +352,7 @@ export async function updateDealStage(
                 pipelineStageId: newStageId,
                 updatedAt: new Date(),
             })
-            .where(eq(crmDeals.id, dealId))
+            .where(and(eq(crmDeals.id, dealId), eq(crmDeals.organisationId, organisationId)))
             .returning();
 
         await logCrmAction({
@@ -339,28 +384,25 @@ export async function getActivityLog(
     if (!auth.success) return auth;
 
     try {
-        let query = db
-            .select()
-            .from(crmActivityLog)
-            .where(eq(crmActivityLog.organisationId, organisationId));
+        const conditions = [eq(crmActivityLog.organisationId, organisationId)];
 
         if (filters?.dealId) {
-            query = db.select().from(crmActivityLog).where(
-                and(
-                    eq(crmActivityLog.organisationId, organisationId),
-                    eq(crmActivityLog.dealId, filters.dealId)
-                )
-            );
-        } else if (filters?.contactId) {
-            query = db.select().from(crmActivityLog).where(
-                and(
-                    eq(crmActivityLog.organisationId, organisationId),
-                    eq(crmActivityLog.contactId, filters.contactId)
-                )
-            );
+            conditions.push(eq(crmActivityLog.dealId, filters.dealId));
+        }
+        if (filters?.contactId) {
+            conditions.push(eq(crmActivityLog.contactId, filters.contactId));
+        }
+        if (filters?.action) {
+            conditions.push(eq(crmActivityLog.action, filters.action));
         }
 
-        const logs = await query.orderBy(desc(crmActivityLog.createdAt)).limit(50);
+        const logs = await db
+            .select()
+            .from(crmActivityLog)
+            .where(and(...conditions))
+            .orderBy(desc(crmActivityLog.createdAt))
+            .limit(50);
+
         return { success: true, data: logs };
     } catch (err) {
         console.error("[getActivityLog] error:", err);
@@ -372,13 +414,16 @@ export async function getActivityLog(
 
 export async function searchCrm(
     organisationId: string,
-    query: string
+    searchTerm: string
 ): Promise<ActionResult<{ contacts: any[]; deals: any[] }>> {
     const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator", "viewer"]);
     if (!auth.success) return auth;
 
+    const query = sanitizeInput(searchTerm);
+    if (query.length < 2) return { success: true, data: { contacts: [], deals: [] } };
+
     try {
-        const searchTerm = `%${query}%`;
+        const sqlQuery = `%${query}%`;
 
         const [contacts, deals] = await Promise.all([
             db
@@ -387,7 +432,7 @@ export async function searchCrm(
                 .where(
                     and(
                         eq(crmContacts.organisationId, organisationId),
-                        sql`${crmContacts.firstName} || ' ' || ${crmContacts.lastName} ILIKE ${searchTerm}`
+                        sql`${crmContacts.firstName} || ' ' || ${crmContacts.lastName} ILIKE ${sqlQuery}`
                     )
                 )
                 .limit(10),
@@ -397,7 +442,7 @@ export async function searchCrm(
                 .where(
                     and(
                         eq(crmDeals.organisationId, organisationId),
-                        sql`${crmDeals.title} ILIKE ${searchTerm}`
+                        sql`${crmDeals.title} ILIKE ${sqlQuery}`
                     )
                 )
                 .limit(10),
@@ -415,8 +460,19 @@ export async function searchCrm(
 
 // --- Metadata Actions ---
 
-export async function getPipelineStages(pipelineId: string): Promise<ActionResult> {
+export async function getPipelineStages(organisationId: string, pipelineId: string): Promise<ActionResult> {
+    const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator", "viewer"]);
+    if (!auth.success) return auth;
+
     try {
+        const [pipeline] = await db
+            .select()
+            .from(crmPipelines)
+            .where(and(eq(crmPipelines.id, pipelineId), eq(crmPipelines.organisationId, organisationId)))
+            .limit(1);
+
+        if (!pipeline) return { success: false, error: "Pipeline not found" };
+
         const stages = await db
             .select()
             .from(crmPipelineStages)
@@ -444,10 +500,10 @@ export async function bulkCreateContacts(
         const insertData = contacts.map((c) => ({
             id: crypto.randomUUID(),
             organisationId,
-            firstName: c.firstName,
-            lastName: c.lastName,
-            email: c.email,
-            phone: c.phone,
+            firstName: sanitizeInput(c.firstName),
+            lastName: sanitizeInput(c.lastName),
+            email: sanitizeInput(c.email),
+            phone: sanitizeInput(c.phone, 20),
             type: "individual" as const,
             createdAt: now,
             updatedAt: now,

@@ -41,7 +41,9 @@ const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' 
                     key={option.id}
                     type="button"
                     onClick={() => {
-                        if (window.navigator.vibrate) window.navigator.vibrate(5);
+                        if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+                            navigator.vibrate(5);
+                        }
                         onChange(option.id);
                     }}
                     className={cn(

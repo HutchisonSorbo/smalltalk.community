@@ -23,6 +23,8 @@ import { CRMSearchBar } from "../crm/crm-search-bar";
 import { CRMActivityTimeline } from "../crm/crm-activity-timeline";
 import { CRMBulkActions } from "../crm/crm-bulk-actions";
 import { CRMImportExport } from "../crm/crm-import-export";
+import { COSModal } from "../ui/cos-modal";
+import { COSInput } from "../ui/cos-input";
 import { getActivityLog, bulkCreateContacts } from "@/lib/communityos/crm-actions";
 import type {
     CrmPipeline,
@@ -49,6 +51,9 @@ export function CRMProApp() {
     // UI State
     const [activeDeal, setActiveDeal] = React.useState<Partial<CrmDeal> | null>(null);
     const [isDealSheetOpen, setIsDealSheetOpen] = React.useState(false);
+    const [isCreatePipelineModalOpen, setIsCreatePipelineModalOpen] = React.useState(false);
+    const [newPipelineName, setNewPipelineName] = React.useState("");
+    const [isCreatingPipeline, setIsCreatingPipeline] = React.useState(false);
 
     const fetchData = React.useCallback(async () => {
         if (!tenant?.id) return;
@@ -92,7 +97,7 @@ export function CRMProApp() {
         if (!tenant?.id || !selectedPipelineId) return;
         try {
             const [stagesRes, dealsRes] = await Promise.all([
-                getPipelineStages(selectedPipelineId),
+                getPipelineStages(tenant.id, selectedPipelineId),
                 getDeals(tenant.id, selectedPipelineId)
             ]);
 
@@ -111,22 +116,34 @@ export function CRMProApp() {
         fetchDealsAndStages();
     }, [fetchDealsAndStages]);
 
-    const handleCreatePipeline = async () => {
-        if (!tenant?.id) return;
-        const name = window.prompt("Enter pipeline name:");
-        if (!name) return;
+    const handleCreatePipeline = () => {
+        setNewPipelineName("");
+        setIsCreatePipelineModalOpen(true);
+    };
 
+    const handleCreatePipelineSubmit = async () => {
+        if (!tenant?.id) return;
+        const name = newPipelineName.trim();
+        if (!name) {
+            toast.error("Pipeline name is required");
+            return;
+        }
+
+        setIsCreatingPipeline(true);
         try {
             const res = await createPipeline(tenant.id, { name });
             if (res.success) {
                 toast.success("Pipeline created");
+                setIsCreatePipelineModalOpen(false);
                 fetchData();
             } else {
                 toast.error(res.error);
             }
         } catch (err) {
-            console.error("[handleCreatePipeline] error:", err);
+            console.error("[handleCreatePipelineSubmit] error:", err);
             toast.error(`Failed to create pipeline: ${err instanceof Error ? err.message : "Unknown error"}`);
+        } finally {
+            setIsCreatingPipeline(false);
         }
     };
 
@@ -146,11 +163,18 @@ export function CRMProApp() {
 
     const handleContactsImport = async (importedContacts: { firstName: string; lastName: string; email: string | null; phone: string | null }[]) => {
         if (!tenant?.id) return;
-        const result = await bulkCreateContacts(tenant.id, importedContacts);
-        if (result.success) {
-            await fetchData();
-        } else {
-            throw new Error(result.error);
+        try {
+            const result = await bulkCreateContacts(tenant.id, importedContacts);
+            if (result.success) {
+                toast.success(`Successfully imported ${importedContacts.length} contacts`);
+                await fetchData();
+            } else {
+                toast.error(result.error ?? "Failed to import contacts");
+            }
+        } catch (err) {
+            console.error("[handleContactsImport] error:", err);
+            const message = err instanceof Error ? err.message : "An unexpected error occurred during import";
+            toast.error(message);
         }
     };
 
@@ -341,6 +365,39 @@ export function CRMProApp() {
                 onClear={() => setSelectedContactIds([])}
                 onAction={handleBulkAction}
             />
+
+            <COSModal
+                isOpen={isCreatePipelineModalOpen}
+                onClose={() => setIsCreatePipelineModalOpen(false)}
+                title="Create Pipeline"
+                description="Create a new sales or outreach pipeline to track your organization's deals."
+            >
+                <div className="space-y-4 py-4">
+                    <COSInput
+                        label="Pipeline Name"
+                        placeholder="e.g. Sales Pipeline, Investor Outreach"
+                        value={newPipelineName}
+                        onChange={setNewPipelineName}
+                        autoFocus
+                    />
+                    <div className="flex justify-end gap-3 mt-6">
+                        <Button variant="ghost" onClick={() => setIsCreatePipelineModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleCreatePipelineSubmit}
+                            disabled={isCreatingPipeline || !newPipelineName.trim()}
+                        >
+                            {isCreatingPipeline ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating...
+                                </>
+                            ) : "Create Pipeline"}
+                        </Button>
+                    </div>
+                </div>
+            </COSModal>
         </div>
     );
 }

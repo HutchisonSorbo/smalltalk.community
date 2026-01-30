@@ -91,7 +91,7 @@ export interface CrmPipelineStage {
 export interface CrmDeal {
     id: string;
     title: string;
-    value: string | null;
+    value: number | null;
     probability: number | null;
     expectedCloseDate: Date | null;
     pipelineStageId: string;

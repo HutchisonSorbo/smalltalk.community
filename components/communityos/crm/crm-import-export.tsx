@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, Upload, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Download, Upload, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { parseCsv, generateCsv, mapCsvToContacts } from "@/lib/communityos/csv-utils";
+import { parseCsv, generateCsv, mapCsvToContacts } from "@/lib/communityos/csvUtils";
 
 /** Maximum file size for CSV imports (5MB) */
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -64,7 +64,6 @@ export function CRMImportExport({ contacts, onImport }: CRMImportExportProps) {
 
 function CRMExportDialog({ contacts }: { contacts: Contact[] }) {
     const handleExport = () => {
-        // Map contacts to plain objects for CSV generation
         const exportData = contacts.map((c) => ({
             firstName: c.firstName,
             lastName: c.lastName,
@@ -111,13 +110,11 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
 
-        // Validate file size
         if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
             toast.error(`File too large. Maximum size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB`);
             return;
         }
 
-        // Validate file type
         if (!selectedFile.name.toLowerCase().endsWith(".csv")) {
             toast.error("Please select a CSV file");
             return;
@@ -132,7 +129,6 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
             setRows(result.rows);
             setErrors(result.errors);
 
-            // Auto-map common header names
             const autoMap = { firstName: "", lastName: "", email: "", phone: "" };
             result.headers.forEach((h) => {
                 const lower = h.toLowerCase();
@@ -149,8 +145,8 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
                 toast.error("No data rows found in the CSV file");
             }
         } catch (err) {
-            console.error("CRMImportDialog: handleFileChange failed", err);
-            toast.error("Failed to read the CSV file. Please check the format.");
+            console.error("[CRMImportDialog] handleFileChange failed:", err);
+            toast.error("Failed to read the CSV file");
             setFile(null);
         }
     };
@@ -164,8 +160,8 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
             setIsOpen(false);
             resetState();
         } catch (error) {
-            toast.error("Import failed. Please try again.");
-            console.error("Import error:", error);
+            toast.error("Import failed");
+            console.error("[CRMImportDialog] Import error:", error);
         } finally {
             setIsImporting(false);
         }
@@ -188,90 +184,154 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
                     Import CSV
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Import Contacts from CSV</DialogTitle>
+            <DialogContent className="sm:max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                <DialogHeader className="shrink-0">
+                    <DialogTitle>Import Contacts</DialogTitle>
                     <DialogDescription>
                         {step === "upload" && "Upload a CSV file to import contacts."}
-                        {step === "map" && "Map csv columns to contact fields."}
+                        {step === "map" && "Map CSV columns to contact fields."}
                         {step === "preview" && `Ready to import ${rows.length} contacts.`}
                     </DialogDescription>
                 </DialogHeader>
 
-                {step === "upload" && (
-                    <div className="grid gap-4 py-4">
-                        <Label htmlFor="csv-file">CSV File</Label>
-                        <Input
-                            id="csv-file"
-                            type="file"
-                            accept=".csv"
-                            onChange={handleFileChange}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            Maximum file size: {MAX_FILE_SIZE_BYTES / 1024 / 1024}MB
-                        </p>
-                    </div>
-                )}
-
-                {step === "map" && (
-                    <div className="grid gap-4 py-4">
-                        {errors.length > 0 && (
-                            <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
-                                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                                <div>
-                                    <p className="font-medium">Warnings:</p>
-                                    <ul className="list-disc list-inside">
-                                        {errors.slice(0, 3).map((err, i) => <li key={i}>{err}</li>)}
-                                    </ul>
-                                </div>
-                            </div>
-                        )}
-                        <p className="text-sm text-muted-foreground">Found {rows.length} rows in {file?.name}</p>
-                        {(["firstName", "lastName", "email", "phone"] as const).map((field) => (
-                            <div key={field} className="grid grid-cols-2 items-center gap-4">
-                                <Label htmlFor={`map-${field}`} className="capitalize">{field.replace(/([A-Z])/g, " $1").trim()}</Label>
-                                <Select
-                                    value={mapping[field]}
-                                    onValueChange={(val) => setMapping((m) => ({ ...m, [field]: val }))}
-                                >
-                                    <SelectTrigger id={`map-${field}`}>
-                                        <SelectValue placeholder="Select column" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {headers.map((h) => (
-                                            <SelectItem key={h} value={h}>{h}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {step === "preview" && (
-                    <div className="py-4 text-center">
-                        <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                        <p className="text-lg font-medium">Ready to import {rows.length} contacts</p>
-                        <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
-                    </div>
-                )}
-
-                <DialogFooter>
+                <div className="flex-1 overflow-y-auto py-4">
+                    {step === "upload" && <UploadStep onFileChange={handleFileChange} />}
                     {step === "map" && (
-                        <Button type="button" onClick={() => setStep("preview")} disabled={!mapping.email}>
+                        <MappingStep
+                            rowsCount={rows.length}
+                            fileName={file?.name || ""}
+                            headers={headers}
+                            mapping={mapping}
+                            errors={errors}
+                            onMappingChange={setMapping}
+                        />
+                    )}
+                    {step === "preview" && <PreviewStep rowsCount={rows.length} />}
+                </div>
+
+                <DialogFooter className="shrink-0 pt-4 border-t">
+                    {step === "map" && (
+                        <Button type="button" onClick={() => setStep("preview")} disabled={!mapping.firstName || !mapping.lastName}>
                             Continue
                         </Button>
                     )}
                     {step === "preview" && (
                         <>
-                            <Button type="button" variant="outline" onClick={() => setStep("map")}>Back</Button>
+                            <Button type="button" variant="outline" onClick={() => setStep("map")} disabled={isImporting}>Back</Button>
                             <Button type="button" onClick={handleImport} disabled={isImporting}>
-                                {isImporting ? "Importing..." : "Import"}
+                                {isImporting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Importing...
+                                    </>
+                                ) : "Import"}
                             </Button>
                         </>
                     )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+function UploadStep({ onFileChange }: { onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+    return (
+        <div className="grid gap-4">
+            <Label htmlFor="csv-file" className="font-bold uppercase text-[10px] tracking-widest text-muted-foreground">CSV File</Label>
+            <div className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer relative">
+                <Upload className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-medium">Click or drag CSV file here</p>
+                <p className="text-xs text-muted-foreground">Max size: 5MB</p>
+                <Input
+                    id="csv-file"
+                    type="file"
+                    accept=".csv"
+                    onChange={onFileChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+            </div>
+        </div>
+    );
+}
+
+function MappingStep({
+    rowsCount,
+    fileName,
+    headers,
+    mapping,
+    errors,
+    onMappingChange
+}: {
+    rowsCount: number;
+    fileName: string;
+    headers: string[];
+    mapping: { firstName: string; lastName: string; email: string; phone: string };
+    errors: string[];
+    onMappingChange: React.Dispatch<React.SetStateAction<{ firstName: string; lastName: string; email: string; phone: string }>>;
+}) {
+    return (
+        <div className="grid gap-6">
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Source File</p>
+                    <p className="text-sm font-medium truncate">{fileName}</p>
+                </div>
+                <div className="text-right shrink-0">
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Rows</p>
+                    <p className="text-sm font-bold text-primary">{rowsCount}</p>
+                </div>
+            </div>
+
+            {errors.length > 0 && (
+                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                        <p className="font-bold uppercase text-[10px] tracking-widest mb-1">Warnings</p>
+                        <ul className="list-disc list-inside text-xs space-y-0.5">
+                            {errors.slice(0, 3).map((err, i) => <li key={i} className="truncate">{err}</li>)}
+                        </ul>
+                    </div>
+                </div>
+            )}
+
+            <div className="space-y-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground border-b pb-2">Field Mapping</p>
+                {(["firstName", "lastName", "email", "phone"] as const).map((field) => (
+                    <div key={field} className="grid grid-cols-2 items-center gap-4">
+                        <Label htmlFor={`map-${field}`} className="capitalize font-medium">{field.replace(/([A-Z])/g, " $1").trim()}</Label>
+                        <Select
+                            value={mapping[field]}
+                            onValueChange={(val) => onMappingChange((m) => ({ ...m, [field]: val }))}
+                        >
+                            <SelectTrigger id={`map-${field}`} className="h-9">
+                                <SelectValue placeholder="Skip field" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">-- Skip --</SelectItem>
+                                {headers.map((h) => (
+                                    <SelectItem key={h} value={h}>{h}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function PreviewStep({ rowsCount }: { rowsCount: number }) {
+    return (
+        <div className="py-8 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
+            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+            <p className="text-xl font-bold">Ready to Import</p>
+            <p className="text-sm text-muted-foreground mt-1">{rowsCount} contacts will be added to your CRM.</p>
+            <div className="mt-6 p-4 text-[10px] items-center gap-2 inline-flex border rounded-full bg-background font-bold text-muted-foreground uppercase tracking-widest">
+                <AlertCircle className="h-3 w-3 text-amber-500" />
+                This action cannot be undone
+            </div>
+        </div>
     );
 }

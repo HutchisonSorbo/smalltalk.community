@@ -176,7 +176,6 @@ export function COSDataTable<T extends { id: string | number }>({
                                         }
                                     }}
                                     tabIndex={onRowClick ? 0 : undefined}
-                                    role="row"
                                     className={cn(
                                         "border-b last:border-0 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
                                         onRowClick && "cursor-pointer",

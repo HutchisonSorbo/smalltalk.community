@@ -8,6 +8,17 @@ interface BeforeInstallPromptEvent extends Event {
     userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+/**
+ * Hook to manage the PWA installation prompt.
+ * 
+ * Handles the 'beforeinstallprompt' event and provides state/methods to trigger
+ * the browser's install dialog and track installation status.
+ * 
+ * @returns {Object} An object containing:
+ * - promptEvent: The captured beforeinstallprompt event, or null
+ * - isInstalled: Boolean indicating if the app is already installed
+ * - showPrompt: Function to trigger the installation dialog
+ */
 export function useInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [isInstallable, setIsInstallable] = useState(false);

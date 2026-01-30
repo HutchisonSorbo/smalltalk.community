@@ -3,7 +3,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { COSButton } from "./cos-button";
 
 interface COSModalProps {
     isOpen: boolean;
@@ -70,11 +69,9 @@ const COSModal = ({
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-                    <div className="space-y-1">
-                        <h2 className="text-xl font-black tracking-tight leading-none">{title}</h2>
-                        {description && (
-                            <p className="text-sm text-muted-foreground font-medium">{description}</p>
-                        )}
+                    <div className="flex-1 min-w-0 pr-8">
+                        {title && <h2 className="text-xl font-bold tracking-tight truncate">{title}</h2>}
+                        {description && <p className="text-sm text-muted-foreground truncate">{description}</p>}
                     </div>
                     <button
                         onClick={onClose}

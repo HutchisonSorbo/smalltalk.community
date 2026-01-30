@@ -13,6 +13,25 @@ interface CRMActivityTimelineProps {
 }
 
 /**
+ * Basic sanitisation and truncation for user-generated content
+ */
+function sanitizeContent(text: string | unknown, maxLength = 100): string {
+    if (typeof text !== "string") return "";
+    const trimmed = text.trim();
+    if (!trimmed) return "";
+
+    // Simple HTML escape and truncation
+    const escaped = trimmed
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    return escaped.length > maxLength ? escaped.substring(0, maxLength) + "..." : escaped;
+}
+
+/**
  * Get the title and description for an activity log entry
  */
 function getActionTitleAndDescription(log: CrmActivityLog): { title: string; description: string } {
@@ -23,13 +42,16 @@ function getActionTitleAndDescription(log: CrmActivityLog): { title: string; des
         description = "Moved to new stage.";
     } else if (log.action === "deal_created") {
         const details = log.details as { title?: string } | null;
-        description = `New deal created: ${details?.title || "Untitled"}`;
+        const sanitizedTitle = sanitizeContent(details?.title) || "Untitled";
+        description = `New deal created: ${sanitizedTitle}`;
     } else if (log.action === "contact_created") {
         const details = log.details as { name?: string } | null;
-        description = `New contact added: ${details?.name || "Unknown"}`;
+        const sanitizedName = sanitizeContent(details?.name) || "Unknown";
+        description = `New contact added: ${sanitizedName}`;
     } else if (log.action === "pipeline_created") {
         const details = log.details as { name?: string } | null;
-        description = `New pipeline created: ${details?.name || "Untitled"}`;
+        const sanitizedName = sanitizeContent(details?.name) || "Untitled";
+        description = `New pipeline created: ${sanitizedName}`;
     }
 
     return { title, description };
@@ -47,16 +69,18 @@ function formatLogTimestamp(createdAt: Date | string | null): string {
 
 export function CRMActivityTimeline({ logs, isLoading }: CRMActivityTimelineProps) {
     if (isLoading) {
-        return <div className="p-8 text-center text-muted-foreground">Loading activity...</div>;
+        return <div className="p-8 text-center text-muted-foreground max-w-full">Loading activity...</div>;
     }
 
     if (!logs || logs.length === 0) {
         return (
-            <COSEmptyState
-                title="No Activity Yet"
-                description="Activity related to deals and contacts will appear here."
-                icon={<Clock />}
-            />
+            <div className="max-w-full">
+                <COSEmptyState
+                    title="No Activity Yet"
+                    description="Activity related to deals and contacts will appear here."
+                    icon={<Clock />}
+                />
+            </div>
         );
     }
 
@@ -68,7 +92,7 @@ export function CRMActivityTimeline({ logs, isLoading }: CRMActivityTimelineProp
     });
 
     return (
-        <div className="p-4">
+        <div className="p-4 max-w-full">
             <COSTimeline items={timelineItems} />
         </div>
     );
