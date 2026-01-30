@@ -13,10 +13,16 @@ async function seedStcProfile() {
 
     const supabase = createServiceClient();
 
-    // Update stc tenant with public profile data
+    // Upsert stc tenant with public profile data
     const { data, error } = await supabase
         .from("tenants")
-        .update({
+        .upsert({
+            code: "stc",
+            name: "smalltalk.community Inc",
+            logo_url: "/images/stc-logo.png",
+            primary_color: "#4F46E5",
+            secondary_color: "#818CF8",
+            description: "A Victorian non-profit organisation supporting community connection and development.",
             mission_statement: `smalltalk.community Inc is dedicated to building safer, more connected communities across Australia. We create digital tools and platforms that empower local organisations, support youth engagement, and foster meaningful connections between people of all ages.`,
             hero_image_url: null, // Will use primary color as fallback
             social_links: {
@@ -28,23 +34,25 @@ async function seedStcProfile() {
             contact_phone: null,
             address: "Melbourne, Victoria, Australia",
             is_public: true,
-        })
-        .eq("code", "stc")
+            vcss_status: [] // Ensure initialized
+        }, { onConflict: 'code' })
         .select()
         .single();
 
     if (error) {
-        console.error("❌ Error updating stc profile:", error.message);
+        console.error("❌ Error upserting stc profile:", error.message);
         process.exit(1);
     }
 
     if (!data) {
-        console.error("❌ stc tenant not found. Make sure tenant exists with code 'stc'");
+        console.error("❌ Failed to upsert stc tenant.");
         process.exit(1);
     }
 
-    console.log("✅ Successfully updated stc profile!\n");
-    console.log("Updated fields:");
+    console.log("✅ Successfully upserted stc profile!\n");
+    console.log("Tenant Details:");
+    console.log(`  - Name: ${data.name}`);
+    console.log(`  - Code: ${data.code}`);
     console.log(`  - Mission: ${data.mission_statement?.substring(0, 50)}...`);
     console.log(`  - Social Links: ${Object.keys(data.social_links || {}).join(", ")}`);
     console.log(`  - Contact Email: ${data.contact_email}`);
