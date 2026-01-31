@@ -45,8 +45,65 @@ interface COSKanbanProps {
     onMove: (cardId: string, newStatus: string) => void;
     onCardClick?: (card: COSKanbanCard) => void;
     onAddClick?: (status: string) => void;
-    className?: string;
-}
+// Basic sanitization to prevent XSS/injection in rendered content
+const sanitize = (str: string | undefined): string => {
+    if (!str) return "";
+    return str.replace(/[<>]/g, "").trim();
+};
+
+const KanbanCardHeader = ({
+    title,
+    priority,
+    listeners,
+    isDragging
+}: {
+    title: string;
+    priority?: 'low' | 'medium' | 'high';
+    listeners: any;
+    isDragging?: boolean;
+}) => (
+    <div className="flex items-start justify-between gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
+            <button
+                type="button"
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity shrink-0 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Drag to reorder"
+            >
+                <GripVertical className="h-3 w-3 text-muted-foreground" />
+            </button>
+            <h4 className="text-sm font-semibold leading-tight truncate">{sanitize(title)}</h4>
+        </div>
+        {priority === 'high' && (
+            <div className="h-2 w-2 rounded-full bg-destructive animate-pulse flex-shrink-0" />
+        )}
+    </div>
+);
+
+const KanbanCardTags = ({ tags }: { tags?: string[] }) => (
+    <div className="flex flex-wrap gap-1.5 pt-1">
+        {tags?.slice(0, 5).map((tag) => (
+            <COSBadge key={tag} size="sm" variant="info" className="opacity-80 max-w-[120px] truncate">
+                {sanitize(tag)}
+            </COSBadge>
+        ))}
+    </div>
+);
+
+const KanbanCardAssignee = ({ assignee }: { assignee?: { name: string; avatar?: string } }) => {
+    if (!assignee?.name) return null;
+    const safeName = sanitize(assignee.name);
+    return (
+        <div className="flex items-center gap-2 pt-2 border-t border-border/50 min-w-0">
+            <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                {safeName.charAt(0)}
+            </div>
+            <span className="text-[10px] text-muted-foreground font-medium truncate">
+                {safeName}
+            </span>
+        </div>
+    );
+};
 
 const KanbanCardItem = ({
     card,
@@ -87,47 +144,21 @@ const KanbanCardItem = ({
                 )}
             >
                 <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2 min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <button
-                                type="button"
-                                {...listeners}
-                                className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity shrink-0 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                aria-label="Drag to reorder"
-                            >
-                                <GripVertical className="h-3 w-3 text-muted-foreground" />
-                            </button>
-                            <h4 className="text-sm font-semibold leading-tight truncate">{card.title}</h4>
-                        </div>
-                        {card.priority === 'high' && (
-                            <div className="h-2 w-2 rounded-full bg-destructive animate-pulse flex-shrink-0" />
-                        )}
-                    </div>
+                    <KanbanCardHeader
+                        title={card.title}
+                        priority={card.priority}
+                        listeners={listeners}
+                        isDragging={isDragging}
+                    />
 
                     {card.subtitle && (
                         <p className="text-xs text-muted-foreground line-clamp-2">
-                            {card.subtitle}
+                            {sanitize(card.subtitle)}
                         </p>
                     )}
 
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                        {card.tags?.map((tag) => (
-                            <COSBadge key={tag} size="sm" variant="info" className="opacity-80 max-w-[120px] truncate">
-                                {tag}
-                            </COSBadge>
-                        ))}
-                    </div>
-
-                    {card.assignee && (
-                        <div className="flex items-center gap-2 pt-2 border-t border-border/50 min-w-0">
-                            <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                                {card.assignee.name.charAt(0)}
-                            </div>
-                            <span className="text-[10px] text-muted-foreground font-medium truncate">
-                                {card.assignee.name}
-                            </span>
-                        </div>
-                    )}
+                    <KanbanCardTags tags={card.tags} />
+                    <KanbanCardAssignee assignee={card.assignee} />
                 </div>
             </COSCard>
         </div>
@@ -214,6 +245,7 @@ const COSKanbanColumn = ({
 const COSKanban = ({ columns, cards, onMove, onCardClick, onAddClick, className }: COSKanbanProps) => {
     const [activeCard, setActiveCard] = React.useState<COSKanbanCard | null>(null);
     const [mounted, setMounted] = React.useState(false);
+    const portalRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         setMounted(true);
@@ -288,20 +320,27 @@ const COSKanban = ({ columns, cards, onMove, onCardClick, onAddClick, className 
                 })}
             </div>
 
-            {mounted && createPortal(
-                <DragOverlay dropAnimation={{
-                    duration: 200,
-                    easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-                }}>
-                    {activeCard ? (
-                        <div className="w-[320px] rotate-2 cursor-grabbing">
-                            <KanbanCardItem card={activeCard} isDragging />
-                        </div>
-                    ) : null}
-                </DragOverlay>,
-                document.body
-            )}
-        </DndContext>
+        </div>
+            
+            {/* Portal container to avoid direct document.body access if possible, or use a ref */ }
+    <div ref={portalRef} />
+
+    {
+        mounted && portalRef.current && createPortal(
+            <DragOverlay dropAnimation={{
+                duration: 200,
+                easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+            }}>
+                {activeCard ? (
+                    <div className="w-[320px] rotate-2 cursor-grabbing">
+                        <KanbanCardItem card={activeCard} isDragging />
+                    </div>
+                ) : null}
+            </DragOverlay>,
+            portalRef.current
+        )
+    }
+        </DndContext >
     );
 };
 

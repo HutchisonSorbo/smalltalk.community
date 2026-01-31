@@ -187,9 +187,13 @@ interface DealFormProps {
     onValueChange: (value: string) => void;
 }
 
-function DealForm({ formData, stages, onUpdateField, onProbabilityChange, onValueChange }: DealFormProps) {
+function TitleStageGroup({
+    formData,
+    stages,
+    onUpdateField
+}: Pick<DealFormProps, "formData" | "stages" | "onUpdateField">) {
     return (
-        <div className="grid grid-cols-1 gap-6 font-medium">
+        <>
             <COSInput
                 id="title"
                 label="Deal Title"
@@ -199,7 +203,6 @@ function DealForm({ formData, stages, onUpdateField, onProbabilityChange, onValu
                 className="font-bold"
                 required
             />
-
             <div className="grid gap-2">
                 <Label htmlFor="stage" className="text-sm font-semibold text-foreground/80 ml-1">
                     Pipeline Stage <span className="text-destructive ml-1">*</span>
@@ -220,30 +223,46 @@ function DealForm({ formData, stages, onUpdateField, onProbabilityChange, onValu
                     </SelectContent>
                 </Select>
             </div>
+        </>
+    );
+}
 
-            {/* Responsive grid for numeric values */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <COSInput
-                    id="value"
-                    label="Value ($)"
-                    type="number"
-                    icon={<DollarSign className="h-4 w-4" />}
-                    value={formData.value?.toString() ?? ""}
-                    onChange={onValueChange}
-                    placeholder="0.00"
-                />
-                <COSInput
-                    id="probability"
-                    label="Probability (%)"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.probability?.toString() ?? ""}
-                    onChange={onProbabilityChange}
-                    placeholder="0-100"
-                />
-            </div>
+function NumericFieldsGroup({
+    formData,
+    onValueChange,
+    onProbabilityChange
+}: Pick<DealFormProps, "formData" | "onValueChange" | "onProbabilityChange">) {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <COSInput
+                id="value"
+                label="Value ($)"
+                type="number"
+                icon={<DollarSign className="h-4 w-4" />}
+                value={formData.value?.toString() ?? ""}
+                onChange={onValueChange}
+                placeholder="0.00"
+            />
+            <COSInput
+                id="probability"
+                label="Probability (%)"
+                type="number"
+                min="0"
+                max="100"
+                value={formData.probability?.toString() ?? ""}
+                onChange={onProbabilityChange}
+                placeholder="0-100"
+            />
+        </div>
+    );
+}
 
+function NotesGroup({
+    formData,
+    onUpdateField
+}: Pick<DealFormProps, "formData" | "onUpdateField">) {
+    return (
+        <>
             <COSInput
                 id="closeDate"
                 label="Expected Close Date"
@@ -252,7 +271,6 @@ function DealForm({ formData, stages, onUpdateField, onProbabilityChange, onValu
                 value={toLocalDateString(formData.expectedCloseDate)}
                 onChange={(val) => onUpdateField("expectedCloseDate", parseLocalDateString(val))}
             />
-
             <div className="grid gap-2">
                 <Label htmlFor="notes" className="text-sm font-semibold text-foreground/80 ml-1">Notes</Label>
                 <Textarea
@@ -266,6 +284,27 @@ function DealForm({ formData, stages, onUpdateField, onProbabilityChange, onValu
                     Optional
                 </p>
             </div>
+        </>
+    );
+}
+
+function DealForm(props: DealFormProps) {
+    return (
+        <div className="grid grid-cols-1 gap-6 font-medium">
+            <TitleStageGroup
+                formData={props.formData}
+                stages={props.stages}
+                onUpdateField={props.onUpdateField}
+            />
+            <NumericFieldsGroup
+                formData={props.formData}
+                onValueChange={props.onValueChange}
+                onProbabilityChange={props.onProbabilityChange}
+            />
+            <NotesGroup
+                formData={props.formData}
+                onUpdateField={props.onUpdateField}
+            />
         </div>
     );
 }
