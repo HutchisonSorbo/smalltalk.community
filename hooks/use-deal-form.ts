@@ -43,14 +43,15 @@ export function parseProbability(value: string): number | null {
  * @param value - The raw string input (handles multiple decimals by keeping first)
  * @returns number or null if invalid/empty
  */
-// Strip non-numeric characters (except dot/minus), parse, and clamp to non-negative
-const cleaned = value.replace(/[^0-9.-]/g, "");
-const parts = cleaned.split(".");
-const sanitized = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleaned;
-if (sanitized === "" || sanitized === ".") return null;
-const parsed = parseFloat(sanitized);
-if (isNaN(parsed)) return null;
-return Math.max(0, parsed);
+export function parseMonetaryValue(value: string): number | null {
+    // Strip non-numeric characters (except dot/minus), parse, and clamp to non-negative
+    const cleaned = value.replace(/[^0-9.-]/g, "");
+    const parts = cleaned.split(".");
+    const sanitized = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleaned;
+    if (sanitized === "" || sanitized === ".") return null;
+    const parsed = parseFloat(sanitized);
+    if (isNaN(parsed)) return null;
+    return Math.max(0, parsed);
 }
 
 export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) {
