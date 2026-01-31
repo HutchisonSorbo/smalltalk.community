@@ -38,7 +38,7 @@ export function ExpiryTracker({ credentials }: ExpiryTrackerProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {credentials.length > 0 ? (
                     credentials.map((cred) => (
                         <CredentialCard key={cred.id} cred={cred} />

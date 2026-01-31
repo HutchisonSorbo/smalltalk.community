@@ -79,6 +79,7 @@ export const RiskAssessmentSchema = z.object({
     controls: z.string().max(500).optional(),
     residual_likelihood: z.number().int().min(1).max(5).optional(),
     residual_impact: z.number().int().min(1).max(5).optional(),
+    review_date: z.string().datetime().optional(),
     status: RiskAssessmentStatusSchema.optional().default("draft"),
 });
 
