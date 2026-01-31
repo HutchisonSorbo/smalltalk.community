@@ -182,7 +182,7 @@ export function CRMDealDetailSheet({ deal, stages, isOpen, onClose, onSave, onDe
 interface DealFormProps {
     formData: Partial<CrmDeal>;
     stages: CrmPipelineStage[];
-    onUpdateField: (field: keyof CrmDeal, value: any) => void;
+    onUpdateField: <K extends keyof CrmDeal>(field: K, value: CrmDeal[K]) => void;
     onProbabilityChange: (value: string) => void;
     onValueChange: (value: string) => void;
 }

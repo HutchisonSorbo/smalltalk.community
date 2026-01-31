@@ -17,10 +17,12 @@ import {
     DragStartEvent,
     useDroppable,
 } from "@dnd-kit/core";
-SortableContext,
+import {
+    SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
     useSortable,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 
@@ -110,7 +112,7 @@ const KanbanCardItem = ({
 
                     <div className="flex flex-wrap gap-1.5 pt-1">
                         {card.tags?.map((tag) => (
-                            <COSBadge key={tag} size="sm" variant="info" className="opacity-80">
+                            <COSBadge key={tag} size="sm" variant="info" className="opacity-80 max-w-[120px] truncate">
                                 {tag}
                             </COSBadge>
                         ))}
@@ -240,17 +242,22 @@ const COSKanban = ({ columns, cards, onMove, onCardClick, onAddClick, className 
         if (!over) return;
 
         const cardId = active.id as string;
-        const newStatus = over.data.current?.status || over.id as string;
+        // Try to get status from column drop data or sortable container context
+        const newStatus = (over.data.current?.status ||
+            over.data.current?.sortable?.containerId ||
+            over.id) as string;
 
         const card = cards.find(c => c.id === cardId);
-        if (card && card.status !== newStatus) {
+
+        // Only move if status defined and changed
+        if (card && newStatus && card.status !== newStatus) {
             onMove(cardId, newStatus);
         }
     };
 
     if (!mounted) {
         return (
-            <div className={cn("flex flex-col md:flex-row gap-6 overflow-x-auto pb-6 h-full", className)}>
+            <div className={cn("flex flex-col md:flex-row gap-6 overflow-x-auto pb-6 h-full max-w-full", className)}>
                 {columns.map((column) => (
                     <div key={column.id} className="flex-shrink-0 w-full md:w-80 h-[500px] bg-muted/20 animate-pulse rounded-2xl" />
                 ))}
@@ -265,7 +272,7 @@ const COSKanban = ({ columns, cards, onMove, onCardClick, onAddClick, className 
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className={cn("flex flex-col md:flex-row gap-6 overflow-x-auto pb-6 h-full w-full custom-scrollbar", className)}>
+            <div className={cn("flex flex-col md:flex-row gap-6 overflow-x-auto pb-6 h-full w-full max-w-full custom-scrollbar", className)}>
                 {columns.map((column) => {
                     const columnCards = cards.filter((card) => card.status === column.id);
 

@@ -11,16 +11,57 @@ interface COSSegmentedControlProps {
     size?: 'sm' | 'md' | 'lg';
 }
 
-const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' }: COSSegmentedControlProps) => {
+const sizeStyles = {
+    sm: "h-8 p-0.5 text-xs",
+    md: "h-10 p-1 text-sm",
+    lg: "h-12 p-1 text-base",
+};
+
+function SlidingBackground({ activeWidth, activeOffset }: { activeWidth: number; activeOffset: number }) {
+    return (
+        <div
+            className="absolute top-1 left-0 rounded-lg bg-background shadow-xs transition-all duration-300 ease-in-out h-[calc(100%-8px)]"
+            style={{
+                width: `${activeWidth}%`,
+                left: `${activeOffset}%`
+            }}
+            aria-hidden="true"
+        />
+    );
+}
+
+function OptionButton({
+    option,
+    isActive,
+    onClick
+}: {
+    option: { id: string; label: string; icon?: React.ReactNode };
+    isActive: boolean;
+    onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={() => {
+                if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+                    navigator.vibrate(5);
+                }
+                onClick();
+            }}
+            className={cn(
+                "relative flex-1 flex items-center justify-center gap-2 font-bold transition-colors z-10",
+                isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
+            )}
+        >
+            {option.icon}
+            <span>{option.label}</span>
+        </button>
+    );
+}
+
+export const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' }: COSSegmentedControlProps) => {
     const activeIndex = options.findIndex(opt => opt.id === value);
     const safeIndex = activeIndex >= 0 ? activeIndex : 0;
-
-    const sizeStyles = {
-        sm: "h-8 p-0.5 text-xs",
-        md: "h-10 p-1 text-sm",
-        lg: "h-12 p-1 text-base",
-    };
-
     const activeWidth = options.length > 0 ? 100 / options.length : 0;
     const activeOffset = safeIndex * activeWidth;
 
@@ -31,38 +72,16 @@ const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' 
                 sizeStyles[size],
                 className
             )}
-            style={{
-                "--active-width": `${activeWidth}%`,
-                "--active-offset": `${activeOffset}%`
-            } as React.CSSProperties}
         >
-            {/* Sliding background */}
-            <div
-                className="absolute top-1 left-0 rounded-lg bg-background shadow-xs transition-all duration-300 ease-in-out h-[calc(100%-8px)] w-[var(--active-width)] left-[var(--active-offset)]"
-                aria-hidden="true"
-            />
-
+            <SlidingBackground activeWidth={activeWidth} activeOffset={activeOffset} />
             {options.map((option) => (
-                <button
+                <OptionButton
                     key={option.id}
-                    type="button"
-                    onClick={() => {
-                        if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-                            navigator.vibrate(5);
-                        }
-                        onChange(option.id);
-                    }}
-                    className={cn(
-                        "relative flex-1 flex items-center justify-center gap-2 font-bold transition-colors z-10",
-                        value === option.id ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
-                    )}
-                >
-                    {option.icon}
-                    <span>{option.label}</span>
-                </button>
+                    option={option}
+                    isActive={value === option.id}
+                    onClick={() => onChange(option.id)}
+                />
             ))}
         </div>
     );
 };
-
-export { COSSegmentedControl };

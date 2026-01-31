@@ -22,6 +22,12 @@ interface UseDealFormProps {
     onClose: () => void;
 }
 
+/**
+ * Parses a string input into a probability number (0-100).
+ * 
+ * @param value - The raw string input
+ * @returns number between 0-100, or null if invalid/empty
+ */
 export function parseProbability(value: string): number | null {
     const cleaned = value.replace(/[^0-9]/g, "");
     if (cleaned === "") return null;
@@ -30,6 +36,12 @@ export function parseProbability(value: string): number | null {
     return Math.max(0, Math.min(100, parsed));
 }
 
+/**
+ * Parses a string input into a monetary value.
+ * 
+ * @param value - The raw string input (handles multiple decimals by keeping first)
+ * @returns number or null if invalid/empty
+ */
 export function parseMonetaryValue(value: string): number | null {
     const cleaned = value.replace(/[^0-9.]/g, "");
     const parts = cleaned.split(".");
@@ -44,9 +56,8 @@ export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) 
 
     React.useEffect(() => {
         setFormData(initialDeal || {});
-        // Cleanup on unmount or when initialDeal changes? 
-        // ideally usually cleanup on unmount, but here we just set initial
-    }, [initialDeal, setFormData]);
+        return () => reset();
+    }, [initialDeal, setFormData, reset]);
 
     const handleSave = async () => {
         setIsSaving(true);
