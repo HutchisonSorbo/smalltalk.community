@@ -25,7 +25,7 @@ export function StandardDetailCard({
     const completedCount = standard.requirements.filter((r) => r.completed).length;
 
     return (
-        <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+        <div className="space-y-4 animate-in slide-in-from-right-4 duration-500 max-w-full">
             <Button variant="ghost" size="sm" onClick={onBack} className="gap-2 -ml-2">
                 <ChevronLeft className="h-4 w-4" />
                 Back to Dashboard
@@ -38,9 +38,9 @@ export function StandardDetailCard({
                             <Badge variant="outline" className="font-bold border-primary text-primary">
                                 Standard {standard.id}
                             </Badge>
-                            <h2 className="text-xl font-bold">{standard.title}</h2>
+                            <h2 className="text-xl font-bold line-clamp-1" title={standard.title}>{standard.title}</h2>
                         </div>
-                        <p className="text-sm text-muted-foreground max-w-2xl">
+                        <p className="text-sm text-muted-foreground max-w-2xl line-clamp-2" title={standard.description}>
                             {standard.description}
                         </p>
                     </div>

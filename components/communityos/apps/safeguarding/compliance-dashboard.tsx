@@ -20,11 +20,17 @@ export function ComplianceDashboard({
     expiringCredentialsCount,
     onSelectStandard,
 }: ComplianceDashboardProps) {
-    const completedCount = standards.filter((s) => s.status === "compliant").length;
-    const overallProgress = Math.round((completedCount / standards.length) * 100);
+    const { completedCount, overallProgress } = React.useMemo(() => {
+        if (standards.length === 0) return { completedCount: 0, overallProgress: 0 };
+        const count = standards.filter((s) => s.status === "compliant").length;
+        return {
+            completedCount: count,
+            overallProgress: Math.round((count / standards.length) * 100),
+        };
+    }, [standards]);
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-full">
             {/* Top Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <COSCard variant="glass" className="flex flex-col justify-between">

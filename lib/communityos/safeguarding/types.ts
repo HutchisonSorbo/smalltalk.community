@@ -69,6 +69,8 @@ export interface RiskAssessment {
     updated_at: string;
 }
 
+export type RiskAssessmentInput = Omit<RiskAssessment, "id" | "organisation_id" | "assessor_id" | "status" | "created_at" | "updated_at" | "inherent_risk_score" | "residual_risk_score">;
+
 export interface VCSSRequirement {
     id: string;
     text: string;

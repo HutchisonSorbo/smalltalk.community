@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { RiskMatrix, getRiskLevel } from "./risk-matrix";
 import { Shield, ChevronRight, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RiskAssessmentInput } from "@/lib/communityos/safeguarding/types";
 
 interface RiskAssessmentWizardProps {
-    onComplete: (data: RiskAssessment) => Promise<void>;
+    onComplete: (data: RiskAssessmentInput) => Promise<void>;
     onCancel: () => void;
 }
 
@@ -56,16 +57,18 @@ export function RiskAssessmentWizard({ onComplete, onCancel }: RiskAssessmentWiz
                                 <p className="text-sm text-muted-foreground">Define what activity or area you are assessing for risk.</p>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-muted-foreground">Activity Name</label>
+                                <label htmlFor="activity-name" className="text-xs font-bold uppercase text-muted-foreground cursor-pointer">Activity Name</label>
                                 <Input
+                                    id="activity-name"
                                     placeholder="e.g., Youth Summer Camp 2026"
                                     value={data.activity_name}
                                     onChange={(e) => setData({ ...data, activity_name: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-muted-foreground">Context / Details</label>
+                                <label htmlFor="activity-desc" className="text-xs font-bold uppercase text-muted-foreground cursor-pointer">Context / Details</label>
                                 <Textarea
+                                    id="activity-desc"
                                     placeholder="Describe the setting, participants, and potential hazards..."
                                     className="min-h-[100px]"
                                     value={data.description}
@@ -86,10 +89,11 @@ export function RiskAssessmentWizard({ onComplete, onCancel }: RiskAssessmentWiz
                                 <div className="space-y-6">
                                     <div className="space-y-3">
                                         <div className="flex justify-between text-xs font-bold">
-                                            <label>Likelihood ({data.likelihood})</label>
+                                            <label htmlFor="likelihood-range">Likelihood ({data.likelihood})</label>
                                             <span className="text-muted-foreground">Rare → Almost Certain</span>
                                         </div>
                                         <input
+                                            id="likelihood-range"
                                             type="range" min="1" max="5"
                                             className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                                             value={data.likelihood}
@@ -99,10 +103,11 @@ export function RiskAssessmentWizard({ onComplete, onCancel }: RiskAssessmentWiz
                                     </div>
                                     <div className="space-y-3">
                                         <div className="flex justify-between text-xs font-bold">
-                                            <label>Impact ({data.impact})</label>
+                                            <label htmlFor="impact-range">Impact ({data.impact})</label>
                                             <span className="text-muted-foreground">Insignificant → Critical</span>
                                         </div>
                                         <input
+                                            id="impact-range"
                                             type="range" min="1" max="5"
                                             className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                                             value={data.impact}
@@ -138,8 +143,9 @@ export function RiskAssessmentWizard({ onComplete, onCancel }: RiskAssessmentWiz
                                 <p className="text-sm text-muted-foreground">What measures will you implement to mitigate this risk?</p>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-muted-foreground">Mitigation Strategy</label>
+                                <label htmlFor="risk-controls" className="text-xs font-bold uppercase text-muted-foreground cursor-pointer">Mitigation Strategy</label>
                                 <Textarea
+                                    id="risk-controls"
                                     placeholder="e.g., Staff training, sign-in procedures, enhanced supervision ratios..."
                                     className="min-h-[150px]"
                                     value={data.controls}
@@ -182,7 +188,10 @@ export function RiskAssessmentWizard({ onComplete, onCancel }: RiskAssessmentWiz
                     <Button variant="ghost" onClick={step === 1 ? onCancel : prevStep}>
                         {step === 1 ? "Cancel" : "Back"}
                     </Button>
-                    <Button onClick={step === 4 ? () => onComplete(data) : nextStep} disabled={step === 1 && !data.activity_name}>
+                    <Button
+                        onClick={step === 4 ? () => onComplete(data as RiskAssessmentInput) : nextStep}
+                        disabled={step === 1 && !data.activity_name}
+                    >
                         {step === 4 ? "Submit Assessment" : "Continue"}
                         {step < 4 && <ChevronRight className="h-4 w-4 ml-2" />}
                     </Button>

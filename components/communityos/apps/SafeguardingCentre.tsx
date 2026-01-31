@@ -17,7 +17,11 @@ import { RiskAssessmentWizard } from "./safeguarding/risk-wizard";
 
 // Data & Types
 import { VCSS_STANDARDS } from "@/lib/communityos/safeguarding/vcss-standards";
-import { VCSSStandard, EvidenceCategory, RiskAssessment } from "@/lib/communityos/safeguarding/types";
+import {
+    VCSSStandard,
+    EvidenceCategory,
+    RiskAssessmentInput
+} from "@/lib/communityos/safeguarding/types";
 
 type ViewState = "dashboard" | "standard-detail" | "risk-wizard" | "audit-log" | "expiry-alerts";
 
@@ -63,27 +67,45 @@ export function SafeguardingCentre() {
     };
 
     const handleUploadEvidence = async (file: File, category: EvidenceCategory) => {
-        // In a real app, this would call a server action or Supabase directly
-        console.log(`Uploading ${file.name} to category ${category} for Standard ${selectedStandardId}`);
+        try {
+            // In a real app, this would call a server action or Supabase directly
+            console.log(`Uploading ${file.name} to category ${category} for Standard ${selectedStandardId}`);
 
-        return new Promise<void>((resolve) => {
-            setTimeout(() => {
-                toast({
-                    title: "Evidence Uploaded",
-                    description: `${file.name} has been linked and stored.`,
-                });
-                resolve();
-            }, 1000);
-        });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            toast({
+                title: "Evidence Uploaded",
+                description: `${file.name} has been linked and stored.`,
+            });
+        } catch (error) {
+            console.error("Failed to upload evidence:", error);
+            toast({
+                title: "Upload Failed",
+                description: "There was an error saving your evidence. Please try again.",
+                variant: "destructive",
+            });
+        }
     };
 
-    const handleRiskComplete = async (data: RiskAssessment) => {
-        console.log("Risk Assessment Complete:", data);
-        setView("dashboard");
-        toast({
-            title: "Assessment Saved",
-            description: "Child safety risk assessment has been recorded.",
-        });
+    const handleRiskComplete = async (data: RiskAssessment | RiskAssessmentInput) => {
+        try {
+            console.log("Risk Assessment Complete:", data);
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            setView("dashboard");
+            toast({
+                title: "Assessment Saved",
+                description: "Child safety risk assessment has been recorded.",
+            });
+        } catch (error) {
+            console.error("Failed to save risk assessment:", error);
+            toast({
+                title: "Error Saving Assessment",
+                description: "Could not record the assessment. Please check your data and try again.",
+                variant: "destructive",
+            });
+        }
     };
 
     if (isTenantLoading || (tenant && isModerationLoading)) {

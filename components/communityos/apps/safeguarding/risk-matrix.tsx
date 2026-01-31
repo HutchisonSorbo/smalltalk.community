@@ -45,6 +45,7 @@ export function RiskMatrix({ risks, activeRiskId, onSelectRisk }: RiskMatrixProp
                                         {/* Plot Risks */}
                                         {risks.filter(r => r.likelihood === l && r.impact === i).map(r => (
                                             <button
+                                                type="button"
                                                 key={r.id}
                                                 onClick={() => onSelectRisk?.(r.id)}
                                                 className={cn(

@@ -61,9 +61,11 @@ export function ExpiryTracker({ credentials }: ExpiryTrackerProps) {
                                 <div className="space-y-1">
                                     <p className="text-sm font-bold flex items-center gap-2">
                                         <User className="h-3 w-3 text-muted-foreground" />
-                                        {cred.user_name}
+                                        <p className="text-sm font-semibold truncate max-w-[120px] sm:max-w-[180px]" title={cred.user_name}>
+                                            {cred.user_name}
+                                        </p>
                                     </p>
-                                    <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">
+                                    <p className="text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[150px]" title={cred.type}>
                                         {cred.type}
                                     </p>
                                 </div>
@@ -120,10 +122,10 @@ function StatusBadge({ status }: { status: Credential["status"] }) {
 }
 
 function getDaysRemaining(expiryDate: string): number {
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    const diffTime = expiry.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const days = Math.ceil(
+        (new Date(expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return Math.max(0, days);
 }
 
 function calculateProgress(expiryDate: string): number {

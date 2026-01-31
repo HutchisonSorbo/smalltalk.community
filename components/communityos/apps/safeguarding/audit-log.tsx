@@ -4,7 +4,7 @@ import React from "react";
 import { COSCard } from "@/components/communityos/ui/cos-card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Clock, FileText, CheckCircle2, History } from "lucide-react";
+import { User, Clock, FileText, CheckCircle2, History, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AuditLogEntry {
@@ -52,7 +52,7 @@ export function AuditLogView({ logs }: AuditLogViewProps) {
 
                                     <div className="flex-1 space-y-1">
                                         <div className="flex items-center justify-between">
-                                            <p className="text-sm font-semibold text-foreground">
+                                            <p className="text-sm font-semibold text-foreground truncate max-w-[200px] sm:max-w-xs" title={log.action}>
                                                 {log.action}
                                             </p>
                                             <time className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
@@ -67,9 +67,11 @@ export function AuditLogView({ logs }: AuditLogViewProps) {
                                         </div>
 
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <div className="flex items-center gap-1">
-                                                <User className="h-3 w-3" />
-                                                {log.user_name}
+                                            <div className="flex items-center gap-1 overflow-hidden">
+                                                <User className="h-3 w-3 shrink-0" />
+                                                <span className="truncate max-w-[120px]" title={log.user_name}>
+                                                    {log.user_name}
+                                                </span>
                                             </div>
                                             <span>•</span>
                                             <span className="capitalize">{log.target_type.replace('-', ' ')}</span>
@@ -109,23 +111,3 @@ function TargetIcon({ type }: { type: AuditLogEntry["target_type"] }) {
     }
 }
 
-function AlertCircle({ className }: { className?: string }) {
-    return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-    );
-}

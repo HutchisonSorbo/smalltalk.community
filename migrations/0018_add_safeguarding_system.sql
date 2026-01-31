@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS safeguarding_incidents (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     organisation_id VARCHAR NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
-    reporter_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE
+    reporter_id VARCHAR REFERENCES users(id) ON DELETE
     SET NULL,
         date TIMESTAMP NOT NULL DEFAULT NOW(),
         description TEXT NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS safeguarding_incident_actions (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     incident_id VARCHAR NOT NULL REFERENCES safeguarding_incidents(id) ON DELETE CASCADE,
     organisation_id VARCHAR NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
-    user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE
+    user_id VARCHAR REFERENCES users(id) ON DELETE
     SET NULL,
         action TEXT NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS safeguarding_incident_actions (
 CREATE TABLE IF NOT EXISTS safeguarding_evidence (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     organisation_id VARCHAR NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
-    uploaded_by VARCHAR NOT NULL REFERENCES users(id) ON DELETE
+    uploaded_by VARCHAR REFERENCES users(id) ON DELETE
     SET NULL,
         vcss_standard_id INTEGER NOT NULL,
         filename VARCHAR(255) NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS safeguarding_evidence (
 CREATE TABLE IF NOT EXISTS safeguarding_risk_assessments (
     id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
     organisation_id VARCHAR NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
-    assessor_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE
+    assessor_id VARCHAR REFERENCES users(id) ON DELETE
     SET NULL,
         activity_name VARCHAR(255) NOT NULL,
         description TEXT,

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { COSCard } from "@/components/communityos/ui/cos-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { EvidenceCategory, EvidenceCategorySchema } from "@/lib/communityos/safeguarding/types";
+import { EvidenceCategory } from "@/lib/communityos/safeguarding/types";
 import { Upload, X, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,39 +24,79 @@ export function EvidenceUploader({
     const [category, setCategory] = useState<EvidenceCategory>("policy");
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
-    const [error, setError] = useState<string | null>(null);
+    const [fileError, setFileError] = useState<string | null>(null);
+    const [uploadError, setUploadError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const selectedFile = e.target.files[0];
-            if (selectedFile.size > 10 * 1024 * 1024) {
-                setError("File size exceeds 10MB limit.");
-                return;
-            }
-            setFile(selectedFile);
-            setError(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const validateFile = (selectedFile: File): string | null => {
+        const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+        const ALLOWED_TYPES = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+        ];
+
+        if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+            return "Invalid file type. Please upload PDF, Word, PNG, JPG, or WEBP files.";
         }
+        if (selectedFile.size > MAX_SIZE) {
+            return "File is too large. Maximum size is 10MB.";
+        }
+        return null;
     };
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
+    const handleFileSelection = useCallback((selectedFile: File | null) => {
+        if (!selectedFile) {
+            setFile(null);
+            setFileError(null);
+            return;
+        }
+
+        const error = validateFile(selectedFile);
+        if (error) {
+            setFile(null);
+            setFileError(error);
+        } else {
+            setFile(selectedFile);
+            setFileError(null);
+            setUploadError(null);
+        }
+    }, []);
+
+    const onDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            const selectedFile = e.dataTransfer.files[0];
-            setFile(selectedFile);
-            setError(null);
+            handleFileSelection(e.dataTransfer.files[0]);
+        }
+    }, [handleFileSelection]);
+
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInputRef.current?.click();
         }
     }, []);
 
     const handleUpload = async () => {
-        if (!file) return;
+        if (!file) {
+            setUploadError("No file selected for upload.");
+            return;
+        }
+        if (fileError) {
+            setUploadError("Cannot upload due to file validation error.");
+            return;
+        }
 
         setUploading(true);
         setUploadProgress(10);
-        setError(null);
+        setUploadError(null);
 
         try {
-            // Manual progress simulation if the actual upload doesn't provide it
             const interval = setInterval(() => {
                 setUploadProgress((prev) => (prev < 90 ? prev + 10 : prev));
             }, 200);
@@ -68,7 +108,9 @@ export function EvidenceUploader({
             setSuccess(true);
             setTimeout(() => onClose(), 1500);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to upload evidence.");
+            console.error("Upload failed internally:", err);
+            setUploadError("Upload failed. Please try again.");
+            setUploadProgress(0);
         } finally {
             setUploading(false);
         }
@@ -96,14 +138,30 @@ export function EvidenceUploader({
 
                 {!success ? (
                     <>
-                        <div
+                        <label
                             onDragOver={(e) => e.preventDefault()}
-                            onDrop={handleDrop}
+                            onDrop={onDrop}
+                            onKeyDown={onKeyDown}
+                            tabIndex={0}
                             className={cn(
-                                "border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 transition-colors",
-                                file ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                                "border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer",
+                                file ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
+                                (fileError || uploadError) && "border-destructive",
+                                uploading && "border-primary/50 bg-primary/5"
                             )}
                         >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const selectedFile = e.target.files?.[0];
+                                    handleFileSelection(selectedFile || null);
+                                    e.target.value = '';
+                                }}
+                                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+                                title="Evidence file input"
+                            />
                             {file ? (
                                 <>
                                     <FileText className="h-10 w-10 text-primary" />
@@ -111,7 +169,17 @@ export function EvidenceUploader({
                                         <p className="text-sm font-medium truncate max-w-[200px]">{file.name}</p>
                                         <p className="text-[10px] text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                     </div>
-                                    <Button variant="ghost" size="sm" onClick={() => setFile(null)} className="text-xs h-7">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.preventDefault(); // Prevent triggering the label's input click
+                                            e.stopPropagation();
+                                            handleFileSelection(null);
+                                        }}
+                                        className="text-xs h-7"
+                                    >
                                         Remove
                                     </Button>
                                 </>
@@ -124,25 +192,15 @@ export function EvidenceUploader({
                                         <p className="text-sm font-medium">Click or drag to upload</p>
                                         <p className="text-[10px] text-muted-foreground">PDF, DOC, PNG, JPG (Max 10MB)</p>
                                     </div>
-                                    <input
-                                        type="file"
-                                        id="evidence-file"
-                                        className="hidden"
-                                        onChange={handleFileChange}
-                                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
-                                    />
-                                    <Button variant="outline" size="sm" asChild>
-                                        <label htmlFor="evidence-file" className="cursor-pointer">Select File</label>
-                                    </Button>
                                 </>
                             )}
-                        </div>
+                        </label>
 
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</label>
+                                <label htmlFor="evidence-category" className="text-xs font-bold uppercase tracking-wider text-muted-foreground cursor-pointer">Category</label>
                                 <Select value={category} onValueChange={(val) => setCategory(val as EvidenceCategory)}>
-                                    <SelectTrigger>
+                                    <SelectTrigger id="evidence-category">
                                         <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -154,10 +212,10 @@ export function EvidenceUploader({
                                 </Select>
                             </div>
 
-                            {error && (
+                            {(fileError || uploadError) && (
                                 <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
                                     <AlertCircle className="h-4 w-4 shrink-0" />
-                                    {error}
+                                    {fileError || uploadError}
                                 </div>
                             )}
 
@@ -172,8 +230,9 @@ export function EvidenceUploader({
                             )}
 
                             <Button
+                                type="button"
                                 className="w-full"
-                                disabled={!file || uploading}
+                                disabled={!file || uploading || !!fileError}
                                 onClick={handleUpload}
                             >
                                 {uploading ? "Processing..." : "Complete Upload"}
