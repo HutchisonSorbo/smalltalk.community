@@ -64,29 +64,29 @@ const COSPullToRefresh = ({ onRefresh, children, className }: COSPullToRefreshPr
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            style={{
+                "--pull-offset": refreshing ? '48px' : `${pullDist}px`,
+                "--pull-indicator-offset": refreshing ? '48px' : `${pullDist - 32}px`,
+                "--pull-opacity": Math.min(pullDist / threshold, 1),
+                "--pull-rotation": refreshing ? '0deg' : `${Math.min(pullDist * 2, 180)}deg`
+            } as React.CSSProperties}
         >
             <div
-                style={{
-                    transform: refreshing ? 'translateY(48px)' : `translateY(${pullDist - 32}px)`,
-                    opacity: Math.min(pullDist / threshold, 1)
-                }}
-                className="absolute left-0 right-0 flex items-center justify-center transition-all duration-200"
+                className="absolute left-0 right-0 flex items-center justify-center transition-all duration-200 transform-gpu translate-y-[var(--pull-indicator-offset)] opacity-[var(--pull-opacity)]"
             >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-gray-900 shadow-lg border border-border">
                     {refreshing ? (
                         <Loader2 className="h-5 w-5 animate-spin text-primary" />
                     ) : (
                         <ArrowDown
-                            style={{ transform: `rotate(${Math.min(pullDist * 2, 180)}deg)` }}
-                            className="h-5 w-5 text-muted-foreground transition-transform"
+                            className="h-5 w-5 text-muted-foreground transition-transform rotate-[var(--pull-rotation)]"
                         />
                     )}
                 </div>
             </div>
 
             <div
-                style={{ transform: refreshing ? `translateY(48px)` : `translateY(${pullDist}px)` }}
-                className="transition-transform duration-200"
+                className="transition-transform duration-200 translate-y-[var(--pull-offset)]"
             >
                 {children}
             </div>

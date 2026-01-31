@@ -171,7 +171,7 @@ export function COSDataTable<T extends { id: string | number }>({
                                 <tr
                                     key={item.id}
                                     role="row"
-                                    aria-selected={selectedIds.has(item.id)}
+                                    aria-selected={selectedIds.has(item.id) ? "true" : "false"}
                                     onClick={() => onRowClick?.(item)}
                                     onKeyDown={(e) => {
                                         if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {

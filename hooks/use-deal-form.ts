@@ -3,6 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import type { CrmDeal } from "@/types/crm";
 
 const dealSchema = z.object({
     title: z.string().min(1, "Deal title is required").max(255),

@@ -22,19 +22,24 @@ const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' 
         lg: "h-12 p-1 text-base",
     };
 
+    const activeWidth = options.length > 0 ? 100 / options.length : 0;
+    const activeOffset = safeIndex * activeWidth;
+
     return (
-        <div className={cn(
-            "relative flex w-full max-w-full bg-muted/50 rounded-xl border border-border/50 select-none",
-            sizeStyles[size],
-            className
-        )}>
+        <div
+            className={cn(
+                "relative flex w-full max-w-full bg-muted/50 rounded-xl border border-border/50 select-none",
+                sizeStyles[size],
+                className
+            )}
+            style={{
+                "--active-width": `${activeWidth}%`,
+                "--active-offset": `${activeOffset}%`
+            } as React.CSSProperties}
+        >
             {/* Sliding background */}
             <div
-                className="absolute top-1 left-0 rounded-lg bg-background shadow-xs transition-all duration-300 ease-in-out h-[calc(100%-8px)]"
-                style={{
-                    width: `${activeWidth}%`,
-                    left: `${activeOffset}%`
-                }}
+                className="absolute top-1 left-0 rounded-lg bg-background shadow-xs transition-all duration-300 ease-in-out h-[calc(100%-8px)] w-[var(--active-width)] left-[var(--active-offset)]"
                 aria-hidden="true"
             />
 

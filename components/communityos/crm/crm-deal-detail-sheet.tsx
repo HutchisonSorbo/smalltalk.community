@@ -23,6 +23,7 @@ import {
 import { DollarSign, Calendar, Loader2, AlertTriangle } from "lucide-react";
 import { useDealForm } from "@/hooks/use-deal-form";
 import { COSModal } from "../ui/cos-modal";
+import { COSInput } from "../ui/cos-input";
 import type { CrmDeal, CrmPipelineStage } from "@/types/crm";
 
 interface Props {

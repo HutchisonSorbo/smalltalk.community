@@ -15,8 +15,8 @@ interface COSBottomNavProps {
     className?: string;
 }
 
-/** Maximum displayable badge value before showing "9+" */
-const MAX_BADGE_VALUE = 9;
+/** Maximum displayable badge value before showing "99+" */
+const MAX_BADGE_VALUE = 99;
 
 /**
  * Format badge text with overflow handling

@@ -195,9 +195,9 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto py-4">
-                    {step === "upload" && <UploadStep onFileChange={handleFileChange} />}
+                    {step === "upload" && <FileUploader onFileChange={handleFileChange} />}
                     {step === "map" && (
-                        <MappingStep
+                        <MappingTable
                             rowsCount={rows.length}
                             fileName={file?.name || ""}
                             headers={headers}
@@ -206,7 +206,7 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
                             onMappingChange={setMapping}
                         />
                     )}
-                    {step === "preview" && <PreviewStep rowsCount={rows.length} />}
+                    {step === "preview" && <ImportPreview rowsCount={rows.length} />}
                 </div>
 
                 <DialogFooter className="shrink-0 pt-4 border-t">
