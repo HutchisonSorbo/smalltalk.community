@@ -25,6 +25,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
+import DOMPurify from "dompurify";
 
 export interface COSKanbanCard {
     id: string;
@@ -45,10 +46,14 @@ interface COSKanbanProps {
     onMove: (cardId: string, newStatus: string) => void;
     onCardClick?: (card: COSKanbanCard) => void;
     onAddClick?: (status: string) => void;
-// Basic sanitization to prevent XSS/injection in rendered content
+    className?: string;
+}
+
+// Robust sanitization using DOMPurify
 const sanitize = (str: string | undefined): string => {
     if (!str) return "";
-    return str.replace(/[<>]/g, "").trim();
+    // Configure DOMPurify to strip all tags
+    return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] }).trim();
 };
 
 const KanbanCardHeader = ({
@@ -320,27 +325,23 @@ const COSKanban = ({ columns, cards, onMove, onCardClick, onAddClick, className 
                 })}
             </div>
 
-        </div>
-            
-            {/* Portal container to avoid direct document.body access if possible, or use a ref */ }
-    <div ref={portalRef} />
+            {/* Portal container and DragOverlay */}
+            <div ref={portalRef} />
 
-    {
-        mounted && portalRef.current && createPortal(
-            <DragOverlay dropAnimation={{
-                duration: 200,
-                easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-            }}>
-                {activeCard ? (
-                    <div className="w-[320px] rotate-2 cursor-grabbing">
-                        <KanbanCardItem card={activeCard} isDragging />
-                    </div>
-                ) : null}
-            </DragOverlay>,
-            portalRef.current
-        )
-    }
-        </DndContext >
+            {mounted && portalRef.current && createPortal(
+                <DragOverlay dropAnimation={{
+                    duration: 200,
+                    easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+                }}>
+                    {activeCard ? (
+                        <div className="w-[320px] rotate-2 cursor-grabbing">
+                            <KanbanCardItem card={activeCard} isDragging />
+                        </div>
+                    ) : null}
+                </DragOverlay>,
+                portalRef.current
+            )}
+        </DndContext>
     );
 };
 

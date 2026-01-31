@@ -10,7 +10,7 @@ import { useDealStore } from "@/lib/store/deal-form-store";
 const dealSchema = z.object({
     title: z.string().min(1, "Deal title is required").max(255),
     pipelineStageId: z.string().min(1, "Pipeline stage is required"),
-    value: z.number().nullable().optional(),
+    value: z.number().min(0, "Value cannot be negative").nullable().optional(),
     probability: z.number().min(0).max(100).nullable().optional(),
     expectedCloseDate: z.coerce.date().nullable().optional(),
     notes: z.string().max(2000).nullable().optional(),
@@ -38,17 +38,22 @@ export function parseProbability(value: string): number | null {
 
 /**
  * Parses a string input into a monetary value.
+ * Enforces non-negative values.
  * 
  * @param value - The raw string input (handles multiple decimals by keeping first)
  * @returns number or null if invalid/empty
  */
 export function parseMonetaryValue(value: string): number | null {
-    const cleaned = value.replace(/[^0-9.]/g, "");
+    const cleaned = value.replace(/[^0-9.-]/g, ""); // Allow minus for interim typing, but clamp at end
+    // But requirement says "never stores negatives".
+    // Better regex: /[^0-9.]/g to strip '-' completely if we want to strictly disallow negatives even during typing? 
+    // User said: "parse the input then set parsed = Math.max(0, parsed)"
     const parts = cleaned.split(".");
     const sanitized = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleaned;
     if (sanitized === "" || sanitized === ".") return null;
     const parsed = parseFloat(sanitized);
-    return isNaN(parsed) ? null : parsed;
+    if (isNaN(parsed)) return null;
+    return Math.max(0, parsed);
 }
 
 export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) {
