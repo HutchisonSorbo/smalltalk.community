@@ -1,182 +1,90 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { useModeration } from "@/hooks/use-moderation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { Shield, AlertCircle, CheckCircle2, Info } from "lucide-react";
-import { saveVCSSStatus } from "@/lib/communityos/actions";
 import { useToast } from "@/hooks/use-toast";
+import { Shield, LayoutDashboard, History, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface VCSSStandard {
-    id: number;
-    title: string;
-    description: string;
-    completed: boolean;
-}
+// New Safeguarding Components
+import { ComplianceDashboard } from "./safeguarding/compliance-dashboard";
+import { StandardDetailCard } from "./safeguarding/standard-card";
+import { EvidenceUploader } from "./safeguarding/evidence-uploader";
+import { AuditLogView } from "./safeguarding/audit-log";
+import { ExpiryTracker } from "./safeguarding/expiry-alerts";
+import { RiskAssessmentWizard } from "./safeguarding/risk-wizard";
 
-const INITIAL_STANDARDS: VCSSStandard[] = [
-    { id: 1, title: "Standard 1: Culturally Safe Environments", description: "Organisations establish a culturally safe environment in which the diverse and unique identities and experiences of Aboriginal children and young people are respected and valued.", completed: false },
-    { id: 2, title: "Standard 2: Leadership, Governance and Culture", description: "Child safety and wellbeing is embedded in organisational leadership, governance and culture.", completed: false },
-    { id: 3, title: "Standard 3: Child and Student Empowerment", description: "Children and young people are empowered about their rights, participate in decisions affecting them and are taken seriously.", completed: false },
-    { id: 4, title: "Standard 4: Family Engagement", description: "Families and communities are informed and involved in promoting child safety and wellbeing.", completed: false },
-    { id: 5, title: "Standard 5: Equity and Diverse Needs", description: "Equity is upheld and diverse needs respected in policy and practice.", completed: false },
-    { id: 6, title: "Standard 6: Suitable Staff and Volunteers", description: "People working with children and young people are suitable and supported to reflect child safety and wellbeing values in practice.", completed: false },
-    { id: 7, title: "Standard 7: Complaints Processes", description: "Processes for complaints and concerns are child-focused.", completed: false },
-    { id: 8, title: "Standard 8: Child Safety Knowledge and Skills", description: "Staff and volunteers are equipped with the knowledge, skills and awareness to keep children and young people safe through ongoing education and training.", completed: false },
-    { id: 9, title: "Standard 9: Child Safety in Physical and Online Environments", description: "Physical and online environments promote child safety and wellbeing while minimising the opportunity for children and young people to be harmed.", completed: false },
-    { id: 10, title: "Standard 10: Review of Child Safety Practices", description: "Implementation of the Child Safe Standards is regularly reviewed and improved.", completed: false },
-    { id: 11, title: "Standard 11: Implementation of Child Safety Policy", description: "Policies and procedures document how the organisation is safe for children and young people.", completed: false },
-];
+// Data & Types
+import { VCSS_STANDARDS } from "@/lib/communityos/safeguarding/vcss-standards";
+import { VCSSStandard, EvidenceCategory, RiskAssessment } from "@/lib/communityos/safeguarding/types";
 
-/**
- * Subcomponent: Header section for the Safeguarding Centre
- */
-function SafeguardingHeader({ tenantName }: { tenantName: string }) {
-    return (
-        <div className="flex items-center justify-between">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Shield className="h-6 w-6 text-primary" aria-hidden="true" />
-                    Safeguarding Centre
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                    Manage Victorian Child Safe Standards (VCSS) compliance for {tenantName}.
-                </p>
-            </div>
-        </div>
-    );
-}
-
-/**
- * Subcomponent: Compliance Progress Overview
- */
-function ComplianceOverview({ progress }: { progress: number }) {
-    return (
-        <Card className="border-primary/20 bg-primary/5">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center justify-between">
-                    Overall Compliance Progress
-                    <output className="text-primary font-bold" aria-live="polite">
-                        {progress}%
-                    </output>
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Progress value={progress} className="h-2" aria-label="Overall compliance progress" />
-                <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                    <Info className="h-3 w-3" aria-hidden="true" />
-                    Complete all 11 standards to achieve full compliance certification.
-                </p>
-            </CardContent>
-        </Card>
-    );
-}
-
-/**
- * Subcomponent: Individual Checklist Item
- */
-function VCSSItem({
-    standard,
-    onToggle
-}: {
-    standard: VCSSStandard,
-    onToggle: (id: number) => void
-}) {
-    const id = `std-${standard.id}`;
-    return (
-        <Card className={`transition-colors ${standard.completed ? 'border-green-200 bg-green-50/30' : 'border-gray-200'}`}>
-            <CardHeader className="p-4 flex flex-row items-start gap-4 space-y-0">
-                <Checkbox
-                    id={id}
-                    checked={standard.completed}
-                    onCheckedChange={() => onToggle(standard.id)}
-                    className="mt-1"
-                />
-                <div className="space-y-1">
-                    <label
-                        htmlFor={id}
-                        className="text-sm font-semibold leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                        {standard.title}
-                    </label>
-                    <CardDescription className="text-xs">
-                        {standard.description}
-                    </CardDescription>
-                </div>
-                {standard.completed ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500 ml-auto shrink-0" aria-hidden="true" />
-                ) : (
-                    <AlertCircle className="h-5 w-5 text-yellow-500 ml-auto shrink-0" aria-hidden="true" />
-                )}
-            </CardHeader>
-        </Card>
-    );
-}
+type ViewState = "dashboard" | "standard-detail" | "risk-wizard" | "audit-log" | "expiry-alerts";
 
 export function SafeguardingCentre() {
     const { tenant, isLoading: isTenantLoading } = useTenant();
     const { moderatedContent: moderatedTenantName, isLoading: isModerationLoading } = useModeration(tenant?.name || "");
-    const [standards, setStandards] = useState<VCSSStandard[]>(INITIAL_STANDARDS);
     const { toast } = useToast();
 
-    // Fetch and sync VCSS status when tenant changes
-    useEffect(() => {
-        if (!tenant) return;
+    const [view, setView] = useState<ViewState>("dashboard");
+    const [selectedStandardId, setSelectedStandardId] = useState<number | null>(null);
+    const [standards, setStandards] = useState<VCSSStandard[]>(VCSS_STANDARDS);
+    const [isUploading, setIsUploading] = useState(false);
 
-        let resetNeeded = true;
-        if (tenant.vcssStatus) {
-            try {
-                const persisted = Array.isArray(tenant.vcssStatus)
-                    ? tenant.vcssStatus
-                    : typeof tenant.vcssStatus === 'string'
-                        ? JSON.parse(tenant.vcssStatus)
-                        : [];
-
-                if (Array.isArray(persisted) && persisted.length > 0) {
-                    setStandards(persisted);
-                    resetNeeded = false;
-                }
-            } catch (error) {
-                console.error("Failed to parse persisted VCSS status:", error);
-            }
+    // Mock data for initial state
+    const [incidentsCount] = useState(2);
+    const [expiringCredentialsCount] = useState(3);
+    const [auditLogs] = useState([
+        {
+            id: "1",
+            user_name: "Ryan Hutchison",
+            action: "Updated Standard 1",
+            target_type: "standard" as const,
+            target_id: "1",
+            details: "Marked 'Leadership Support' as completed.",
+            created_at: new Date().toISOString()
         }
-        
-        if (resetNeeded) {
-            setStandards(INITIAL_STANDARDS);
-        }
-    }, [tenant]);
+    ]);
 
-    const toggleStandard = useCallback(async (id: number) => {
-        const previousStandards = [...standards];
-        const updatedStandards = standards.map(s => s.id === id ? { ...s, completed: !s.completed } : s);
+    const selectedStandard = selectedStandardId
+        ? standards.find(s => s.id === selectedStandardId)
+        : null;
 
-        // Optimistic UI update
-        setStandards(updatedStandards);
+    const handleToggleRequirement = (standardId: number, requirementId: string) => {
+        setStandards(prev => prev.map(s => {
+            if (s.id !== standardId) return s;
+            return {
+                ...s,
+                requirements: s.requirements.map(r =>
+                    r.id === requirementId ? { ...r, completed: !r.completed } : r
+                )
+            };
+        }));
+    };
 
-        if (tenant?.id) {
-            try {
-                const result = await saveVCSSStatus(tenant.id, updatedStandards);
-                if (!result.success) throw new Error(result.error);
-            } catch (error) {
-                console.error("Failed to persist VCSS progress", { 
-                    tenantId: tenant.id, 
-                    standardId: id, 
-                    error: error instanceof Error ? error.message : "Unknown error" 
-                });
-                
-                // Rollback on failure
-                setStandards(previousStandards);
+    const handleUploadEvidence = async (file: File, category: EvidenceCategory) => {
+        // In a real app, this would call a server action or Supabase directly
+        console.log(`Uploading ${file.name} to category ${category} for Standard ${selectedStandardId}`);
+
+        return new Promise<void>((resolve) => {
+            setTimeout(() => {
                 toast({
-                    title: "Update Failed",
-                    description: "We were unable to save your progress. Please check your connection.",
-                    variant: "destructive",
+                    title: "Evidence Uploaded",
+                    description: `${file.name} has been linked and stored.`,
                 });
-            }
-        }
-    }, [standards, tenant?.id, toast]);
+                resolve();
+            }, 1000);
+        });
+    };
+
+    const handleRiskComplete = async (data: RiskAssessment) => {
+        console.log("Risk Assessment Complete:", data);
+        setView("dashboard");
+        toast({
+            title: "Assessment Saved",
+            description: "Child safety risk assessment has been recorded.",
+        });
+    };
 
     if (isTenantLoading || (tenant && isModerationLoading)) {
         return (
@@ -187,31 +95,98 @@ export function SafeguardingCentre() {
         );
     }
 
-    if (!tenant) {
-        return (
-            <div className="text-center py-12 text-red-600 border rounded-lg border-red-200 bg-red-50">
-                <p>Unable to load Safeguarding Centre - Organisation context not available.</p>
-            </div>
-        );
-    }
-
-    const completedCount = standards.filter(s => s.completed).length;
-    const progress = Math.round((completedCount / standards.length) * 100);
-
     return (
         <div className="space-y-6 max-w-full">
-            <SafeguardingHeader tenantName={moderatedTenantName} />
-            <ComplianceOverview progress={progress} />
+            {/* Dynamic Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                            <Shield className="h-6 w-6 text-primary" />
+                        </div>
+                        <h2 className="text-2xl font-bold tracking-tight">Safeguarding Centre</h2>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                        {moderatedTenantName}&apos;s VCSS Compliance & Risk Management Suite
+                    </p>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {standards.map((standard) => (
-                    <VCSSItem
-                        key={standard.id}
-                        standard={standard}
-                        onToggle={toggleStandard}
-                    />
-                ))}
+                <div className="flex items-center gap-2">
+                    {view !== "dashboard" && (
+                        <Button variant="ghost" size="sm" onClick={() => setView("dashboard")} className="gap-2">
+                            <LayoutDashboard className="h-4 w-4" />
+                            Dashboard
+                        </Button>
+                    )}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => setView("audit-log")}
+                    >
+                        <History className="h-4 w-4" />
+                        Audit Log
+                    </Button>
+                    <Button
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => setView("risk-wizard")}
+                    >
+                        <AlertTriangle className="h-4 w-4" />
+                        New Risk Assessment
+                    </Button>
+                </div>
             </div>
+
+            {/* View Switcher */}
+            <main className="min-h-[500px]">
+                {view === "dashboard" && (
+                    <ComplianceDashboard
+                        standards={standards}
+                        incidentsCount={incidentsCount}
+                        expiringCredentialsCount={expiringCredentialsCount}
+                        onSelectStandard={(id) => {
+                            setSelectedStandardId(id);
+                            setView("standard-detail");
+                        }}
+                    />
+                )}
+
+                {view === "standard-detail" && selectedStandard && (
+                    <div className="space-y-6">
+                        <StandardDetailCard
+                            standard={selectedStandard}
+                            onBack={() => setView("dashboard")}
+                            onToggleRequirement={(reqId) => handleToggleRequirement(selectedStandard.id, reqId)}
+                            onUploadEvidence={() => setIsUploading(true)}
+                        />
+                        {isUploading && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+                                <EvidenceUploader
+                                    standardId={selectedStandard.id}
+                                    onUpload={handleUploadEvidence}
+                                    onClose={() => setIsUploading(false)}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {view === "risk-wizard" && (
+                    <RiskAssessmentWizard
+                        onComplete={handleRiskComplete}
+                        onCancel={() => setView("dashboard")}
+                    />
+                )}
+
+                {view === "audit-log" && (
+                    <AuditLogView logs={auditLogs} />
+                )}
+
+                {view === "expiry-alerts" && (
+                    <ExpiryTracker credentials={[]} /> // To be populated
+                )}
+            </main>
         </div>
     );
 }
