@@ -99,6 +99,7 @@ export interface VCSSStandard {
     nextReview?: string;
 }
 
+
 export interface Credential {
     id: string;
     user_name: string;
@@ -106,3 +107,6 @@ export interface Credential {
     expiry_date: string;
     status: "valid" | "expiring-soon" | "expired";
 }
+
+export type ViewState = "dashboard" | "standard-detail" | "risk-wizard" | "audit-log" | "expiry-alerts";
+

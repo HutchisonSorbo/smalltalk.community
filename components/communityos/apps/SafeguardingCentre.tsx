@@ -68,14 +68,18 @@ function Header({ view, setView, tenantName }: { view: ViewState; setView: (v: V
 function MainContent({ logic }: { logic: ReturnType<typeof useSafeguarding> }) {
     const { view, setView, selectedStandard, setSelectedStandardId, standards, isUploading, setIsUploading, credentials, modalRef, incidentsCount, expiringCredentialsCount, auditLogs, handleToggleRequirement, handleUploadEvidence, handleRiskComplete } = logic;
 
+    // Fix: Move side-effect (redirect) out of render
+    React.useEffect(() => {
+        if (view === "standard-detail" && !selectedStandard) {
+            setView("dashboard");
+        }
+    }, [view, selectedStandard, setView]);
+
     switch (view) {
         case "dashboard":
             return <ComplianceDashboard standards={standards} incidentsCount={incidentsCount} expiringCredentialsCount={expiringCredentialsCount} onSelectStandard={(id) => { setSelectedStandardId(id); setView("standard-detail"); }} />;
         case "standard-detail":
-            if (!selectedStandard) {
-                setView("dashboard");
-                return null;
-            }
+            if (!selectedStandard) return null; // Logic handled by useEffect
             return (
                 <div className="space-y-6">
                     <StandardDetailCard standard={selectedStandard} onBack={() => setView("dashboard")} onToggleRequirement={(reqId) => handleToggleRequirement(selectedStandard.id, reqId)} onUploadEvidence={() => setIsUploading(true)} />
