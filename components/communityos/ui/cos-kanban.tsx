@@ -168,7 +168,44 @@ const KanbanCardItem = ({
             </COSCard>
         </div>
     );
+    );
 };
+
+const ColumnHeader = ({
+    title,
+    count,
+    onAddClick
+}: {
+    title: string;
+    count: number;
+    onAddClick?: () => void
+}) => (
+    <div className="flex items-center justify-between mb-2 px-1">
+        <div className="flex items-center gap-2 min-w-0">
+            <h3 className="font-bold text-sm tracking-tight truncate">{title}</h3>
+            <span className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-bold text-muted-foreground uppercase shrink-0">
+                {count}
+            </span>
+        </div>
+        <div className="flex gap-1">
+            <button
+                type="button"
+                onClick={onAddClick}
+                className="p-1 hover:bg-muted rounded transition-colors"
+                aria-label={`Add card to ${title}`}
+            >
+                <Plus className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <button
+                type="button"
+                className="p-1 hover:bg-muted rounded transition-colors"
+                aria-label={`Column options for ${title}`}
+            >
+                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+            </button>
+        </div>
+    </div>
+);
 
 const COSKanbanColumn = ({
     column,
@@ -194,31 +231,11 @@ const COSKanbanColumn = ({
                 isOver && "bg-primary/5 border-primary/20"
             )}
         >
-            <div className="flex items-center justify-between mb-2 px-1">
-                <div className="flex items-center gap-2 min-w-0">
-                    <h3 className="font-bold text-sm tracking-tight truncate">{column.title}</h3>
-                    <span className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-bold text-muted-foreground uppercase shrink-0">
-                        {columnCards.length}
-                    </span>
-                </div>
-                <div className="flex gap-1">
-                    <button
-                        type="button"
-                        onClick={() => onAddClick?.(column.id)}
-                        className="p-1 hover:bg-muted rounded transition-colors"
-                        aria-label={`Add card to ${column.title}`}
-                    >
-                        <Plus className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                    <button
-                        type="button"
-                        className="p-1 hover:bg-muted rounded transition-colors"
-                        aria-label={`Column options for ${column.title}`}
-                    >
-                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                </div>
-            </div>
+            <ColumnHeader
+                title={column.title}
+                count={columnCards.length}
+                onAddClick={() => onAddClick?.(column.id)}
+            />
 
             <div className="flex flex-col gap-3 min-h-[200px]">
                 <SortableContext
