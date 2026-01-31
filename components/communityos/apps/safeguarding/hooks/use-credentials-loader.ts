@@ -13,31 +13,36 @@ export function useCredentialsLoader() {
     const MOCK_TIMESTAMP = useMemo(() => new Date().toISOString(), []);
 
     const fetchCredentials = async (): Promise<Credential[]> => {
-        // Simulate API fetch delay
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return [
-            {
-                id: "c1",
-                user_name: "Alice Thompson",
-                type: "WWCC (Working with Children)",
-                expiry_date: new Date(Date.now() + 15 * 86400000).toISOString(),
-                status: "expiring-soon"
-            },
-            {
-                id: "c2",
-                user_name: "Bob Roberts",
-                type: "Police Check",
-                expiry_date: new Date(Date.now() - 2 * 86400000).toISOString(),
-                status: "expired"
-            },
-            {
-                id: "c3",
-                user_name: "Claire Smith",
-                type: "First Aid Certification",
-                expiry_date: new Date(Date.now() + 120 * 86400000).toISOString(),
-                status: "valid"
-            }
-        ];
+        try {
+            // Simulate API fetch delay
+            await new Promise(resolve => setTimeout(resolve, 300));
+            return [
+                {
+                    id: "c1",
+                    user_name: "Alice Thompson",
+                    type: "WWCC (Working with Children)",
+                    expiry_date: new Date(Date.now() + 15 * 86400000).toISOString(),
+                    status: "expiring-soon"
+                },
+                {
+                    id: "c2",
+                    user_name: "Bob Roberts",
+                    type: "Police Check",
+                    expiry_date: new Date(Date.now() - 2 * 86400000).toISOString(),
+                    status: "expired"
+                },
+                {
+                    id: "c3",
+                    user_name: "Claire Smith",
+                    type: "First Aid Certification",
+                    expiry_date: new Date(Date.now() + 120 * 86400000).toISOString(),
+                    status: "valid"
+                }
+            ];
+        } catch (error) {
+            console.error("use-credentials-loader: fetchCredentials failed", error);
+            throw error;
+        }
     };
 
     const query = useQuery({

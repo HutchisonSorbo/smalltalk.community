@@ -1,36 +1,39 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef } from "react";
+import { create } from "zustand";
 import { VCSS_STANDARDS } from "@/lib/communityos/safeguarding/vcss-standards";
 import { VCSSStandard, ViewState } from "@/lib/communityos/safeguarding/types";
 
+interface SafeguardingState {
+    view: ViewState;
+    selectedStandardId: number | null;
+    standards: VCSSStandard[];
+    isUploading: boolean;
+
+    // Actions
+    setView: (view: ViewState) => void;
+    setSelectedStandardId: (id: number | null) => void;
+    setStandards: (standards: VCSSStandard[]) => void;
+    setIsUploading: (isUploading: boolean) => void;
+    handleToggleRequirement: (standardId: number, requirementId: string) => void;
+}
+
 /**
- * Manages the core state for the Safeguarding module.
- * Tracks view navigation, selected standards, and modal visibility.
- * 
- * @returns Object containing:
- * - `view`: Current ViewState
- * - `setView`: Navigation setter
- * - `selectedStandardId`: ID of the standard in focus
- * - `standards`: List of VCSS standards and their progress
- * - `isUploading`: Boolean for evidence modal visibility
- * - `modalRef`: Ref for focusing the upload modal
- * - `selectedStandard`: The standard object matching selectedStandardId
- * - `handleToggleRequirement`: Function to toggle a requirement's completion status (standardId, requirementId)
+ * Zustand store for Safeguarding module state.
  */
-export function useSafeguardingState() {
-    const [view, setView] = useState<ViewState>("dashboard");
-    const [selectedStandardId, setSelectedStandardId] = useState<number | null>(null);
-    const [standards, setStandards] = useState<VCSSStandard[]>(VCSS_STANDARDS);
-    const [isUploading, setIsUploading] = useState(false);
-    const modalRef = useRef<HTMLDivElement>(null);
+const useSafeguardingStore = create<SafeguardingState>((set) => ({
+    view: "dashboard",
+    selectedStandardId: null,
+    standards: VCSS_STANDARDS,
+    isUploading: false,
 
-    const selectedStandard = selectedStandardId
-        ? standards.find(s => s.id === selectedStandardId)
-        : null;
-
-    const handleToggleRequirement = (standardId: number, requirementId: string) => {
-        setStandards(prev => prev.map(s => {
+    setView: (view) => set({ view }),
+    setSelectedStandardId: (selectedStandardId) => set({ selectedStandardId }),
+    setStandards: (standards) => set({ standards }),
+    setIsUploading: (isUploading) => set({ isUploading }),
+    handleToggleRequirement: (standardId, requirementId) => set((state) => ({
+        standards: state.standards.map(s => {
             if (s.id !== standardId) return s;
             return {
                 ...s,
@@ -38,20 +41,28 @@ export function useSafeguardingState() {
                     r.id === requirementId ? { ...r, completed: !r.completed } : r
                 )
             };
-        }));
-    };
+        })
+    })),
+}));
+
+/**
+ * Manages the core state for the Safeguarding module.
+ * Tracks view navigation, selected standards, and modal visibility.
+ * 
+ * @returns Object containing state and actions selected from the Zustand store.
+ */
+export function useSafeguardingState() {
+    const state = useSafeguardingStore();
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    const selectedStandard = state.selectedStandardId
+        ? state.standards.find(s => s.id === state.selectedStandardId)
+        : null;
 
     return {
-        view,
-        setView,
-        selectedStandardId,
-        setSelectedStandardId,
-        standards,
-        setStandards,
-        isUploading,
-        setIsUploading,
+        ...state,
         modalRef,
-        selectedStandard,
-        handleToggleRequirement
+        selectedStandard
     };
 }
+
