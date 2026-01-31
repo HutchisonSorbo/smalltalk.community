@@ -168,7 +168,6 @@ const KanbanCardItem = ({
             </COSCard>
         </div>
     );
-    );
 };
 
 const ColumnHeader = ({
