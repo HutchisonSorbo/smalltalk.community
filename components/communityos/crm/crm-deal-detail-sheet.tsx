@@ -31,7 +31,7 @@ interface Props {
     stages: CrmPipelineStage[];
     isOpen: boolean;
     onClose: () => void;
-    onSave: (deal: CrmDeal) => Promise<void>;
+    onSave: (deal: Partial<CrmDeal>) => Promise<void>;
     onDelete?: (dealId: string) => Promise<void>;
 }
 
@@ -58,6 +58,17 @@ function parseLocalDateString(dateString: string): Date | null {
     return new Date(year, month - 1, day);
 }
 
+/**
+ * Sheet component for creating and editing CRM deals.
+ *
+ * @param props.deal - The deal object to edit, or null for creating a new deal.
+ * @param props.stages - List of pipeline stages for the stage selector.
+ * @param props.isOpen - Whether the sheet is open.
+ * @param props.onClose - Callback to close the sheet.
+ * @param props.onSave - Callback to save deal changes. Accepts a partial deal object.
+ * @param props.onDelete - Optional callback to delete the deal.
+ * @returns JSX.Element | null
+ */
 export function CRMDealDetailSheet({ deal, stages, isOpen, onClose, onSave, onDelete }: Props) {
     const {
         formData,

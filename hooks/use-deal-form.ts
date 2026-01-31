@@ -4,37 +4,49 @@ import * as React from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import type { CrmDeal } from "@/types/crm";
+import { useDealStore } from "@/lib/store/deal-form-store";
 
+// Use z.coerce.date() to handle ISO strings and Date objects
 const dealSchema = z.object({
     title: z.string().min(1, "Deal title is required").max(255),
     pipelineStageId: z.string().min(1, "Pipeline stage is required"),
     value: z.number().nullable().optional(),
     probability: z.number().min(0).max(100).nullable().optional(),
-    expectedCloseDate: z.date().nullable().optional(),
+    expectedCloseDate: z.coerce.date().nullable().optional(),
     notes: z.string().max(2000).nullable().optional(),
 });
 
 interface UseDealFormProps {
     initialDeal: Partial<CrmDeal> | null;
-    onSave: (deal: CrmDeal) => Promise<void>;
+    onSave: (deal: Partial<CrmDeal>) => Promise<void>;
     onClose: () => void;
 }
 
+export function parseProbability(value: string): number | null {
+    const cleaned = value.replace(/[^0-9]/g, "");
+    if (cleaned === "") return null;
+    const parsed = parseInt(cleaned, 10);
+    if (isNaN(parsed)) return null;
+    return Math.max(0, Math.min(100, parsed));
+}
+
+export function parseMonetaryValue(value: string): number | null {
+    const cleaned = value.replace(/[^0-9.]/g, "");
+    const parts = cleaned.split(".");
+    const sanitized = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleaned;
+    if (sanitized === "" || sanitized === ".") return null;
+    const parsed = parseFloat(sanitized);
+    return isNaN(parsed) ? null : parsed;
+}
+
 export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) {
-    const [formData, setFormData] = React.useState<Partial<CrmDeal>>({});
-    const [isSaving, setIsSaving] = React.useState(false);
+    const { formData, isSaving, setFormData, updateField, setIsSaving, reset } = useDealStore();
 
     React.useEffect(() => {
-        if (initialDeal) {
-            setFormData(initialDeal);
-        } else {
-            setFormData({});
-        }
-    }, [initialDeal]);
-
-    const updateField = (field: keyof CrmDeal, value: any) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
+        setFormData(initialDeal || {});
+        // Cleanup on unmount or when initialDeal changes? 
+        // ideally usually cleanup on unmount, but here we just set initial
+    }, [initialDeal, setFormData]);
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -45,10 +57,7 @@ export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) 
                 notes: formData.notes?.trim() || null,
             });
 
-            await onSave({
-                ...formData,
-                ...validatedData,
-            } as CrmDeal);
+            await onSave({ ...formData, ...validatedData });
             onClose();
         } catch (err) {
             if (err instanceof z.ZodError) {
@@ -62,46 +71,12 @@ export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) 
         }
     };
 
-    const handleProbabilityChange = (value: string) => {
-        const cleaned = value.replace(/[^0-9]/g, "");
-        if (cleaned === "") {
-            updateField("probability", null);
-            return;
-        }
-        const parsed = parseInt(cleaned, 10);
-        if (isNaN(parsed)) {
-            updateField("probability", null);
-            return;
-        }
-        const clamped = Math.max(0, Math.min(100, parsed));
-        updateField("probability", clamped);
-    };
-
-    const handleValueChange = (value: string) => {
-        // Allow decimals but strip invalid characters
-        const cleaned = value.replace(/[^0-9.]/g, "");
-        // Prevent multiple dots
-        const parts = cleaned.split(".");
-        const sanitized = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleaned;
-
-        if (sanitized === "" || sanitized === ".") {
-            updateField("value", null);
-            return;
-        }
-        const parsed = parseFloat(sanitized);
-        if (isNaN(parsed)) {
-            updateField("value", null);
-            return;
-        }
-        updateField("value", parsed);
-    };
-
     return {
         formData,
         isSaving,
         updateField,
         handleSave,
-        handleProbabilityChange,
-        handleValueChange
+        handleProbabilityChange: (v: string) => updateField("probability", parseProbability(v)),
+        handleValueChange: (v: string) => updateField("value", parseMonetaryValue(v))
     };
 }

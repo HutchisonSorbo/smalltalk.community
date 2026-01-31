@@ -308,7 +308,7 @@ function MappingTable({
                                 <SelectValue placeholder="Skip field" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">-- Skip --</SelectItem>
+                                <SelectItem value="__skip__">-- Skip --</SelectItem>
                                 {headers.map((h) => (
                                     <SelectItem key={h} value={h}>{h}</SelectItem>
                                 ))}

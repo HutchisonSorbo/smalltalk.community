@@ -17,13 +17,10 @@ import {
     DragStartEvent,
     useDroppable,
 } from "@dnd-kit/core";
-import {
-    arrayMove,
-    SortableContext,
+SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
     useSortable,
-} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 
@@ -49,7 +46,7 @@ interface COSKanbanProps {
     className?: string;
 }
 
-const COSKanbanCard = ({
+const KanbanCardItem = ({
     card,
     onClick,
     isDragging
@@ -77,7 +74,7 @@ const COSKanbanCard = ({
     } as React.CSSProperties;
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} className="focus:outline-none">
+        <div ref={setNodeRef} style={style} {...attributes} className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <COSCard
                 variant="default"
                 interactive
@@ -90,9 +87,14 @@ const COSKanbanCard = ({
                 <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2 min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                            <div {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            <button
+                                type="button"
+                                {...listeners}
+                                className="cursor-grab active:cursor-grabbing p-0.5 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity shrink-0 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                aria-label="Drag to reorder"
+                            >
                                 <GripVertical className="h-3 w-3 text-muted-foreground" />
-                            </div>
+                            </button>
                             <h4 className="text-sm font-semibold leading-tight truncate">{card.title}</h4>
                         </div>
                         {card.priority === 'high' && (
@@ -187,7 +189,7 @@ const COSKanbanColumn = ({
                     strategy={verticalListSortingStrategy}
                 >
                     {columnCards.map((card) => (
-                        <COSKanbanCard
+                        <KanbanCardItem
                             key={card.id}
                             card={card}
                             onClick={onCardClick}
@@ -286,7 +288,7 @@ const COSKanban = ({ columns, cards, onMove, onCardClick, onAddClick, className 
                 }}>
                     {activeCard ? (
                         <div className="w-[320px] rotate-2 cursor-grabbing">
-                            <COSKanbanCard card={activeCard} isDragging />
+                            <KanbanCardItem card={activeCard} isDragging />
                         </div>
                     ) : null}
                 </DragOverlay>,

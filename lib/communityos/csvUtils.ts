@@ -109,10 +109,17 @@ export function mapCsvToContacts(
     rows: CsvRow[],
     mapping: { firstName?: string; lastName?: string; email?: string; phone?: string }
 ): { firstName: string; lastName: string; email: string; phone: string }[] {
-    return rows.map((row) => ({
-        firstName: row[mapping.firstName || "firstName"] || "",
-        lastName: row[mapping.lastName || "lastName"] || "",
-        email: row[mapping.email || "email"] || "",
-        phone: row[mapping.phone || "phone"] || "",
-    }));
+    return rows.map((row) => {
+        const getValue = (key?: string) => {
+            if (!key || key === "__skip__") return "";
+            return row[key] || "";
+        };
+
+        return {
+            firstName: getValue(mapping.firstName),
+            lastName: getValue(mapping.lastName),
+            email: getValue(mapping.email),
+            phone: getValue(mapping.phone),
+        };
+    });
 }

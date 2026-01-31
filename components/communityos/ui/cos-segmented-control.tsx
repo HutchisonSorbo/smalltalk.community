@@ -14,7 +14,6 @@ interface COSSegmentedControlProps {
 const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' }: COSSegmentedControlProps) => {
     const activeIndex = options.findIndex(opt => opt.id === value);
     const safeIndex = activeIndex >= 0 ? activeIndex : 0;
-    const percent = options.length > 0 ? (safeIndex / options.length) * 100 : 0;
 
     const sizeStyles = {
         sm: "h-8 p-0.5 text-xs",
