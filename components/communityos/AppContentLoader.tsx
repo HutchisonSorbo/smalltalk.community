@@ -104,37 +104,58 @@ function AppErrorFallback({ error, resetErrorBoundary }: { error: unknown; reset
 }
 
 const CRMApp = dynamic(
-    () => import("./apps/CRMApp").then((m) => ({ default: m.CRMApp })),
+    async () => {
+        const m = await import("./apps/CRMProApp");
+        return { default: m.CRMProApp };
+    },
     { loading: () => <AppLoadingSkeleton />, ssr: false }
 );
 
 const RosteringApp = dynamic(
-    () => import("./apps/RosteringApp").then((m) => ({ default: m.RosteringApp })),
+    async () => {
+        const m = await import("./apps/RosteringApp");
+        return { default: m.RosteringApp };
+    },
     { loading: () => <AppLoadingSkeleton />, ssr: false }
 );
 
 const InventoryApp = dynamic(
-    () => import("./apps/InventoryApp").then((m) => ({ default: m.InventoryApp })),
-    { loading: () => <AppLoadingSkeleton />, ssr: false }
-);
-
-const ImpactApp = dynamic(
-    () => import("./apps/ImpactApp").then((m) => ({ default: m.ImpactApp })),
-    { loading: () => <AppLoadingSkeleton />, ssr: false }
-);
-
-const SafeguardingCentre = dynamic(
-    () => import("./apps/SafeguardingCentre").then((m) => ({ default: m.SafeguardingCentre })),
-    { loading: () => <AppLoadingSkeleton />, ssr: false }
-);
-
-const WorkflowApp = dynamic(
-    () => import("./apps/WorkflowApp").then((m) => ({ default: m.WorkflowApp })),
+    async () => {
+        const m = await import("./apps/InventoryApp");
+        return { default: m.InventoryApp };
+    },
     { loading: () => <AppLoadingSkeleton />, ssr: false }
 );
 
 const GenericCommunityApp = dynamic(
-    () => import("./apps/GenericCommunityApp").then((m) => ({ default: m.GenericCommunityApp })),
+    async () => {
+        const m = await import("./apps/GenericCommunityApp");
+        return { default: m.GenericCommunityApp };
+    },
+    { loading: () => <AppLoadingSkeleton />, ssr: false }
+);
+
+const ImpactApp = dynamic(
+    async () => {
+        const m = await import("./apps/ImpactApp");
+        return { default: m.ImpactApp };
+    },
+    { loading: () => <AppLoadingSkeleton />, ssr: false }
+);
+
+const SafeguardingCentre = dynamic(
+    async () => {
+        const m = await import("./apps/SafeguardingCentre");
+        return { default: m.SafeguardingCentre };
+    },
+    { loading: () => <AppLoadingSkeleton />, ssr: false }
+);
+
+const WorkflowApp = dynamic(
+    async () => {
+        const m = await import("./apps/WorkflowApp");
+        return { default: m.WorkflowApp };
+    },
     { loading: () => <AppLoadingSkeleton />, ssr: false }
 );
 

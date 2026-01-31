@@ -52,6 +52,7 @@ describe('getPublicTenantByCode', () => {
             testimonials: [],
             cta_buttons: [],
             upcoming_events: [],
+            vcss_status: [],
         };
 
         const expectedTenant: PublicTenant = {
@@ -149,7 +150,7 @@ describe('getPublicTenantByCode', () => {
         });
 
         it('trims whitespace from code before querying', async () => {
-            const mockTenantRow = { id: 'test', code: 'stc', name: 'Test', is_public: true };
+            const mockTenantRow = { id: 'test', code: 'stc', name: 'Test', is_public: true, vcss_status: [] };
             const singleMock = vi.fn().mockResolvedValue({ data: mockTenantRow, error: null });
             const eqPublicMock = vi.fn().mockReturnValue({ single: singleMock });
             const eqCodeMock = vi.fn().mockReturnValue({ eq: eqPublicMock });
