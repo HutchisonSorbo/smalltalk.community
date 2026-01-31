@@ -7,13 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Clock, User, AlertCircle, CheckCircle2, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Credential {
-    id: string;
-    user_name: string;
-    type: string; // e.g., "WWCC", "Police Check", "First Aid"
-    expiry_date: string;
-    status: "valid" | "expiring-soon" | "expired";
-}
+import { Credential } from "@/lib/communityos/safeguarding/types";
 
 interface ExpiryTrackerProps {
     credentials: Credential[];

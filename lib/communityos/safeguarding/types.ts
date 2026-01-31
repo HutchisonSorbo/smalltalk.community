@@ -97,3 +97,10 @@ export interface VCSSStandard {
     lastReviewed?: string;
     nextReview?: string;
 }
+export interface Credential {
+    id: string;
+    user_name: string;
+    type: string; // e.g., "WWCC", "Police Check", "First Aid"
+    expiry_date: string;
+    status: "valid" | "expiring-soon" | "expired";
+}

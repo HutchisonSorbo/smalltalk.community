@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { useModeration } from "@/hooks/use-moderation";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,8 @@ import {
     VCSSStandard,
     EvidenceCategory,
     RiskAssessment,
-    RiskAssessmentInput
+    RiskAssessmentInput,
+    Credential
 } from "@/lib/communityos/safeguarding/types";
 
 type ViewState = "dashboard" | "standard-detail" | "risk-wizard" | "audit-log" | "expiry-alerts";
@@ -35,6 +36,8 @@ export function SafeguardingCentre() {
     const [selectedStandardId, setSelectedStandardId] = useState<number | null>(null);
     const [standards, setStandards] = useState<VCSSStandard[]>(VCSS_STANDARDS);
     const [isUploading, setIsUploading] = useState(false);
+    const [credentials, setCredentials] = useState<Credential[]>([]);
+    const modalRef = useRef<HTMLDivElement>(null);
 
     // Mock data for initial state
     const [incidentsCount] = useState(2);
@@ -50,6 +53,44 @@ export function SafeguardingCentre() {
             created_at: new Date().toISOString()
         }
     ]);
+
+    useEffect(() => {
+        async function loadCredentials() {
+            // Simulate API fetch delay
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const mockCredentials: Credential[] = [
+                {
+                    id: "c1",
+                    user_name: "Alice Thompson",
+                    type: "WWCC (Working with Children)",
+                    expiry_date: new Date(Date.now() + 15 * 86400000).toISOString(),
+                    status: "expiring-soon"
+                },
+                {
+                    id: "c2",
+                    user_name: "Bob Roberts",
+                    type: "Police Check",
+                    expiry_date: new Date(Date.now() - 2 * 86400000).toISOString(),
+                    status: "expired"
+                },
+                {
+                    id: "c3",
+                    user_name: "Claire Smith",
+                    type: "First Aid Certification",
+                    expiry_date: new Date(Date.now() + 120 * 86400000).toISOString(),
+                    status: "valid"
+                }
+            ];
+            setCredentials(mockCredentials);
+        }
+        loadCredentials();
+    }, []);
+
+    useEffect(() => {
+        if (isUploading) {
+            modalRef.current?.focus();
+        }
+    }, [isUploading]);
 
     const selectedStandard = selectedStandardId
         ? standards.find(s => s.id === selectedStandardId)
@@ -185,7 +226,11 @@ export function SafeguardingCentre() {
                         />
                         {isUploading && (
                             <div
-                                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300"
+                                ref={modalRef}
+                                role="dialog"
+                                aria-modal="true"
+                                tabIndex={-1}
+                                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300 outline-none"
                                 onKeyDown={(e) => {
                                     if (e.key === "Escape") setIsUploading(false);
                                 }}
@@ -214,7 +259,7 @@ export function SafeguardingCentre() {
                 )}
 
                 {view === "expiry-alerts" && (
-                    <ExpiryTracker credentials={[]} /> // To be populated
+                    <ExpiryTracker credentials={credentials} />
                 )}
             </main>
         </div>
