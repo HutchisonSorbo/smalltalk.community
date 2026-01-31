@@ -20,6 +20,7 @@ import { VCSS_STANDARDS } from "@/lib/communityos/safeguarding/vcss-standards";
 import {
     VCSSStandard,
     EvidenceCategory,
+    RiskAssessment,
     RiskAssessmentInput
 } from "@/lib/communityos/safeguarding/types";
 
@@ -41,7 +42,7 @@ export function SafeguardingCentre() {
     const [auditLogs] = useState([
         {
             id: "1",
-            user_name: "Ryan Hutchison",
+            user_name: "Mock User",
             action: "Updated Standard 1",
             target_type: "standard" as const,
             target_id: "1",
@@ -183,12 +184,19 @@ export function SafeguardingCentre() {
                             onUploadEvidence={() => setIsUploading(true)}
                         />
                         {isUploading && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
-                                <EvidenceUploader
-                                    standardId={selectedStandard.id}
-                                    onUpload={handleUploadEvidence}
-                                    onClose={() => setIsUploading(false)}
-                                />
+                            <div
+                                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300"
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") setIsUploading(false);
+                                }}
+                            >
+                                <div className="relative w-full max-w-lg animate-in zoom-in-95 duration-200">
+                                    <EvidenceUploader
+                                        standardId={selectedStandard.id}
+                                        onUpload={handleUploadEvidence}
+                                        onClose={() => setIsUploading(false)}
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>

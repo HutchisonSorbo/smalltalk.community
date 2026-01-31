@@ -24,7 +24,7 @@ export function ExpiryTracker({ credentials }: ExpiryTrackerProps) {
     const expiredCount = credentials.filter(c => c.status === 'expired').length;
 
     return (
-        <div className="space-y-4 animate-in fade-in duration-500">
+        <div className="space-y-4 animate-in fade-in duration-500 max-w-full">
             <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                     <Clock className="h-5 w-5" />
@@ -47,58 +47,69 @@ export function ExpiryTracker({ credentials }: ExpiryTrackerProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {credentials.length > 0 ? (
                     credentials.map((cred) => (
-                        <COSCard
-                            key={cred.id}
-                            variant="default"
-                            className={cn(
-                                "p-4 border-l-4",
-                                cred.status === 'expired' ? "border-l-destructive bg-destructive/5" :
-                                    cred.status === 'expiring-soon' ? "border-l-orange-500 bg-orange-50/50" :
-                                        "border-l-green-500"
-                            )}
-                        >
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="space-y-1">
-                                    <p className="text-sm font-bold flex items-center gap-2">
-                                        <User className="h-3 w-3 text-muted-foreground" />
-                                        <p className="text-sm font-semibold truncate max-w-[120px] sm:max-w-[180px]" title={cred.user_name}>
-                                            {cred.user_name}
-                                        </p>
-                                    </p>
-                                    <p className="text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[150px]" title={cred.type}>
-                                        {cred.type}
-                                    </p>
-                                </div>
-                                <StatusBadge status={cred.status} />
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[10px] font-medium uppercase text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                        <Calendar className="h-3 w-3" />
-                                        Expiry: {new Date(cred.expiry_date).toLocaleDateString('en-AU')}
-                                    </span>
-                                    <span>{getDaysRemaining(cred.expiry_date)} days left</span>
-                                </div>
-                                <Progress
-                                    value={calculateProgress(cred.expiry_date)}
-                                    className={cn(
-                                        "h-1.5",
-                                        cred.status === 'expired' ? "bg-destructive/20" :
-                                            cred.status === 'expiring-soon' ? "bg-orange-200" :
-                                                "bg-green-200"
-                                    )}
-                                />
-                            </div>
-                        </COSCard>
+                        <CredentialCard key={cred.id} cred={cred} />
                     ))
                 ) : (
-                    <div className="md:col-span-2 p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl border-border/50">
-                        <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                        <p className="text-sm font-medium">All credentials are up to date.</p>
-                    </div>
+                    <EmptyState />
                 )}
             </div>
+        </div>
+    );
+}
+
+function CredentialCard({ cred }: { cred: Credential }) {
+    return (
+        <COSCard
+            variant="default"
+            className={cn(
+                "p-4 border-l-4",
+                cred.status === 'expired' ? "border-l-destructive bg-destructive/5" :
+                    cred.status === 'expiring-soon' ? "border-l-orange-500 bg-orange-50/50" :
+                        "border-l-green-500"
+            )}
+        >
+            <div className="flex justify-between items-start mb-3">
+                <div className="space-y-1">
+                    <div className="text-sm font-bold flex items-center gap-2">
+                        <User className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm font-semibold truncate max-w-[120px] sm:max-w-[180px]" title={cred.user_name}>
+                            {cred.user_name}
+                        </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[150px]" title={cred.type}>
+                        {cred.type}
+                    </p>
+                </div>
+                <StatusBadge status={cred.status} />
+            </div>
+
+            <div className="space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-medium uppercase text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Expiry: {new Date(cred.expiry_date).toLocaleDateString('en-AU')}
+                    </span>
+                    <span>{getDaysRemaining(cred.expiry_date)} days left</span>
+                </div>
+                <Progress
+                    value={calculateProgress(cred.expiry_date)}
+                    className={cn(
+                        "h-1.5",
+                        cred.status === 'expired' ? "bg-destructive/20" :
+                            cred.status === 'expiring-soon' ? "bg-orange-200" :
+                                "bg-green-200"
+                    )}
+                />
+            </div>
+        </COSCard>
+    );
+}
+
+function EmptyState() {
+    return (
+        <div className="md:col-span-2 p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl border-border/50">
+            <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-20" />
+            <p className="text-sm font-medium">All credentials are up to date.</p>
         </div>
     );
 }

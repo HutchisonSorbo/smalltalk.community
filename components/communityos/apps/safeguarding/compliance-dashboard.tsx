@@ -29,6 +29,13 @@ export function ComplianceDashboard({
         };
     }, [standards]);
 
+    const handleKeyDown = (e: React.KeyboardEvent, id: number) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onSelectStandard(id);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-full">
             {/* Top Stats Overview */}
@@ -36,7 +43,7 @@ export function ComplianceDashboard({
                 <COSCard variant="glass" className="flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-muted-foreground">Overall Compliance</span>
-                        <Shield className="h-5 w-5 text-primary" />
+                        <Shield className="h-5 w-5 text-primary" aria-hidden="true" focusable="false" />
                     </div>
                     <div className="space-y-2">
                         <div className="text-3xl font-bold">{overallProgress}%</div>
@@ -50,7 +57,7 @@ export function ComplianceDashboard({
                 <COSCard variant="glass" className="flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-muted-foreground">Active Incidents</span>
-                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" focusable="false" />
                     </div>
                     <div className="space-y-1">
                         <div className="text-3xl font-bold">{incidentsCount}</div>
@@ -63,7 +70,7 @@ export function ComplianceDashboard({
                 <COSCard variant="glass" className="flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-muted-foreground">Credential Alerts</span>
-                        <Clock className="h-5 w-5 text-orange-500" />
+                        <Clock className="h-5 w-5 text-orange-500" aria-hidden="true" focusable="false" />
                     </div>
                     <div className="space-y-1">
                         <div className="text-3xl font-bold">{expiringCredentialsCount}</div>
@@ -77,7 +84,7 @@ export function ComplianceDashboard({
             {/* Standards Grid */}
             <div>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
+                    <FileText className="h-5 w-5" aria-hidden="true" focusable="false" />
                     VCSS Standards Progress
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -87,6 +94,10 @@ export function ComplianceDashboard({
                             variant="default"
                             interactive
                             onClick={() => onSelectStandard(standard.id)}
+                            onKeyDown={(e) => handleKeyDown(e, standard.id)}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`Select standard ${standard.id}: ${standard.title}`}
                             className="flex flex-col h-full"
                         >
                             <div className="mb-4">
@@ -150,7 +161,7 @@ function StatusBadge({ status }: { status: VCSSStandard["status"] }) {
 
     return (
         <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border", config.className)}>
-            <Icon className="h-3 w-3" />
+            <Icon className="h-3 w-3" aria-hidden="true" focusable="false" />
             {config.label}
         </div>
     );

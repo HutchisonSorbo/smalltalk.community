@@ -24,7 +24,7 @@ export interface Evidence {
     storage_path: string;
     category: EvidenceCategory;
     uploaded_at: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 export interface SafeguardingIncident {
@@ -38,7 +38,7 @@ export interface SafeguardingIncident {
     actions: IncidentAction[];
     created_at: string;
     updated_at: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 export interface IncidentAction {
@@ -70,6 +70,17 @@ export interface RiskAssessment {
 }
 
 export type RiskAssessmentInput = Omit<RiskAssessment, "id" | "organisation_id" | "assessor_id" | "status" | "created_at" | "updated_at" | "inherent_risk_score" | "residual_risk_score">;
+
+export const RiskAssessmentSchema = z.object({
+    activity_name: z.string().min(1, "Activity name is required").max(100),
+    description: z.string().max(1000).optional(),
+    likelihood: z.number().int().min(1).max(5),
+    impact: z.number().int().min(1).max(5),
+    controls: z.string().max(500).optional(),
+    residual_likelihood: z.number().int().min(1).max(5).optional(),
+    residual_impact: z.number().int().min(1).max(5).optional(),
+    status: RiskAssessmentStatusSchema.optional().default("draft"),
+});
 
 export interface VCSSRequirement {
     id: string;

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { COSCard } from "@/components/communityos/ui/cos-card";
-import { VCSSStandard } from "@/lib/communityos/safeguarding/types";
+import { VCSSStandard, VCSSRequirement } from "@/lib/communityos/safeguarding/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,8 +22,6 @@ export function StandardDetailCard({
     onToggleRequirement,
     onUploadEvidence,
 }: StandardDetailCardProps) {
-    const completedCount = standard.requirements.filter((r) => r.completed).length;
-
     return (
         <div className="space-y-4 animate-in slide-in-from-right-4 duration-500 max-w-full">
             <Button variant="ghost" size="sm" onClick={onBack} className="gap-2 -ml-2">
@@ -60,77 +58,97 @@ export function StandardDetailCard({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column: Requirements */}
-                    <div className="lg:col-span-2 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                                Requirements Checklist ({completedCount}/{standard.requirements.length})
-                            </h3>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <RequirementsList
+                        requirements={standard.requirements}
+                        onToggleRequirement={onToggleRequirement}
+                    />
+                    <QuickActions onUploadEvidence={onUploadEvidence} />
+                </div>
+            </COSCard>
+        </div>
+    );
+}
 
-                        <div className="space-y-3">
-                            {standard.requirements.map((req) => (
-                                <div
-                                    key={req.id}
-                                    className={cn(
-                                        "flex items-start gap-3 p-3 rounded-lg border transition-all",
-                                        req.completed ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800/20" : "bg-card border-border"
-                                    )}
-                                >
-                                    <Checkbox
-                                        id={req.id}
-                                        checked={req.completed}
-                                        onCheckedChange={() => onToggleRequirement(req.id)}
-                                        className="mt-1"
-                                    />
-                                    <div className="space-y-1">
-                                        <label
-                                            htmlFor={req.id}
-                                            className={cn(
-                                                "text-sm font-medium leading-relaxed cursor-pointer",
-                                                req.completed && "text-muted-foreground line-through decoration-green-300 dark:decoration-green-800"
-                                            )}
-                                        >
-                                            {req.text}
-                                        </label>
-                                    </div>
-                                </div>
-                            ))}
+function RequirementsList({
+    requirements,
+    onToggleRequirement
+}: {
+    requirements: VCSSRequirement[],
+    onToggleRequirement: (id: string) => void
+}) {
+    const completedCount = requirements.filter((r) => r.completed).length;
+
+    return (
+        <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    Requirements Checklist ({completedCount}/{requirements.length})
+                </h3>
+            </div>
+
+            <div className="space-y-3">
+                {requirements.map((req) => (
+                    <div
+                        key={req.id}
+                        className={cn(
+                            "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                            req.completed ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800/20" : "bg-card border-border"
+                        )}
+                    >
+                        <Checkbox
+                            id={req.id}
+                            checked={req.completed}
+                            onCheckedChange={() => onToggleRequirement(req.id)}
+                            className="mt-1"
+                        />
+                        <div className="space-y-1">
+                            <label
+                                htmlFor={req.id}
+                                className={cn(
+                                    "text-sm font-medium leading-relaxed cursor-pointer",
+                                    req.completed && "text-muted-foreground line-through decoration-green-300 dark:decoration-green-800"
+                                )}
+                            >
+                                {req.text}
+                            </label>
                         </div>
                     </div>
+                ))}
+            </div>
+        </div>
+    );
+}
 
-                    {/* Right Column: Actions & Meta */}
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quick Actions</h3>
-                            <div className="grid grid-cols-1 gap-2">
-                                <Button variant="outline" className="w-full justify-start gap-2" onClick={onUploadEvidence}>
-                                    <FileUp className="h-4 w-4" />
-                                    Upload Evidence
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    Schedule Review
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start gap-2">
-                                    <History className="h-4 w-4" />
-                                    View History
-                                </Button>
-                            </div>
-                        </div>
+function QuickActions({ onUploadEvidence }: { onUploadEvidence: () => void }) {
+    return (
+        <div className="space-y-6">
+            <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quick Actions</h3>
+                <div className="grid grid-cols-1 gap-2">
+                    <Button variant="outline" className="w-full justify-start gap-2" onClick={onUploadEvidence}>
+                        <FileUp className="h-4 w-4" />
+                        Upload Evidence
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Schedule Review
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start gap-2">
+                        <History className="h-4 w-4" />
+                        View History
+                    </Button>
+                </div>
+            </div>
 
-                        <COSCard variant="glass" className="p-4 space-y-3">
-                            <h4 className="text-xs font-bold uppercase text-primary">Compliance Tip</h4>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                Ensure you have evidence for each requirement. Evidence can include meeting minutes, signed policies, or training certificates.
-                            </p>
-                            <div className="flex items-center gap-2 pt-2">
-                                <AlertCircle className="h-3 w-3 text-primary" />
-                                <span className="text-[10px] font-medium">Victorian Legal Requirement</span>
-                            </div>
-                        </COSCard>
-                    </div>
+            <COSCard variant="glass" className="p-4 space-y-3">
+                <h4 className="text-xs font-bold uppercase text-primary">Compliance Tip</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                    Ensure you have evidence for each requirement. Evidence can include meeting minutes, signed policies, or training certificates.
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                    <AlertCircle className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] font-medium">Victorian Legal Requirement</span>
                 </div>
             </COSCard>
         </div>
