@@ -178,24 +178,25 @@ interface DealFormProps {
 function DealForm({ formData, stages, onUpdateField, onProbabilityChange, onValueChange }: DealFormProps) {
     return (
         <div className="grid grid-cols-1 gap-6 font-medium">
-            <div className="grid gap-2">
-                <Label htmlFor="title">Deal Title</Label>
-                <Input
-                    id="title"
-                    value={formData.title || ""}
-                    onChange={(e) => onUpdateField("title", e.target.value)}
-                    placeholder="e.g., Service Contract for Community Org"
-                    className="font-bold"
-                />
-            </div>
+            <COSInput
+                id="title"
+                label="Deal Title"
+                value={formData.title || ""}
+                onChange={(val) => onUpdateField("title", val)}
+                placeholder="e.g., Service Contract for Community Org"
+                className="font-bold"
+                required
+            />
 
             <div className="grid gap-2">
-                <Label htmlFor="stage">Pipeline Stage</Label>
+                <Label htmlFor="stage" className="text-sm font-semibold text-foreground/80 ml-1">
+                    Pipeline Stage <span className="text-destructive ml-1">*</span>
+                </Label>
                 <Select
                     value={formData.pipelineStageId}
                     onValueChange={(val) => onUpdateField("pipelineStageId", val)}
                 >
-                    <SelectTrigger id="stage" className="h-11">
+                    <SelectTrigger id="stage" className="h-12 rounded-xl border-input">
                         <SelectValue placeholder="Select a stage" />
                     </SelectTrigger>
                     <SelectContent>
@@ -210,55 +211,42 @@ function DealForm({ formData, stages, onUpdateField, onProbabilityChange, onValu
 
             {/* Responsive grid for numeric values */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="value">Value ($)</Label>
-                    <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="value"
-                            type="number"
-                            className="pl-9 h-11"
-                            value={formData.value ?? ""}
-                            onChange={(e) => onValueChange(e.target.value)}
-                            placeholder="0.00"
-                        />
-                    </div>
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="probability">Probability (%)</Label>
-                    <Input
-                        id="probability"
-                        type="number"
-                        min="0"
-                        max="100"
-                        className="h-11"
-                        value={formData.probability ?? ""}
-                        onChange={(e) => onProbabilityChange(e.target.value)}
-                        placeholder="0-100"
-                    />
-                </div>
+                <COSInput
+                    id="value"
+                    label="Value ($)"
+                    type="number"
+                    icon={<DollarSign className="h-4 w-4" />}
+                    value={formData.value?.toString() ?? ""}
+                    onChange={onValueChange}
+                    placeholder="0.00"
+                />
+                <COSInput
+                    id="probability"
+                    label="Probability (%)"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.probability?.toString() ?? ""}
+                    onChange={onProbabilityChange}
+                    placeholder="0-100"
+                />
             </div>
 
-            <div className="grid gap-2">
-                <Label htmlFor="closeDate">Expected Close Date</Label>
-                <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        id="closeDate"
-                        type="date"
-                        className="pl-9 h-11"
-                        value={toLocalDateString(formData.expectedCloseDate)}
-                        onChange={(e) => onUpdateField("expectedCloseDate", parseLocalDateString(e.target.value))}
-                    />
-                </div>
-            </div>
+            <COSInput
+                id="closeDate"
+                label="Expected Close Date"
+                type="date"
+                icon={<Calendar className="h-4 w-4" />}
+                value={toLocalDateString(formData.expectedCloseDate)}
+                onChange={(val) => onUpdateField("expectedCloseDate", parseLocalDateString(val))}
+            />
 
             <div className="grid gap-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes" className="text-sm font-semibold text-foreground/80 ml-1">Notes</Label>
                 <Textarea
                     id="notes"
                     placeholder="Enter any additional details or context..."
-                    className="min-h-[120px] resize-none"
+                    className="min-h-[120px] resize-none rounded-xl border-input"
                     value={formData.notes || ""}
                     onChange={(e) => onUpdateField("notes", e.target.value)}
                 />

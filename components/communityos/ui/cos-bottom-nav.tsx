@@ -49,7 +49,7 @@ const COSBottomNav = ({ items, activeId, onSelect, className }: COSBottomNavProp
         <nav
             aria-label="Bottom navigation"
             className={cn(
-                "fixed bottom-0 left-0 right-0 z-50 flex h-16 w-full items-center justify-around border-t bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl transition-transform duration-300 md:hidden pb-safe",
+                "fixed bottom-0 left-0 right-0 z-50 flex h-16 w-full max-w-full items-center justify-around border-t bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl transition-transform duration-300 md:hidden pb-safe",
                 isVisible ? "translate-y-0" : "translate-y-full",
                 className
             )}

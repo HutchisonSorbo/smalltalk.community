@@ -13,7 +13,8 @@ interface COSSegmentedControlProps {
 
 const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' }: COSSegmentedControlProps) => {
     const activeIndex = options.findIndex(opt => opt.id === value);
-    const percent = (activeIndex / options.length) * 100;
+    const safeIndex = activeIndex >= 0 ? activeIndex : 0;
+    const percent = options.length > 0 ? (safeIndex / options.length) * 100 : 0;
 
     const sizeStyles = {
         sm: "h-8 p-0.5 text-xs",
@@ -23,17 +24,18 @@ const COSSegmentedControl = ({ options, value, onChange, className, size = 'md' 
 
     return (
         <div className={cn(
-            "relative flex w-full bg-muted/50 rounded-xl border border-border/50 select-none",
+            "relative flex w-full max-w-full bg-muted/50 rounded-xl border border-border/50 select-none",
             sizeStyles[size],
             className
         )}>
-            {/* Slider Background */}
+            {/* Sliding background */}
             <div
-                className="absolute inset-y-1 left-1 bg-background rounded-lg shadow-sm transition-all duration-300 ease-out z-0 w-[var(--slider-width)] translate-x-[var(--slider-translate)]"
+                className="absolute top-1 left-0 rounded-lg bg-background shadow-xs transition-all duration-300 ease-in-out h-[calc(100%-8px)]"
                 style={{
-                    "--slider-width": `calc(${100 / options.length}% - ${size === 'sm' ? '4px' : '8px'})`,
-                    "--slider-translate": `${percent}%`
-                } as React.CSSProperties}
+                    width: `${activeWidth}%`,
+                    left: `${activeOffset}%`
+                }}
+                aria-hidden="true"
             />
 
             {options.map((option) => (

@@ -499,6 +499,11 @@ export async function bulkCreateContacts(
     const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator"]);
     if (!auth.success) return auth;
 
+    // Enforce record limit
+    if (contacts.length > 500) {
+        return { success: false, error: "Maximum of 500 contacts per bulk import." };
+    }
+
     try {
         const now = new Date();
         const insertData = contacts.map((c) => ({
@@ -515,6 +520,17 @@ export async function bulkCreateContacts(
 
         await db.insert(crmContacts).values(insertData);
 
+        await logCrmAction({
+            organisationId,
+            userId: auth.data.userId,
+            action: "bulk_contacts_created",
+            details: {
+                count: insertData.length,
+                source: "csv_import"
+            },
+        });
+
+        revalidatePath(`/crm/${organisationId}/contacts`);
         return { success: true, data: { createdCount: insertData.length } };
     } catch (err) {
         console.error("[bulkCreateContacts] error:", err);

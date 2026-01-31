@@ -43,6 +43,17 @@ export function CRMPipelineBoard({
         handleDragEnd
     } = usePipelineDrag({ organisationId, initialDeals, stages });
 
+    const dealsByStage = React.useMemo(() => {
+        const grouped: Record<string, CrmDeal[]> = {};
+        stages.forEach(s => grouped[s.id] = []);
+        deals.forEach(d => {
+            if (grouped[d.pipelineStageId]) {
+                grouped[d.pipelineStageId].push(d);
+            }
+        });
+        return grouped;
+    }, [deals, stages]);
+
     return (
         <DndContext
             sensors={sensors}
@@ -51,12 +62,12 @@ export function CRMPipelineBoard({
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex flex-row gap-6 overflow-x-auto pb-6 h-[calc(100vh-12rem)] min-h-[500px] max-w-full">
+            <div className="flex flex-row gap-6 overflow-x-auto pb-6 h-[calc(100vh-12rem)] min-h-[500px] max-w-full" role="list" aria-label="CRM Pipeline Board">
                 {stages.map((stage) => (
                     <StageColumn
                         key={stage.id}
                         stage={stage}
-                        deals={deals.filter((d) => d.pipelineStageId === stage.id)}
+                        deals={dealsByStage[stage.id] || []}
                         onDealClick={onDealClick}
                         onAddDeal={onAddDeal}
                     />

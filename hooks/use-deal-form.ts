@@ -2,7 +2,16 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import type { CrmDeal } from "@/types/crm";
+import { z } from "zod";
+
+const dealSchema = z.object({
+    title: z.string().min(1, "Deal title is required").max(255),
+    pipelineStageId: z.string().min(1, "Pipeline stage is required"),
+    value: z.number().nullable().optional(),
+    probability: z.number().min(0).max(100).nullable().optional(),
+    expectedCloseDate: z.date().nullable().optional(),
+    notes: z.string().max(2000).nullable().optional(),
+});
 
 interface UseDealFormProps {
     initialDeal: Partial<CrmDeal> | null;
@@ -27,40 +36,38 @@ export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) 
     };
 
     const handleSave = async () => {
-        // Validation with trimming
-        const title = (formData.title || "").trim();
-        if (!title) {
-            toast.error("Deal title is required");
-            return;
-        }
-
-        if (!formData.pipelineStageId) {
-            toast.error("Pipeline stage is required");
-            return;
-        }
-
         setIsSaving(true);
         try {
+            const validatedData = dealSchema.parse({
+                ...formData,
+                title: (formData.title || "").trim(),
+                notes: formData.notes?.trim() || null,
+            });
+
             await onSave({
                 ...formData,
-                title,
-                notes: formData.notes?.trim() || null,
+                ...validatedData,
             } as CrmDeal);
             onClose();
         } catch (err) {
-            console.error("[useDealForm] handleSave error:", err);
-            toast.error("Failed to save deal");
+            if (err instanceof z.ZodError) {
+                toast.error(err.errors[0].message);
+            } else {
+                console.error("[useDealForm] handleSave error:", err);
+                toast.error("Failed to save deal");
+            }
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleProbabilityChange = (value: string) => {
-        if (value === "") {
+        const cleaned = value.replace(/[^0-9]/g, "");
+        if (cleaned === "") {
             updateField("probability", null);
             return;
         }
-        const parsed = parseInt(value, 10);
+        const parsed = parseInt(cleaned, 10);
         if (isNaN(parsed)) {
             updateField("probability", null);
             return;
@@ -70,11 +77,17 @@ export function useDealForm({ initialDeal, onSave, onClose }: UseDealFormProps) 
     };
 
     const handleValueChange = (value: string) => {
-        if (value === "") {
+        // Allow decimals but strip invalid characters
+        const cleaned = value.replace(/[^0-9.]/g, "");
+        // Prevent multiple dots
+        const parts = cleaned.split(".");
+        const sanitized = parts.length > 2 ? `${parts[0]}.${parts[1]}` : cleaned;
+
+        if (sanitized === "" || sanitized === ".") {
             updateField("value", null);
             return;
         }
-        const parsed = parseFloat(value);
+        const parsed = parseFloat(sanitized);
         if (isNaN(parsed)) {
             updateField("value", null);
             return;

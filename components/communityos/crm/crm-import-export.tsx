@@ -234,12 +234,12 @@ function CRMImportDialog({ onImport }: { onImport: (contacts: Omit<Contact, "id"
     );
 }
 
-function UploadStep({ onFileChange }: { onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+function FileUploader({ onFileChange }: { onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
     return (
         <div className="grid gap-4">
             <Label htmlFor="csv-file" className="font-bold uppercase text-[10px] tracking-widest text-muted-foreground">CSV File</Label>
-            <div className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer relative">
-                <Upload className="h-8 w-8 text-muted-foreground" />
+            <div className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer relative focus-within:ring-2 focus-within:ring-primary/20">
+                <Upload className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
                 <p className="text-sm font-medium">Click or drag CSV file here</p>
                 <p className="text-xs text-muted-foreground">Max size: 5MB</p>
                 <Input
@@ -248,13 +248,14 @@ function UploadStep({ onFileChange }: { onFileChange: (e: React.ChangeEvent<HTML
                     accept=".csv"
                     onChange={onFileChange}
                     className="absolute inset-0 opacity-0 cursor-pointer"
+                    aria-label="Upload CSV file"
                 />
             </div>
         </div>
     );
 }
 
-function MappingStep({
+function MappingTable({
     rowsCount,
     fileName,
     headers,
@@ -272,11 +273,11 @@ function MappingStep({
     return (
         <div className="grid gap-6">
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Source File</p>
-                    <p className="text-sm font-medium truncate">{fileName}</p>
+                    <p className="text-sm font-medium truncate" title={fileName}>{fileName}</p>
                 </div>
-                <div className="text-right shrink-0">
+                <div className="text-right shrink-0 ml-4">
                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Rows</p>
                     <p className="text-sm font-bold text-primary">{rowsCount}</p>
                 </div>
@@ -320,16 +321,16 @@ function MappingStep({
     );
 }
 
-function PreviewStep({ rowsCount }: { rowsCount: number }) {
+function ImportPreview({ rowsCount }: { rowsCount: number }) {
     return (
         <div className="py-8 text-center bg-muted/20 rounded-xl border border-dashed border-border/50">
             <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <CheckCircle2 className="h-8 w-8 text-green-600" aria-hidden="true" />
             </div>
             <p className="text-xl font-bold">Ready to Import</p>
             <p className="text-sm text-muted-foreground mt-1">{rowsCount} contacts will be added to your CRM.</p>
             <div className="mt-6 p-4 text-[10px] items-center gap-2 inline-flex border rounded-full bg-background font-bold text-muted-foreground uppercase tracking-widest">
-                <AlertCircle className="h-3 w-3 text-amber-500" />
+                <AlertCircle className="h-3 w-3 text-amber-500" aria-hidden="true" />
                 This action cannot be undone
             </div>
         </div>

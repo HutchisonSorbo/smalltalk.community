@@ -93,7 +93,7 @@ export function COSDataTable<T extends { id: string | number }>({
     };
 
     return (
-        <div className={cn("flex flex-col gap-4 w-full", className)}>
+        <div className={cn("flex flex-col gap-4 w-full max-w-full", className)}>
             {/* Header Actions */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 {searchable && (
@@ -171,7 +171,7 @@ export function COSDataTable<T extends { id: string | number }>({
                                 <tr
                                     key={item.id}
                                     role="row"
-                                    aria-selected={selectedIds.has(item.id) ? "true" : "false"}
+                                    aria-selected={selectedIds.has(item.id)}
                                     onClick={() => onRowClick?.(item)}
                                     onKeyDown={(e) => {
                                         if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {
