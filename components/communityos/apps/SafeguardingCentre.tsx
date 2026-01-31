@@ -98,6 +98,12 @@ function MainContent({ logic }: { logic: ReturnType<typeof useSafeguarding> }) {
 }
 
 function UploadModal({ modalRef, setIsUploading, selectedStandard, handleUploadEvidence }: { modalRef: React.RefObject<HTMLDivElement | null>; setIsUploading: (b: boolean) => void; selectedStandard: VCSSStandard; handleUploadEvidence: (file: File, category: EvidenceCategory) => Promise<void> }) {
+    React.useEffect(() => {
+        if (modalRef.current) {
+            modalRef.current.focus();
+        }
+    }, [modalRef]);
+
     return (
         <div ref={modalRef} role="dialog" aria-modal="true" tabIndex={-1} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300 outline-none" onKeyDown={(e) => { if (e.key === "Escape") setIsUploading(false); }}>
             <div className="relative w-full max-w-lg animate-in zoom-in-95 duration-200">
@@ -106,6 +112,7 @@ function UploadModal({ modalRef, setIsUploading, selectedStandard, handleUploadE
         </div>
     );
 }
+
 
 function LoadingState() {
     return (

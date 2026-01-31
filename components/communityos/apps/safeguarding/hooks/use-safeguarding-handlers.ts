@@ -13,6 +13,18 @@ interface UseSafeguardingHandlersProps {
     selectedStandardId: number | null;
 }
 
+/**
+ * Handles complex safeguarding actions like evidence uploads and risk assessment completion.
+ * Encapsulates side effects such as toasts, redirecting views, and managing loading states.
+ * 
+ * @param props - Dependencies for the handlers
+ * @param props.toast - Toast handler from useToast
+ * @param props.setIsUploading - Setter to toggle the upload modal/state
+ * @param props.setView - Setter to change the current view
+ * @param props.selectedStandardId - ID of the currently active standard
+ * 
+ * @returns Object containing async handlers for evidence and risk completion
+ */
 export function useSafeguardingHandlers({
     toast,
     setIsUploading,
@@ -28,7 +40,6 @@ export function useSafeguardingHandlers({
                 title: "Evidence Uploaded",
                 description: `${file.name} has been linked and stored.`,
             });
-            setIsUploading(false);
         } catch (error) {
             console.error(`Failed to upload evidence for Standard ${selectedStandardId}, file=${file.name}, category=${category} — error:`, error);
             toast({
@@ -36,12 +47,15 @@ export function useSafeguardingHandlers({
                 description: "There was an error saving your evidence. Please try again.",
                 variant: "destructive",
             });
+        } finally {
+            setIsUploading(false);
         }
     };
 
     const handleRiskComplete = async (data: RiskAssessment | RiskAssessmentInput) => {
         try {
-            console.log("Risk Assessment Complete:", data);
+            const dataSummary = JSON.stringify(data).substring(0, 200);
+            console.log("Risk Assessment Complete:", dataSummary);
             await new Promise(resolve => setTimeout(resolve, 500));
             setView("dashboard");
             toast({
@@ -49,10 +63,8 @@ export function useSafeguardingHandlers({
                 description: "Child safety risk assessment has been recorded.",
             });
         } catch (error) {
-            // Sanitizing data for logging purposes (avoiding potentially sensitive large objects if needed, but here simple spread is fine)
-            // Ideally we'd cherry pick fields, but current requirement is summary.
             const dataSummary = JSON.stringify(data).substring(0, 200);
-            console.error(`Failed to save risk assessment, data=${dataSummary} — error:`, error);
+            console.error(`Failed to save risk assessment for Standard ${selectedStandardId}, data=${dataSummary} — error:`, error);
             toast({
                 title: "Error Saving Assessment",
                 description: "Could not record the assessment. Please check your data and try again.",
@@ -66,3 +78,4 @@ export function useSafeguardingHandlers({
         handleRiskComplete
     };
 }
+
