@@ -98,6 +98,7 @@ export interface VCSSStandard {
     lastReviewed?: string;
     nextReview?: string;
 }
+
 export interface Credential {
     id: string;
     user_name: string;

@@ -101,7 +101,7 @@ function CredentialCard({ cred }: { cred: Credential }) {
 
 function EmptyState() {
     return (
-        <div className="md:col-span-2 p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl border-border/50">
+        <div className="md:col-span-3 p-12 text-center text-muted-foreground border-2 border-dashed rounded-xl border-border/50">
             <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-20" />
             <p className="text-sm font-medium">All credentials are up to date.</p>
         </div>

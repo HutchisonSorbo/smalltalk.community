@@ -13,6 +13,18 @@ import {
 
 export type ViewState = "dashboard" | "standard-detail" | "risk-wizard" | "audit-log" | "expiry-alerts";
 
+/**
+ * React hook that provides safeguarding helpers and state management.
+ * 
+ * @returns An object containing:
+ * - `view`: Current view state (dashboard, standard-detail, etc.)
+ * - `setView`: Function to update the current view
+ * - `selectedStandard`: currently selected VCSS standard (if any)
+ * - `credentials`: List of staff credentials/certifications
+ * - `handleRiskComplete`: Function to handle risk assessment completion
+ * - `toast`: Helper from useToast
+ * - And other state/handlers for the safeguarding module
+ */
 export function useSafeguarding() {
     const { toast } = useToast();
     const [view, setView] = useState<ViewState>("dashboard");

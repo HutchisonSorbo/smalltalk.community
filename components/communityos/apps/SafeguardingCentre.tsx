@@ -72,7 +72,11 @@ function MainContent({ logic }: { logic: ReturnType<typeof useSafeguarding> }) {
         case "dashboard":
             return <ComplianceDashboard standards={standards} incidentsCount={incidentsCount} expiringCredentialsCount={expiringCredentialsCount} onSelectStandard={(id) => { setSelectedStandardId(id); setView("standard-detail"); }} />;
         case "standard-detail":
-            return selectedStandard && (
+            if (!selectedStandard) {
+                setView("dashboard");
+                return null;
+            }
+            return (
                 <div className="space-y-6">
                     <StandardDetailCard standard={selectedStandard} onBack={() => setView("dashboard")} onToggleRequirement={(reqId) => handleToggleRequirement(selectedStandard.id, reqId)} onUploadEvidence={() => setIsUploading(true)} />
                     {isUploading && <UploadModal modalRef={modalRef} setIsUploading={setIsUploading} selectedStandard={selectedStandard} handleUploadEvidence={handleUploadEvidence} />}
