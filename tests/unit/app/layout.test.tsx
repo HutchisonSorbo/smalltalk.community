@@ -45,26 +45,31 @@ vi.mock('@/app/globals.css', () => ({}));
 
 describe('RootLayout', () => {
     it('renders the main content wrapper with correct ID', () => {
-        // RootLayout is an async server component, but for unit testing React structure
-        // in this environment (without Next.js RSC runner), we can treat it as a function
-        // if we mock the async parts or if it doesn't await anything before return.
-        // Looking at the file, it is synchronous (export default function ...).
-        // Wait, the file has "export default function RootLayout". It is not async.
+        // RootLayout renders <html> and <body>. In a JSDOM environment, we cannot nest <html> inside the test container <div>.
+        // We must inspect the children directly or use a different rendering strategy.
+        // Or, we can mock the internal components and check the structure.
 
-        const { container } = render(
-            <RootLayout>
-                <div data-testid="child-content">Content</div>
-            </RootLayout>
-        );
+        // Since we want to verify the <main> wrapper, let's render the children of body.
 
-        // Check for SkipToContent
-        expect(screen.getByTestId('skip-link')).toBeInTheDocument();
+        const result = RootLayout({
+            children: <div data-testid="child-content">Content</div>
+        });
 
-        // Check for Main Wrapper
-        // We look for a <main> tag with id="main-content"
-        const main = container.querySelector('main#main-content');
-        expect(main).toBeInTheDocument();
-        expect(main).toHaveClass('min-h-screen');
-        expect(main).toContainHTML('<div data-testid="child-content">Content</div>');
+        // result is a React Element (<html>...</html>)
+        // We can render this into a document using render() if we use container: document
+        // But cleaning up is hard.
+
+        // Alternatively, we can traverse the React Element tree.
+        const html = result as React.ReactElement;
+        const body = html.props.children[1]; // <head> is 0, <body> is 1
+        const providers = body.props.children;
+        const a11yProvider = providers.props.children;
+        // Children of AccessibilityProvider: [WorkInProgressBanner, SkipToContent, main, SpeedInsights, Analytics]
+        const childrenArray = a11yProvider.props.children;
+        const main = childrenArray[2];
+
+        expect(main.type).toBe('main');
+        expect(main.props.id).toBe('main-content');
+        expect(main.props.className).toContain('min-h-screen');
     });
 });

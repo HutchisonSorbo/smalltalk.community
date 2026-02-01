@@ -230,4 +230,67 @@ describe('POST /api/onboarding/profile', () => {
         expect(privacyCall).toBeDefined();
         expect(privacyCall[0].showRealName).toBe(false);
     });
+
+    it('should handle database errors gracefully', async () => {
+        mockGetUser.mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null });
+        mockDbLimit.mockResolvedValue([{ id: 'user-123', accountType: 'Individual' }]);
+
+        mockDbTransaction.mockRejectedValue(new Error('DB Error'));
+
+        const req = new Request('http://localhost/api/onboarding/profile', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer valid-token' },
+            body: JSON.stringify({ bio: 'Test' }),
+        });
+
+        const res = await POST(req);
+        expect(res.status).toBe(500);
+        const json = await res.json();
+        expect(json.error).toBe('Internal Server Error');
+    });
+
+    it('should generate correct slug for organisation', async () => {
+        mockGetUser.mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null });
+        mockDbLimit.mockResolvedValue([{
+            id: 'user-123',
+            accountType: 'Organisation',
+            userType: 'admin',
+            organisationName: 'Test Org & Co.'
+        }]);
+
+        let insertedOrg: any;
+        const mockValues = vi.fn().mockImplementation((val) => {
+            // Need to capture the first argument (val)
+            // But if mockValues is called multiple times, we need to be careful.
+            // In the route, org is inserted, then member.
+            // We want the org insert.
+            if (val && val.slug) {
+                insertedOrg = val;
+            }
+            return {
+                onConflictDoUpdate: vi.fn(),
+                returning: vi.fn().mockResolvedValue([{ id: 'org-1' }])
+            };
+        });
+
+        mockDbTransaction.mockImplementation(async (callback) => {
+            const txMock = {
+                insert: vi.fn().mockReturnValue({ values: mockValues }),
+                update: vi.fn().mockReturnValue({
+                    set: vi.fn().mockReturnValue({ where: vi.fn() })
+                })
+            };
+            await callback(txMock);
+        });
+
+        const req = new Request('http://localhost/api/onboarding/profile', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer valid-token' },
+            body: JSON.stringify({ bio: 'Org' }),
+        });
+
+        await POST(req);
+
+        expect(insertedOrg.slug).toMatch(/^test-org-co-[a-z0-9]{8}$/);
+    });
 });
