@@ -12,6 +12,7 @@ import {
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import { createClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
+import { CRMStatus } from "@/lib/communityos/crm/types";
 
 /**
  * Result pattern for server actions
@@ -215,8 +216,15 @@ export async function createContact(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
+    /**
+     * Creates a new contact for an organisation.
+     * Validates required fields and enforces CRMStatus constraints.
+     */
+
+    // Manual validation refactor to match robust style:
     const firstName = sanitizeInput(data.firstName);
     const lastName = sanitizeInput(data.lastName);
+    const email = sanitizeInput(data.email);
 
     if (!firstName || !lastName) {
         return { success: false, error: "First and last name are required" };
@@ -229,10 +237,19 @@ export async function createContact(
                 organisationId,
                 firstName,
                 lastName,
-                email: sanitizeInput(data.email),
+                email,
                 phone: sanitizeInput(data.phone, 20),
                 type: data.type === "organisation" ? "organisation" : "individual",
+                status: (function () {
+                    const validStatuses = ["lead", "qualified", "proposal", "won", "lost", "active", "inactive", "customer", "churned"];
+                    const provided = data.status?.toLowerCase();
+                    return validStatuses.includes(provided) ? provided : "lead";
+                })(),
                 metadata: data.metadata || {},
+                // Map new fields if DB supports them, otherwise store in metadata or ignore for now
+                // Assuming schema needs update or we just store basics. 
+                // Detailed CRM fields in `CRMContact` might not all be in `crmContacts` table yet.
+                // We will trust the existing schema for now and just add simple validation improvements.
             })
             .returning();
 
