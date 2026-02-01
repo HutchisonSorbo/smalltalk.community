@@ -1,19 +1,24 @@
-import { useState, useEffect } from 'react';
-
+import { useEffect } from 'react';
+import { usePWAStore } from '@/lib/stores/use-pwa-store';
 import { BeforeInstallPromptEvent } from "@/lib/pwa-utils";
 
 /**
  * Hook to handle PWA installation prompt
- * Returns the installable state, installed state, and methods to trigger install or dismiss
+ * uses global Zustand store for state management
  */
 export function useInstallPrompt() {
-    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-    const [isInstallable, setIsInstallable] = useState(false);
-    const [isInstalled, setIsInstalled] = useState(false);
+    const {
+        deferredPrompt,
+        isInstallable,
+        isInstalled,
+        setDeferredPrompt,
+        setIsInstallable,
+        setIsInstalled
+    } = usePWAStore();
 
     useEffect(() => {
         // Check if app is already installed (launching in standalone mode)
-        if (window.matchMedia('(display-mode: standalone)').matches) {
+        if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
             setIsInstalled(true);
         }
 
@@ -41,21 +46,26 @@ export function useInstallPrompt() {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
             window.removeEventListener('appinstalled', handleAppInstalled);
         };
-    }, []);
+    }, [setDeferredPrompt, setIsInstallable, setIsInstalled]);
 
     const install = async () => {
         if (!deferredPrompt) {
             return;
         }
-        // Show the install prompt
-        await deferredPrompt.prompt();
-        // Wait for the user to respond to the prompt
-        const { outcome } = await deferredPrompt.userChoice;
-        // Optionally, send analytics event with outcome of user choice
-        console.log(`User response to the install prompt: ${outcome}`);
-        // We've used the prompt, and can't use it again, throw it away
-        setDeferredPrompt(null);
-        setIsInstallable(false);
+        try {
+            // Show the install prompt
+            await deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            // Optionally, send analytics event with outcome of user choice
+            console.log(`User response to the install prompt: ${outcome}`);
+        } catch (error) {
+            console.error('PWA installation prompt failed:', error);
+        } finally {
+            // We've used the prompt, and can't use it again, throw it away
+            setDeferredPrompt(null);
+            setIsInstallable(false);
+        }
     };
 
     const dismiss = () => {

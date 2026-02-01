@@ -45,6 +45,7 @@ export function COSSyncStatus({
                     variant="ghost"
                     size="sm"
                     className={cn("h-8 px-2 gap-2 transition-colors", className)}
+                    aria-label={`Sync status: ${status.label}`}
                 >
                     <div className="relative flex items-center justify-center">
                         <div className={cn("h-2 w-2 rounded-full", status.bg, isSyncing && "animate-pulse")} />

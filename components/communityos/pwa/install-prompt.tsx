@@ -22,7 +22,7 @@ export function InstallPrompt() {
 
     return (
         <div className={cn(
-            "fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50",
+            "fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 max-w-full z-50",
             "transition-all duration-300 ease-in-out transform translate-y-0",
             "animate-in slide-in-from-bottom-5 fade-in"
         )}>
@@ -40,7 +40,7 @@ export function InstallPrompt() {
                     <Button onClick={install} size="sm" className="h-8">
                         Install
                     </Button>
-                    <Button onClick={dismiss} variant="ghost" size="icon" className="h-8 w-8">
+                    <Button onClick={dismiss} variant="ghost" size="icon" className="h-8 w-8" aria-label="Dismiss">
                         <X className="h-4 w-4" />
                     </Button>
                 </div>

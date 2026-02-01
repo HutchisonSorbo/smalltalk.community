@@ -55,22 +55,37 @@ registerRoute(
 // 5. Offline Fallback
 // If a navigation request fails and isn't in cache, show offline page (if precached)
 setCatchHandler(async ({ event }) => {
-    // Return the precached offline page if a document is being requested
-    const fetchEvent = event as unknown as FetchEvent;
-    if (fetchEvent.request?.destination === 'document') {
-        // This assumes 'offline.html' or similar is in the precache manifest
-        // or handled by appShellStrategy fallback. 
-        // For Next.js PWA, usually the catch handler isn't strictly necessary 
-        // if NetworkFirst handles the cache fallback effectively. 
-        // We can leave this simple or expand if we have a dedicated /offline route.
+    try {
+        // Return the precached offline page if a document is being requested
+        const fetchEvent = event as unknown as FetchEvent;
+        if (fetchEvent.request?.destination === 'document') {
+            // This assumes 'offline.html' or similar is in the precache manifest
+            // or handled by appShellStrategy fallback. 
+            // For Next.js PWA, usually the catch handler isn't strictly necessary 
+            // if NetworkFirst handles the cache fallback effectively. 
+            // We can leave this simple or expand if we have a dedicated /offline route.
+            return Response.error();
+        }
+        return Response.error();
+    } catch (error) {
+        const fetchEvent = event as unknown as FetchEvent;
+        console.error('Service Worker Catch Handler failed:', {
+            url: fetchEvent.request?.url,
+            destination: fetchEvent.request?.destination,
+            error
+        });
         return Response.error();
     }
-    return Response.error();
 });
 
 // Listener for custom messages
 self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
+    if (
+        event.data &&
+        typeof event.data === 'object' &&
+        'type' in event.data &&
+        event.data.type === 'SKIP_WAITING'
+    ) {
         self.skipWaiting();
     }
 });
