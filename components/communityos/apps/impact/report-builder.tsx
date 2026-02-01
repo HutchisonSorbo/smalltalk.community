@@ -184,7 +184,7 @@ function ReportPreview({ sections, onBack }: { sections: ReportSection[]; onBack
             </div>
             {sections.map(section => (
                 <div key={section.id} className="mb-8">
-                    {section.title && <h3 className="text-2xl font-bold mb-4">{section.title}</h3>}
+                    {section.title && <h3 className="text-2xl font-bold mb-4 truncate">{section.title}</h3>}
                     <div className="prose dark:prose-invert max-w-none">
                         {section.type === 'text' && <p className="whitespace-pre-wrap">{section.content as string}</p>}
                         {section.type === 'header' && <p className="text-xl text-muted-foreground">{section.content as string}</p>}

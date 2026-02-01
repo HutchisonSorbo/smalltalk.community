@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImpactKPI } from "@/lib/communityos/impact/types";
-import { TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRight, LucideIcon } from "lucide-react";
 
 interface KPICardProps {
     kpi: ImpactKPI;
@@ -10,7 +10,7 @@ interface KPICardProps {
     className?: string;
 }
 
-function KPICardHeader({ title, TrendIcon, trendColor }: { title: string; TrendIcon: any; trendColor: string }) {
+function KPICardHeader({ title, TrendIcon, trendColor }: { title: string; TrendIcon: LucideIcon; trendColor: string }) {
     return (
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium text-muted-foreground truncate">

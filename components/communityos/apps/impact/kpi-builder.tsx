@@ -3,7 +3,7 @@
 import React from "react";
 import { z } from "zod";
 import { ImpactKPI } from "@/lib/communityos/impact/types";
-import { useForm } from "react-hook-form";
+import { useForm, Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -37,7 +37,7 @@ interface KPIBuilderProps {
     onCancel: () => void;
 }
 
-function KPIFields({ control }: { control: any }) {
+function KPIFields({ control }: { control: Control<KPIFormValues> }) {
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -97,7 +97,7 @@ function KPIFields({ control }: { control: any }) {
     );
 }
 
-function DataConfiguration({ control, aggregation }: { control: any; aggregation: string }) {
+function DataConfiguration({ control, aggregation }: { control: Control<KPIFormValues>; aggregation: string }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-muted/50 rounded-lg">
             <FormItem className="col-span-full">

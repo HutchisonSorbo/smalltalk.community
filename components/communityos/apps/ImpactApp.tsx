@@ -47,7 +47,7 @@ function ImpactBuilderView({
     onSave
 }: {
     onBack: () => void;
-    onSave: (data: any) => void
+    onSave: React.ComponentProps<typeof KPIBuilder>['onSave']
 }) {
     return (
         <div className="space-y-6">
