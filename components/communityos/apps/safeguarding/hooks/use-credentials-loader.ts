@@ -6,7 +6,17 @@ import { Credential } from "@/lib/communityos/safeguarding/types";
 
 /**
  * Hook that manages credential data loading using React Query.
- * Derive stats and memoizes audit logs for stable references.
+ * Derives stats and memoises audit logs for stable references.
+ * 
+ * @returns Object containing:
+ * - `credentials`: Array of Credential objects (defaults to undefined while loading)
+ * - `incidentsCount`: Number of active incidents (currently mock data)
+ * - `expiringCredentialsCount`: Number of credentials with 'expiring-soon' status
+ * - `auditLogs`: Memoised array of recent compliance actions
+ * - `isLoading`: Boolean indicating the initial fetch is in progress
+ * - `isFetching`: Boolean indicating any fetch (including refetch) is in progress
+ * - `error`: Error object if the query fails
+ * - `refetch`: Function to manually trigger a data reload
  */
 export function useCredentialsLoader() {
     // Hoist a stable reference for the mock created_at timestamp
@@ -48,12 +58,12 @@ export function useCredentialsLoader() {
     const query = useQuery({
         queryKey: ["safeguarding-credentials"],
         queryFn: fetchCredentials,
-        initialData: [],
     });
 
-    const credentials = query.data;
+    const credentials = query.data || [];
 
     // Derived stats
+    // NOTE: incidentsCount is currently hardcoded placeholder data until real backend integration.
     const incidentsCount = 2;
     const expiringCredentialsCount = credentials.filter(c => c.status === 'expiring-soon').length;
 
@@ -75,8 +85,10 @@ export function useCredentialsLoader() {
         expiringCredentialsCount,
         auditLogs,
         isLoading: query.isLoading,
+        isFetching: query.isFetching,
         error: query.error,
         refetch: query.refetch
     };
 }
+
 
