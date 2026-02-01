@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Upload, CheckCircle2, AlertTriangle } from "lucide-react";
 import { CRMContact } from "@/lib/communityos/crm/types";
+import { sanitizeDisplay } from "@/lib/utils/moderation";
+import { Label } from "@/components/ui/label";
+import Papa from "papaparse";
 
 interface ImportWizardProps {
     open: boolean;
@@ -41,52 +44,60 @@ export function ImportWizard({
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
+
+        const clearFileInput = () => {
+            setFile(null);
+            e.target.value = '';
+        };
+
         if (selectedFile) {
             // Validation
             if (selectedFile.size > MAX_FILE_SIZE) {
-                // Ideally this should use toast.error, but simple alert or state/log for now as toast isn't imported here
                 console.error("File exceeds 5MB limit");
+                clearFileInput();
                 return;
             }
             if (!selectedFile.name.endsWith('.csv') && selectedFile.type !== 'text/csv' && !selectedFile.type.startsWith('text/')) {
                 console.error("Invalid file type. Please upload a CSV.");
+                clearFileInput();
                 return;
             }
             setFile(selectedFile);
         }
     };
 
+    const parseCsvFile = (file: File): Promise<any[]> => {
+        return new Promise((resolve, reject) => {
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    const mapped = results.data.map((row: any) => {
+                        // Heuristic mapping
+                        const firstName = row.firstName || row['first name'] || row.FirstName || '';
+                        const lastName = row.lastName || row['last name'] || row.LastName || '';
+                        const email = row.email || row.Email || '';
+                        const status = (row.status || row.Status || 'lead').toLowerCase();
+
+                        return {
+                            firstName: sanitizeDisplay(firstName),
+                            lastName: sanitizeDisplay(lastName),
+                            email: sanitizeDisplay(email),
+                            status: sanitizeDisplay(status)
+                        };
+                    });
+                    resolve(mapped);
+                },
+                error: (error) => reject(error)
+            });
+        });
+    };
+
     const handleNext = async () => {
         if (step === 1 && file) {
             setLoading(true);
             try {
-                // Real parsing
-                const text = await file.text();
-                // Simple CSV parse (or use imported util if available). 
-                // Since I cannot immediately see the import of parseCsv, I'll stick to a simple split logic OR import it if I know parsing util exists.
-                // The task summary says `csvUtils.ts` exists. Let's assume we can try to use it or inline a simple parser if import is missing.
-                // I'll assume simple parsing for this snippet to be self-contained or use the requested CSV parser.
-                // Request says: "use FileReader or a CSV parser... preserve field mapping".
-
-                const rows = text.split('\n').filter(r => r.trim());
-                const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
-
-                const parsedData = rows.slice(1).map(row => {
-                    const values = row.split(',').map(v => v.trim());
-                    const obj: any = {};
-                    headers.forEach((h, i) => {
-                        obj[h] = values[i] || ''; // Basic mapping
-                    });
-
-                    // Simple heuristic mapping
-                    return {
-                        firstName: obj['firstname'] || obj['first name'] || values[0] || '',
-                        lastName: obj['lastname'] || obj['last name'] || values[1] || '',
-                        email: obj['email'] || values[2] || '',
-                        status: obj['status'] || 'lead'
-                    };
-                });
-
+                const parsedData = await parseCsvFile(file);
                 setPreview(parsedData.slice(0, 10)); // Preview first 10
                 setStep(2);
             } catch (err) {
@@ -98,10 +109,9 @@ export function ImportWizard({
             setLoading(true);
             try {
                 await onImport(preview as any);
-                setStep(3); // Move to step 3 on success
+                setStep(3);
             } catch (err) {
                 console.error("Import failed", err);
-                // Here we would toast error
             } finally {
                 setLoading(false);
             }
@@ -129,12 +139,16 @@ export function ImportWizard({
                     {step === 1 && (
                         <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 bg-muted/20">
                             <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-                            <Input
-                                type="file"
-                                accept=".csv"
-                                onChange={handleFileChange}
-                                className="w-full max-w-xs cursor-pointer"
-                            />
+                            <div className="w-full max-w-xs space-y-2">
+                                <Label htmlFor="csv-upload" className="sr-only">Upload CSV file</Label>
+                                <Input
+                                    id="csv-upload"
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={handleFileChange}
+                                    className="cursor-pointer"
+                                />
+                            </div>
                             <p className="text-xs text-muted-foreground mt-2">
                                 Max size 5MB. CSV format only.
                             </p>
@@ -147,22 +161,7 @@ export function ImportWizard({
                                 <AlertTriangle className="h-4 w-4 mr-2 shrink-0 mt-0.5" />
                                 <p>We found {preview.length} contacts. Columns mapped automatically.</p>
                             </div>
-                            <div className="rounded-md border text-xs overflow-x-auto">
-                                <div className="min-w-full">
-                                    <div className="grid grid-cols-1 md:grid-cols-4 p-2 bg-muted font-medium gap-2">
-                                        <div>Name</div>
-                                        <div className="md:col-span-2">Email</div>
-                                        <div>Status</div>
-                                    </div>
-                                    {preview.map((p, i) => (
-                                        <div key={i} className="grid grid-cols-1 md:grid-cols-4 p-2 border-t gap-2">
-                                            <div className="truncate">{p.firstName} {p.lastName}</div>
-                                            <div className="md:col-span-2 truncate">{p.email}</div>
-                                            <div className="truncate">{p.status}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <PreviewList preview={preview} />
                         </div>
                     )}
 
@@ -177,20 +176,61 @@ export function ImportWizard({
                     )}
                 </div>
 
-                <DialogFooter>
-                    {step < 3 && (
-                        <Button variant="ghost" onClick={handleClose}>Cancel</Button>
-                    )}
-                    {step === 3 ? (
-                        <Button onClick={handleClose}>Done</Button>
-                    ) : (
-                        <Button onClick={handleNext} disabled={!file || loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {step === 1 ? "Next" : "Import Now"}
-                        </Button>
-                    )}
-                </DialogFooter>
+                <ImportFooter
+                    step={step}
+                    file={file}
+                    loading={loading}
+                    onCancel={handleClose}
+                    onNext={handleNext}
+                />
             </DialogContent>
         </Dialog>
+    );
+}
+
+function PreviewList({ preview }: { preview: any[] }) {
+    return (
+        <div className="rounded-md border text-xs overflow-x-auto">
+            <div className="min-w-full">
+                <div className="grid grid-cols-1 md:grid-cols-4 p-2 bg-muted font-medium gap-2">
+                    <div>Name</div>
+                    <div className="md:col-span-2 text-wrap break-all">Email</div>
+                    <div>Status</div>
+                </div>
+                {preview.map((p, i) => (
+                    <div key={i} className="grid grid-cols-1 md:grid-cols-4 p-2 border-t gap-2">
+                        <div className="truncate font-medium">{p.firstName} {p.lastName}</div>
+                        <div className="md:col-span-2 text-wrap break-all text-muted-foreground">{p.email}</div>
+                        <div className="truncate">{p.status}</div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+interface ImportFooterProps {
+    step: number;
+    file: File | null;
+    loading: boolean;
+    onCancel: () => void;
+    onNext: () => void;
+}
+
+function ImportFooter({ step, file, loading, onCancel, onNext }: ImportFooterProps) {
+    return (
+        <DialogFooter>
+            {step < 3 && (
+                <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+            )}
+            {step === 3 ? (
+                <Button onClick={onCancel}>Done</Button>
+            ) : (
+                <Button onClick={onNext} disabled={!file || loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {step === 1 ? "Next" : "Import Now"}
+                </Button>
+            )}
+        </DialogFooter>
     );
 }

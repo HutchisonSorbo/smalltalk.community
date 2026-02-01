@@ -12,6 +12,7 @@ import {
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import { createClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
+import { CRMStatus } from "@/lib/communityos/crm/types";
 
 /**
  * Result pattern for server actions
@@ -215,11 +216,10 @@ export async function createContact(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
-    // Use Zod schema for validation
-    // Note: types.ts defines CRMContact, but here we are creating, so ID/dates are generated.
-    // We validate the fields we expect from the form.
-    // We import validation from the new file (dynamic import to avoid cycle if needed, or top level)
-    // For now assuming top level import is fine or I add it.
+    /**
+     * Creates a new contact for an organisation.
+     * Validates required fields and enforces CRMStatus constraints.
+     */
 
     // Manual validation refactor to match robust style:
     const firstName = sanitizeInput(data.firstName);
@@ -240,9 +240,11 @@ export async function createContact(
                 email,
                 phone: sanitizeInput(data.phone, 20),
                 type: data.type === "organisation" ? "organisation" : "individual",
-                status: ["lead", "active", "customer", "churned"].includes(data.status?.toLowerCase())
-                    ? data.status.toLowerCase()
-                    : "lead",
+                status: (function () {
+                    const validStatuses = ["lead", "qualified", "proposal", "won", "lost", "active", "inactive", "customer", "churned"];
+                    const provided = data.status?.toLowerCase();
+                    return validStatuses.includes(provided) ? provided : "lead";
+                })(),
                 metadata: data.metadata || {},
                 // Map new fields if DB supports them, otherwise store in metadata or ignore for now
                 // Assuming schema needs update or we just store basics. 

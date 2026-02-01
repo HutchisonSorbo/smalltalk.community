@@ -54,4 +54,6 @@ export const CRM_STAGES: CRMPipelineStage[] = [
     { id: 'lost', label: 'Lost', color: 'bg-red-100 text-red-800', order: 5 },
     { id: 'active', label: 'Active', color: 'bg-gray-100 text-gray-800', order: 6 },
     { id: 'inactive', label: 'Inactive', color: 'bg-gray-50 text-gray-600', order: 7 },
+    { id: 'customer', label: 'Customer', color: 'bg-emerald-100 text-emerald-800', order: 8 },
+    { id: 'churned', label: 'Churned', color: 'bg-orange-100 text-orange-800', order: 9 },
 ];

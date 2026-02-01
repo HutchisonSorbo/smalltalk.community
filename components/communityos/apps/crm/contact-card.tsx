@@ -51,7 +51,7 @@ export function ContactCard({ contact, onClick, className, compact = false }: Co
                     <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-center justify-between">
                             <h3 className="font-semibold text-sm truncate pr-2">
-                                {contact.firstName} {contact.lastName}
+                                {sanitizeDisplay(contact.firstName)} {sanitizeDisplay(contact.lastName)}
                             </h3>
                             {!compact && (
                                 <Badge variant="secondary" className={cn("text-[10px] h-5 px-1.5 font-normal", stage?.color)}>
@@ -62,7 +62,7 @@ export function ContactCard({ contact, onClick, className, compact = false }: Co
 
                         {(contact.role || contact.company) && (
                             <p className="text-xs text-muted-foreground truncate">
-                                {contact.role}{contact.role && contact.company && ' at '}{contact.company}
+                                {sanitizeDisplay(contact.role)}{contact.role && contact.company && ' at '}{sanitizeDisplay(contact.company)}
                             </p>
                         )}
 
@@ -70,7 +70,7 @@ export function ContactCard({ contact, onClick, className, compact = false }: Co
                             <div className="flex flex-wrap gap-1 pt-1">
                                 {contact.tags.slice(0, 2).map(tag => (
                                     <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground">
-                                        {tag}
+                                        {sanitizeDisplay(tag)}
                                     </span>
                                 ))}
                                 {contact.tags.length > 2 && (
@@ -99,6 +99,7 @@ export function ContactCard({ contact, onClick, className, compact = false }: Co
                             const safePhone = safeUrl(`tel:${contact.phone}`);
                             if (safePhone) window.location.href = safePhone;
                         }}
+                        aria-label={`Call ${sanitizeDisplay(contact.firstName)} ${sanitizeDisplay(contact.lastName)}`}
                     >
                         <Phone className="h-4 w-4" />
                     </Button>
@@ -111,6 +112,7 @@ export function ContactCard({ contact, onClick, className, compact = false }: Co
                             const safeEmail = safeUrl(`mailto:${contact.email}`);
                             if (safeEmail) window.location.href = safeEmail;
                         }}
+                        aria-label={`Email ${sanitizeDisplay(contact.firstName)} ${sanitizeDisplay(contact.lastName)}`}
                     >
                         <Mail className="h-4 w-4" />
                     </Button>

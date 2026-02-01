@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Mail, Phone, Trash2, X, Plus } from "lucide-react";
+import { sanitizeDisplay } from "@/lib/utils/moderation";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { safeUrl } from "@/lib/utils";
@@ -63,7 +64,10 @@ export function ContactDetailSheet({
 
                     <div className="flex items-start gap-4 pr-10">
                         <Avatar className="h-16 w-16 border-2 border-white shadow-sm dark:border-gray-800">
-                            <AvatarImage src={safeUrl(contact.avatar || '')} />
+                            <AvatarImage
+                                src={safeUrl(contact.avatar || '')}
+                                alt={sanitizeDisplay(`${contact.firstName} ${contact.lastName}`)}
+                            />
                             <AvatarFallback className="bg-primary/10 text-xl text-primary">
                                 {contact.firstName[0]}
                                 {contact.lastName[0]}
@@ -71,11 +75,11 @@ export function ContactDetailSheet({
                         </Avatar>
 
                         <div className="space-y-1">
-                            <h2 className="text-xl font-bold">{contact.firstName} {contact.lastName}</h2>
-                            <p className="text-muted-foreground">{contact.role}{contact.company ? ` at ${contact.company}` : ''}</p>
+                            <h2 className="text-xl font-bold">{sanitizeDisplay(contact.firstName)} {sanitizeDisplay(contact.lastName)}</h2>
+                            <p className="text-muted-foreground">{sanitizeDisplay(contact.role)}{contact.company ? ` at ${sanitizeDisplay(contact.company)}` : ''}</p>
                             <div className="flex flex-wrap gap-2 pt-1">
                                 <Badge variant="outline" className={stage?.color}>{stage?.label}</Badge>
-                                {contact.tags?.map(t => <Badge key={t} variant="secondary" className="font-normal">{t}</Badge>)}
+                                {contact.tags?.map(t => <Badge key={t} variant="secondary" className="font-normal">{sanitizeDisplay(t)}</Badge>)}
                             </div>
                         </div>
                     </div>
@@ -196,7 +200,7 @@ export function ContactDetailSheet({
                                     <div className="grid gap-4">
                                         <div className="space-y-1">
                                             <Label className="text-xs text-muted-foreground">Email</Label>
-                                            <p className="text-sm font-medium">{contact.email}</p>
+                                            <p className="text-sm font-medium">{sanitizeDisplay(contact.email)}</p>
                                         </div>
                                         <div className="space-y-1">
                                             <Label className="text-xs text-muted-foreground">Phone</Label>
@@ -223,17 +227,7 @@ export function ContactDetailSheet({
 
                 {/* Footer */}
                 <SheetFooter className="p-4 border-t bg-background shrink-0 sm:justify-between sm:space-x-0">
-                    <Button
-                        variant="ghost"
-                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                            if (window.confirm("Are you sure you want to delete this contact?")) {
-                                onDelete(contact.id);
-                            }
-                        }}
-                    >
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete Contact
-                    </Button>
+                    {/* Duplicate delete button removed as per requirements */}
                 </SheetFooter>
 
             </SheetContent>
