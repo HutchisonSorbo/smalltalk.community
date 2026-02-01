@@ -48,15 +48,14 @@ export function InsightsPanel({ kpis }: InsightsPanelProps) {
                             Generate executive summaries and recommendations based on your KPIs.
                         </CardDescription>
                     </div>
-                    {!isLoading && (
-                        <Button
-                            onClick={handleGenerate}
-                            variant={insights ? "secondary" : "primary"}
-                            icon={insights ? <RefreshCw className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                        >
-                            {insights ? "Regenerate" : "Generate Analysis"}
-                        </Button>
-                    )}
+                    <Button
+                        onClick={handleGenerate}
+                        variant={insights ? "secondary" : "primary"}
+                        icon={insights ? <RefreshCw className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                        disabled={!tenant || isLoading}
+                    >
+                        {insights ? "Regenerate" : "Generate Analysis"}
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent>

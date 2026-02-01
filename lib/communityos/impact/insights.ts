@@ -1,8 +1,12 @@
+"use server";
+
 import { GoogleGenAI } from "@google/genai";
 import { moderateContent } from "@/lib/utils/moderation";
 import { ImpactKPI } from "./types";
 
-// Helper to generate a prompt from KPIs
+/**
+ * Creates a focused prompt for the AI based on current KPI metrics.
+ */
 function createPrompt(kpis: ImpactKPI[], contextName: string): string {
     const kpiSummary = kpis.map(k => {
         const trend = k.trend === 'up' ? 'improving' : k.trend === 'down' ? 'declining' : 'stable';
@@ -22,46 +26,48 @@ function createPrompt(kpis: ImpactKPI[], contextName: string): string {
     `;
 }
 
+/**
+ * Generates impact insights using the Gemini AI 1.5 Flash model.
+ * 
+ * @param kpis - Array of KPI objects containing performance data.
+ * @param organisationName - The name of the target organisation.
+ * @param apiKey - Optional API key override (primarily for testing).
+ * @returns A Promise that resolves to a moderated AI-generated insights string.
+ * @throws {Error} If the API key is missing or the generation process fails.
+ */
 export async function generateImpactInsights(
     kpis: ImpactKPI[],
     organisationName: string,
     apiKey?: string
 ): Promise<string> {
-    const key = apiKey || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    // Only use server-side environment variables for security
+    const key = apiKey || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
     if (!key) {
-        throw new Error("Missing API Key for AI Insights");
+        throw new Error("Missing AI API Key (GOOGLE_API_KEY). Ensure it is set in the server environment.");
     }
 
     try {
-        // Initialize the client with the new SDK
         const genAI = new GoogleGenAI({ apiKey: key });
-
         const prompt = createPrompt(kpis, organisationName);
 
-        // Use the models.generateContent method from the new SDK
-        // Using casting to any to avoid potential type mismatches if d.ts is missing or complex
-        // but trying to follow the likely API structure: client.models.generateContent
-        const response: any = await (genAI as any).models.generateContent({
+        // Typed invocation using the 1.5-flash model for cost/speed efficiency
+        const response = await genAI.models.generateContent({
             model: 'gemini-1.5-flash',
-            contents: [{ parts: [{ text: prompt }] }]
+            contents: [{ role: 'user', parts: [{ text: prompt }] }]
         });
 
-        // Parse response - checking new SDK structure, often it is response.text() or similar
-        // but if response is the object, it might have candidates
-        // If the SDK returns a simple response object with text() method:
-        if (typeof response.text === 'function') {
-            return moderateContent(response.text());
+        // The SDK returns text directly or via a specific structure
+        const text = response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+        if (!text) {
+            throw new Error("AI returned an empty response.");
         }
 
-        // Fallback for object structure
-        const text = response.response?.candidates?.[0]?.content?.parts?.[0]?.text
-            || response.candidates?.[0]?.content?.parts?.[0]?.text
-            || "";
-
+        // Moderate the output before returning to ensure safety
         return moderateContent(text);
     } catch (error) {
-        console.error("AI Insight Generation Failed:", error);
-        throw new Error("Failed to generate insights. Please try again later.");
+        console.error("AI Impact Analysis Failed:", error);
+        throw new Error("The AI failed to generate insights. Please check credentials or try again later.");
     }
 }

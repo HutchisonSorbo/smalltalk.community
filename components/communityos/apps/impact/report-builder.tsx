@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { COSButton as Button } from "@/components/communityos/ui/cos-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { GripVertical, Plus, Trash2, Eye, FileText, BarChart3, LayoutGrid, Type } from "lucide-react";
+import { GripVertical, Plus, Trash2, Eye, FileText, BarChart3, LayoutGrid, Type, Table as TableIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface SortableSectionProps {
@@ -143,13 +143,20 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
     };
 
     const addSection = (type: ReportSectionType) => {
-        const newSection: ReportSection = {
+        let content: any = "";
+
+        if (type === 'kpi-grid') content = [];
+        if (type === 'chart') content = { chartType: 'bar', kpiIds: [] };
+        if (type === 'table') content = { columns: [], rows: [] };
+
+        const newSection = {
             id: crypto.randomUUID(),
             type,
             order: sections.length,
             title: "",
-            content: ""
-        };
+            content
+        } as ReportSection;
+
         setSections([...sections, newSection]);
     };
 
@@ -158,7 +165,10 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
     };
 
     const updateSection = (id: string, updates: Partial<ReportSection>) => {
-        setSections(sections.map(s => s.id === id ? { ...s, ...updates } : s));
+        setSections(sections.map(s => {
+            if (s.id !== id) return s;
+            return { ...s, ...updates } as ReportSection;
+        }));
     };
 
     if (previewMode) {
@@ -257,6 +267,9 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => addSection('chart')}>
                                 <BarChart3 className="mr-2 h-4 w-4" /> Chart
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => addSection('table')}>
+                                <TableIcon className="mr-2 h-4 w-4" /> Table
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

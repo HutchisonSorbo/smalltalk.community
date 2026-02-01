@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { z } from "zod";
 import { ImpactKPI } from "@/lib/communityos/impact/types";
 import { useForm } from "react-hook-form";
@@ -10,17 +10,24 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { COSButton as Button } from "@/components/communityos/ui/cos-button"; // Using COS Button
-import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 const kpiSchema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
     description: z.string().optional(),
     dataSource: z.string().min(1, "Please select a data source"),
     aggregation: z.enum(["count", "sum", "average"]),
-    field: z.string().optional(), // Required if sum/avg
+    field: z.string().optional(),
     goal: z.coerce.number().optional(),
     unit: z.string().min(1, "Unit is required"),
     category: z.string().min(1, "Category is required"),
+}).superRefine((data, ctx) => {
+    if ((data.aggregation === 'sum' || data.aggregation === 'average') && (!data.field || data.field.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Field name is required for sum or average",
+            path: ["field"],
+        });
+    }
 });
 
 type KPIFormValues = z.infer<typeof kpiSchema>;

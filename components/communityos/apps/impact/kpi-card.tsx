@@ -56,7 +56,7 @@ export function KPICard({ kpi, onClick, className }: KPICardProps) {
                 </div>
 
                 <div className="flex items-center mt-1 space-x-2">
-                    {kpi.trendPercentage && (
+                    {kpi.trendPercentage != null && (
                         <span className={`text-xs font-medium flex items-center ${trendColor}`}>
                             {isPositive ? <ArrowUpRight className="h-3 w-3 mr-1" /> : isNegative ? <ArrowDownRight className="h-3 w-3 mr-1" /> : null}
                             {kpi.trendPercentage}%

@@ -3,7 +3,6 @@
 import React from "react";
 import { ImpactKPI } from "@/lib/communityos/impact/types";
 import { KPICard } from "./kpi-card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle } from "lucide-react";
 
 interface KPIDashboardProps {

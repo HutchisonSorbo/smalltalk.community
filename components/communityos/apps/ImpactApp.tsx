@@ -13,27 +13,8 @@ import { ImpactKPI } from "@/lib/communityos/impact/types";
 import { BarChart3, FileText, LayoutDashboard, Plus } from "lucide-react";
 import { COSButton as Button } from "../ui/cos-button"; // Fixed import
 
-// Mock Data for Demonstration
-const MOCK_KPIS: ImpactKPI[] = [
-    { id: '1', name: 'Lives Impacted', value: 1250, unit: 'people', trend: 'up', trendPercentage: 12, category: 'Community', dataSource: 'crm', goal: 1500 },
-    { id: '2', name: 'Volunteer Hours', value: 450, unit: 'hours', trend: 'stable', category: 'Engagement', dataSource: 'volunteers', goal: 500 },
-    { id: '3', name: 'Donations Raised', value: 15000, unit: 'AUD', trend: 'up', trendPercentage: 8, category: 'Financial', dataSource: 'donations', goal: 20000 },
-    { id: '4', name: 'New Members', value: 45, unit: 'members', trend: 'down', trendPercentage: 5, category: 'Growth', dataSource: 'crm', goal: 60 }
-];
-
-const MOCK_CHART_DATA = [
-    { name: 'Jan', value: 400 },
-    { name: 'Feb', value: 300 },
-    { name: 'Mar', value: 600 },
-    { name: 'Apr', value: 800 },
-    { name: 'May', value: 700 },
-];
-
-const MOCK_DISTRIBUTION_DATA = [
-    { name: 'Education', value: 400 },
-    { name: 'Health', value: 300 },
-    { name: 'Environment', value: 300 },
-];
+import { MOCK_KPIS, MOCK_CHART_DATA, MOCK_DISTRIBUTION_DATA } from "@/lib/communityos/impact/mocks";
+import { toast } from "@/hooks/use-toast"; // Assuming toast hook exists based on project style
 
 function ImpactHeader({ name }: { name: string }) {
     return (
@@ -54,20 +35,57 @@ function ImpactHeader({ name }: { name: string }) {
 }
 
 function LoadingState() {
-    return <div className="p-8 text-center text-muted-foreground">Loading impact data...</div>;
+    return <div className="p-8 text-center text-muted-foreground" role="status" aria-live="polite">Loading impact data...</div>;
 }
 
 function ErrorState() {
-    return <div className="p-8 text-center text-destructive">Failed to load tenant information.</div>;
+    return <div className="p-8 text-center text-destructive" role="alert" aria-live="assertive">Failed to load tenant information.</div>;
 }
 
 export function ImpactApp() {
     const { tenant, isLoading } = useTenant();
     const [kpis, setKpis] = useState<ImpactKPI[]>(MOCK_KPIS);
     const [view, setView] = useState<'dashboard' | 'reports' | 'builder'>('dashboard');
+    const [selectedKPI, setSelectedKPI] = useState<ImpactKPI | null>(null);
+
+    const handleKPIClick = (kpi: ImpactKPI) => {
+        setSelectedKPI(kpi);
+        // Toast feedback for selection
+        toast({
+            title: kpi.name,
+            description: `Showing details for ${kpi.name}. ${kpi.trendPercentage ? `${kpi.trendPercentage}% trend` : 'Stable performance'}.`
+        });
+    };
 
     if (isLoading) return <LoadingState />;
     if (!tenant) return <ErrorState />;
+
+    if (view === 'builder') {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" onClick={() => setView('dashboard')}>
+                        ← Back to Dashboard
+                    </Button>
+                    <h1 className="text-2xl font-bold">KPI Builder</h1>
+                </div>
+                <KPIBuilder
+                    onCancel={() => setView('dashboard')}
+                    onSave={(newKPIData) => {
+                        const newKPI: ImpactKPI = {
+                            ...newKPIData,
+                            id: crypto.randomUUID(),
+                            value: 0,
+                            trend: 'stable'
+                        };
+                        setKpis([...kpis, newKPI]);
+                        setView('dashboard');
+                        toast({ title: "KPI Created", description: `${newKPI.name} has been added to your dashboard.` });
+                    }}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 max-w-full overflow-x-hidden pb-12">
@@ -93,7 +111,7 @@ export function ImpactApp() {
                     <KPIDashboard
                         kpis={kpis}
                         isLoading={false}
-                        onKPIClick={(kpi) => console.log('Clicked KPI:', kpi.name)}
+                        onKPIClick={handleKPIClick}
                     />
 
                     {/* Charts Grid */}
@@ -122,7 +140,11 @@ export function ImpactApp() {
                     </div>
 
                     <div className="flex justify-start pt-4">
-                        <Button variant="ghost" icon={<Plus className="h-4 w-4" onClick={() => setView('builder')} />}>
+                        <Button
+                            variant="ghost"
+                            icon={<Plus className="h-4 w-4" />}
+                            onClick={() => setView('builder')}
+                        >
                             Add Custom KPI
                         </Button>
                     </div>
@@ -133,7 +155,7 @@ export function ImpactApp() {
                         initialSections={[
                             { id: '1', type: 'header', content: 'Monthly Impact Report - May 2026', order: 0 },
                             { id: '2', type: 'text', content: 'This month we saw significant growth in volunteer participation...', order: 1 },
-                            { id: '3', type: 'kpi-grid', content: 'Standard KPIs', order: 2 },
+                            { id: '3', type: 'kpi-grid', content: ['1', '2', '3'], order: 2 },
                         ]}
                         onSave={(sections) => console.log('Saved report:', sections)}
                     />

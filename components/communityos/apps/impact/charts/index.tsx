@@ -1,26 +1,63 @@
 "use client";
 
 import React from "react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    PieChart,
+    Pie,
+    Cell,
+    LineChart,
+    Line,
+    Legend
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 // Shared color palette
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#ef4444", "#8b5cf6"];
 
-interface ChartProps {
+// Centralized Styles
+const TOOLTIP_CONTENT_STYLE = {
+    backgroundColor: 'hsl(var(--popover))',
+    border: '1px solid hsl(var(--border))',
+    borderRadius: '8px',
+    color: 'hsl(var(--popover-foreground))',
+    fontSize: '12px'
+};
+
+const TOOLTIP_CURSOR = { fill: 'hsl(var(--muted) / 0.5)' };
+
+/**
+ * Common Props for all Impact Chart components.
+ * @template T - The shape of the data entry.
+ */
+interface ChartProps<T> {
     title: string;
     description?: string;
-    data: any[];
+    data: T[];
     className?: string;
     height?: number;
 }
 
-interface BarChartProps extends ChartProps {
-    xKey: string;
-    bars: { key: string; name: string; color?: string }[];
+interface BarChartProps<T> extends ChartProps<T> {
+    xKey: keyof T & string;
+    bars: { key: keyof T & string; name: string; color?: string }[];
 }
 
-export function ImpactBarChart({ title, description, data, xKey, bars, className, height = 320 }: BarChartProps) {
+export function ImpactBarChart<T extends Record<string, any>>({
+    title,
+    description,
+    data,
+    xKey,
+    bars,
+    className,
+    height = 320
+}: BarChartProps<T>) {
     return (
         <Card className={className}>
             <CardHeader>
@@ -44,16 +81,11 @@ export function ImpactBarChart({ title, description, data, xKey, bars, className
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
-                                tickFormatter={(value) => `${value}`}
                             />
                             <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'hsl(var(--popover))',
-                                    border: '1px solid hsl(var(--border))',
-                                    borderRadius: '8px',
-                                    color: 'hsl(var(--popover-foreground))'
-                                }}
-                                cursor={{ fill: 'hsl(var(--muted) / 0.5)' }}
+                                contentStyle={TOOLTIP_CONTENT_STYLE}
+                                cursor={TOOLTIP_CURSOR}
+                                itemStyle={{ color: 'hsl(var(--foreground))' }}
                             />
                             <Legend />
                             {bars.map((bar, index) => (
@@ -73,12 +105,20 @@ export function ImpactBarChart({ title, description, data, xKey, bars, className
     );
 }
 
-interface PieChartProps extends ChartProps {
-    nameKey: string;
-    valueKey: string;
+interface PieChartProps<T> extends ChartProps<T> {
+    nameKey: keyof T & string;
+    valueKey: keyof T & string;
 }
 
-export function ImpactPieChart({ title, description, data, nameKey, valueKey, className, height = 320 }: PieChartProps) {
+export function ImpactPieChart<T extends Record<string, any>>({
+    title,
+    description,
+    data,
+    nameKey,
+    valueKey,
+    className,
+    height = 320
+}: PieChartProps<T>) {
     return (
         <Card className={className}>
             <CardHeader>
@@ -100,17 +140,15 @@ export function ImpactPieChart({ title, description, data, nameKey, valueKey, cl
                                 nameKey={nameKey}
                             >
                                 {data.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--background))" strokeWidth={2} />
+                                    <Cell
+                                        key={`cell-${entry[nameKey] || index}`}
+                                        fill={COLORS[index % COLORS.length]}
+                                        stroke="hsl(var(--background))"
+                                        strokeWidth={2}
+                                    />
                                 ))}
                             </Pie>
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'hsl(var(--popover))',
-                                    border: '1px solid hsl(var(--border))',
-                                    borderRadius: '8px',
-                                    color: 'hsl(var(--popover-foreground))'
-                                }}
-                            />
+                            <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
                             <Legend layout="horizontal" verticalAlign="bottom" align="center" />
                         </PieChart>
                     </ResponsiveContainer>
@@ -120,12 +158,20 @@ export function ImpactPieChart({ title, description, data, nameKey, valueKey, cl
     );
 }
 
-interface LineChartProps extends ChartProps {
-    xKey: string;
-    lines: { key: string; name: string; color?: string }[];
+interface LineChartProps<T> extends ChartProps<T> {
+    xKey: keyof T & string;
+    lines: { key: keyof T & string; name: string; color?: string }[];
 }
 
-export function ImpactLineChart({ title, description, data, xKey, lines, className, height = 320 }: LineChartProps) {
+export function ImpactLineChart<T extends Record<string, any>>({
+    title,
+    description,
+    data,
+    xKey,
+    lines,
+    className,
+    height = 320
+}: LineChartProps<T>) {
     return (
         <Card className={className}>
             <CardHeader>
@@ -150,14 +196,7 @@ export function ImpactLineChart({ title, description, data, xKey, lines, classNa
                                 tickLine={false}
                                 axisLine={false}
                             />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'hsl(var(--popover))',
-                                    border: '1px solid hsl(var(--border))',
-                                    borderRadius: '8px',
-                                    color: 'hsl(var(--popover-foreground))'
-                                }}
-                            />
+                            <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
                             <Legend />
                             {lines.map((line, index) => (
                                 <Line

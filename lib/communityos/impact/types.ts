@@ -14,13 +14,45 @@ export interface ImpactKPI {
 
 export type ReportSectionType = 'header' | 'text' | 'kpi-grid' | 'chart' | 'table';
 
-export interface ReportSection {
+export interface BaseSection {
     id: string;
-    type: ReportSectionType;
     title?: string;
-    content?: any; // structured content based on type
     order: number;
 }
+
+export interface HeaderSection extends BaseSection {
+    type: 'header';
+    content: string;
+}
+
+export interface TextSection extends BaseSection {
+    type: 'text';
+    content: string;
+}
+
+export interface KPIGridSection extends BaseSection {
+    type: 'kpi-grid';
+    content: string[]; // Array of KPI IDs
+}
+
+export interface ChartSection extends BaseSection {
+    type: 'chart';
+    content: {
+        chartType: 'bar' | 'line' | 'pie';
+        kpiIds: string[];
+        options?: any;
+    };
+}
+
+export interface TableSection extends BaseSection {
+    type: 'table';
+    content: {
+        columns: { key: string; label: string }[];
+        rows: any[];
+    };
+}
+
+export type ReportSection = HeaderSection | TextSection | KPIGridSection | ChartSection | TableSection;
 
 export interface ImpactReport {
     id: string;
