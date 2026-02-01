@@ -284,6 +284,46 @@ interface ReportSectionsListProps {
     onAdd: (type: ReportSectionType) => void;
 }
 
+function ReportEmptyState() {
+    return (
+        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed rounded-lg bg-background/50">
+            <FileText className="h-10 w-10 mb-2 opacity-50" />
+            <p>Drag and drop sections here to build your report</p>
+        </div>
+    );
+}
+
+function AddSectionMenu({ onAdd }: { onAdd: (type: ReportSectionType) => void }) {
+    return (
+        <div className="mt-6 flex justify-center">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" icon={<Plus className="h-4 w-4" />}>
+                        Add Section
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-56">
+                    <DropdownMenuItem onClick={() => onAdd('header')}>
+                        <Type className="mr-2 h-4 w-4" /> Header
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('text')}>
+                        <FileText className="mr-2 h-4 w-4" /> Text Block
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('kpi-grid')}>
+                        <LayoutGrid className="mr-2 h-4 w-4" /> KPI Grid
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('chart')}>
+                        <BarChart3 className="mr-2 h-4 w-4" /> Chart
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('table')}>
+                        <TableIcon className="mr-2 h-4 w-4" /> Table
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    );
+}
+
 function ReportSectionsList({
     sections,
     sensors,
@@ -314,39 +354,9 @@ function ReportSectionsList({
                 </SortableContext>
             </DndContext>
 
-            {sections.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed rounded-lg bg-background/50">
-                    <FileText className="h-10 w-10 mb-2 opacity-50" />
-                    <p>Drag and drop sections here to build your report</p>
-                </div>
-            )}
+            {sections.length === 0 && <ReportEmptyState />}
 
-            <div className="mt-6 flex justify-center">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="secondary" icon={<Plus className="h-4 w-4" />}>
-                            Add Section
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-56">
-                        <DropdownMenuItem onClick={() => onAdd('header')}>
-                            <Type className="mr-2 h-4 w-4" /> Header
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onAdd('text')}>
-                            <FileText className="mr-2 h-4 w-4" /> Text Block
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onAdd('kpi-grid')}>
-                            <LayoutGrid className="mr-2 h-4 w-4" /> KPI Grid
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onAdd('chart')}>
-                            <BarChart3 className="mr-2 h-4 w-4" /> Chart
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onAdd('table')}>
-                            <TableIcon className="mr-2 h-4 w-4" /> Table
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+            <AddSectionMenu onAdd={onAdd} />
         </div>
     );
 }
@@ -406,7 +416,7 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
     }
 
     return (
-        <div className="space-y-6 max-w-3xl mx-auto">
+        <div className="space-y-6 max-w-3xl max-w-full mx-auto">
             <ReportHeader
                 onPreview={() => setPreviewMode(true)}
                 onSave={() => onSave?.(sections)}

@@ -30,7 +30,10 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
                 <p className="font-semibold mb-1">{label}</p>
                 {payload.map((entry, index: number) => (
                     <div key={index} className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                        <div
+                            className="h-2 w-2 rounded-full bg-[var(--dot-color)]"
+                            style={{ '--dot-color': entry.color } as React.CSSProperties}
+                        />
                         <span>{entry.name}: {entry.value}</span>
                     </div>
                 ))}
