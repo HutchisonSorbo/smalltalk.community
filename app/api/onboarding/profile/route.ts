@@ -118,8 +118,8 @@ export async function POST(req: Request) {
         // If Individual -> check userType -> insert into musicianProfiles or professionalProfiles
 
         // Moderate content
-        const moderatedBio = moderateContent(profileData.bio);
-        const moderatedHeadline = moderateContent(profileData.headline);
+        const moderatedBio = moderateContent(profileData.bio || "");
+        const moderatedHeadline = moderateContent(profileData.headline || "");
 
         // Transaction to ensure atomicity
         await db.transaction(async (tx: any) => {
