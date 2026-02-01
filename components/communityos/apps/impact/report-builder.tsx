@@ -8,7 +8,9 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
-    DragEndEvent
+    DragEndEvent,
+    DraggableAttributes as Attributes,
+    DraggableSyntheticListeners as Listeners
 } from "@dnd-kit/core";
 import {
     arrayMove,
@@ -48,8 +50,8 @@ function HeaderControls({
 }: {
     section: ReportSection;
     onRemove: (id: string) => void;
-    attributes: any;
-    listeners: any;
+    attributes: Attributes;
+    listeners: Listeners;
 }) {
     return (
         <CardHeader className="flex flex-row items-start space-y-0 pb-2">
@@ -210,6 +212,8 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
+
+
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;

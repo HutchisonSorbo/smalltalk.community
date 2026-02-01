@@ -165,7 +165,7 @@ export function ImpactApp() {
         });
     };
 
-    const handleSaveKPI = (newKPIData: any) => {
+    const handleSaveKPI = (newKPIData: Parameters<React.ComponentProps<typeof KPIBuilder>['onSave']>[0]) => {
         const newKPI: ImpactKPI = {
             ...newKPIData,
             id: crypto.randomUUID(),
