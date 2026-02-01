@@ -22,12 +22,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#ef4444", "#8b5cf6"];
 
 // Centralized Styles
-const TOOLTIP_CONTENT_STYLE = {
-    backgroundColor: 'hsl(var(--popover))',
-    border: '1px solid hsl(var(--border))',
-    borderRadius: '8px',
-    color: 'hsl(var(--popover-foreground))',
-    fontSize: '12px'
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-popover border border-border rounded-lg text-popover-foreground text-xs p-2 shadow-sm">
+                <p className="font-semibold mb-1">{label}</p>
+                {payload.map((entry: any, index: number) => (
+                    <div key={index} className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                        <span>{entry.name}: {entry.value}</span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+    return null;
 };
 
 const TOOLTIP_CURSOR = { fill: 'hsl(var(--muted) / 0.5)' };
@@ -102,9 +111,8 @@ export function ImpactBarChart<T extends Record<string, any>>({
                     axisLine={false}
                 />
                 <Tooltip
-                    contentStyle={TOOLTIP_CONTENT_STYLE}
+                    content={<CustomTooltip />}
                     cursor={TOOLTIP_CURSOR}
-                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                 />
                 <Legend />
                 {bars.map((bar, index) => (
@@ -157,7 +165,7 @@ export function ImpactPieChart<T extends Record<string, any>>({
                         />
                     ))}
                 </Pie>
-                <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend layout="horizontal" verticalAlign="bottom" align="center" />
             </PieChart>
         </ChartCard>
@@ -195,7 +203,7 @@ export function ImpactLineChart<T extends Record<string, any>>({
                     tickLine={false}
                     axisLine={false}
                 />
-                <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 {lines.map((line, index) => (
                     <Line
