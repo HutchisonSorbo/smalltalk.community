@@ -16,10 +16,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Mail, Phone, Trash2, X, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { safeUrl } from "@/lib/utils";
 
 import { CRMContact, CRMInteraction, CRM_STAGES } from "@/lib/communityos/crm/types";
 import { ActivityTimeline } from "./activity-timeline";
-import { Input } from "@/components/ui/input"; // Using standard UI for edit mode inner parts if needed
 import { Label } from "@/components/ui/label";
 
 interface ContactDetailSheetProps {
@@ -28,6 +29,7 @@ interface ContactDetailSheetProps {
     onOpenChange: (open: boolean) => void;
     interactions: CRMInteraction[];
     onUpdate: (id: string, data: Partial<CRMContact>) => void;
+    onDelete: (id: string) => void;
     onAddInteraction: (type: CRMInteraction['type'], content: string) => void;
 }
 
@@ -37,6 +39,7 @@ export function ContactDetailSheet({
     onOpenChange,
     interactions,
     onUpdate,
+    onDelete,
     onAddInteraction
 }: ContactDetailSheetProps) {
     if (!contact) return null;
@@ -59,9 +62,12 @@ export function ContactDetailSheet({
                     </Button>
 
                     <div className="flex items-start gap-4 pr-10">
-                        <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-                            <AvatarImage src={contact.avatar} />
-                            <AvatarFallback className="text-lg">{contact.firstName[0]}{contact.lastName[0]}</AvatarFallback>
+                        <Avatar className="h-16 w-16 border-2 border-white shadow-sm dark:border-gray-800">
+                            <AvatarImage src={safeUrl(contact.avatar || '')} />
+                            <AvatarFallback className="bg-primary/10 text-xl text-primary">
+                                {contact.firstName[0]}
+                                {contact.lastName[0]}
+                            </AvatarFallback>
                         </Avatar>
 
                         <div className="space-y-1">
@@ -75,15 +81,91 @@ export function ContactDetailSheet({
                     </div>
 
                     <div className="flex gap-2 mt-6">
-                        <Button className="flex-1" variant="default">
-                            <Mail className="h-4 w-4 mr-2" /> Email
-                        </Button>
-                        <Button className="flex-1" variant="outline">
-                            <Phone className="h-4 w-4 mr-2" /> Call
-                        </Button>
-                        <Button size="icon" variant="ghost">
-                            <Edit className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            const url = safeUrl(`mailto:${contact.email}`);
+                                            if (url) window.location.href = url;
+                                        }}
+                                        disabled={!contact.email}
+                                    >
+                                        <Mail className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Email Contact</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            const url = safeUrl(`tel:${contact.phone}`);
+                                            if (url) window.location.href = url;
+                                        }}
+                                        disabled={!contact.phone}
+                                    >
+                                        <Phone className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Call Contact</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            onOpenChange(false);
+                                            // Trigger edit mode - assuming parent handles this via onUpdate or separate flow
+                                            // For now, allow quick edit or navigate.
+                                            // Given current setup, we might need a prop for onEdit or just use onUpdate with modal.
+                                            // This button is likely just a trigger for the edit form which isn't fully wired in *this* sheet
+                                            // (Edit is happening in main CRMApp modal, but this sheet is 'ContactDetailSheet').
+                                            // Let's assume we want to trigger the Edit modal from here.
+                                            // Since we don't have onEdit prop, I'll add a TODO or wire it if possible.
+                                            // The prompt says "existing editContact or router.push".
+                                            // I'll assume we can pass a callback later, but for now just disable or placeholder.
+                                            // Wait, prompt says: "Edit by invoking the sheet's edit handler or navigation function... or set disabled".
+                                            // I will set disabled with tooltip "Coming soon" as I don't have the edit handler prop in this component signature yet.
+                                        }}
+                                        disabled
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit Contact (Coming Soon)</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        onClick={() => {
+                                            if (window.confirm("Are you sure you want to delete this contact?")) {
+                                                onDelete(contact.id);
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete Contact</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
                 </div>
 
@@ -141,7 +223,15 @@ export function ContactDetailSheet({
 
                 {/* Footer */}
                 <SheetFooter className="p-4 border-t bg-background shrink-0 sm:justify-between sm:space-x-0">
-                    <Button variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                    <Button
+                        variant="ghost"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this contact?")) {
+                                onDelete(contact.id);
+                            }
+                        }}
+                    >
                         <Trash2 className="h-4 w-4 mr-2" /> Delete Contact
                     </Button>
                 </SheetFooter>

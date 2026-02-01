@@ -4,9 +4,8 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Filter, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { COSFilterBar, FilterOption } from "@/components/communityos/ui/cos-filter-bar";
 
 export interface SegmentFilter {
     id: string;
@@ -45,7 +44,7 @@ export function SegmentBuilder({
     const handleSelectField = (field: string) => {
         // Determine default operator/value based on field type (mock logic)
         const newFilter: SegmentFilter = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: crypto.randomUUID(),
             field,
             operator: 'equals',
             value: ''
@@ -89,9 +88,14 @@ export function SegmentBuilder({
                         {filters.map(filter => (
                             <Badge key={filter.id} variant="secondary" className="h-8 px-2 lg:px-3 text-sm font-normal gap-1">
                                 <span className="font-medium">{AVAILABLE_FIELDS.find(f => f.value === filter.field)?.label}:</span>
-                                <span>{filter.value || "(Any)"}</span>
+                                <span className="max-w-[150px] truncate block" title={filter.value}>
+                                    {filter.value || "(Any)"}
+                                </span>
                                 <button
+                                    type="button"
                                     onClick={() => onRemoveFilter(filter.id)}
+                                    title="Remove filter"
+                                    aria-label={`Remove filter: ${filter.field}`}
                                     className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                 >
                                     <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />

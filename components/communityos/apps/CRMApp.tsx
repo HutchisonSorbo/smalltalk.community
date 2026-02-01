@@ -121,20 +121,27 @@ export function CRMApp() {
     };
 
     const handleAddInteraction = async (type: CRMInteraction['type'], content: string) => {
-        // Since CRMContact doesn't store interactions directly in the type definition in types.ts (it was omitted/separated?),
-        // we might need to store them in a separate collection OR add them to the type. 
-        // *Correction*: The types.ts definition for CRMContact *did not* have interactions array in my previous step, 
-        // but the previous CRMApp had it. 
-        // I should probably separate them or add to type. 
-        // For local-first PWA simplicity, embedding often easier, but separating scaling better.
-        // Let's assume we store them in a separate collection `crm_interactions` eventually, 
-        // but for this MVP refactor, let's keep it simple.
-        // I will add `interactions` to the `CRMContact` type locally or extend it if needed.
-        // *Self-correction*: types.ts has CRMInteraction interface but CRMContact didn't include it array.
-        // I will use `customFields` or just expect the app to handle it. 
-        // Let's assume we pass a prop or fetch them. 
-        // For now, I'll log to console or mock it to proceed without blocking on schema migration.
-        console.log("Adding interaction:", type, content);
+        if (!selectedContact) return;
+
+        const newInteraction: CRMInteraction = {
+            id: crypto.randomUUID(),
+            contactId: selectedContact.id,
+            type,
+            content,
+            date: new Date().toISOString(),
+            createdBy: 'user', // Placeholder, ideally from auth
+            createdAt: new Date().toISOString(),
+        };
+
+        const updatedContact = {
+            ...selectedContact,
+            interactions: [...(selectedContact.interactions || []), newInteraction],
+            updatedAt: new Date().toISOString()
+        };
+
+        await upsertDocument(selectedContact.id, updatedContact);
+        setSelectedContact(updatedContact);
+        toast.success("Interaction added");
     };
 
     const handleMoveStatus = async (id: string, newStatus: string) => {
@@ -142,7 +149,7 @@ export function CRMApp() {
     };
 
     const handleDeleteSelected = async () => {
-        if (!confirm(`Delete ${selectedIds.size} contacts?`)) return;
+        if (!window.confirm(`Delete ${selectedIds.size} contacts?`)) return;
         for (const id of Array.from(selectedIds)) {
             await deleteDocument(id);
         }
@@ -165,6 +172,7 @@ export function CRMApp() {
                             variant={viewMode === 'board' ? 'default' : 'ghost'}
                             size="icon"
                             onClick={() => setViewMode('board')}
+                            aria-label="Board view"
                         >
                             <LayoutGrid className="h-4 w-4" />
                         </Button>
@@ -172,6 +180,7 @@ export function CRMApp() {
                             variant={viewMode === 'list' ? 'default' : 'ghost'}
                             size="icon"
                             onClick={() => setViewMode('list')}
+                            aria-label="List view"
                         >
                             <List className="h-4 w-4" />
                         </Button>
@@ -234,8 +243,14 @@ export function CRMApp() {
                 contact={selectedContact}
                 open={isSheetOpen}
                 onOpenChange={setIsSheetOpen}
-                interactions={[]} // TODO: Fetch interactions
+                interactions={selectedContact?.interactions || []}
                 onUpdate={handleUpdateContact}
+                onDelete={async (id) => {
+                    await deleteDocument(id);
+                    setIsSheetOpen(false);
+                    setSelectedContact(null);
+                    toast.success("Contact deleted");
+                }}
                 onAddInteraction={handleAddInteraction}
             />
 
@@ -258,11 +273,12 @@ export function CRMApp() {
             <ExportDialog
                 open={isExportOpen}
                 onOpenChange={setIsExportOpen}
-                count={documents.length}
+                count={selectedIds.size > 0 ? selectedIds.size : filteredContacts.length}
                 selectedCount={selectedIds.size}
                 onExport={(opts) => {
                     console.log("Exporting", opts);
-                    toast.success("Export started");
+                    toast.success(`Exporting ${selectedIds.size > 0 ? selectedIds.size : filteredContacts.length} contacts...`);
+                    setIsExportOpen(false);
                 }}
             />
 
@@ -270,8 +286,26 @@ export function CRMApp() {
                 open={isImportOpen}
                 onOpenChange={setIsImportOpen}
                 onImport={async (data) => {
-                    console.log("Importing", data);
                     // Bulk create logic
+                    let count = 0;
+                    for (const item of data) {
+                        const newContact: CRMContact = {
+                            id: crypto.randomUUID(),
+                            firstName: item.firstName || 'Unknown',
+                            lastName: item.lastName || '',
+                            email: item.email || '',
+                            phone: '',
+                            status: (item.status?.toLowerCase() as CRMStatus) || 'lead',
+                            organisationId: tenant?.id || "",
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                            segments: []
+                        };
+                        await upsertDocument(newContact.id, newContact);
+                        count++;
+                    }
+                    toast.success(`Imported ${count} contacts`);
+                    setIsImportOpen(false);
                 }}
             />
         </div>

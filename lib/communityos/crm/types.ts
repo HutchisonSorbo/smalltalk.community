@@ -1,5 +1,5 @@
 
-export type CRMStatus = 'lead' | 'qualified' | 'proposal' | 'won' | 'lost' | 'active' | 'inactive';
+export type CRMStatus = 'lead' | 'qualified' | 'proposal' | 'won' | 'lost' | 'active' | 'inactive' | 'customer' | 'churned';
 
 export interface CRMContact {
     id: string;
@@ -21,6 +21,7 @@ export interface CRMContact {
     customFields?: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
+    interactions?: CRMInteraction[];
 }
 
 export type InteractionType = 'note' | 'email' | 'call' | 'meeting' | 'task';

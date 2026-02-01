@@ -2,8 +2,10 @@
 
 import * as React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { safeUrl } from "@/lib/utils";
+import { sanitizeDisplay } from "@/lib/utils/moderation";
 import { Card } from "@/components/ui/card";
 import { Phone, Mail, MoreHorizontal } from "lucide-react";
 import { CRMContact, CRM_STAGES } from "@/lib/communityos/crm/types";
@@ -38,9 +40,12 @@ export function ContactCard({ contact, onClick, className, compact = false }: Co
 
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <Avatar className="h-10 w-10 border">
-                        <AvatarImage src={contact.avatar} alt={`${contact.firstName} ${contact.lastName}`} />
-                        <AvatarFallback>{contact.firstName[0]}{contact.lastName[0]}</AvatarFallback>
+                    <Avatar className="h-10 w-10 border border-gray-100 dark:border-gray-700">
+                        <AvatarImage src={safeUrl(contact.avatar || '')} alt={sanitizeDisplay(`${contact.firstName} ${contact.lastName}`)} />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                            {contact.firstName[0]}
+                            {contact.lastName[0]}
+                        </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 min-w-0 space-y-1">
@@ -88,22 +93,26 @@ export function ContactCard({ contact, onClick, className, compact = false }: Co
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 rounded-full"
-                        onClick={(e) => handleAction(e, () => window.location.href = `tel:${contact.phone}`)}
-                        disabled={!contact.phone}
-                        title="Call"
+                        className="h-8 w-8 text-gray-500 hover:text-primary"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const safePhone = safeUrl(`tel:${contact.phone}`);
+                            if (safePhone) window.location.href = safePhone;
+                        }}
                     >
-                        <Phone className="h-3.5 w-3.5" />
+                        <Phone className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 rounded-full"
-                        onClick={(e) => handleAction(e, () => window.location.href = `mailto:${contact.email}`)}
-                        disabled={!contact.email}
-                        title="Email"
+                        className="h-8 w-8 text-gray-500 hover:text-primary"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const safeEmail = safeUrl(`mailto:${contact.email}`);
+                            if (safeEmail) window.location.href = safeEmail;
+                        }}
                     >
-                        <Mail className="h-3.5 w-3.5" />
+                        <Mail className="h-4 w-4" />
                     </Button>
                 </div>
             )}

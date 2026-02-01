@@ -13,6 +13,9 @@ interface COSSearchProps {
     loading?: boolean;
     className?: string;
     autoFocus?: boolean;
+    minLength?: number;
+    maxLength?: number;
+    ariaLabel?: string;
 }
 
 const COSSearch = React.forwardRef<HTMLInputElement, COSSearchProps>(
@@ -25,6 +28,9 @@ const COSSearch = React.forwardRef<HTMLInputElement, COSSearchProps>(
         loading = false,
         className,
         autoFocus,
+        minLength,
+        maxLength,
+        ariaLabel,
         ...props
     }, ref) => {
         const [localValue, setLocalValue] = React.useState(value);
@@ -36,13 +42,21 @@ const COSSearch = React.forwardRef<HTMLInputElement, COSSearchProps>(
         React.useEffect(() => {
             const handler = setTimeout(() => {
                 if (localValue !== value) {
-                    onChange(localValue);
-                    onSearch?.(localValue);
+                    const meetsMinLength = minLength === undefined || localValue.length >= minLength;
+                    const meetsMaxLength = maxLength === undefined || localValue.length <= maxLength;
+
+                    if (meetsMinLength && meetsMaxLength) {
+                        onChange(localValue);
+                        onSearch?.(localValue);
+                    } else if (localValue === "") {
+                        onChange(localValue);
+                        onSearch?.(localValue);
+                    }
                 }
             }, debounceMs);
 
             return () => clearTimeout(handler);
-        }, [localValue, debounceMs, onChange, onSearch, value]);
+        }, [localValue, debounceMs, onChange, onSearch, value, minLength, maxLength]);
 
         const handleClear = () => {
             setLocalValue("");
@@ -67,6 +81,7 @@ const COSSearch = React.forwardRef<HTMLInputElement, COSSearchProps>(
                     onChange={(e) => setLocalValue(e.target.value)}
                     placeholder={placeholder}
                     autoFocus={autoFocus}
+                    aria-label={ariaLabel || placeholder}
                     className={cn(
                         "flex h-11 w-full rounded-xl border border-input bg-background pl-10 pr-10 py-2",
                         "text-base md:text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium",

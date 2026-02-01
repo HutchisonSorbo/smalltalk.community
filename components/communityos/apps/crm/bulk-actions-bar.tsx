@@ -43,8 +43,9 @@ export function BulkActionsBar({
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 rounded-full hover:bg-background/20 text-background"
+                        className="h-8 w-8 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
                         onClick={onClear}
+                        aria-label="Clear selection"
                     >
                         <X className="h-4 w-4" />
                     </Button>

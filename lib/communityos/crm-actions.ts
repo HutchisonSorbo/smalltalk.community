@@ -240,7 +240,9 @@ export async function createContact(
                 email,
                 phone: sanitizeInput(data.phone, 20),
                 type: data.type === "organisation" ? "organisation" : "individual",
-                status: data.status || 'lead',
+                status: ["lead", "active", "customer", "churned"].includes(data.status?.toLowerCase())
+                    ? data.status.toLowerCase()
+                    : "lead",
                 metadata: data.metadata || {},
                 // Map new fields if DB supports them, otherwise store in metadata or ignore for now
                 // Assuming schema needs update or we just store basics. 
