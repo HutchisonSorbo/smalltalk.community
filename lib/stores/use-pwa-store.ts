@@ -10,6 +10,12 @@ interface PWAState {
     setIsInstalled: (isInstalled: boolean) => void;
 }
 
+/**
+ * Global Zustand store for PWA installation state management.
+ * 
+ * Provides PWAState getters (deferredPrompt, isInstallable, isInstalled) 
+ * and setters for handling the PWA install lifecycle across components.
+ */
 export const usePWAStore = create<PWAState>((set) => ({
     deferredPrompt: null,
     isInstallable: false,

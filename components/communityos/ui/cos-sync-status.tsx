@@ -27,16 +27,35 @@ export function COSSyncStatus({
 }: COSSyncStatusProps) {
     const [isOpen, setIsOpen] = useState(false);
 
+    // Normalize inputs
+    const safePendingChanges = Math.max(0, Number(pendingChanges) || 0);
+    const safeLastSyncTime = (lastSyncTime && !isNaN(new Date(lastSyncTime).getTime()))
+        ? new Date(lastSyncTime)
+        : undefined;
+
     // Determine status color and icon
     const getStatus = () => {
         if (!isOnline) return { color: "text-destructive", bg: "bg-destructive", icon: Network, label: "Offline" };
         if (isSyncing) return { color: "text-amber-500", bg: "bg-amber-500", icon: RefreshCw, label: "Syncing..." };
-        if (pendingChanges > 0) return { color: "text-amber-500", bg: "bg-amber-500", icon: AlertCircle, label: "Unsynced Changes" };
+        if (safePendingChanges > 0) return { color: "text-amber-500", bg: "bg-amber-500", icon: AlertCircle, label: "Unsynced Changes" };
         return { color: "text-green-500", bg: "bg-green-500", icon: CheckCircle2, label: "Synced" };
     };
 
     const status = getStatus();
     const Icon = status.icon;
+
+    const handleRetry = async () => {
+        if (!onRetry) return;
+        try {
+            await onRetry();
+        } catch (error) {
+            console.error("COSSyncStatus: onRetry failed", {
+                isOnline,
+                pendingChanges: safePendingChanges,
+                error
+            });
+        }
+    };
 
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -56,9 +75,9 @@ export function COSSyncStatus({
                     <span className="text-xs font-medium text-muted-foreground hidden md:inline-block">
                         {status.label}
                     </span>
-                    {pendingChanges > 0 && (
+                    {safePendingChanges > 0 && (
                         <span className="flex items-center justify-center bg-muted text-foreground text-[10px] font-bold h-4 min-w-[1rem] px-1 rounded-full border border-border">
-                            {pendingChanges}
+                            {safePendingChanges}
                         </span>
                     )}
                 </Button>
@@ -73,22 +92,22 @@ export function COSSyncStatus({
                     <div className="space-y-1 text-xs text-muted-foreground">
                         <div className="flex justify-between">
                             <span>Pending Changes:</span>
-                            <span className="font-mono text-foreground">{pendingChanges}</span>
+                            <span className="font-mono text-foreground">{safePendingChanges}</span>
                         </div>
-                        {lastSyncTime && (
+                        {safeLastSyncTime && (
                             <div className="flex justify-between">
                                 <span>Last Sync:</span>
-                                <span className="text-foreground">{lastSyncTime.toLocaleTimeString()}</span>
+                                <span className="text-foreground">{safeLastSyncTime.toLocaleTimeString()}</span>
                             </div>
                         )}
                     </div>
 
-                    {(onRetry && (!isOnline || pendingChanges > 0)) && (
+                    {(onRetry && (!isOnline || safePendingChanges > 0)) && (
                         <Button
                             variant="outline"
                             size="sm"
                             className="w-full h-7 text-xs mt-2"
-                            onClick={onRetry}
+                            onClick={handleRetry}
                             disabled={isSyncing}
                         >
                             {isSyncing ? "Syncing..." : "Sync Now"}
