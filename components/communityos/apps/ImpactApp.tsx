@@ -65,6 +65,34 @@ function ImpactBuilderView({
     );
 }
 
+function ChartsGrid() {
+    return (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <ImpactBarChart
+                title="Monthly Impact"
+                description="Impact metric growth over time"
+                data={MOCK_CHART_DATA}
+                xKey="name"
+                bars={[{ key: 'value', name: 'Impact Value' }]}
+            />
+            <ImpactPieChart
+                title="Impact Distribution"
+                description="Distribution by category"
+                data={MOCK_DISTRIBUTION_DATA}
+                nameKey="name"
+                valueKey="value"
+            />
+            <ImpactLineChart
+                title="Trend Analysis"
+                description="6-month trend projection"
+                data={MOCK_CHART_DATA}
+                xKey="name"
+                lines={[{ key: 'value', name: 'Projected Value', color: '#8884d8' }]}
+            />
+        </div>
+    );
+}
+
 function DashboardTabContent({
     kpis,
     onKPIClick,
@@ -83,29 +111,7 @@ function DashboardTabContent({
                 onKPIClick={onKPIClick}
             />
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <ImpactBarChart
-                    title="Monthly Impact"
-                    description="Impact metric growth over time"
-                    data={MOCK_CHART_DATA}
-                    xKey="name"
-                    bars={[{ key: 'value', name: 'Impact Value' }]}
-                />
-                <ImpactPieChart
-                    title="Impact Distribution"
-                    description="Distribution by category"
-                    data={MOCK_DISTRIBUTION_DATA}
-                    nameKey="name"
-                    valueKey="value"
-                />
-                <ImpactLineChart
-                    title="Trend Analysis"
-                    description="6-month trend projection"
-                    data={MOCK_CHART_DATA}
-                    xKey="name"
-                    lines={[{ key: 'value', name: 'Projected Value', color: '#8884d8' }]}
-                />
-            </div>
+            <ChartsGrid />
 
             <div className="flex justify-start pt-4">
                 <Button
@@ -121,6 +127,26 @@ function DashboardTabContent({
 }
 
 function ReportsTabContent() {
+    const saveReport = async (sections: any[]) => {
+        try {
+            console.log('Persisting report sections:', sections);
+            // Simulating backend call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            toast({
+                title: "Report Saved",
+                description: "Your impact report has been successfully persisted."
+            });
+        } catch (error) {
+            console.error('Failed to save report:', error);
+            toast({
+                title: "Error",
+                description: "Failed to save the report. Please try again.",
+                variant: "destructive"
+            });
+        }
+    };
+
     return (
         <TabsContent value="reports" className="space-y-6 mt-6">
             <ReportBuilder
@@ -129,7 +155,7 @@ function ReportsTabContent() {
                     { id: '2', type: 'text', content: 'This month we saw significant growth in volunteer participation...', order: 1, title: '' },
                     { id: '3', type: 'kpi-grid', content: ['1', '2', '3'], order: 2, title: '' },
                 ]}
-                onSave={(sections) => console.log('Saved report:', sections)}
+                onSave={saveReport}
             />
         </TabsContent>
     );

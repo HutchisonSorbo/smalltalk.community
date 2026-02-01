@@ -37,9 +37,21 @@ interface SortableSectionProps {
     onUpdate: (id: string, updates: Partial<ReportSection>) => void;
 }
 
+interface ChartOptions {
+    stacked?: boolean;
+    showLegend?: boolean;
+    colors?: string[];
+    xKey?: string;
+    yKeys?: string[];
+    labels?: string[];
+}
+
 type KpiGridContent = string[];
-type ChartContent = { chartType: 'bar' | 'line' | 'pie'; kpiIds: string[]; options?: any };
-type TableContent = { columns: { key: string; label: string }[]; rows: any[] };
+type ChartContent = { chartType: 'bar' | 'line' | 'pie'; kpiIds: string[]; options?: ChartOptions };
+export type TableContent<T extends Record<string, unknown> = Record<string, unknown>> = {
+    columns: { key: keyof T & string; label: string }[];
+    rows: T[]
+};
 type ReportSectionContent = string | KpiGridContent | ChartContent | TableContent;
 
 interface ReportBuilderProps {
@@ -261,8 +273,8 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
     const addSection = (type: ReportSectionType) => {
         let content: ReportSectionContent = "";
         if (type === 'kpi-grid') content = [];
-        if (type === 'chart') content = { chartType: 'bar' as const, kpiIds: [] };
-        if (type === 'table') content = { columns: [], rows: [] };
+        if (type === 'chart') content = { chartType: 'bar' as const, kpiIds: [], options: {} };
+        if (type === 'table') content = { columns: [], rows: [] } as TableContent;
 
         const newSection = {
             id: crypto.randomUUID(),
