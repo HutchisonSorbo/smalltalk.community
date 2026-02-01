@@ -42,7 +42,9 @@ export default function RootLayout({
                     <AccessibilityProvider>
                         <WorkInProgressBanner />
                         <SkipToContent />
-                        {children}
+                        <main id="main-content" className="min-h-screen">
+                            {children}
+                        </main>
                         <SpeedInsights />
                         <Analytics />
                     </AccessibilityProvider>

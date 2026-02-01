@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
+import { moderateContent } from "@/lib/utils/moderation";
 
 // Use service role for database updates that might require admin privileges or bypassing RLS if needed (though we use Drizzle so we bypass RLS mostly unless using Postgres directly via Supabase client)
 // We use Drizzle for DB, so we don't need Supabase Sudo client strictly, but we need to verify the user from the Request headers/Supabase token.
@@ -116,6 +117,10 @@ export async function POST(req: Request) {
         // If Org -> insert into organisations
         // If Individual -> check userType -> insert into musicianProfiles or professionalProfiles
 
+        // Moderate content
+        const moderatedBio = moderateContent(profileData.bio);
+        const moderatedHeadline = moderateContent(profileData.headline);
+
         // Transaction to ensure atomicity
         await db.transaction(async (tx: any) => {
             const accType = userRec.accountType;
@@ -155,8 +160,8 @@ export async function POST(req: Request) {
                     // Create Professional Profile
                     await tx.insert(professionalProfiles).values({
                         userId,
-                        role: (profileData.headline?.trim().substring(0, 50)) || "Professional",
-                        bio: profileData.bio || "",
+                        role: (moderatedHeadline.trim().substring(0, 50)) || "Professional",
+                        bio: moderatedBio || "",
                         location: profileData.location || "",
                         profileImageUrl: profileData.profileImageUrl,
                         // Update other fields as needed
@@ -166,7 +171,7 @@ export async function POST(req: Request) {
                     await tx.insert(musicianProfiles).values({
                         userId,
                         name: [userRec.firstName, userRec.lastName].filter(Boolean).join(" ").trim() || "Unnamed Musician",
-                        bio: profileData.bio,
+                        bio: moderatedBio,
                         location: profileData.location,
                         profileImageUrl: profileData.profileImageUrl,
                         // Map headline -> experienceLevel? No.
@@ -178,7 +183,7 @@ export async function POST(req: Request) {
                 const [org] = await tx.insert(organisations).values({
                     name: userRec.organisationName || "New Organisation",
                     slug: generateSlug(userRec.organisationName || "New Organisation"),
-                    description: profileData.bio, // Mapping bio to description
+                    description: moderatedBio, // Mapping bio to description
                     logoUrl: profileData.profileImageUrl,
                     // location and type are not in organisations schema
                 }).returning();
