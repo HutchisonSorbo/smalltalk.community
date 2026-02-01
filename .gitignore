@@ -43,4 +43,5 @@ comments.json
 
 # GrepAI
 .grepai/
+!.grepai/config.yaml.example
 bin/grepai
