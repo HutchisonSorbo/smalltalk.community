@@ -44,6 +44,32 @@ interface ChartProps<T> {
     height?: number;
 }
 
+interface ChartCardProps {
+    title: string;
+    description?: string;
+    className?: string;
+    height: number;
+    children: React.ReactNode;
+}
+
+function ChartCard({ title, description, className, height, children }: ChartCardProps) {
+    return (
+        <Card className={className}>
+            <CardHeader>
+                <CardTitle className="truncate">{title}</CardTitle>
+                {description && <CardDescription className="truncate">{description}</CardDescription>}
+            </CardHeader>
+            <CardContent>
+                <div className="w-full" style={{ height }} role="img" aria-label={`Chart: ${title}`}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        {children as React.DetailedReactHTMLElement<any, HTMLElement>}
+                    </ResponsiveContainer>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 interface BarChartProps<T> extends ChartProps<T> {
     xKey: keyof T & string;
     bars: { key: keyof T & string; name: string; color?: string }[];
@@ -59,49 +85,39 @@ export function ImpactBarChart<T extends Record<string, any>>({
     height = 320
 }: BarChartProps<T>) {
     return (
-        <Card className={className}>
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
-            </CardHeader>
-            <CardContent>
-                <div className="w-full" style={{ height }} role="img" aria-label={`Bar chart: ${title}`}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                            <XAxis
-                                dataKey={xKey}
-                                stroke="hsl(var(--muted-foreground))"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                            />
-                            <YAxis
-                                stroke="hsl(var(--muted-foreground))"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                            />
-                            <Tooltip
-                                contentStyle={TOOLTIP_CONTENT_STYLE}
-                                cursor={TOOLTIP_CURSOR}
-                                itemStyle={{ color: 'hsl(var(--foreground))' }}
-                            />
-                            <Legend />
-                            {bars.map((bar, index) => (
-                                <Bar
-                                    key={bar.key}
-                                    dataKey={bar.key}
-                                    name={bar.name}
-                                    fill={bar.color || COLORS[index % COLORS.length]}
-                                    radius={[4, 4, 0, 0]}
-                                />
-                            ))}
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </CardContent>
-        </Card>
+        <ChartCard title={title} description={description} className={className} height={height}>
+            <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis
+                    dataKey={xKey}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                />
+                <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                />
+                <Tooltip
+                    contentStyle={TOOLTIP_CONTENT_STYLE}
+                    cursor={TOOLTIP_CURSOR}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                />
+                <Legend />
+                {bars.map((bar, index) => (
+                    <Bar
+                        key={bar.key}
+                        dataKey={bar.key}
+                        name={bar.name}
+                        fill={bar.color || COLORS[index % COLORS.length]}
+                        radius={[4, 4, 0, 0]}
+                    />
+                ))}
+            </BarChart>
+        </ChartCard>
     );
 }
 
@@ -120,41 +136,31 @@ export function ImpactPieChart<T extends Record<string, any>>({
     height = 320
 }: PieChartProps<T>) {
     return (
-        <Card className={className}>
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
-            </CardHeader>
-            <CardContent>
-                <div className="w-full" style={{ height }} role="img" aria-label={`Pie chart: ${title}`}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={data}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey={valueKey}
-                                nameKey={nameKey}
-                            >
-                                {data.map((entry, index) => (
-                                    <Cell
-                                        key={`cell-${entry[nameKey] || index}`}
-                                        fill={COLORS[index % COLORS.length]}
-                                        stroke="hsl(var(--background))"
-                                        strokeWidth={2}
-                                    />
-                                ))}
-                            </Pie>
-                            <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
-                            <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </div>
-            </CardContent>
-        </Card>
+        <ChartCard title={title} description={description} className={className} height={height}>
+            <PieChart>
+                <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey={valueKey}
+                    nameKey={nameKey}
+                >
+                    {data.map((entry, index) => (
+                        <Cell
+                            key={`cell-${entry[nameKey] || index}`}
+                            fill={COLORS[index % COLORS.length]}
+                            stroke="hsl(var(--background))"
+                            strokeWidth={2}
+                        />
+                    ))}
+                </Pie>
+                <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
+                <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+            </PieChart>
+        </ChartCard>
     );
 }
 
@@ -173,47 +179,37 @@ export function ImpactLineChart<T extends Record<string, any>>({
     height = 320
 }: LineChartProps<T>) {
     return (
-        <Card className={className}>
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
-            </CardHeader>
-            <CardContent>
-                <div className="w-full" style={{ height }} role="img" aria-label={`Line chart: ${title}`}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                            <XAxis
-                                dataKey={xKey}
-                                stroke="hsl(var(--muted-foreground))"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                            />
-                            <YAxis
-                                stroke="hsl(var(--muted-foreground))"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                            />
-                            <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
-                            <Legend />
-                            {lines.map((line, index) => (
-                                <Line
-                                    key={line.key}
-                                    type="monotone"
-                                    dataKey={line.key}
-                                    name={line.name}
-                                    stroke={line.color || COLORS[index % COLORS.length]}
-                                    strokeWidth={2}
-                                    dot={{ r: 4, fill: line.color || COLORS[index % COLORS.length] }}
-                                    activeDot={{ r: 6 }}
-                                />
-                            ))}
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-            </CardContent>
-        </Card>
+        <ChartCard title={title} description={description} className={className} height={height}>
+            <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis
+                    dataKey={xKey}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                />
+                <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                />
+                <Tooltip contentStyle={TOOLTIP_CONTENT_STYLE} />
+                <Legend />
+                {lines.map((line, index) => (
+                    <Line
+                        key={line.key}
+                        type="monotone"
+                        dataKey={line.key}
+                        name={line.name}
+                        stroke={line.color || COLORS[index % COLORS.length]}
+                        strokeWidth={2}
+                        dot={{ r: 4, fill: line.color || COLORS[index % COLORS.length] }}
+                        activeDot={{ r: 6 }}
+                    />
+                ))}
+            </LineChart>
+        </ChartCard>
     );
 }

@@ -42,54 +42,43 @@ function ErrorState() {
     return <div className="p-8 text-center text-destructive" role="alert" aria-live="assertive">Failed to load tenant information.</div>;
 }
 
-export function ImpactApp() {
-    const { tenant, isLoading } = useTenant();
-    const [kpis, setKpis] = useState<ImpactKPI[]>(MOCK_KPIS);
-    const [view, setView] = useState<'dashboard' | 'reports' | 'builder'>('dashboard');
-    const [selectedKPI, setSelectedKPI] = useState<ImpactKPI | null>(null);
-
-    const handleKPIClick = (kpi: ImpactKPI) => {
-        setSelectedKPI(kpi);
-        // Toast feedback for selection
-        toast({
-            title: kpi.name,
-            description: `Showing details for ${kpi.name}. ${kpi.trendPercentage ? `${kpi.trendPercentage}% trend` : 'Stable performance'}.`
-        });
-    };
-
-    if (isLoading) return <LoadingState />;
-    if (!tenant) return <ErrorState />;
-
-    if (view === 'builder') {
-        return (
-            <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" onClick={() => setView('dashboard')}>
-                        ← Back to Dashboard
-                    </Button>
-                    <h1 className="text-2xl font-bold">KPI Builder</h1>
-                </div>
-                <KPIBuilder
-                    onCancel={() => setView('dashboard')}
-                    onSave={(newKPIData) => {
-                        const newKPI: ImpactKPI = {
-                            ...newKPIData,
-                            id: crypto.randomUUID(),
-                            value: 0,
-                            trend: 'stable'
-                        };
-                        setKpis([...kpis, newKPI]);
-                        setView('dashboard');
-                        toast({ title: "KPI Created", description: `${newKPI.name} has been added to your dashboard.` });
-                    }}
-                />
+function ImpactBuilderView({
+    onBack,
+    onSave
+}: {
+    onBack: () => void;
+    onSave: (data: any) => void
+}) {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={onBack}>
+                    ← Back to Dashboard
+                </Button>
+                <h1 className="text-2xl font-bold">KPI Builder</h1>
             </div>
-        );
-    }
+            <KPIBuilder
+                onCancel={onBack}
+                onSave={onSave}
+            />
+        </div>
+    );
+}
 
+function ImpactDashboardView({
+    tenantName,
+    kpis,
+    onKPIClick,
+    onAddKPI
+}: {
+    tenantName: string;
+    kpis: ImpactKPI[];
+    onKPIClick: (kpi: ImpactKPI) => void;
+    onAddKPI: () => void;
+}) {
     return (
         <div className="space-y-6 max-w-full overflow-x-hidden pb-12">
-            <ImpactHeader name={tenant.name} />
+            <ImpactHeader name={tenantName} />
 
             <Tabs defaultValue="dashboard" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
@@ -104,17 +93,13 @@ export function ImpactApp() {
                 </TabsList>
 
                 <TabsContent value="dashboard" className="space-y-6 mt-6">
-                    {/* Insights Panel */}
                     <InsightsPanel kpis={kpis} />
-
-                    {/* KPI Cards */}
                     <KPIDashboard
                         kpis={kpis}
                         isLoading={false}
-                        onKPIClick={handleKPIClick}
+                        onKPIClick={onKPIClick}
                     />
 
-                    {/* Charts Grid */}
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                         <ImpactBarChart
                             title="Monthly Impact"
@@ -143,7 +128,7 @@ export function ImpactApp() {
                         <Button
                             variant="ghost"
                             icon={<Plus className="h-4 w-4" />}
-                            onClick={() => setView('builder')}
+                            onClick={onAddKPI}
                         >
                             Add Custom KPI
                         </Button>
@@ -153,17 +138,55 @@ export function ImpactApp() {
                 <TabsContent value="reports" className="space-y-6 mt-6">
                     <ReportBuilder
                         initialSections={[
-                            { id: '1', type: 'header', content: 'Monthly Impact Report - May 2026', order: 0 },
-                            { id: '2', type: 'text', content: 'This month we saw significant growth in volunteer participation...', order: 1 },
-                            { id: '3', type: 'kpi-grid', content: ['1', '2', '3'], order: 2 },
+                            { id: '1', type: 'header', content: 'Monthly Impact Report - May 2026', order: 0, title: '' },
+                            { id: '2', type: 'text', content: 'This month we saw significant growth in volunteer participation...', order: 1, title: '' },
+                            { id: '3', type: 'kpi-grid', content: ['1', '2', '3'], order: 2, title: '' },
                         ]}
                         onSave={(sections) => console.log('Saved report:', sections)}
                     />
                 </TabsContent>
             </Tabs>
-
-            {/* Conditional Rendering for KPI Builder Modal (if view state was full page, or use Dialog) */}
-            {/* For now, just a button placeholder in dashboard */}
         </div>
+    );
+}
+
+export function ImpactApp() {
+    const { tenant, isLoading } = useTenant();
+    const [kpis, setKpis] = useState<ImpactKPI[]>(MOCK_KPIS);
+    const [view, setView] = useState<'dashboard' | 'reports' | 'builder'>('dashboard');
+
+    if (isLoading) return <LoadingState />;
+    if (!tenant) return <ErrorState />;
+
+    const handleKPIClick = (kpi: ImpactKPI) => {
+        toast({
+            title: kpi.name,
+            description: `Showing details for ${kpi.name}. ${kpi.trendPercentage ? `${kpi.trendPercentage}% trend` : 'Stable performance'}.`
+        });
+    };
+
+    const handleSaveKPI = (newKPIData: any) => {
+        const newKPI: ImpactKPI = {
+            ...newKPIData,
+            id: crypto.randomUUID(),
+            value: 0,
+            trend: 'stable'
+        };
+        setKpis([...kpis, newKPI]);
+        setView('dashboard');
+        toast({ title: "KPI Created", description: `${newKPI.name} has been added to your dashboard.` });
+    };
+
+    if (view === 'builder') {
+        return <ImpactBuilderView onBack={() => setView('dashboard')} onSave={handleSaveKPI} />;
+    }
+
+    return (
+        <ImpactDashboardView
+            tenantName={tenant.name}
+            kpis={kpis}
+            onKPIClick={handleKPIClick}
+            onAddKPI={() => setView('builder')}
+        />
     );
 }

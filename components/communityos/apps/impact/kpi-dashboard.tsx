@@ -11,35 +11,40 @@ interface KPIDashboardProps {
     isLoading?: boolean;
 }
 
-export function KPIDashboard({ kpis, onKPIClick, isLoading }: KPIDashboardProps) {
-    if (isLoading) {
-        return (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-32 rounded-lg bg-gray-100 animate-pulse dark:bg-gray-800" />
-                ))}
-            </div>
-        );
-    }
+function LoadingPlaceholder() {
+    return (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-32 rounded-lg bg-gray-100 animate-pulse dark:bg-gray-800" />
+            ))}
+        </div>
+    );
+}
 
-    if (kpis.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-gray-50 border-dashed dark:bg-gray-900/50 dark:border-gray-800">
-                <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
-                <h3 className="text-lg font-medium">No KPIs Configured</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mt-1">
-                    Get started by adding Key Performance Indicators to track your community impact.
-                </p>
-            </div>
-        );
-    }
+function EmptyState() {
+    return (
+        <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-gray-50 border-dashed dark:bg-gray-900/50 dark:border-gray-800">
+            <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
+            <h3 className="text-lg font-medium">No KPIs Configured</h3>
+            <p className="text-sm text-muted-foreground max-w-sm mt-1">
+                Get started by adding Key Performance Indicators to track your community impact.
+            </p>
+        </div>
+    );
+}
 
-    // Group KPIs by category
-    const categories = Array.from(new Set(kpis.map(k => k.category)));
-    const hasMultipleCategories = categories.length > 1;
-
-    if (!hasMultipleCategories) {
-        return (
+function CategorySection({
+    category,
+    kpis,
+    onKPIClick
+}: {
+    category?: string;
+    kpis: ImpactKPI[];
+    onKPIClick?: (kpi: ImpactKPI) => void
+}) {
+    return (
+        <div className="space-y-3">
+            {category && <h3 className="text-lg font-semibold tracking-tight truncate">{category}</h3>}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {kpis.map((kpi) => (
                     <KPICard
@@ -49,7 +54,19 @@ export function KPIDashboard({ kpis, onKPIClick, isLoading }: KPIDashboardProps)
                     />
                 ))}
             </div>
-        );
+        </div>
+    );
+}
+
+export function KPIDashboard({ kpis, onKPIClick, isLoading }: KPIDashboardProps) {
+    if (isLoading) return <LoadingPlaceholder />;
+    if (kpis.length === 0) return <EmptyState />;
+
+    const categories = Array.from(new Set(kpis.map(k => k.category)));
+    const hasMultipleCategories = categories.length > 1;
+
+    if (!hasMultipleCategories) {
+        return <CategorySection kpis={kpis} onKPIClick={onKPIClick} />;
     }
 
     return (
@@ -59,18 +76,12 @@ export function KPIDashboard({ kpis, onKPIClick, isLoading }: KPIDashboardProps)
                 if (categoryKpis.length === 0) return null;
 
                 return (
-                    <div key={category} className="space-y-3">
-                        <h3 className="text-lg font-semibold tracking-tight">{category}</h3>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            {categoryKpis.map((kpi) => (
-                                <KPICard
-                                    key={kpi.id}
-                                    kpi={kpi}
-                                    onClick={() => onKPIClick?.(kpi)}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                    <CategorySection
+                        key={category}
+                        category={category}
+                        kpis={categoryKpis}
+                        onKPIClick={onKPIClick}
+                    />
                 );
             })}
         </div>
