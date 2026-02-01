@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImpactKPI } from "@/lib/communityos/impact/types";
 import { TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRight, LucideIcon } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface KPICardProps {
     kpi: ImpactKPI;
@@ -51,8 +52,6 @@ function KPICardTrend({
         </div>
     );
 }
-
-import { Progress } from "@/components/ui/progress";
 
 function KPICardGoalProgress({ percentage, isPositive }: { percentage: number; isPositive: boolean }) {
     const clampedValue = Math.min(Math.max(percentage, 0), 100);

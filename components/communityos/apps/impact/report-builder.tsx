@@ -10,7 +10,8 @@ import {
     useSensors,
     DragEndEvent,
     DraggableAttributes as Attributes,
-    DraggableSyntheticListeners as Listeners
+    DraggableSyntheticListeners as Listeners,
+    SensorDescriptor
 } from "@dnd-kit/core";
 import {
     arrayMove,
@@ -276,7 +277,7 @@ function ReportHeader({ onPreview, onSave }: ReportHeaderProps) {
 
 interface ReportSectionsListProps {
     sections: ReportSection[];
-    sensors: any;
+    sensors: SensorDescriptor<any>[];
     onDragEnd: (event: DragEndEvent) => void;
     onRemove: (id: string) => void;
     onUpdate: (id: string, updates: Partial<ReportSection>) => void;

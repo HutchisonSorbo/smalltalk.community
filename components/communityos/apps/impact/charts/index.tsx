@@ -14,7 +14,8 @@ import {
     Cell,
     LineChart,
     Line,
-    Legend
+    Legend,
+    TooltipProps
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
@@ -22,12 +23,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#ef4444", "#8b5cf6"];
 
 // Centralized Styles
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-popover border border-border rounded-lg text-popover-foreground text-xs p-2 shadow-sm">
                 <p className="font-semibold mb-1">{label}</p>
-                {payload.map((entry: any, index: number) => (
+                {payload.map((entry, index: number) => (
                     <div key={index} className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
                         <span>{entry.name}: {entry.value}</span>
