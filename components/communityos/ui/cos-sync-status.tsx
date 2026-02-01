@@ -82,7 +82,7 @@ export function COSSyncStatus({
                     )}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 p-3">
+            <PopoverContent align="end" className="w-64 max-w-full p-3">
                 <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b pb-2">
                         <Icon className={cn("h-4 w-4", status.color, isSyncing && "animate-spin")} />
