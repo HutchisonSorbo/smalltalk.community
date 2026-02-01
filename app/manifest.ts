@@ -34,6 +34,24 @@ export default function manifest(): MetadataRoute.Manifest {
             },
         ],
 
+        // Share target for receiving shared content
+        share_target: {
+            action: "/share",
+            method: "POST",
+            enctype: "multipart/form-data",
+            params: {
+                title: "title",
+                text: "text",
+                url: "url",
+                files: [
+                    {
+                        name: "files",
+                        accept: ["image/*", "application/pdf"]
+                    }
+                ]
+            }
+        },
+
         icons: [
             {
                 src: "/favicon.ico",

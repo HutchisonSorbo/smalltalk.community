@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/cleanup-binaries.mjs && npm run build:sw && next build",
-    "build:sw": "esbuild src/service-worker/sw.ts --bundle --outfile=public/sw.js --minify",
+    "build:sw": "tsx scripts/build-sw.ts",
     "start": "next start",
     "check": "tsc",
     "typecheck": "tsc --noEmit",

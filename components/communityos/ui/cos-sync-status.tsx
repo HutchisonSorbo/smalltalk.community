@@ -1,11 +1,14 @@
-"use client";
-
-import React from 'react';
+import React, { useState } from 'react';
+import { Network, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { RefreshCcw, Wifi, WifiOff, CloudCheck, CloudOff, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
-export interface COSSyncStatusProps {
+interface COSSyncStatusProps {
     isOnline: boolean;
     isSyncing: boolean;
     pendingChanges: number;
@@ -22,44 +25,76 @@ export function COSSyncStatus({
     onRetry,
     className
 }: COSSyncStatusProps) {
-    const statusColor = !isOnline ? 'bg-destructive' : pendingChanges > 0 ? 'bg-amber-500' : 'bg-green-500';
-    const statusText = !isOnline ? 'Offline' : isSyncing ? 'Syncing...' : pendingChanges > 0 ? `${pendingChanges} pending` : 'Synced';
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Determine status color and icon
+    const getStatus = () => {
+        if (!isOnline) return { color: "text-destructive", bg: "bg-destructive", icon: Network, label: "Offline" };
+        if (isSyncing) return { color: "text-amber-500", bg: "bg-amber-500", icon: RefreshCw, label: "Syncing..." };
+        if (pendingChanges > 0) return { color: "text-amber-500", bg: "bg-amber-500", icon: AlertCircle, label: "Unsynced Changes" };
+        return { color: "text-green-500", bg: "bg-green-500", icon: CheckCircle2, label: "Synced" };
+    };
+
+    const status = getStatus();
+    const Icon = status.icon;
 
     return (
-        <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/50 backdrop-blur-md border shadow-sm", className)}>
-            <div className="relative flex items-center justify-center w-2 h-2">
-                <div className={cn("absolute inset-0 rounded-full animate-ping opacity-20", statusColor)} />
-                <div className={cn("relative w-2 h-2 rounded-full", statusColor)} />
-            </div>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn("h-8 px-2 gap-2 transition-colors", className)}
+                >
+                    <div className="relative flex items-center justify-center">
+                        <div className={cn("h-2 w-2 rounded-full", status.bg, isSyncing && "animate-pulse")} />
+                        {isSyncing && (
+                            <div className={cn("absolute h-3 w-3 rounded-full opacity-50 animate-ping", status.bg)} />
+                        )}
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground hidden md:inline-block">
+                        {status.label}
+                    </span>
+                    {pendingChanges > 0 && (
+                        <span className="flex items-center justify-center bg-muted text-foreground text-[10px] font-bold h-4 min-w-[1rem] px-1 rounded-full border border-border">
+                            {pendingChanges}
+                        </span>
+                    )}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 p-3">
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-2">
+                        <Icon className={cn("h-4 w-4", status.color, isSyncing && "animate-spin")} />
+                        <h4 className="font-medium text-sm">{status.label}</h4>
+                    </div>
 
-            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                {statusText}
-            </span>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                        <div className="flex justify-between">
+                            <span>Pending Changes:</span>
+                            <span className="font-mono text-foreground">{pendingChanges}</span>
+                        </div>
+                        {lastSyncTime && (
+                            <div className="flex justify-between">
+                                <span>Last Sync:</span>
+                                <span className="text-foreground">{lastSyncTime.toLocaleTimeString()}</span>
+                            </div>
+                        )}
+                    </div>
 
-            <AnimatePresence mode="wait">
-                {isSyncing ? (
-                    <motion.div
-                        key="syncing"
-                        initial={{ rotate: 0 }}
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
-                        <RefreshCcw className="w-3 h-3 text-amber-500" />
-                    </motion.div>
-                ) : !isOnline ? (
-                    <motion.div key="offline" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                        <WifiOff className="w-3 h-3 text-destructive" />
-                    </motion.div>
-                ) : pendingChanges > 0 ? (
-                    <motion.div key="pending" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                        <AlertCircle className="w-3 h-3 text-amber-500" />
-                    </motion.div>
-                ) : (
-                    <motion.div key="synced" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                        <CloudCheck className="w-3 h-3 text-green-500" />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+                    {(onRetry && (!isOnline || pendingChanges > 0)) && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-7 text-xs mt-2"
+                            onClick={onRetry}
+                            disabled={isSyncing}
+                        >
+                            {isSyncing ? "Syncing..." : "Sync Now"}
+                        </Button>
+                    )}
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
