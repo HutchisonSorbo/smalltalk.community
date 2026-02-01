@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImpactKPI } from "@/lib/communityos/impact/types";
 import { TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRight, LucideIcon } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface KPICardProps {
     kpi: ImpactKPI;
@@ -56,19 +57,11 @@ function KPICardGoalProgress({ percentage, isPositive }: { percentage: number; i
     const clampedValue = Math.min(Math.max(percentage, 0), 100);
 
     return (
-        <div
-            className="mt-3 h-1.5 w-full bg-secondary rounded-full overflow-hidden"
-            role="progressbar"
+        <Progress
+            value={clampedValue}
+            className={`mt-3 h-1.5 w-full ${isPositive ? '[&>div]:bg-green-500' : ''}`}
             aria-label="Goal Progress"
-            aria-valuenow={clampedValue}
-            aria-valuemin={0}
-            aria-valuemax={100}
-        >
-            <div
-                className={`h-full rounded-full ${isPositive ? 'bg-green-500' : 'bg-primary'}`}
-                style={{ width: `${clampedValue}%` }}
-            />
-        </div>
+        />
     );
 }
 

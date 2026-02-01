@@ -10,7 +10,8 @@ import {
     useSensors,
     DragEndEvent,
     DraggableAttributes as Attributes,
-    DraggableSyntheticListeners as Listeners
+    DraggableSyntheticListeners as Listeners,
+    SensorDescriptor
 } from "@dnd-kit/core";
 import {
     arrayMove,
@@ -246,6 +247,120 @@ function ReportPreview({ sections, onBack }: { sections: ReportSection[]; onBack
     );
 }
 
+interface ReportHeaderProps {
+    onPreview: () => void;
+    onSave: () => void;
+}
+
+function ReportHeader({ onPreview, onSave }: ReportHeaderProps) {
+    return (
+        <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold">Report Builder</h2>
+            <div className="flex gap-2">
+                <Button
+                    variant="secondary"
+                    onClick={onPreview}
+                    icon={<Eye className="h-4 w-4" />}
+                >
+                    Preview
+                </Button>
+                <Button
+                    onClick={onSave}
+                    variant="primary"
+                >
+                    Save Report
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+interface ReportSectionsListProps {
+    sections: ReportSection[];
+    sensors: SensorDescriptor<any>[];
+    onDragEnd: (event: DragEndEvent) => void;
+    onRemove: (id: string) => void;
+    onUpdate: (id: string, updates: Partial<ReportSection>) => void;
+    onAdd: (type: ReportSectionType) => void;
+}
+
+function ReportEmptyState() {
+    return (
+        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed rounded-lg bg-background/50">
+            <FileText className="h-10 w-10 mb-2 opacity-50" />
+            <p>Drag and drop sections here to build your report</p>
+        </div>
+    );
+}
+
+function AddSectionMenu({ onAdd }: { onAdd: (type: ReportSectionType) => void }) {
+    return (
+        <div className="mt-6 flex justify-center">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" icon={<Plus className="h-4 w-4" />}>
+                        Add Section
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-56">
+                    <DropdownMenuItem onClick={() => onAdd('header')}>
+                        <Type className="mr-2 h-4 w-4" /> Header
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('text')}>
+                        <FileText className="mr-2 h-4 w-4" /> Text Block
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('kpi-grid')}>
+                        <LayoutGrid className="mr-2 h-4 w-4" /> KPI Grid
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('chart')}>
+                        <BarChart3 className="mr-2 h-4 w-4" /> Chart
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAdd('table')}>
+                        <TableIcon className="mr-2 h-4 w-4" /> Table
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    );
+}
+
+function ReportSectionsList({
+    sections,
+    sensors,
+    onDragEnd,
+    onRemove,
+    onUpdate,
+    onAdd
+}: ReportSectionsListProps) {
+    return (
+        <div className="bg-muted/30 p-4 rounded-lg border min-h-[500px]">
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={onDragEnd}
+            >
+                <SortableContext
+                    items={sections.map(s => s.id)}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {sections.map((section) => (
+                        <SortableSection
+                            key={section.id}
+                            section={section}
+                            onRemove={onRemove}
+                            onUpdate={onUpdate}
+                        />
+                    ))}
+                </SortableContext>
+            </DndContext>
+
+            {sections.length === 0 && <ReportEmptyState />}
+
+            <AddSectionMenu onAdd={onAdd} />
+        </div>
+    );
+}
+
 export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderProps) {
     const [sections, setSections] = useState<ReportSection[]>(initialSections);
     const [previewMode, setPreviewMode] = useState(false);
@@ -256,8 +371,6 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
-
-
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -303,81 +416,19 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
     }
 
     return (
-        <div className="space-y-6 max-w-3xl mx-auto">
-            <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Report Builder</h2>
-                <div className="flex gap-2">
-                    <Button
-                        variant="secondary"
-                        onClick={() => setPreviewMode(true)}
-                        icon={<Eye className="h-4 w-4" />}
-                    >
-                        Preview
-                    </Button>
-                    <Button
-                        onClick={() => onSave?.(sections)}
-                        variant="primary"
-                    >
-                        Save Report
-                    </Button>
-                </div>
-            </div>
-
-            <div className="bg-muted/30 p-4 rounded-lg border min-h-[500px]">
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableContext
-                        items={sections.map(s => s.id)}
-                        strategy={verticalListSortingStrategy}
-                    >
-                        {sections.map((section) => (
-                            <SortableSection
-                                key={section.id}
-                                section={section}
-                                onRemove={removeSection}
-                                onUpdate={updateSection}
-                            />
-                        ))}
-                    </SortableContext>
-                </DndContext>
-
-                {sections.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground border-2 border-dashed rounded-lg bg-background/50">
-                        <FileText className="h-10 w-10 mb-2 opacity-50" />
-                        <p>Drag and drop sections here to build your report</p>
-                    </div>
-                )}
-
-                <div className="mt-6 flex justify-center">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="secondary" icon={<Plus className="h-4 w-4" />}>
-                                Add Section
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center" className="w-56">
-                            <DropdownMenuItem onClick={() => addSection('header')}>
-                                <Type className="mr-2 h-4 w-4" /> Header
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => addSection('text')}>
-                                <FileText className="mr-2 h-4 w-4" /> Text Block
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => addSection('kpi-grid')}>
-                                <LayoutGrid className="mr-2 h-4 w-4" /> KPI Grid
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => addSection('chart')}>
-                                <BarChart3 className="mr-2 h-4 w-4" /> Chart
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => addSection('table')}>
-                                <TableIcon className="mr-2 h-4 w-4" /> Table
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </div>
+        <div className="space-y-6 max-w-3xl max-w-full mx-auto">
+            <ReportHeader
+                onPreview={() => setPreviewMode(true)}
+                onSave={() => onSave?.(sections)}
+            />
+            <ReportSectionsList
+                sections={sections}
+                sensors={sensors}
+                onDragEnd={handleDragEnd}
+                onRemove={removeSection}
+                onUpdate={updateSection}
+                onAdd={addSection}
+            />
         </div>
     );
 }
