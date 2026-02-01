@@ -37,6 +37,11 @@ interface SortableSectionProps {
     onUpdate: (id: string, updates: Partial<ReportSection>) => void;
 }
 
+type KpiGridContent = string[];
+type ChartContent = { chartType: 'bar' | 'line' | 'pie'; kpiIds: string[]; options?: any };
+type TableContent = { columns: { key: string; label: string }[]; rows: any[] };
+type ReportSectionContent = string | KpiGridContent | ChartContent | TableContent;
+
 interface ReportBuilderProps {
     initialSections?: ReportSection[];
     onSave?: (sections: ReportSection[]) => void;
@@ -78,6 +83,64 @@ function HeaderControls({
     );
 }
 
+function TextSectionEditor({
+    section,
+    onUpdate
+}: {
+    section: ReportSection;
+    onUpdate: (id: string, updates: Partial<ReportSection>) => void
+}) {
+    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const value = e.target.value.slice(0, MAX_CONTENT_LENGTH);
+        onUpdate(section.id, { content: value });
+    };
+
+    return (
+        <div className="space-y-1">
+            <Textarea
+                value={section.content as string || ""}
+                onChange={handleContentChange}
+                placeholder="Enter section content..."
+                className="min-h-[100px]"
+                aria-label="Section content"
+            />
+            <div className="text-[10px] text-muted-foreground text-right">
+                {(section.content as string)?.length || 0}/{MAX_CONTENT_LENGTH}
+            </div>
+        </div>
+    );
+}
+
+function HeaderSectionEditor({
+    section,
+    onUpdate
+}: {
+    section: ReportSection;
+    onUpdate: (id: string, updates: Partial<ReportSection>) => void
+}) {
+    const handleContentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.slice(0, MAX_CONTENT_LENGTH);
+        onUpdate(section.id, { content: value });
+    };
+
+    return (
+        <Input
+            value={section.content as string || ""}
+            onChange={handleContentChange}
+            placeholder="Subtitle or description"
+            aria-label="Header content"
+        />
+    );
+}
+
+function ConfigPlaceholder({ label }: { label: string }) {
+    return (
+        <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground bg-secondary/20">
+            {label}
+        </div>
+    );
+}
+
 function ContentEditor({
     section,
     onUpdate
@@ -88,11 +151,6 @@ function ContentEditor({
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.slice(0, MAX_TITLE_LENGTH);
         onUpdate(section.id, { title: value });
-    };
-
-    const handleContentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const value = e.target.value.slice(0, MAX_CONTENT_LENGTH);
-        onUpdate(section.id, { content: value });
     };
 
     return (
@@ -110,38 +168,12 @@ function ContentEditor({
                 </div>
             </div>
 
-            {section.type === 'text' && (
-                <div className="space-y-1">
-                    <Textarea
-                        value={section.content as string || ""}
-                        onChange={handleContentChange}
-                        placeholder="Enter section content..."
-                        className="min-h-[100px]"
-                        aria-label="Section content"
-                    />
-                    <div className="text-[10px] text-muted-foreground text-right">
-                        {(section.content as string)?.length || 0}/{MAX_CONTENT_LENGTH}
-                    </div>
-                </div>
-            )}
-            {section.type === 'header' && (
-                <Input
-                    value={section.content as string || ""}
-                    onChange={handleContentChange}
-                    placeholder="Subtitle or description"
-                    aria-label="Header content"
-                />
-            )}
+            {section.type === 'text' && <TextSectionEditor section={section} onUpdate={onUpdate} />}
+            {section.type === 'header' && <HeaderSectionEditor section={section} onUpdate={onUpdate} />}
             {(section.type === 'chart' || section.type === 'kpi-grid') && (
-                <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground bg-secondary/20">
-                    Configuration Placeholder (Integrated with builder data)
-                </div>
+                <ConfigPlaceholder label="Configuration Placeholder (Integrated with builder data)" />
             )}
-            {section.type === 'table' && (
-                <div className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground bg-secondary/20">
-                    Table configuration coming soon
-                </div>
-            )}
+            {section.type === 'table' && <ConfigPlaceholder label="Table configuration coming soon" />}
         </CardContent>
     );
 }
@@ -188,8 +220,8 @@ function ReportPreview({ sections, onBack }: { sections: ReportSection[]; onBack
                 <div key={section.id} className="mb-8">
                     {section.title && <h3 className="text-2xl font-bold mb-4 truncate">{section.title}</h3>}
                     <div className="prose dark:prose-invert max-w-none">
-                        {section.type === 'text' && <p className="whitespace-pre-wrap">{section.content as string}</p>}
-                        {section.type === 'header' && <p className="text-xl text-muted-foreground">{section.content as string}</p>}
+                        {section.type === 'text' && <p className="whitespace-pre-wrap line-clamp-3 break-words">{section.content as string}</p>}
+                        {section.type === 'header' && <p className="text-xl text-muted-foreground truncate">{section.content as string}</p>}
                         {(section.type === 'chart' || section.type === 'kpi-grid' || section.type === 'table') && (
                             <div className="bg-secondary/20 border border-dashed rounded h-32 flex items-center justify-center text-muted-foreground">
                                 [Visualization Placeholder: {section.type}]
@@ -227,9 +259,9 @@ export function ReportBuilder({ initialSections = [], onSave }: ReportBuilderPro
     };
 
     const addSection = (type: ReportSectionType) => {
-        let content: any = "";
+        let content: ReportSectionContent = "";
         if (type === 'kpi-grid') content = [];
-        if (type === 'chart') content = { chartType: 'bar', kpiIds: [] };
+        if (type === 'chart') content = { chartType: 'bar' as const, kpiIds: [] };
         if (type === 'table') content = { columns: [], rows: [] };
 
         const newSection = {

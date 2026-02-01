@@ -35,7 +35,7 @@ function ImpactHeader({ name }: { name: string }) {
 }
 
 function LoadingState() {
-    return <div className="p-8 text-center text-muted-foreground" role="status" aria-live="polite">Loading impact data...</div>;
+    return <output className="p-8 text-center text-muted-foreground block" aria-live="polite">Loading impact data...</output>;
 }
 
 function ErrorState() {
@@ -62,6 +62,76 @@ function ImpactBuilderView({
                 onSave={onSave}
             />
         </div>
+    );
+}
+
+function DashboardTabContent({
+    kpis,
+    onKPIClick,
+    onAddKPI
+}: {
+    kpis: ImpactKPI[];
+    onKPIClick: (kpi: ImpactKPI) => void;
+    onAddKPI: () => void;
+}) {
+    return (
+        <TabsContent value="dashboard" className="space-y-6 mt-6">
+            <InsightsPanel kpis={kpis} />
+            <KPIDashboard
+                kpis={kpis}
+                isLoading={false}
+                onKPIClick={onKPIClick}
+            />
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <ImpactBarChart
+                    title="Monthly Impact"
+                    description="Impact metric growth over time"
+                    data={MOCK_CHART_DATA}
+                    xKey="name"
+                    bars={[{ key: 'value', name: 'Impact Value' }]}
+                />
+                <ImpactPieChart
+                    title="Impact Distribution"
+                    description="Distribution by category"
+                    data={MOCK_DISTRIBUTION_DATA}
+                    nameKey="name"
+                    valueKey="value"
+                />
+                <ImpactLineChart
+                    title="Trend Analysis"
+                    description="6-month trend projection"
+                    data={MOCK_CHART_DATA}
+                    xKey="name"
+                    lines={[{ key: 'value', name: 'Projected Value', color: '#8884d8' }]}
+                />
+            </div>
+
+            <div className="flex justify-start pt-4">
+                <Button
+                    variant="ghost"
+                    icon={<Plus className="h-4 w-4" />}
+                    onClick={onAddKPI}
+                >
+                    Add Custom KPI
+                </Button>
+            </div>
+        </TabsContent>
+    );
+}
+
+function ReportsTabContent() {
+    return (
+        <TabsContent value="reports" className="space-y-6 mt-6">
+            <ReportBuilder
+                initialSections={[
+                    { id: '1', type: 'header', content: 'Monthly Impact Report - May 2026', order: 0, title: '' },
+                    { id: '2', type: 'text', content: 'This month we saw significant growth in volunteer participation...', order: 1, title: '' },
+                    { id: '3', type: 'kpi-grid', content: ['1', '2', '3'], order: 2, title: '' },
+                ]}
+                onSave={(sections) => console.log('Saved report:', sections)}
+            />
+        </TabsContent>
     );
 }
 
@@ -92,59 +162,8 @@ function ImpactDashboardView({
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="dashboard" className="space-y-6 mt-6">
-                    <InsightsPanel kpis={kpis} />
-                    <KPIDashboard
-                        kpis={kpis}
-                        isLoading={false}
-                        onKPIClick={onKPIClick}
-                    />
-
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        <ImpactBarChart
-                            title="Monthly Impact"
-                            description="Impact metric growth over time"
-                            data={MOCK_CHART_DATA}
-                            xKey="name"
-                            bars={[{ key: 'value', name: 'Impact Value' }]}
-                        />
-                        <ImpactPieChart
-                            title="Impact Distribution"
-                            description="Distribution by category"
-                            data={MOCK_DISTRIBUTION_DATA}
-                            nameKey="name"
-                            valueKey="value"
-                        />
-                        <ImpactLineChart
-                            title="Trend Analysis"
-                            description="6-month trend projection"
-                            data={MOCK_CHART_DATA}
-                            xKey="name"
-                            lines={[{ key: 'value', name: 'Projected Value', color: '#8884d8' }]}
-                        />
-                    </div>
-
-                    <div className="flex justify-start pt-4">
-                        <Button
-                            variant="ghost"
-                            icon={<Plus className="h-4 w-4" />}
-                            onClick={onAddKPI}
-                        >
-                            Add Custom KPI
-                        </Button>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="reports" className="space-y-6 mt-6">
-                    <ReportBuilder
-                        initialSections={[
-                            { id: '1', type: 'header', content: 'Monthly Impact Report - May 2026', order: 0, title: '' },
-                            { id: '2', type: 'text', content: 'This month we saw significant growth in volunteer participation...', order: 1, title: '' },
-                            { id: '3', type: 'kpi-grid', content: ['1', '2', '3'], order: 2, title: '' },
-                        ]}
-                        onSave={(sections) => console.log('Saved report:', sections)}
-                    />
-                </TabsContent>
+                <DashboardTabContent kpis={kpis} onKPIClick={onKPIClick} onAddKPI={onAddKPI} />
+                <ReportsTabContent />
             </Tabs>
         </div>
     );
