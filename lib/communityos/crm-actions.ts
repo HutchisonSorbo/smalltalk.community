@@ -9,10 +9,10 @@ import {
     crmActivityLog,
     organisationMembers,
 } from "@/shared/schema";
-import { eq, and, asc, desc, sql } from "drizzle-orm";
+import { eq, and, asc, desc, sql, inArray, gte, lte } from "drizzle-orm";
 import { createClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
-import { CRMStatus } from "@/lib/communityos/crm/types";
+import { z } from "zod";
 
 /**
  * Result pattern for server actions
@@ -21,13 +21,42 @@ export type ActionResult<T = any> =
     | { success: true; data: T }
     | { success: false; error: string };
 
-/**
- * Basic input validation and sanitisation
- */
-function sanitizeInput(text: string | unknown, maxLength = 255): string {
-    if (typeof text !== "string") return "";
-    return text.trim().slice(0, maxLength);
-}
+// --- Validation Schemas ---
+
+const contactSchema = z.object({
+    firstName: z.string().trim().min(1, "First name is required").max(100),
+    lastName: z.string().trim().min(1, "Last name is required").max(100),
+    email: z.string().trim().email("Invalid email").optional().nullable().or(z.literal("")),
+    phone: z.string().trim().max(20).optional().nullable(),
+    type: z.enum(["individual", "organisation"]).default("individual"),
+    status: z.enum(["lead", "qualified", "proposal", "won", "lost", "active", "inactive", "customer", "churned"]).default("lead"),
+    metadata: z.record(z.any()).optional().default({}),
+});
+
+const dealSchema = z.object({
+    title: z.string().trim().min(1, "Title is required").max(200),
+    pipelineStageId: z.string().uuid("Invalid stage ID"),
+    contactId: z.string().uuid().optional().nullable(),
+    value: z.number().min(0).default(0),
+    probability: z.number().min(0).max(100).default(0),
+    expectedCloseDate: z.string().datetime().optional().nullable().transform(str => str ? new Date(str) : null),
+    notes: z.string().trim().max(2000).optional().default(""),
+});
+
+const pipelineSchema = z.object({
+    name: z.string().min(1, "Name is required").max(100),
+    description: z.string().max(1000).optional().default(""),
+});
+
+const activityLogFiltersSchema = z.object({
+    dealId: z.string().uuid().optional(),
+    contactId: z.string().uuid().optional(),
+    action: z.string().max(100).optional(),
+    fromDate: z.coerce.date().optional(),
+    toDate: z.coerce.date().optional(),
+});
+
+// --- Helpers ---
 
 /**
  * Audit log helper for CRM actions
@@ -114,6 +143,29 @@ async function verifyStageOrg(organisationId: string, stageId: string): Promise<
     }
 }
 
+async function createDefaultPipelineStages(pipelineId: string, tx: any) {
+    const defaultStages = [
+        { name: "Lead", position: 0, color: "#94A3B8" },
+        { name: "Qualified", position: 1, color: "#60A5FA" },
+        { name: "Proposal", position: 2, color: "#FBBF24" },
+        { name: "Negotiation", position: 3, color: "#A78BFA" },
+        { name: "Closed Won", position: 4, color: "#34D399" },
+        { name: "Closed Lost", position: 5, color: "#F87171" },
+    ];
+
+    try {
+        await tx.insert(crmPipelineStages).values(
+            defaultStages.map((s) => ({
+                pipelineId,
+                ...s,
+            }))
+        );
+    } catch (err) {
+        console.error(`[createDefaultPipelineStages] failed for pipelineId=${pipelineId}:`, err);
+        throw err;
+    }
+}
+
 // --- Pipeline Actions ---
 
 export async function getPipelines(organisationId: string): Promise<ActionResult> {
@@ -141,8 +193,10 @@ export async function createPipeline(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
-    const name = sanitizeInput(data.name);
-    if (!name) return { success: false, error: "Pipeline name is required" };
+    const validation = pipelineSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: validation.error.errors[0].message };
+    }
 
     try {
         const [pipeline] = await db.transaction(async (tx: any) => {
@@ -150,27 +204,12 @@ export async function createPipeline(
                 .insert(crmPipelines)
                 .values({
                     organisationId,
-                    name,
-                    description: sanitizeInput(data.description, 1000),
+                    name: validation.data.name,
+                    description: validation.data.description,
                 })
                 .returning();
 
-            const defaultStages = [
-                { name: "Lead", position: 0, color: "#94A3B8" },
-                { name: "Qualified", position: 1, color: "#60A5FA" },
-                { name: "Proposal", position: 2, color: "#FBBF24" },
-                { name: "Negotiation", position: 3, color: "#A78BFA" },
-                { name: "Closed Won", position: 4, color: "#34D399" },
-                { name: "Closed Lost", position: 5, color: "#F87171" },
-            ];
-
-            await tx.insert(crmPipelineStages).values(
-                defaultStages.map((s) => ({
-                    pipelineId: p.id,
-                    ...s,
-                }))
-            );
-
+            await createDefaultPipelineStages(p.id, tx);
             return [p];
         });
 
@@ -216,18 +255,9 @@ export async function createContact(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
-    /**
-     * Creates a new contact for an organisation.
-     * Validates required fields and enforces CRMStatus constraints.
-     */
-
-    // Manual validation refactor to match robust style:
-    const firstName = sanitizeInput(data.firstName);
-    const lastName = sanitizeInput(data.lastName);
-    const email = sanitizeInput(data.email);
-
-    if (!firstName || !lastName) {
-        return { success: false, error: "First and last name are required" };
+    const validation = contactSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: validation.error.errors[0].message };
     }
 
     try {
@@ -235,21 +265,7 @@ export async function createContact(
             .insert(crmContacts)
             .values({
                 organisationId,
-                firstName,
-                lastName,
-                email,
-                phone: sanitizeInput(data.phone, 20),
-                type: data.type === "organisation" ? "organisation" : "individual",
-                status: (function () {
-                    const validStatuses = ["lead", "qualified", "proposal", "won", "lost", "active", "inactive", "customer", "churned"];
-                    const provided = data.status?.toLowerCase();
-                    return validStatuses.includes(provided) ? provided : "lead";
-                })(),
-                metadata: data.metadata || {},
-                // Map new fields if DB supports them, otherwise store in metadata or ignore for now
-                // Assuming schema needs update or we just store basics. 
-                // Detailed CRM fields in `CRMContact` might not all be in `crmContacts` table yet.
-                // We will trust the existing schema for now and just add simple validation improvements.
+                ...validation.data,
             })
             .returning();
 
@@ -302,13 +318,13 @@ export async function createDeal(
     const auth = await verifyOrgAccess(organisationId);
     if (!auth.success) return auth;
 
-    const title = sanitizeInput(data.title);
-    if (!title) return { success: false, error: "Deal title is required" };
-
-    if (!data.pipelineStageId) return { success: false, error: "Pipeline stage is required" };
+    const validation = dealSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: validation.error.errors[0].message };
+    }
 
     // Verify stage belongs to org
-    if (!(await verifyStageOrg(organisationId, data.pipelineStageId))) {
+    if (!(await verifyStageOrg(organisationId, validation.data.pipelineStageId))) {
         return { success: false, error: "Invalid pipeline stage" };
     }
 
@@ -317,13 +333,13 @@ export async function createDeal(
             .insert(crmDeals)
             .values({
                 organisationId,
-                contactId: data.contactId,
-                pipelineStageId: data.pipelineStageId,
-                title,
-                value: Number.isFinite(Number(data.value)) ? Number(data.value).toString() : "0",
-                probability: Math.max(0, Math.min(100, parseInt(data.probability) || 0)),
-                expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : null,
-                notes: sanitizeInput(data.notes, 2000),
+                contactId: validation.data.contactId,
+                pipelineStageId: validation.data.pipelineStageId,
+                title: validation.data.title,
+                value: validation.data.value.toString(),
+                probability: validation.data.probability,
+                expectedCloseDate: validation.data.expectedCloseDate,
+                notes: validation.data.notes,
             })
             .returning();
 
@@ -399,23 +415,26 @@ export async function updateDealStage(
 
 export async function getActivityLog(
     organisationId: string,
-    filters?: { dealId?: string; contactId?: string; action?: string }
+    filters?: { dealId?: string; contactId?: string; action?: string; fromDate?: Date; toDate?: Date }
 ): Promise<ActionResult> {
     const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator", "viewer"]);
     if (!auth.success) return auth;
 
+    // Validate filters
+    const filterValidation = activityLogFiltersSchema.safeParse(filters || {});
+    if (!filterValidation.success) {
+        return { success: false, error: filterValidation.error.errors[0].message };
+    }
+    const safeFilters = filterValidation.data;
+
     try {
         const conditions = [eq(crmActivityLog.organisationId, organisationId)];
 
-        if (filters?.dealId) {
-            conditions.push(eq(crmActivityLog.dealId, filters.dealId));
-        }
-        if (filters?.contactId) {
-            conditions.push(eq(crmActivityLog.contactId, filters.contactId));
-        }
-        if (filters?.action) {
-            conditions.push(eq(crmActivityLog.action, filters.action));
-        }
+        if (safeFilters.dealId) conditions.push(eq(crmActivityLog.dealId, safeFilters.dealId));
+        if (safeFilters.contactId) conditions.push(eq(crmActivityLog.contactId, safeFilters.contactId));
+        if (safeFilters.action) conditions.push(eq(crmActivityLog.action, safeFilters.action));
+        if (safeFilters.fromDate) conditions.push(gte(crmActivityLog.createdAt, safeFilters.fromDate));
+        if (safeFilters.toDate) conditions.push(lte(crmActivityLog.createdAt, safeFilters.toDate));
 
         const logs = await db
             .select()
@@ -440,8 +459,8 @@ export async function searchCrm(
     const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator", "viewer"]);
     if (!auth.success) return auth;
 
-    const query = sanitizeInput(searchTerm);
-    if (query.length < 2) return { success: true, data: { contacts: [], deals: [] } };
+    if (!searchTerm || searchTerm.trim().length < 2) return { success: true, data: { contacts: [], deals: [] } };
+    const query = searchTerm.trim();
 
     try {
         const sqlQuery = `%${query}%`;
@@ -486,6 +505,7 @@ export async function getPipelineStages(organisationId: string, pipelineId: stri
     if (!auth.success) return auth;
 
     try {
+        // Verify pipeline belongs to org
         const [pipeline] = await db
             .select()
             .from(crmPipelines)
@@ -511,7 +531,7 @@ export async function getPipelineStages(organisationId: string, pipelineId: stri
 
 export async function bulkCreateContacts(
     organisationId: string,
-    contacts: { firstName: string; lastName: string; email: string | null; phone: string | null }[]
+    contacts: any[]
 ): Promise<ActionResult<{ createdCount: number }>> {
     const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator"]);
     if (!auth.success) return auth;
@@ -522,33 +542,40 @@ export async function bulkCreateContacts(
     }
 
     try {
+        const validContacts: any[] = [];
         const now = new Date();
-        const insertData = contacts.map((c) => ({
-            id: crypto.randomUUID(),
-            organisationId,
-            firstName: sanitizeInput(c.firstName),
-            lastName: sanitizeInput(c.lastName),
-            email: sanitizeInput(c.email),
-            phone: sanitizeInput(c.phone, 20),
-            type: "individual" as const,
-            createdAt: now,
-            updatedAt: now,
-        }));
 
-        await db.insert(crmContacts).values(insertData);
+        for (const c of contacts) {
+            const result = contactSchema.safeParse(c);
+            if (result.success) {
+                validContacts.push({
+                    id: crypto.randomUUID(),
+                    organisationId,
+                    ...result.data,
+                    createdAt: now,
+                    updatedAt: now,
+                });
+            }
+        }
+
+        if (validContacts.length === 0) {
+            return { success: false, error: "No valid contacts found in input" };
+        }
+
+        await db.insert(crmContacts).values(validContacts);
 
         await logCrmAction({
             organisationId,
             userId: auth.data.userId,
             action: "bulk_contacts_created",
             details: {
-                count: insertData.length,
+                count: validContacts.length,
                 source: "csv_import"
             },
         });
 
         revalidatePath(`/crm/${organisationId}/contacts`);
-        return { success: true, data: { createdCount: insertData.length } };
+        return { success: true, data: { createdCount: validContacts.length } };
     } catch (err) {
         console.error("[bulkCreateContacts] error:", err);
         return { success: false, error: "Failed to create contacts" };
