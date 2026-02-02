@@ -13,7 +13,9 @@ export interface InventoryItem {
     quantity: number;
     description?: string;
     minStockLevel?: number;
-    [key: string]: any;
+    unit?: string;
+    lastChecked?: string;
+    metadata?: Record<string, unknown>;
 }
 
 interface QuickAddProps {
@@ -84,7 +86,11 @@ export function QuickAdd({ onAdd, onCancel, className }: QuickAddProps) {
                             required
                             className="w-full px-3 py-2 bg-background border rounded-md text-sm"
                             value={formData.quantity}
-                            onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                            onChange={e => {
+                                const parsed = parseInt(e.target.value);
+                                const qty = Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
+                                setFormData({ ...formData, quantity: qty });
+                            }}
                         />
                     </div>
                 </div>

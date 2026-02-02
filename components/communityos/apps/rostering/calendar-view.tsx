@@ -179,7 +179,7 @@ export function CalendarView({
     };
 
     return (
-        <div className={cn("flex flex-col h-full bg-background rounded-lg border", className)}>
+        <div className={cn("flex flex-col h-full bg-background rounded-lg border max-w-full", className)}>
             <CalendarToolbar
                 currentDate={currentDate}
                 viewMode={viewMode}

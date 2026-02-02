@@ -5,7 +5,6 @@
 
 "use client";
 
-// ... imports
 import { useState } from "react";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";

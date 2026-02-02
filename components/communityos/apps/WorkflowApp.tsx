@@ -36,10 +36,18 @@ const WorkflowCard = ({
 }) => (
     <Card
         className={cn(
-            "cursor-pointer transition-all",
+            "cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
             workflow.isActive ? 'border-l-4 border-l-yellow-500 hover:shadow-md' : 'opacity-60 hover:opacity-100'
         )}
         onClick={() => onEdit(workflow)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onEdit(workflow);
+            }
+        }}
     >
         <CardHeader className="p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -144,7 +152,7 @@ const WorkflowEditor = ({
                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 flex items-center gap-2"
             >
                 <Save className="w-4 h-4" />
-                Save && Close
+                Save & Close
             </button>
         </div>
     </div>

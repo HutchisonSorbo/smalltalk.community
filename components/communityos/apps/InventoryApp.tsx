@@ -47,9 +47,9 @@ export function InventoryApp() {
     const handleSave = async () => {
         if (formData.name && formData.quantity !== undefined) {
             try {
-                const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
+                const id = isEditing === "new" ? crypto.randomUUID() : String(isEditing);
                 await upsertDocument(
-                    id as any,
+                    id,
                     {
                         id,
                         name: formData.name,
@@ -279,8 +279,9 @@ export function InventoryApp() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Min Stock Level</label>
+                            <label htmlFor="minStockLevel" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Min Stock Level</label>
                             <input
+                                id="minStockLevel"
                                 type="number"
                                 title="Minimum Stock Level"
                                 value={formData.minStockLevel || 0}

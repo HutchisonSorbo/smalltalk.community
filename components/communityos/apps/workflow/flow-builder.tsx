@@ -152,9 +152,29 @@ export function FlowBuilder({ initialNodes = [], initialConnections = [], onSave
     const [isDragging, setIsDragging] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Auto-save changes
+    const isInitialMount = useRef(true);
+    const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Auto-save changes with debounce
     useEffect(() => {
-        onSave?.(nodes, connections);
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        if (saveTimerRef.current) {
+            clearTimeout(saveTimerRef.current);
+        }
+
+        saveTimerRef.current = setTimeout(() => {
+            onSave?.(nodes, connections);
+        }, 300);
+
+        return () => {
+            if (saveTimerRef.current) {
+                clearTimeout(saveTimerRef.current);
+            }
+        };
     }, [nodes, connections, onSave]);
 
     const handleMouseMove = (e: React.MouseEvent) => {

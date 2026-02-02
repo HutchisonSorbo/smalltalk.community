@@ -110,7 +110,7 @@ export function AvailabilityGrid({
     };
 
     return (
-        <div className={cn("overflow-x-auto rounded-lg border bg-card", className)}>
+        <div className={cn("overflow-x-auto rounded-lg border bg-card max-w-full", className)}>
             <div className="min-w-[800px]">
                 <AvailabilityGridHeader dates={dates} days={clampedDays} />
                 {staff.map(person => (
