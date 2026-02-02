@@ -8,6 +8,10 @@
 import { useState } from "react";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
+import { COSModal } from "../ui/cos-modal";
+import { COSSkeleton } from "../ui/cos-skeleton";
+import { COSEmptyState } from "../ui/cos-empty-state";
+import { Plus, FolderOpen } from "lucide-react";
 
 interface GenericItem {
     id: string;
@@ -45,7 +49,19 @@ export function GenericCommunityApp({
 
     // Guard against missing tenant
     if (isLoading) {
-        return <div className="p-4"><div className="h-6 w-48 rounded bg-gray-200 animate-pulse" /></div>;
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <COSSkeleton variant="text" className="h-8 w-48" />
+                    <COSSkeleton variant="text" className="h-8 w-32" />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {[1, 2, 3].map((i) => (
+                        <COSSkeleton key={i} variant="card" className="h-48" />
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     if (!tenant) {
@@ -64,7 +80,7 @@ export function GenericCommunityApp({
                     title: formData.title,
                     description: formData.description || "",
                     status: formData.status || "Active",
-                    createdAt: new Date().toISOString(),
+                    createdAt: formData.createdAt || new Date().toISOString(), // Preserve original date on edit
                     ...formData,
                 } as GenericItem
             );
@@ -90,60 +106,81 @@ export function GenericCommunityApp({
                             setIsEditing("new");
                             setFormData({ status: "Active" });
                         }}
-                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
+                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 flex items-center gap-2"
+                        title={`Add ${itemType}`}
                     >
+                        <Plus className="w-4 h-4" />
                         Add {itemType}
                     </button>
                 </div>
             </div>
 
-            {isEditing && (
-                <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <h3 className="mb-4 text-lg font-semibold">{isEditing === "new" ? `New ${itemType}` : `Edit ${itemType}`}</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                            <input
-                                type="text"
-                                title="Title"
-                                value={formData.title || ""}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
-                            <textarea
-                                title="Description"
-                                placeholder="Enter description"
-                                value={formData.description || ""}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                rows={3}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-6 flex justify-end gap-3">
+            <COSModal
+                isOpen={!!isEditing}
+                onClose={() => setIsEditing(null)}
+                title={isEditing === "new" ? `New ${itemType}` : `Edit ${itemType}`}
+                description={`Enter the details for this ${itemType.toLowerCase()}.`}
+                footer={
+                    <>
                         <button
-                            onClick={() => setIsEditing(null)}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                        >
-                            Cancel
-                        </button>
-                        <button
+                            type="button"
                             onClick={handleSave}
                             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
                         >
                             Save
                         </button>
+                        <button
+                            type="button"
+                            onClick={() => setIsEditing(null)}
+                            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            Cancel
+                        </button>
+                    </>
+                }
+            >
+                <div className="space-y-4 py-2">
+                    <div>
+                        <label htmlFor="generic-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                        <input
+                            id="generic-title"
+                            type="text"
+                            title="Title"
+                            value={formData.title || ""}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="generic-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                        <textarea
+                            id="generic-description"
+                            title="Description"
+                            placeholder="Enter description"
+                            value={formData.description || ""}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            rows={3}
+                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
+                        />
                     </div>
                 </div>
-            )}
+            </COSModal>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {items.length === 0 ? (
-                    <div className="col-span-full rounded-lg border-2 border-dashed p-12 text-center text-gray-500">
-                        {placeholder}
+                    <div className="col-span-full">
+                        <COSEmptyState
+                            title={`No ${title} found`}
+                            description={placeholder}
+                            icon={<FolderOpen className="h-12 w-12 text-muted-foreground" />}
+                            action={{
+                                label: `Create ${itemType}`,
+                                onClick: () => {
+                                    setIsEditing("new");
+                                    setFormData({ status: "Active" });
+                                }
+                            }}
+                        />
                     </div>
                 ) : (
                     items.map((item) => (
@@ -154,7 +191,7 @@ export function GenericCommunityApp({
                                     {item.status}
                                 </span>
                             </div>
-                            <p className="flex-1 text-sm text-gray-600 dark:text-gray-400">{item.description}</p>
+                            <p className="flex-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{item.description}</p>
                             <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-700">
                                 <span className="text-[10px] text-gray-400">{new Date(item.createdAt).toLocaleDateString()}</span>
                                 <div className="flex gap-2">

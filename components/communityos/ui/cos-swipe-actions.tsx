@@ -174,7 +174,7 @@ const ActionButtons = ({
                 "absolute inset-y-0 flex h-full z-0",
                 side === "left" ? "left-0 flex-row" : "right-0 flex-row-reverse"
             )}
-            style={{ width }}
+            style={{ width } as React.CSSProperties}
         >
             {actions.map((action) => (
                 <button
@@ -267,7 +267,7 @@ const COSSwipeActions = ({
                 style={{
                     transform: `translateX(${currentX}px)`,
                     transition: isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
-                }}
+                } as React.CSSProperties}
                 className="relative bg-white dark:bg-slate-950 z-10 w-full h-full outline-none"
             >
                 {children}
