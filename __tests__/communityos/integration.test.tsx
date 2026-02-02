@@ -116,12 +116,33 @@ describe('CommunityOS Integration Tests', () => {
         const addBtn = screen.getByRole('button', { name: /Add Event/i });
         fireEvent.click(addBtn);
 
-        // Fill required fields
+        // Fill required fields programmatically
+        const appConfig = communityOSApps.find(a => a.id === 'events');
+
+        // Handle Title (always required)
         const titleInput = screen.getByPlaceholderText(/e.g. Event Name/i);
         fireEvent.change(titleInput, { target: { value: 'New Event' } });
 
-        const dateInput = screen.getByLabelText(/Event Date/i);
-        fireEvent.change(dateInput, { target: { value: '2026-03-01' } });
+        // Handle dynamic required fields
+        appConfig?.fields?.forEach(field => {
+            if (field.required) {
+                // Try to find by label, or placeholder if label fails
+                let input;
+                try {
+                    input = screen.getByLabelText(new RegExp(field.label, 'i'));
+                } catch {
+                    const placeholder = field.type === 'date' ? 'YYYY-MM-DD' : field.placeholder;
+                    if (placeholder) {
+                        input = screen.getByPlaceholderText(new RegExp(placeholder, 'i'));
+                    }
+                }
+
+                if (input) {
+                    const value = field.type === 'number' ? '50' : (field.type === 'date' ? '2026-12-31' : 'Test Value');
+                    fireEvent.change(input, { target: { value } });
+                }
+            }
+        });
 
         // Click Save
         const saveBtn = screen.getByRole('button', { name: /Save/i });

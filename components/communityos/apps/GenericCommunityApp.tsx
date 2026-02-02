@@ -30,6 +30,61 @@ interface GenericItem {
     metadata?: Record<string, any>;
 }
 
+/**
+ * Validates form data against app configuration.
+ * Returns { valid: true } or { valid: false, error: string }.
+ */
+function validateFormData(formData: Partial<GenericItem>, appConfig?: any) {
+    const trimmedTitle = formData.title?.trim();
+    if (!trimmedTitle) {
+        return { valid: false, error: "Title is required" };
+    }
+
+    if (appConfig?.fields) {
+        for (const field of appConfig.fields) {
+            const val = formData.metadata?.[field.id];
+            const isEmpty = val === null || val === undefined || (typeof val === 'string' && val.trim() === '');
+
+            if (field.required && isEmpty) {
+                return { valid: false, error: `${field.label} is required` };
+            }
+        }
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Sanitizes metadata by removing non-serializable values and normalizing dates/strings.
+ */
+function sanitizeMetadata(rawMetadata: Record<string, any>) {
+    const sanitized: Record<string, any> = {};
+
+    Object.entries(rawMetadata).forEach(([key, value]) => {
+        if (value === undefined || typeof value === 'function') return;
+        if (value instanceof Date) {
+            sanitized[key] = value.toISOString();
+        } else if (typeof value === 'string') {
+            sanitized[key] = value.trim();
+        } else {
+            sanitized[key] = value;
+        }
+    });
+
+    return sanitized;
+}
+
+/**
+ * Returns a safe representation of an item for logging based on the environment.
+ */
+function getSafeLogData(id: string, itemType: string, payload?: any) {
+    const isProd = process.env.NODE_ENV === 'production';
+    if (isProd) {
+        return { id, itemType };
+    }
+    return { id, itemType, payload };
+}
+
 type ViewMode = 'grid' | 'list';
 
 export function GenericCommunityApp({
@@ -125,41 +180,19 @@ export function GenericCommunityApp({
         const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
         if (!id) return;
 
-        // 1. Validation for Title
-        const trimmedTitle = formData.title?.trim();
-        if (!trimmedTitle) {
-            toast.error("Title is required");
+        // 1. Validation
+        const validation = validateFormData(formData, appConfig);
+        if (!validation.valid) {
+            toast.error(validation.error);
             return;
         }
 
-        // 2. Dynamic Required Field Validation
-        if (appConfig?.fields) {
-            for (const field of appConfig.fields) {
-                if (field.required && !formData.metadata?.[field.id]?.trim()) {
-                    toast.error(`${field.label} is required`);
-                    return;
-                }
-            }
-        }
-
-        // 3. Metadata Sanitization
-        const rawMetadata = formData.metadata || {};
-        const sanitizedMetadata: Record<string, any> = {};
-
-        Object.entries(rawMetadata).forEach(([key, value]) => {
-            if (value === undefined || typeof value === 'function') return;
-            if (value instanceof Date) {
-                sanitizedMetadata[key] = value.toISOString();
-            } else if (typeof value === 'string') {
-                sanitizedMetadata[key] = value.trim();
-            } else {
-                sanitizedMetadata[key] = value;
-            }
-        });
+        // 2. Sanitization
+        const sanitizedMetadata = sanitizeMetadata(formData.metadata || {});
 
         const finalItem: GenericItem = {
             id,
-            title: trimmedTitle,
+            title: formData.title!.trim(),
             description: formData.description?.trim() || "",
             status: formData.status || "Active",
             createdAt: formData.createdAt || new Date().toISOString(),
@@ -167,13 +200,16 @@ export function GenericCommunityApp({
         };
 
         try {
-            console.log(`[GenericCommunityApp] Saving ${itemType}:`, { id, itemType, formData: finalItem });
+            console.log(`[GenericCommunityApp] Saving ${itemType}:`, getSafeLogData(id, itemType, finalItem));
             await upsertDocument(id, finalItem);
             setIsEditing(null);
             setFormData({});
             toast.success(`${itemType} saved`);
         } catch (err) {
-            console.error(`[GenericCommunityApp] Error saving ${itemType}:`, { id, itemType, formData: finalItem, error: err });
+            console.error(`[GenericCommunityApp] Error saving ${itemType}:`, {
+                ...getSafeLogData(id, itemType, finalItem),
+                error: err instanceof Error ? err.message : String(err)
+            });
             toast.error(`Failed to save ${itemType.toLowerCase()}. Please try again.`);
         }
     }, [formData, isEditing, itemType, upsertDocument, appConfig]);
@@ -202,12 +238,16 @@ export function GenericCommunityApp({
         const idsToDelete = Array.from(selectedIds);
 
         try {
-            console.log(`[GenericCommunityApp] Batch deleting ${count} ${itemType}s:`, { selectedIds: idsToDelete, itemType });
+            console.log(`[GenericCommunityApp] Batch deleting ${count} ${itemType}s:`, { ids: idsToDelete, type: itemType });
             await Promise.all(idsToDelete.map(id => deleteDocument(id)));
             setSelectedIds(new Set());
             toast.success(`Deleted ${count} ${itemType.toLowerCase()}s`);
         } catch (err) {
-            console.error(`[GenericCommunityApp] Error batch deleting ${itemType}s:`, { selectedIds: idsToDelete, itemType, error: err });
+            console.error(`[GenericCommunityApp] Error batch deleting ${itemType}s:`, {
+                ids: idsToDelete,
+                type: itemType,
+                error: err instanceof Error ? err.message : String(err)
+            });
             toast.error(`Failed to delete some ${itemType.toLowerCase()}s. Please try again.`);
         }
     }, [selectedIds, itemType, deleteDocument]);
@@ -227,7 +267,7 @@ export function GenericCommunityApp({
                     <COSSkeleton variant="text" className="h-8 w-48" />
                     <COSSkeleton variant="text" className="h-8 w-32" />
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     {[1, 2, 3].map((i) => (
                         <COSSkeleton key={i} variant="card" className="h-48" />
                     ))}
@@ -329,7 +369,7 @@ export function GenericCommunityApp({
                 ) : (
                     <div className={cn(
                         "grid gap-4",
-                        viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
+                        viewMode === 'grid' ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1"
                     )}>
                         {filteredItems.map((item) => (
                             <div
