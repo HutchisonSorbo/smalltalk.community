@@ -82,10 +82,14 @@ function useSwipeGesture(
     }, []);
 
     const onTouchStart = React.useCallback((e: React.TouchEvent) => {
-        setStartX(e.touches[0].pageX);
+        // Initialize startX relative to currentX to avoid jumps
+        setStartX(e.touches[0].pageX - currentX);
         setIsSwiping(true);
+        // Do not reset isActionActive immediately if we want to allow 're-swiping' from open state,
+        // but typically starting a new swipe implies interaction.
+        // We'll keep isActionActive false during swipe to prevent accidental clicks on "close"
         setIsActionActive(false);
-    }, []);
+    }, [currentX]);
 
     const onTouchMove = React.useCallback((e: React.TouchEvent) => {
         if (!isSwiping) return;
@@ -206,16 +210,16 @@ const COSSwipeActions = ({
     const {
         currentX,
         isSwiping,
-        isActionActive,
         handleTouchStart,
         handleTouchMove,
         handleTouchEnd,
         reset,
+        isActionActive,
         maxLeftTranslate,
         maxRightTranslate,
     } = useSwipeGesture(leftActions, rightActions, threshold);
 
-    // Auto-close when clicking outside used to be handled by overlay, 
+    // Auto-close when clicking outside used to be handled by overlay,
     // but typically clicking the content itself should reset if actions are open.
     const handleContentClick = (e: React.MouseEvent) => {
         if (isActionActive) {
@@ -233,7 +237,12 @@ const COSSwipeActions = ({
     };
 
     return (
-        <div className={cn("relative overflow-hidden w-full max-w-full touch-pan-y h-full select-none", className)}>
+        <div
+            className={cn("relative overflow-hidden w-full max-w-full touch-pan-y h-full select-none", className)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
             <ActionButtons
                 actions={leftActions}
                 width={maxLeftTranslate}
@@ -253,11 +262,8 @@ const COSSwipeActions = ({
                 tabIndex={isActionActive ? 0 : -1}
                 aria-label={isActionActive ? "Close actions" : undefined}
                 aria-expanded={isActionActive}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onClick={handleContentClick}
-                onKeyDown={handleContentKeyDown}
+                onClick={isActionActive ? handleContentClick : undefined}
+                onKeyDown={isActionActive ? handleContentKeyDown : undefined}
                 style={{
                     transform: `translateX(${currentX}px)`,
                     transition: isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'

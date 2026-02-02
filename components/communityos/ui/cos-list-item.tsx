@@ -17,6 +17,57 @@ interface COSListItemProps {
     className?: string;
 }
 
+// --- Helpers ---
+
+const AvatarBlock = ({ avatar, title }: { avatar: string | React.ReactNode; title: string }) => {
+    const sanitizedAvatar = typeof avatar === "string" ? safeUrl(avatar) : null;
+
+    if (!avatar) return null;
+
+    return (
+        <div className="flex-shrink-0">
+            {typeof avatar === "string" ? (
+                <Avatar className="h-10 w-10">
+                    {sanitizedAvatar && <AvatarImage src={sanitizedAvatar} alt={title} />}
+                    <AvatarFallback>{title.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+            ) : (
+                <div className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    {avatar}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ContentBlock = ({
+    title,
+    subtitle,
+    badge,
+}: {
+    title: string;
+    subtitle?: string;
+    badge?: React.ReactNode;
+}) => {
+    return (
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                    {title}
+                </span>
+                {badge && <div className="flex-shrink-0">{badge}</div>}
+            </div>
+            {subtitle && (
+                <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    {subtitle}
+                </p>
+            )}
+        </div>
+    );
+};
+
+// --- Main Component ---
+
 export function COSListItem({
     title,
     subtitle,
@@ -35,8 +86,6 @@ export function COSListItem({
         }
     };
 
-    const sanitizedAvatar = typeof avatar === "string" ? safeUrl(avatar) : null;
-
     return (
         <li
             onClick={disabled ? undefined : onClick}
@@ -52,36 +101,8 @@ export function COSListItem({
                 className
             )}
         >
-            {/* Avatar / Leading Icon */}
-            {avatar && (
-                <div className="flex-shrink-0">
-                    {typeof avatar === "string" ? (
-                        <Avatar className="h-10 w-10">
-                            {sanitizedAvatar && <AvatarImage src={sanitizedAvatar} alt={title} />}
-                            <AvatarFallback>{title.substring(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                    ) : (
-                        <div className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            {avatar}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Content */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900 dark:text-slate-100 truncate">
-                        {title}
-                    </span>
-                    {badge && <div className="flex-shrink-0">{badge}</div>}
-                </div>
-                {subtitle && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        {subtitle}
-                    </p>
-                )}
-            </div>
+            <AvatarBlock avatar={avatar} title={title} />
+            <ContentBlock title={title} subtitle={subtitle} badge={badge} />
 
             {/* Trailing */}
             {trailing && (
