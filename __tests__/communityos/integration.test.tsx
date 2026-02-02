@@ -71,6 +71,7 @@ describe('CommunityOS Integration Tests', () => {
 
         // Fill out fields
         fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Annual Gala' } });
+        fireEvent.change(screen.getByLabelText(/Event Date/i), { target: { value: '2026-02-14' } });
         fireEvent.change(screen.getByLabelText(/Location/i), { target: { value: 'Main Hall' } });
         fireEvent.change(screen.getByLabelText(/Capacity/i), { target: { value: '100' } });
 
@@ -79,19 +80,62 @@ describe('CommunityOS Integration Tests', () => {
         fireEvent.click(saveBtn);
 
         // Verify upsert was called with metadata
-        expect(mockUpsert).toHaveBeenCalledWith(
-            expect.any(String),
-            expect.objectContaining({
-                title: 'Annual Gala',
-                metadata: expect.objectContaining({
-                    location: 'Main Hall',
-                    capacity: '100'
+        await waitFor(() => {
+            expect(mockUpsert).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    title: 'Annual Gala',
+                    metadata: expect.objectContaining({
+                        location: 'Main Hall',
+                        capacity: '100'
+                    })
                 })
-            })
-        );
+            );
+        });
 
         // Verify toast success was called
-        expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Event saved'));
+        await waitFor(() => {
+            expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Event saved'));
+        });
+    });
+
+    it('handles upsert failure gracefully', async () => {
+        mockUpsert.mockRejectedValueOnce(new Error('upsert failed'));
+
+        render(
+            <GenericCommunityApp
+                appId="events"
+                title="Community Events"
+                description="Manage events"
+                placeholder="Search events..."
+                itemType="Event"
+            />
+        );
+
+        // Open modal
+        const addBtn = screen.getByRole('button', { name: /Add Event/i });
+        fireEvent.click(addBtn);
+
+        // Fill required fields
+        const titleInput = screen.getByPlaceholderText(/e.g. Event Name/i);
+        fireEvent.change(titleInput, { target: { value: 'New Event' } });
+
+        const dateInput = screen.getByLabelText(/Event Date/i);
+        fireEvent.change(dateInput, { target: { value: '2026-03-01' } });
+
+        // Click Save
+        const saveBtn = screen.getByRole('button', { name: /Save/i });
+        fireEvent.click(saveBtn);
+
+        // Verify upsert was attempted
+        await waitFor(() => {
+            expect(mockUpsert).toHaveBeenCalled();
+        });
+
+        // Verify toast error was called
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalled();
+        });
     });
 
     it('handles search and filtering correctly', async () => {

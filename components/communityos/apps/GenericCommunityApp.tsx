@@ -11,6 +11,7 @@ import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { COSModal } from "../ui/cos-modal";
 import { COSSkeleton } from "../ui/cos-skeleton";
+import { moderateContent } from "@/lib/utils/moderation";
 import { COSEmptyState } from "../ui/cos-empty-state";
 import { COSSearch } from "../ui/cos-search";
 import { COSFilterBar, FilterOption } from "../ui/cos-filter-bar";
@@ -59,6 +60,8 @@ export function GenericCommunityApp({
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<GenericItem>>({});
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
     const titleInputRef = useRef<HTMLInputElement>(null);
 
     // Focus management for modal
@@ -81,15 +84,28 @@ export function GenericCommunityApp({
     // --- Derived Data ---
     const appConfig = useMemo(() => communityOSApps.find(a => a.id === appId), [appId]);
 
+    // --- Moderated Content ---
+    const moderatedItems = useMemo(() => {
+        return items.map(item => ({
+            ...item,
+            moderatedTitle: moderateContent(item.title),
+            moderatedDescription: moderateContent(item.description),
+            moderatedMetadata: Object.entries(item.metadata || {}).reduce((acc, [key, val]) => {
+                acc[key] = typeof val === 'string' ? moderateContent(val) : val;
+                return acc;
+            }, {} as Record<string, any>)
+        }));
+    }, [items]);
+
     const filteredItems = useMemo(() => {
-        let result = items || [];
+        let result = moderatedItems || [];
 
         // Search
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             result = result.filter(item =>
-                item.title.toLowerCase().includes(q) ||
-                item.description.toLowerCase().includes(q)
+                item.moderatedTitle.toLowerCase().includes(q) ||
+                item.moderatedDescription.toLowerCase().includes(q)
             );
         }
 
@@ -102,30 +118,65 @@ export function GenericCommunityApp({
         }
 
         return result;
-    }, [items, searchQuery, quickFilters]);
+    }, [moderatedItems, searchQuery, quickFilters]);
 
     // --- Handlers ---
-    const handleSave = useCallback(() => {
-        if (!formData.title?.trim()) {
+    const handleSave = useCallback(async () => {
+        const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
+        if (!id) return;
+
+        // 1. Validation for Title
+        const trimmedTitle = formData.title?.trim();
+        if (!trimmedTitle) {
             toast.error("Title is required");
             return;
         }
 
-        const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
-        upsertDocument(id, {
-            ...formData,
+        // 2. Dynamic Required Field Validation
+        if (appConfig?.fields) {
+            for (const field of appConfig.fields) {
+                if (field.required && !formData.metadata?.[field.id]?.trim()) {
+                    toast.error(`${field.label} is required`);
+                    return;
+                }
+            }
+        }
+
+        // 3. Metadata Sanitization
+        const rawMetadata = formData.metadata || {};
+        const sanitizedMetadata: Record<string, any> = {};
+
+        Object.entries(rawMetadata).forEach(([key, value]) => {
+            if (value === undefined || typeof value === 'function') return;
+            if (value instanceof Date) {
+                sanitizedMetadata[key] = value.toISOString();
+            } else if (typeof value === 'string') {
+                sanitizedMetadata[key] = value.trim();
+            } else {
+                sanitizedMetadata[key] = value;
+            }
+        });
+
+        const finalItem: GenericItem = {
             id,
-            title: formData.title.trim(),
+            title: trimmedTitle,
             description: formData.description?.trim() || "",
             status: formData.status || "Active",
             createdAt: formData.createdAt || new Date().toISOString(),
-            metadata: formData.metadata || {},
-        } as GenericItem);
+            metadata: sanitizedMetadata
+        };
 
-        setIsEditing(null);
-        setFormData({});
-        toast.success(`${itemType} saved`);
-    }, [formData, isEditing, itemType, upsertDocument]);
+        try {
+            console.log(`[GenericCommunityApp] Saving ${itemType}:`, { id, itemType, formData: finalItem });
+            await upsertDocument(id, finalItem);
+            setIsEditing(null);
+            setFormData({});
+            toast.success(`${itemType} saved`);
+        } catch (err) {
+            console.error(`[GenericCommunityApp] Error saving ${itemType}:`, { id, itemType, formData: finalItem, error: err });
+            toast.error(`Failed to save ${itemType.toLowerCase()}. Please try again.`);
+        }
+    }, [formData, isEditing, itemType, upsertDocument, appConfig]);
 
     const updateMetadata = useCallback((fieldId: string, value: any) => {
         setFormData(prev => ({
@@ -148,11 +199,17 @@ export function GenericCommunityApp({
 
     const handleDeleteSelected = useCallback(async () => {
         const count = selectedIds.size;
-        for (const id of Array.from(selectedIds)) {
-            await deleteDocument(id);
+        const idsToDelete = Array.from(selectedIds);
+
+        try {
+            console.log(`[GenericCommunityApp] Batch deleting ${count} ${itemType}s:`, { selectedIds: idsToDelete, itemType });
+            await Promise.all(idsToDelete.map(id => deleteDocument(id)));
+            setSelectedIds(new Set());
+            toast.success(`Deleted ${count} ${itemType.toLowerCase()}s`);
+        } catch (err) {
+            console.error(`[GenericCommunityApp] Error batch deleting ${itemType}s:`, { selectedIds: idsToDelete, itemType, error: err });
+            toast.error(`Failed to delete some ${itemType.toLowerCase()}s. Please try again.`);
         }
-        setSelectedIds(new Set());
-        toast.success(`Deleted ${count} ${itemType.toLowerCase()}s`);
     }, [selectedIds, itemType, deleteDocument]);
 
     const handleFilterClick = useCallback((id: string) => {
@@ -301,8 +358,8 @@ export function GenericCommunityApp({
 
                                 <div className="flex items-start justify-between mb-3 pr-8">
                                     <div className="space-y-1">
-                                        <h4 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
-                                            {item.title}
+                                        <h4 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors truncate">
+                                            {item.moderatedTitle}
                                         </h4>
                                         <span className={cn(
                                             "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
@@ -316,17 +373,17 @@ export function GenericCommunityApp({
                                 </div>
 
                                 <p className="flex-1 text-sm text-muted-foreground line-clamp-3 mb-4 leading-relaxed">
-                                    {item.description}
+                                    {item.moderatedDescription}
                                 </p>
 
                                 {/* Metadata Badges */}
                                 {appConfig?.fields && (
                                     <div className="flex flex-wrap gap-2 mt-2 mb-4">
                                         {appConfig.fields.slice(0, 3).map(f => {
-                                            const val = item.metadata?.[f.id];
+                                            const val = item.moderatedMetadata?.[f.id];
                                             if (!val) return null;
                                             return (
-                                                <span key={f.id} className="text-[10px] px-1.5 py-0.5 bg-muted rounded border border-border/50 text-muted-foreground">
+                                                <span key={f.id} className="text-[10px] px-1.5 py-0.5 bg-muted rounded border border-border/50 text-muted-foreground truncate max-w-[120px]">
                                                     {f.label}: {val}
                                                 </span>
                                             );
@@ -352,10 +409,8 @@ export function GenericCommunityApp({
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                if (window.confirm(`Delete this ${itemType.toLowerCase()}?`)) {
-                                                    deleteDocument(item.id);
-                                                    toast.success("Item deleted");
-                                                }
+                                                setPendingDeleteId(item.id);
+                                                setShowConfirmDelete(true);
                                             }}
                                             className="p-1.5 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
                                         >
@@ -495,6 +550,56 @@ export function GenericCommunityApp({
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <COSModal
+                isOpen={showConfirmDelete}
+                onClose={() => {
+                    setShowConfirmDelete(false);
+                    setPendingDeleteId(null);
+                }}
+                title={`Delete this ${itemType.toLowerCase()}?`}
+                description="This action cannot be undone. This item will be removed from your local database and synced with other devices."
+                footer={
+                    <div className="flex gap-3 w-full justify-end">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowConfirmDelete(false);
+                                setPendingDeleteId(null);
+                            }}
+                            className="btn-ghost"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                if (pendingDeleteId) {
+                                    try {
+                                        await deleteDocument(pendingDeleteId);
+                                        toast.success("Item deleted");
+                                    } catch (err) {
+                                        console.error("[GenericCommunityApp] Error deleting item:", err);
+                                        toast.error("Failed to delete item");
+                                    } finally {
+                                        setShowConfirmDelete(false);
+                                        setPendingDeleteId(null);
+                                    }
+                                }
+                            }}
+                            className="btn-primary bg-red-600 hover:bg-red-700 border-red-600"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                }
+            >
+                <div className="flex items-center gap-4 text-sm text-muted-foreground p-4 bg-muted/20 rounded-xl">
+                    <CheckCircle2 className="w-5 h-5 text-red-500" />
+                    <p>Are you sure you want to remove this record?</p>
+                </div>
+            </COSModal>
         </div>
     );
 }
