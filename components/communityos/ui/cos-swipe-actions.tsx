@@ -27,22 +27,28 @@ const colorMap: Record<string, string> = {
     default: "bg-slate-500 text-white",
 };
 
-const COSSwipeActions = ({
-    children,
-    leftActions = [],
-    rightActions = [],
-    className,
-    threshold = 80,
-}: COSSwipeActionsProps) => {
+// --- Hook ---
+
+function useSwipeGesture(
+    leftActions: SwipeAction[],
+    rightActions: SwipeAction[],
+    threshold: number = 80
+) {
     const [startX, setStartX] = React.useState(0);
     const [currentX, setCurrentX] = React.useState(0);
     const [isSwiping, setIsSwiping] = React.useState(false);
     const [isActionActive, setIsActionActive] = React.useState(false);
 
-    // Calculate action button widths (assuming roughly 64px per action)
+    // Calculate action button widths (assuming roughly 72px per action)
     const actionWidth = 72;
     const maxLeftTranslate = leftActions.length * actionWidth;
     const maxRightTranslate = rightActions.length * actionWidth;
+
+    const reset = React.useCallback(() => {
+        setCurrentX(0);
+        setIsActionActive(false);
+        setIsSwiping(false);
+    }, []);
 
     const handleTouchStart = (e: React.TouchEvent) => {
         setStartX(e.touches[0].pageX);
@@ -86,9 +92,7 @@ const COSSwipeActions = ({
                 setCurrentX(maxLeftTranslate);
                 setIsActionActive(true);
             } else {
-                // Snap closed
-                setCurrentX(0);
-                setIsActionActive(false);
+                reset();
             }
         } else if (currentX < 0 && rightActions.length > 0) {
             // Swiping Left (Revealing Right Actions)
@@ -97,93 +101,138 @@ const COSSwipeActions = ({
                 setCurrentX(-maxRightTranslate);
                 setIsActionActive(true);
             } else {
-                // Snap closed
-                setCurrentX(0);
-                setIsActionActive(false);
+                reset();
             }
         } else {
-            setCurrentX(0);
-            setIsActionActive(false);
+            reset();
         }
     };
+
+    return {
+        currentX,
+        isSwiping,
+        isActionActive,
+        handleTouchStart,
+        handleTouchMove,
+        handleTouchEnd,
+        reset,
+        maxLeftTranslate,
+        maxRightTranslate,
+    };
+}
+
+// --- Sub-components ---
+
+const ActionButtons = ({
+    actions,
+    width,
+    reset,
+    side,
+}: {
+    actions: SwipeAction[];
+    width: number;
+    reset: () => void;
+    side: "left" | "right";
+}) => {
+    if (actions.length === 0) return null;
+
+    return (
+        <div
+            className={cn(
+                "absolute inset-y-0 flex h-full z-0",
+                side === "left" ? "left-0 flex-row" : "right-0 flex-row-reverse"
+            )}
+            style={{ width }}
+        >
+            {actions.map((action) => (
+                <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => {
+                        action.onClick();
+                        reset();
+                    }}
+                    className={cn(
+                        "flex-1 flex flex-col items-center justify-center gap-1 h-full min-w-[72px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white",
+                        colorMap[action.color] || colorMap.default
+                    )}
+                    aria-label={action.label}
+                >
+                    <span className="text-xl">{action.icon}</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider">{action.label}</span>
+                </button>
+            ))}
+        </div>
+    );
+};
+
+// --- Main Component ---
+
+const COSSwipeActions = ({
+    children,
+    leftActions = [],
+    rightActions = [],
+    className,
+    threshold = 80,
+}: COSSwipeActionsProps) => {
+    const {
+        currentX,
+        isSwiping,
+        isActionActive,
+        handleTouchStart,
+        handleTouchMove,
+        handleTouchEnd,
+        reset,
+        maxLeftTranslate,
+        maxRightTranslate,
+    } = useSwipeGesture(leftActions, rightActions, threshold);
 
     // Auto-close when clicking outside used to be handled by overlay, 
     // but typically clicking the content itself should reset if actions are open.
     const handleContentClick = (e: React.MouseEvent) => {
         if (isActionActive) {
             e.stopPropagation(); // Prevent detail click if just closing actions
-            setCurrentX(0);
-            setIsActionActive(false);
+            reset();
+        }
+    };
+
+    const handleContentKeyDown = (e: React.KeyboardEvent) => {
+        if (isActionActive && (e.key === "Enter" || e.key === " " || e.key === "Escape")) {
+            e.preventDefault();
+            e.stopPropagation();
+            reset();
         }
     };
 
     return (
         <div className={cn("relative overflow-hidden w-full touch-pan-y h-full select-none", className)}>
-            {/* Left Actions Background Layer */}
-            {leftActions.length > 0 && (
-                <div
-                    className="absolute inset-y-0 left-0 flex flex-row h-full z-0"
-                    style={{ width: maxLeftTranslate }}
-                >
-                    {leftActions.map((action) => (
-                        <button
-                            key={action.id}
-                            onClick={() => {
-                                action.onClick();
-                                setCurrentX(0);
-                                setIsActionActive(false);
-                            }}
-                            className={cn(
-                                "flex-1 flex flex-col items-center justify-center gap-1 h-full min-w-[72px] transition-colors focus:outline-none",
-                                colorMap[action.color] || colorMap.default
-                            )}
-                            aria-label={action.label}
-                        >
-                            <span className="text-xl">{action.icon}</span>
-                            <span className="text-[10px] uppercase font-bold tracking-wider">{action.label}</span>
-                        </button>
-                    ))}
-                </div>
-            )}
-
-            {/* Right Actions Background Layer */}
-            {rightActions.length > 0 && (
-                <div
-                    className="absolute inset-y-0 right-0 flex flex-row-reverse h-full z-0"
-                    style={{ width: maxRightTranslate }}
-                >
-                    {rightActions.map((action) => (
-                        <button
-                            key={action.id}
-                            onClick={() => {
-                                action.onClick();
-                                setCurrentX(0);
-                                setIsActionActive(false);
-                            }}
-                            className={cn(
-                                "flex-1 flex flex-col items-center justify-center gap-1 h-full min-w-[72px] transition-colors focus:outline-none",
-                                colorMap[action.color] || colorMap.default
-                            )}
-                            aria-label={action.label}
-                        >
-                            <span className="text-xl">{action.icon}</span>
-                            <span className="text-[10px] uppercase font-bold tracking-wider">{action.label}</span>
-                        </button>
-                    ))}
-                </div>
-            )}
+            <ActionButtons
+                actions={leftActions}
+                width={maxLeftTranslate}
+                reset={reset}
+                side="left"
+            />
+            <ActionButtons
+                actions={rightActions}
+                width={maxRightTranslate}
+                reset={reset}
+                side="right"
+            />
 
             {/* Foreground Content */}
             <div
+                role="button"
+                tabIndex={0}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onClick={handleContentClick}
+                onKeyDown={handleContentKeyDown}
                 style={{
                     transform: `translateX(${currentX}px)`,
                     transition: isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }}
-                className="relative bg-white dark:bg-slate-950 z-10 w-full h-full"
+                className="relative bg-white dark:bg-slate-950 z-10 w-full h-full outline-none"
             >
                 {children}
             </div>

@@ -24,28 +24,36 @@ export type ActionResult<T = any> =
 // --- Validation Schemas ---
 
 const contactSchema = z.object({
-    firstName: z.string().min(1, "First name is required").max(100),
-    lastName: z.string().min(1, "Last name is required").max(100),
-    email: z.string().email("Invalid email").optional().nullable().or(z.literal("")),
-    phone: z.string().max(20).optional().nullable(),
+    firstName: z.string().trim().min(1, "First name is required").max(100),
+    lastName: z.string().trim().min(1, "Last name is required").max(100),
+    email: z.string().trim().email("Invalid email").optional().nullable().or(z.literal("")),
+    phone: z.string().trim().max(20).optional().nullable(),
     type: z.enum(["individual", "organisation"]).default("individual"),
     status: z.enum(["lead", "qualified", "proposal", "won", "lost", "active", "inactive", "customer", "churned"]).default("lead"),
     metadata: z.record(z.any()).optional().default({}),
 });
 
 const dealSchema = z.object({
-    title: z.string().min(1, "Title is required").max(200),
+    title: z.string().trim().min(1, "Title is required").max(200),
     pipelineStageId: z.string().uuid("Invalid stage ID"),
     contactId: z.string().uuid().optional().nullable(),
     value: z.number().min(0).default(0),
     probability: z.number().min(0).max(100).default(0),
-    expectedCloseDate: z.string().optional().nullable().transform(str => str ? new Date(str) : null),
-    notes: z.string().max(2000).optional().default(""),
+    expectedCloseDate: z.string().datetime().optional().nullable().transform(str => str ? new Date(str) : null),
+    notes: z.string().trim().max(2000).optional().default(""),
 });
 
 const pipelineSchema = z.object({
     name: z.string().min(1, "Name is required").max(100),
     description: z.string().max(1000).optional().default(""),
+});
+
+const activityLogFiltersSchema = z.object({
+    dealId: z.string().uuid().optional(),
+    contactId: z.string().uuid().optional(),
+    action: z.string().max(100).optional(),
+    fromDate: z.coerce.date().optional(),
+    toDate: z.coerce.date().optional(),
 });
 
 // --- Helpers ---
@@ -145,12 +153,17 @@ async function createDefaultPipelineStages(pipelineId: string, tx: any) {
         { name: "Closed Lost", position: 5, color: "#F87171" },
     ];
 
-    await tx.insert(crmPipelineStages).values(
-        defaultStages.map((s) => ({
-            pipelineId,
-            ...s,
-        }))
-    );
+    try {
+        await tx.insert(crmPipelineStages).values(
+            defaultStages.map((s) => ({
+                pipelineId,
+                ...s,
+            }))
+        );
+    } catch (err) {
+        console.error(`[createDefaultPipelineStages] failed for pipelineId=${pipelineId}:`, err);
+        throw err;
+    }
 }
 
 // --- Pipeline Actions ---
@@ -407,14 +420,21 @@ export async function getActivityLog(
     const auth = await verifyOrgAccess(organisationId, ["admin", "coordinator", "viewer"]);
     if (!auth.success) return auth;
 
+    // Validate filters
+    const filterValidation = activityLogFiltersSchema.safeParse(filters || {});
+    if (!filterValidation.success) {
+        return { success: false, error: filterValidation.error.errors[0].message };
+    }
+    const safeFilters = filterValidation.data;
+
     try {
         const conditions = [eq(crmActivityLog.organisationId, organisationId)];
 
-        if (filters?.dealId) conditions.push(eq(crmActivityLog.dealId, filters.dealId));
-        if (filters?.contactId) conditions.push(eq(crmActivityLog.contactId, filters.contactId));
-        if (filters?.action) conditions.push(eq(crmActivityLog.action, filters.action));
-        if (filters?.fromDate) conditions.push(gte(crmActivityLog.createdAt, filters.fromDate));
-        if (filters?.toDate) conditions.push(lte(crmActivityLog.createdAt, filters.toDate));
+        if (safeFilters.dealId) conditions.push(eq(crmActivityLog.dealId, safeFilters.dealId));
+        if (safeFilters.contactId) conditions.push(eq(crmActivityLog.contactId, safeFilters.contactId));
+        if (safeFilters.action) conditions.push(eq(crmActivityLog.action, safeFilters.action));
+        if (safeFilters.fromDate) conditions.push(gte(crmActivityLog.createdAt, safeFilters.fromDate));
+        if (safeFilters.toDate) conditions.push(lte(crmActivityLog.createdAt, safeFilters.toDate));
 
         const logs = await db
             .select()

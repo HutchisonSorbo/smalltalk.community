@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn, safeUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
@@ -28,25 +28,37 @@ export function COSListItem({
     disabled,
     className,
 }: COSListItemProps) {
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!disabled && onClick && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            onClick();
+        }
+    };
+
+    const sanitizedAvatar = typeof avatar === "string" ? safeUrl(avatar) : null;
+
     return (
-        <div
+        <li
             onClick={disabled ? undefined : onClick}
+            onKeyDown={handleKeyDown}
+            tabIndex={disabled || !onClick ? -1 : 0}
+            aria-disabled={disabled}
             className={cn(
-                "flex items-center gap-4 p-4 min-h-[64px] w-full transition-colors",
+                "flex items-center gap-4 p-4 min-h-[64px] w-full max-w-full transition-colors outline-none",
                 "bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 last:border-0",
-                onClick && !disabled && "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 active:bg-slate-100 dark:active:bg-slate-800",
+                onClick && !disabled && "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 active:bg-slate-100 dark:active:bg-slate-800 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500",
                 selected && "bg-slate-50 dark:bg-slate-900",
                 disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
-            role="listitem"
+            role="listitem" // Explicit role restoration although li implies it in ul/ol
         >
             {/* Avatar / Leading Icon */}
             {avatar && (
                 <div className="flex-shrink-0">
                     {typeof avatar === "string" ? (
                         <Avatar className="h-10 w-10">
-                            <AvatarImage src={avatar} alt={title} />
+                            {sanitizedAvatar && <AvatarImage src={sanitizedAvatar} alt={title} />}
                             <AvatarFallback>{title.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                     ) : (
@@ -78,6 +90,6 @@ export function COSListItem({
                     {trailing}
                 </div>
             )}
-        </div>
+        </li>
     );
 }
