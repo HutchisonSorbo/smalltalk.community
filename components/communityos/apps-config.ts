@@ -1,11 +1,26 @@
 
 // CommunityOS App definitions
+/**
+ * Defines a custom field for a CommunityOS application.
+ * This is the public API for defining dynamic form fields in apps.
+ * 
+ * @example
+ * ```typescript
+ * { id: "date", label: "Event Date", type: "date", required: true }
+ * ```
+ */
 export interface CommunityOSAppField {
+    /** Unique string identifier for the field, used as the key in metadata */
     id: string;
+    /** Human-readable label displayed in the UI */
     label: string;
+    /** The input type to render */
     type: "text" | "number" | "date" | "select" | "textarea";
+    /** Optional array of options, required only when type is 'select' */
     options?: { label: string; value: string }[];
+    /** Optional hint text displayed in empty inputs */
     placeholder?: string;
+    /** Whether the field must be filled before saving */
     required?: boolean;
 }
 

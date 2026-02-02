@@ -15,13 +15,16 @@ vi.mock('@/hooks/useDittoSync', () => ({
     useDittoSync: vi.fn(),
 }));
 
-// Mock toast
-vi.mock('react-hot-toast', () => ({
-    default: {
+// Mock sonner toast
+vi.mock('sonner', () => ({
+    toast: {
         success: vi.fn(),
         error: vi.fn(),
+        info: vi.fn(),
     },
 }));
+
+import { toast } from 'sonner';
 
 describe('CommunityOS Integration Tests', () => {
     const mockTenant = { id: 'tenant-1', name: 'Test Org' };
@@ -41,9 +44,6 @@ describe('CommunityOS Integration Tests', () => {
     });
 
     it('renders GenericCommunityApp and handles dynamic fields', async () => {
-        // Find an app with fields (e.g. events)
-        const eventApp = communityOSApps.find(a => a.id === 'events');
-
         render(
             <GenericCommunityApp
                 appId="events"
@@ -89,6 +89,9 @@ describe('CommunityOS Integration Tests', () => {
                 })
             })
         );
+
+        // Verify toast success was called
+        expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Event saved'));
     });
 
     it('handles search and filtering correctly', async () => {

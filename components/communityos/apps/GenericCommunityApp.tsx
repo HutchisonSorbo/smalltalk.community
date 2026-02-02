@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { COSModal } from "../ui/cos-modal";
@@ -59,6 +59,18 @@ export function GenericCommunityApp({
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<GenericItem>>({});
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const titleInputRef = useRef<HTMLInputElement>(null);
+
+    // Focus management for modal
+    useEffect(() => {
+        if (isEditing) {
+            // Use a small timeout to ensure modal is rendered and visible
+            const timer = setTimeout(() => {
+                titleInputRef.current?.focus();
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [isEditing]);
 
     const [quickFilters, setQuickFilters] = useState<FilterOption[]>([
         { id: 'all', label: 'All', active: true },
@@ -176,7 +188,7 @@ export function GenericCommunityApp({
     }
 
     return (
-        <div className="flex flex-col min-h-full space-y-6">
+        <div className="flex flex-col min-h-full space-y-6 max-w-full">
             {/* Header Area */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -187,6 +199,7 @@ export function GenericCommunityApp({
                 <div className="flex items-center gap-3">
                     <div className="flex bg-muted p-1 rounded-lg border border-border/50">
                         <button
+                            type="button"
                             onClick={() => setViewMode('grid')}
                             className={cn(
                                 "p-1.5 rounded-md transition-colors",
@@ -197,6 +210,7 @@ export function GenericCommunityApp({
                             <LayoutGrid className="w-4 h-4" />
                         </button>
                         <button
+                            type="button"
                             onClick={() => setViewMode('list')}
                             className={cn(
                                 "p-1.5 rounded-md transition-colors",
@@ -209,6 +223,7 @@ export function GenericCommunityApp({
                     </div>
 
                     <button
+                        type="button"
                         onClick={() => {
                             setIsEditing("new");
                             setFormData({ status: "Active", metadata: {} });
@@ -269,6 +284,7 @@ export function GenericCommunityApp({
                             >
                                 {/* Selection Indicator */}
                                 <button
+                                    type="button"
                                     onClick={() => toggleSelection(item.id)}
                                     className={cn(
                                         "absolute top-3 right-3 p-1 rounded-full transition-opacity opacity-0 group-hover:opacity-100",
@@ -324,6 +340,7 @@ export function GenericCommunityApp({
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 setIsEditing(item.id);
                                                 setFormData({ ...item, metadata: item.metadata || {} });
@@ -333,6 +350,7 @@ export function GenericCommunityApp({
                                             Edit
                                         </button>
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 if (window.confirm(`Delete this ${itemType.toLowerCase()}?`)) {
                                                     deleteDocument(item.id);
@@ -389,12 +407,12 @@ export function GenericCommunityApp({
                         <label htmlFor="generic-title" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Title</label>
                         <input
                             id="generic-title"
+                            ref={titleInputRef}
                             type="text"
                             value={formData.title || ""}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             placeholder={`e.g. ${itemType} Name`}
                             className="cos-input"
-                            autoFocus
                         />
                     </div>
                     <div className="space-y-2">

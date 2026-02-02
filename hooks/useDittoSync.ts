@@ -113,6 +113,8 @@ export function useDittoSync<T extends DittoDocument>(
 
         console.log(`[useDittoSync] Processing batch of ${ops.size} operations for ${sanitizedCollection}`);
 
+        const errors: Error[] = [];
+
         if (ditto && !isMockMode) {
             const dittoCollection = ditto.store.collection(dittoCollectionName);
             for (const [id, doc] of Array.from(ops.entries())) {
@@ -124,29 +126,41 @@ export function useDittoSync<T extends DittoDocument>(
                         await dittoCollection.upsert({ ...doc, _id: id } as unknown as Record<string, unknown>);
                     }
                 } catch (err) {
-                    console.error("[useDittoSync] Batch operation failed:", err);
+                    const error = err instanceof Error ? err : new Error(String(err));
+                    console.error("[useDittoSync] Batch operation failed:", error);
+                    errors.push(error);
                 } finally {
                     decrementPendingChanges();
                 }
             }
         } else if (storageKey) {
-            // Mock mode Batch
-            queryClient.setQueryData(["ditto", dittoCollectionName], (old: T[] = []) => {
-                let current = [...old];
-                ops.forEach((doc, id) => {
-                    if (doc === null) {
-                        current = current.filter(d => d._id !== id && d.id !== id);
-                    } else {
-                        const idx = current.findIndex(d => d._id === id || d.id === id);
-                        if (idx >= 0) current[idx] = { ...doc, _id: id, id } as T;
-                        else current.push({ ...doc, _id: id, id } as T);
-                    }
+            try {
+                // Mock mode Batch
+                queryClient.setQueryData(["ditto", dittoCollectionName], (old: T[] = []) => {
+                    let current = [...old];
+                    ops.forEach((doc, id) => {
+                        if (doc === null) {
+                            current = current.filter(d => d._id !== id && d.id !== id);
+                        } else {
+                            const idx = current.findIndex(d => d._id === id || d.id === id);
+                            if (idx >= 0) current[idx] = { ...doc, _id: id, id } as T;
+                            else current.push({ ...doc, _id: id, id } as T);
+                        }
+                    });
+                    localStorage.setItem(storageKey, JSON.stringify(current));
+                    return current;
                 });
-                localStorage.setItem(storageKey, JSON.stringify(current));
-                return current;
-            });
+            } catch (err) {
+                const error = err instanceof Error ? err : new Error(String(err));
+                console.error("[useDittoSync] Mock batch operation failed:", error);
+                errors.push(error);
+            }
         }
-    }, [ditto, isMockMode, dittoCollectionName, sanitizedCollection, storageKey, queryClient]);
+
+        if (errors.length > 0) {
+            setError(new Error(`Batch failed with ${errors.length} errors. Check console for details.`));
+        }
+    }, [ditto, isMockMode, dittoCollectionName, sanitizedCollection, storageKey, queryClient, incrementPendingChanges, decrementPendingChanges]);
 
     const queueOp = useCallback((id: string, doc: T | null) => {
         pendingOpsRef.current.set(id, doc);
@@ -266,6 +280,10 @@ export function useDittoSync<T extends DittoDocument>(
         return () => {
             subscriptionRef.current?.cancel();
             observerRef.current?.cancel();
+            if (batchTimerRef.current) {
+                clearTimeout(batchTimerRef.current);
+                batchTimerRef.current = null;
+            }
         };
     }, [ditto, dittoCollectionName, isMockMode, dittoInitialized, queryClient]);
 

@@ -99,32 +99,42 @@ export function ImpactApp() {
         });
     };
 
-    const handleSaveKPI = async (newKPIData: any) => {
-        const id = crypto.randomUUID();
-        const newKPI: ImpactKPI = {
-            ...newKPIData,
-            id,
-            value: 0, // Initial value
-            trend: 'stable'
-        };
-        await upsertKPI(id, newKPI);
-        setView('dashboard');
-        toast.success("KPI Created");
+    const handleSaveKPI = async (newKPIData: Partial<ImpactKPI>) => {
+        try {
+            const id = crypto.randomUUID();
+            const newKPI: ImpactKPI = {
+                ...newKPIData,
+                id,
+                value: 0, // Initial value
+                trend: 'stable'
+            } as ImpactKPI;
+            await upsertKPI(id, newKPI);
+            setView('dashboard');
+            toast.success("KPI Created");
+        } catch (err) {
+            console.error("[ImpactApp] Error creating KPI:", err);
+            toast.error("Failed to create KPI. Please try again.");
+        }
     };
 
     const handleSaveReport = async (sections: any[]) => {
-        const id = crypto.randomUUID();
-        const newReport: ImpactReport = {
-            id,
-            title: `Report ${new Date().toLocaleDateString()}`,
-            period: { start: new Date().toISOString(), end: new Date().toISOString() },
-            sections,
-            status: 'draft',
-            createdAt: new Date().toISOString(),
-            createdBy: 'user'
-        };
-        await upsertReport(id, newReport);
-        toast.success("Report Saved");
+        try {
+            const id = crypto.randomUUID();
+            const newReport: ImpactReport = {
+                id,
+                title: `Report ${new Date().toLocaleDateString()}`,
+                period: { start: new Date().toISOString(), end: new Date().toISOString() },
+                sections,
+                status: 'draft',
+                createdAt: new Date().toISOString(),
+                createdBy: 'user'
+            };
+            await upsertReport(id, newReport);
+            toast.success("Report Saved");
+        } catch (err) {
+            console.error("[ImpactApp] Error saving report:", err);
+            toast.error("Failed to save report. Please try again.");
+        }
     };
 
     if (isTenantLoading) {

@@ -29,6 +29,11 @@ test.describe('CommunityOS Accessibility', () => {
         const addBtn = page.getByRole('button', { name: /Add Event/i });
         if (await addBtn.isVisible()) {
             await addBtn.click();
+
+            // Wait for modal to be visible and have an accessible name
+            const modal = page.getByRole('dialog');
+            await modal.waitFor({ state: 'visible' });
+
             const modalResults = await new AxeBuilder({ page })
                 .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
                 .analyze();
