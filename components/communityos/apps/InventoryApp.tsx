@@ -48,21 +48,22 @@ export function InventoryApp() {
         if (formData.name && formData.quantity !== undefined) {
             try {
                 const id = isEditing === "new" ? crypto.randomUUID() : String(isEditing);
-                await upsertDocument(
+
+                // Sanitize and validate
+                const sanitized = {
                     id,
-                    {
-                        id,
-                        name: formData.name,
-                        category: formData.category || "General",
-                        quantity: Number(formData.quantity),
-                        unit: formData.unit || "pcs",
-                        location: formData.location || "Store Room",
-                        minStockLevel: Number(formData.minStockLevel || 0),
-                        lastChecked: new Date().toISOString(),
-                        sku: formData.sku || `INV-${Math.floor(Math.random() * 10000)}`,
-                        ...formData,
-                    } as InventoryItem
-                );
+                    name: formData.name.trim().replace(/[<>]/g, ''),
+                    category: (formData.category || "General").trim().replace(/[<>]/g, ''),
+                    quantity: Math.max(0, parseInt(String(formData.quantity)) || 0),
+                    unit: (formData.unit || "pcs").trim().replace(/[<>]/g, ''),
+                    location: (formData.location || "Store Room").trim().replace(/[<>]/g, ''),
+                    minStockLevel: Math.max(0, parseInt(String(formData.minStockLevel)) || 0),
+                    lastChecked: new Date().toISOString(),
+                    sku: (formData.sku || `INV-${Math.floor(Math.random() * 10000)}`).trim().replace(/[^a-zA-Z0-9-_]/g, ''),
+                    description: (formData.description || "").trim().replace(/[<>]/g, '')
+                };
+
+                await upsertDocument(id, sanitized as InventoryItem);
                 setIsEditing(null);
                 setFormData({});
             } catch (err) {
@@ -102,13 +103,18 @@ export function InventoryApp() {
     const handleQuickAdd = async (data: InventoryItem) => {
         try {
             const id = crypto.randomUUID();
-            await upsertDocument(id, {
+            const sanitized = {
                 id,
-                ...data,
+                name: data.name.trim().replace(/[<>]/g, ''),
+                sku: (data.sku || `INV-${Math.floor(Math.random() * 10000)}`).trim().replace(/[^a-zA-Z0-9-_]/g, ''),
+                category: (data.category || "General").trim().replace(/[<>]/g, ''),
+                location: (data.location || "Main Storage").trim().replace(/[<>]/g, ''),
+                quantity: Math.max(1, parseInt(String(data.quantity)) || 1),
                 unit: "pcs",
                 minStockLevel: 5,
                 lastChecked: new Date().toISOString()
-            });
+            };
+            await upsertDocument(id, sanitized as InventoryItem);
             setIsQuickAdding(false);
         } catch (err) {
             console.error("Failed to quick add item:", err);
@@ -396,12 +402,7 @@ export function InventoryApp() {
                         </button>
                         <button
                             type="button"
-                            onClick={async () => {
-                                if (itemToDelete) {
-                                    await deleteDocument(itemToDelete as any);
-                                    setItemToDelete(null);
-                                }
-                            }}
+                            onClick={handleDelete}
                             className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700"
                         >
                             Delete

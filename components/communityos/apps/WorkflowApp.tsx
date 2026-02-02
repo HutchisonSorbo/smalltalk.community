@@ -82,6 +82,7 @@ const WorkflowCard = ({
                     }}
                     className="text-gray-400 hover:text-red-500 transition-colors p-1"
                     title="Delete Workflow"
+                    aria-label={`Delete ${workflow.name}`}
                 >
                     <Trash2 className="h-4 w-4" />
                 </button>
@@ -349,7 +350,7 @@ export function WorkflowApp() {
             {workflowError && (
                 <div className="fixed bottom-4 right-4 bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
                     <p className="text-sm font-medium">{workflowError}</p>
-                    <button onClick={() => setWorkflowError(null)} className="text-red-900 hover:text-red-700">✕</button>
+                    <button type="button" onClick={() => setWorkflowError(null)} className="text-red-900 hover:text-red-700">✕</button>
                 </div>
             )}
         </div>

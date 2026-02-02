@@ -35,11 +35,23 @@ export function QuickAdd({ onAdd, onCancel, className }: QuickAddProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onAdd(formData);
+
+        const cleanedData = {
+            ...formData,
+            name: formData.name.trim().replace(/[<>]/g, ''),
+            sku: formData.sku.trim().replace(/[^a-zA-Z0-9-_]/g, ''),
+            category: formData.category.trim().replace(/[<>]/g, ''),
+            location: formData.location.trim().replace(/[<>]/g, ''),
+            quantity: Math.max(1, Math.min(99999, formData.quantity))
+        };
+
+        if (cleanedData.name.length < 2) return;
+
+        onAdd(cleanedData);
     };
 
     return (
-        <div className={cn("p-4 bg-card border rounded-lg shadow-lg", className)}>
+        <div className={cn("p-4 bg-card border rounded-lg shadow-lg max-w-full", className)}>
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
                     <Plus className="w-4 h-4 text-primary" />

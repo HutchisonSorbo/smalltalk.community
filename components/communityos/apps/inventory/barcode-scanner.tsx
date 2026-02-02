@@ -47,8 +47,9 @@ export function BarcodeScanner({ onScan, onClose, className }: BarcodeScannerPro
 
     const handleManualSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (manualCode.trim()) {
-            onScan(manualCode.trim());
+        const sanitized = manualCode.trim().replace(/[^a-zA-Z0-9-_]/g, '');
+        if (sanitized && sanitized.length >= 3 && sanitized.length <= 50) {
+            onScan(sanitized);
         }
     };
 
@@ -66,7 +67,7 @@ export function BarcodeScanner({ onScan, onClose, className }: BarcodeScannerPro
     }, [isScanning, hasPermission]);
 
     return (
-        <div className={cn("fixed inset-0 z-50 bg-black flex flex-col", className)}>
+        <div className={cn("fixed inset-0 z-50 bg-black flex flex-col max-w-full", className)}>
             {/* Header */}
             <div className="flex items-center justify-between p-4 text-white z-10">
                 <h3 className="text-lg font-semibold">Scan Barcode</h3>
