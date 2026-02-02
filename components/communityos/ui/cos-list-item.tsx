@@ -91,7 +91,7 @@ export function COSListItem({
             onClick={disabled ? undefined : onClick}
             onKeyDown={handleKeyDown}
             tabIndex={disabled || !onClick ? -1 : 0}
-            aria-disabled={disabled}
+            aria-disabled={disabled ? "true" : "false"}
             className={cn(
                 "flex items-center gap-4 p-4 min-h-[64px] w-full max-w-full transition-colors outline-none",
                 "bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 last:border-0",

@@ -12,7 +12,7 @@ chunking:
     overlap: 50
 watch:
     debounce_ms: 500
-    last_index_time: 2026-02-02T14:21:18.412180679+11:00
+    last_index_time: 2026-02-02T14:57:20.865901907+11:00
 search:
     boost:
         enabled: true

@@ -8,6 +8,12 @@
 import { useState } from "react";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
+import { CalendarView } from "./rostering/calendar-view";
+import { AvailabilityGrid } from "./rostering/availability-grid";
+import { Shift as CalendarShift } from "./rostering/shift-card";
+import { Plus, Calendar as CalendarIcon, Users } from "lucide-react";
+import { COSDataCard } from "../ui/cos-data-card";
+import { COSSegmentedControl } from "../ui/cos-segmented-control";
 
 interface Shift {
     id: string;
@@ -21,16 +27,15 @@ interface Shift {
 
 export function RosteringApp() {
     const { tenant, isLoading } = useTenant();
-
-    // Always call hooks unconditionally
     const { documents: shifts, upsertDocument, deleteDocument, isOnline } =
         useDittoSync<Shift>({
             collection: "rostering_shifts",
             tenantId: tenant?.id || ""
         });
 
-    const [isEditing, setIsEditing] = useState<string | null>(null);
-    const [formData, setFormData] = useState<Partial<Shift>>({});
+    const [viewMode, setViewMode] = useState<"calendar" | "availability">("calendar");
+    const [calendarViewMode, setCalendarViewMode] = useState<'week' | 'month'>('week');
+    const [currentDate, setCurrentDate] = useState(new Date());
 
     // Guard against missing tenant
     if (isLoading) {
@@ -45,172 +50,123 @@ export function RosteringApp() {
         );
     }
 
-    const handleSave = () => {
-        if (formData.workerName && formData.startTime && formData.endTime) {
-            upsertDocument(
-                isEditing === "new" ? crypto.randomUUID() : (isEditing as string),
-                {
-                    workerName: formData.workerName,
-                    role: formData.role || "Volunteer",
-                    startTime: formData.startTime,
-                    endTime: formData.endTime,
-                    status: formData.status || "pending",
-                    location: formData.location || "On-site",
-                    ...formData,
-                } as Shift
-            );
-            setIsEditing(null);
-            setFormData({});
+    // Map Ditto shifts to Calendar shifts
+    const calendarShifts: CalendarShift[] = shifts.map(s => ({
+        id: s.id,
+        title: s.role,
+        start: new Date(s.startTime),
+        end: new Date(s.endTime),
+        userName: s.workerName,
+        status: s.status === 'confirmed' ? 'published' : s.status === 'pending' ? 'draft' : 'unfilled',
+        location: s.location
+    }));
+
+    // Mock availability data
+    const mockStaff = Array.from(new Set(shifts.map(s => s.workerName))).map(name => ({
+        id: name,
+        name: name
+    }));
+
+    // Create some fake availability for the demo based on the shifts
+    const mockAvailability = shifts.map(s => ({
+        userId: s.workerName,
+        userName: s.workerName,
+        date: new Date(s.startTime),
+        status: 'available' as const
+    }));
+
+    const handleShiftMove = (shiftId: string, newDate: Date) => {
+        const shift = shifts.find(s => s.id === shiftId);
+        if (shift) {
+            const duration = new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime();
+            const newStart = newDate.toISOString();
+            const newEnd = new Date(newDate.getTime() + duration).toISOString();
+
+            upsertDocument(shiftId, {
+                ...shift,
+                startTime: newStart,
+                endTime: newEnd
+            });
         }
     };
 
+    const handleAddShift = () => {
+        const start = new Date(currentDate);
+        start.setHours(9, 0, 0, 0);
+        const end = new Date(start);
+        end.setHours(17, 0, 0, 0);
+
+        upsertDocument(crypto.randomUUID(), {
+            workerName: "New Worker",
+            role: "Volunteer",
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            status: "pending",
+            location: "Main Hall"
+        });
+    };
+
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Rostering</h2>
                     <p className="text-gray-600 dark:text-gray-400">Schedule and manage community team rotations.</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-500"}`} />
-                        <span className="text-xs text-gray-500">{isOnline ? "Online Syncing" : "Offline Mode"}</span>
-                    </div>
+                    <COSSegmentedControl
+                        options={[
+                            { id: 'calendar', label: 'Calendar', icon: <CalendarIcon className="w-4 h-4 mr-2" /> },
+                            { id: 'availability', label: 'Availability', icon: <Users className="w-4 h-4 mr-2" /> }
+                        ]}
+                        value={viewMode}
+                        onChange={(val: any) => setViewMode(val)}
+                    />
+
                     <button
-                        onClick={() => {
-                            setIsEditing("new");
-                            setFormData({ status: "pending" });
-                        }}
-                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
+                        onClick={handleAddShift}
+                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 flex items-center"
                     >
+                        <Plus className="w-4 h-4 mr-2" />
                         Add Shift
                     </button>
+
+                    <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full ${isOnline ? "bg-green-500" : "bg-orange-500"}`} />
+                        <span className="text-xs text-gray-500 hidden sm:inline">{isOnline ? "Synced" : "Offline"}</span>
+                    </div>
                 </div>
             </div>
 
-            {isEditing && (
-                <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <h3 className="mb-4 text-lg font-semibold">{isEditing === "new" ? "New Shift" : "Edit Shift"}</h3>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Worker Name</label>
-                            <input
-                                type="text"
-                                title="Worker Name"
-                                value={formData.workerName || ""}
-                                onChange={(e) => setFormData({ ...formData, workerName: e.target.value })}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                            <input
-                                type="text"
-                                title="Role"
-                                value={formData.role || ""}
-                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Time</label>
-                            <input
-                                type="datetime-local"
-                                title="Start Time"
-                                value={formData.startTime || ""}
-                                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">End Time</label>
-                            <input
-                                type="datetime-local"
-                                title="End Time"
-                                value={formData.endTime || ""}
-                                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-600 dark:bg-gray-700 sm:text-sm"
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-6 flex justify-end gap-3">
-                        <button
-                            onClick={() => setIsEditing(null)}
-                            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
-                        >
-                            Save
-                        </button>
-                    </div>
+            {viewMode === 'calendar' ? (
+                <div className="flex-1 min-h-0">
+                    <CalendarView
+                        shifts={calendarShifts}
+                        currentDate={currentDate}
+                        onDateChange={setCurrentDate}
+                        viewMode={calendarViewMode}
+                        onViewModeChange={setCalendarViewMode}
+                        onShiftMove={handleShiftMove}
+                        onShiftClick={(shift) => {
+                            if (confirm('Delete this shift?')) {
+                                deleteDocument(shift.id);
+                            }
+                        }}
+                        className="h-full"
+                    />
+                </div>
+            ) : (
+                <div className="flex-1 min-h-0 overflow-auto">
+                    <COSDataCard title="Staff Availability" className="h-full">
+                        <AvailabilityGrid
+                            staff={mockStaff}
+                            availability={mockAvailability}
+                            startDate={currentDate}
+                            days={14}
+                        />
+                    </COSDataCard>
                 </div>
             )}
-
-            <div className="overflow-hidden rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-900/50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Worker</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Time</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                        {shifts.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                    No shifts scheduled. Create your first roster entry.
-                                </td>
-                            </tr>
-                        ) : (
-                            shifts.sort((a, b) => a.startTime.localeCompare(b.startTime)).map((shift) => (
-                                <tr key={shift.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                    <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                        {shift.workerName}
-                                    </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-gray-600 dark:text-gray-400">
-                                        {shift.role}
-                                    </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                        {new Date(shift.startTime).toLocaleString()}
-                                    </td>
-                                    <td className="whitespace-nowrap px-6 py-4">
-                                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${shift.status === "confirmed" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
-                                            shift.status === "pending" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" :
-                                                "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
-                                            }`}>
-                                            {shift.status}
-                                        </span>
-                                    </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                                        <button
-                                            onClick={() => {
-                                                setIsEditing(shift.id);
-                                                setFormData(shift);
-                                            }}
-                                            className="mr-3 text-primary hover:text-primary/80"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => deleteDocument(shift.id)}
-                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
         </div>
     );
 }

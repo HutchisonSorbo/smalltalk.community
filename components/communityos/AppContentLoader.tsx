@@ -13,19 +13,22 @@ import { ErrorBoundary } from "react-error-boundary";
 import { communityOSApps } from "./apps-config";
 
 // Loading skeleton for apps
+// Loading skeleton for apps
+import { COSSkeleton } from "./ui/cos-skeleton";
+
 function AppLoadingSkeleton() {
     return (
-        <div className="space-y-6 animate-pulse">
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                    <div className="h-6 w-48 rounded bg-gray-200 dark:bg-gray-700" />
-                    <div className="h-4 w-64 rounded bg-gray-200 dark:bg-gray-700" />
+                    <COSSkeleton className="h-6 w-48 bg-gray-200 dark:bg-gray-700" />
+                    <COSSkeleton className="h-4 w-64 bg-gray-200 dark:bg-gray-700" />
                 </div>
-                <div className="h-10 w-32 rounded bg-gray-200 dark:bg-gray-700" />
+                <COSSkeleton className="h-10 w-32 bg-gray-200 dark:bg-gray-700" />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3].map((i) => (
-                    <div
+                    <COSSkeleton
                         key={i}
                         className="h-32 rounded-lg border bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
                     />
