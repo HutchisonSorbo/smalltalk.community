@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { CRMContactCard } from "./crm-contact-card";
-import { COSSwipeable } from "../ui/cos-swipeable";
+import { COSSwipeActions, SwipeAction } from "../ui/cos-swipe-actions";
 import { Phone, Mail } from "lucide-react";
 import type { CrmContactCardProps } from "@/types/crm";
 import { safeUrl } from "@/lib/utils";
@@ -26,18 +26,26 @@ export function CRMSwipeableContactCard({ contact, onClick, className, isSelecte
         }
     };
 
+    const leftActions: SwipeAction[] = contact.phone ? [{
+        id: "call",
+        label: "Call",
+        icon: <Phone className="h-5 w-5 text-white" />,
+        color: "success",
+        onClick: handleCall,
+    }] : [];
+
+    const rightActions: SwipeAction[] = contact.email ? [{
+        id: "email",
+        label: "Email",
+        icon: <Mail className="h-5 w-5 text-white" />,
+        color: "primary",
+        onClick: handleEmail,
+    }] : [];
+
     return (
-        <COSSwipeable
-            leftAction={contact.phone ? {
-                icon: <Phone className="h-5 w-5 text-white" />,
-                color: "bg-green-500",
-                onClick: handleCall,
-            } : undefined}
-            rightAction={contact.email ? {
-                icon: <Mail className="h-5 w-5 text-white" />,
-                color: "bg-blue-500",
-                onClick: handleEmail,
-            } : undefined}
+        <COSSwipeActions
+            leftActions={leftActions}
+            rightActions={rightActions}
             className={className}
         >
             <CRMContactCard
@@ -46,6 +54,6 @@ export function CRMSwipeableContactCard({ contact, onClick, className, isSelecte
                 isSelected={isSelected}
                 onToggleSelection={onToggleSelection}
             />
-        </COSSwipeable>
+        </COSSwipeActions>
     );
 }
