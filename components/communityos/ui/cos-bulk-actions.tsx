@@ -14,16 +14,18 @@ interface BulkActionsBarProps {
     onEmail?: () => void;
     onExport?: () => void;
     className?: string;
+    label?: string;
 }
 
-export function BulkActionsBar({
+export function COSBulkActions({
     selectedCount,
     onClear,
     onDelete,
     onTag,
     onEmail,
     onExport,
-    className
+    className,
+    label = "selected"
 }: BulkActionsBarProps) {
     if (selectedCount === 0) return null;
 
@@ -39,7 +41,7 @@ export function BulkActionsBar({
                 )}
             >
                 <div className="flex items-center pl-4 pr-2 gap-3 border-r border-background/20">
-                    <span className="font-semibold text-sm whitespace-nowrap">{selectedCount} selected</span>
+                    <span className="font-semibold text-sm whitespace-nowrap">{selectedCount} {label}</span>
                     <Button
                         variant="ghost"
                         size="icon"
