@@ -27,6 +27,37 @@ const colorMap: Record<string, string> = {
     default: "bg-slate-500 text-white",
 };
 
+// --- Helpers ---
+
+/**
+ * Calculates the active drag difference with resistance/containment
+ */
+function applyResistance(
+    diff: number,
+    maxLeftTranslate: number,
+    maxRightTranslate: number,
+    hasLeftActions: boolean,
+    hasRightActions: boolean
+): number {
+    let activeDiff = diff;
+
+    // If no left actions, block right swipe (positive diff)
+    if (!hasLeftActions && diff > 0) activeDiff = 0;
+    // If no right actions, block left swipe (negative diff)
+    if (!hasRightActions && diff < 0) activeDiff = 0;
+
+    // Add resistance past max width
+    if (activeDiff > maxLeftTranslate) {
+        const extra = activeDiff - maxLeftTranslate;
+        activeDiff = maxLeftTranslate + extra * 0.4;
+    } else if (activeDiff < -maxRightTranslate) {
+        const extra = activeDiff + maxRightTranslate;
+        activeDiff = -maxRightTranslate + extra * 0.4;
+    }
+
+    return activeDiff;
+}
+
 // --- Hook ---
 
 function useSwipeGesture(
@@ -50,44 +81,38 @@ function useSwipeGesture(
         setIsSwiping(false);
     }, []);
 
-    const handleTouchStart = (e: React.TouchEvent) => {
+    const onTouchStart = React.useCallback((e: React.TouchEvent) => {
         setStartX(e.touches[0].pageX);
         setIsSwiping(true);
         setIsActionActive(false);
-    };
+    }, []);
 
-    const handleTouchMove = (e: React.TouchEvent) => {
+    const onTouchMove = React.useCallback((e: React.TouchEvent) => {
         if (!isSwiping) return;
         const x = e.touches[0].pageX;
         const diff = x - startX;
 
-        // Contain diff based on available actions
-        let activeDiff = diff;
-
-        // If no left actions, block right swipe
-        if (leftActions.length === 0 && diff > 0) activeDiff = 0;
-        // If no right actions, block left swipe
-        if (rightActions.length === 0 && diff < 0) activeDiff = 0;
-
-        // Add resistance past max width
-        if (activeDiff > maxLeftTranslate) {
-            const extra = activeDiff - maxLeftTranslate;
-            activeDiff = maxLeftTranslate + extra * 0.4;
-        } else if (activeDiff < -maxRightTranslate) {
-            const extra = activeDiff + maxRightTranslate;
-            activeDiff = -maxRightTranslate + extra * 0.4;
-        }
+        const activeDiff = applyResistance(
+            diff,
+            maxLeftTranslate,
+            maxRightTranslate,
+            leftActions.length > 0,
+            rightActions.length > 0
+        );
 
         setCurrentX(activeDiff);
-    };
+    }, [isSwiping, startX, maxLeftTranslate, maxRightTranslate, leftActions.length, rightActions.length]);
 
-    const handleTouchEnd = () => {
+    const onTouchEnd = React.useCallback(() => {
         setIsSwiping(false);
         const absX = Math.abs(currentX);
 
         if (currentX > 0 && leftActions.length > 0) {
             // Swiping Right (Revealing Left Actions)
-            if (absX > maxLeftTranslate * 0.5) {
+            // Use threshold clamped to the action width
+            const openThreshold = Math.min(threshold, maxLeftTranslate);
+
+            if (absX >= openThreshold) {
                 // Snap open
                 setCurrentX(maxLeftTranslate);
                 setIsActionActive(true);
@@ -96,7 +121,10 @@ function useSwipeGesture(
             }
         } else if (currentX < 0 && rightActions.length > 0) {
             // Swiping Left (Revealing Right Actions)
-            if (absX > maxRightTranslate * 0.5) {
+            // Use threshold clamped to the action width
+            const openThreshold = Math.min(threshold, maxRightTranslate);
+
+            if (absX >= openThreshold) {
                 // Snap open
                 setCurrentX(-maxRightTranslate);
                 setIsActionActive(true);
@@ -106,15 +134,15 @@ function useSwipeGesture(
         } else {
             reset();
         }
-    };
+    }, [currentX, leftActions.length, rightActions.length, maxLeftTranslate, maxRightTranslate, threshold, reset]);
 
     return {
         currentX,
         isSwiping,
         isActionActive,
-        handleTouchStart,
-        handleTouchMove,
-        handleTouchEnd,
+        handleTouchStart: onTouchStart,
+        handleTouchMove: onTouchMove,
+        handleTouchEnd: onTouchEnd,
         reset,
         maxLeftTranslate,
         maxRightTranslate,
@@ -205,7 +233,7 @@ const COSSwipeActions = ({
     };
 
     return (
-        <div className={cn("relative overflow-hidden w-full touch-pan-y h-full select-none", className)}>
+        <div className={cn("relative overflow-hidden w-full max-w-full touch-pan-y h-full select-none", className)}>
             <ActionButtons
                 actions={leftActions}
                 width={maxLeftTranslate}
@@ -221,8 +249,10 @@ const COSSwipeActions = ({
 
             {/* Foreground Content */}
             <div
-                role="button"
-                tabIndex={0}
+                role={isActionActive ? "button" : undefined}
+                tabIndex={isActionActive ? 0 : -1}
+                aria-label={isActionActive ? "Close actions" : undefined}
+                aria-expanded={isActionActive}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}

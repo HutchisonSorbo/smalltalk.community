@@ -51,7 +51,6 @@ export function COSListItem({
                 disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
-            role="listitem" // Explicit role restoration although li implies it in ul/ol
         >
             {/* Avatar / Leading Icon */}
             {avatar && (
