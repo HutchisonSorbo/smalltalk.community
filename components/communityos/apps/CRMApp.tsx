@@ -10,7 +10,7 @@ import { contactSchema, interactionSchema } from "@/lib/communityos/crm/validati
 import { PipelineBoard } from "./crm/pipeline-board";
 import { ContactDetailSheet } from "./crm/contact-detail-sheet";
 import { ContactCard } from "./crm/contact-card";
-import { BulkActionsBar } from "./crm/bulk-actions-bar";
+import { COSBulkActions } from "@/components/communityos/ui/cos-bulk-actions";
 import { COSSearch } from "@/components/communityos/ui/cos-search";
 import { COSFilterBar, FilterOption } from "@/components/communityos/ui/cos-filter-bar";
 import { COSFab } from "@/components/communityos/ui/cos-fab";
@@ -262,7 +262,7 @@ export function CRMApp() {
             />
 
             {/* Bulk Actions */}
-            <BulkActionsBar
+            <COSBulkActions
                 selectedCount={selectedIds.size}
                 onClear={() => setSelectedIds(new Set())}
                 onDelete={handleDeleteSelected}

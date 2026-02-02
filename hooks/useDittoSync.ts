@@ -78,6 +78,8 @@ export function useDittoSync<T extends DittoDocument>(
     const [error, setError] = useState<Error | null>(null);
     const subscriptionRef = useRef<{ cancel: () => void } | null>(null);
     const observerRef = useRef<{ cancel: () => void } | null>(null);
+    const batchTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const pendingOpsRef = useRef<Map<string, T | null>>(new Map()); // Map of ID to Doc (null means delete)
 
     // Determine if we're in mock mode (using localStorage instead of real Ditto)
     const isMockMode = !ditto || !!dittoError;
@@ -89,6 +91,99 @@ export function useDittoSync<T extends DittoDocument>(
         // Remove special characters that might break Ditto queries
         return collection.replace(/[^a-zA-Z0-9_\-:]/g, "");
     }, [collection]);
+
+    // Collection name with tenant prefix for Ditto
+    const dittoCollectionName = tenantId ? `${tenantId}:${sanitizedCollection}` : sanitizedCollection;
+
+    // Storage key for localStorage fallback
+    const storageKey = tenantId ? `ditto:${tenantId}:${collection}` : undefined;
+
+    /**
+     * Process batched operations
+     */
+    const processBatch = useCallback(async () => {
+        const ops = new Map(pendingOpsRef.current);
+        pendingOpsRef.current.clear();
+        if (batchTimerRef.current) {
+            clearTimeout(batchTimerRef.current);
+            batchTimerRef.current = null;
+        }
+
+        if (ops.size === 0) return;
+
+        console.log(`[useDittoSync] Processing batch of ${ops.size} operations for ${sanitizedCollection}`);
+
+        const errors: Error[] = [];
+
+        if (ditto && !isMockMode) {
+            const dittoCollection = ditto.store.collection(dittoCollectionName);
+            for (const [id, doc] of Array.from(ops.entries())) {
+                incrementPendingChanges();
+                try {
+                    if (doc === null) {
+                        await dittoCollection.findByID(id).remove();
+                    } else {
+                        await dittoCollection.upsert({ ...doc, _id: id } as unknown as Record<string, unknown>);
+                    }
+                } catch (err) {
+                    const error = err instanceof Error ? err : new Error(String(err));
+                    console.error("[useDittoSync] Batch operation failed:", error);
+                    errors.push(error);
+                } finally {
+                    decrementPendingChanges();
+                }
+            }
+        } else if (storageKey) {
+            try {
+                // Mock mode Batch
+                queryClient.setQueryData(["ditto", dittoCollectionName], (old: T[] = []) => {
+                    let current = [...old];
+                    ops.forEach((doc, id) => {
+                        if (doc === null) {
+                            current = current.filter(d => d._id !== id && d.id !== id);
+                        } else {
+                            const idx = current.findIndex(d => d._id === id || d.id === id);
+                            if (idx >= 0) current[idx] = { ...doc, _id: id, id } as T;
+                            else current.push({ ...doc, _id: id, id } as T);
+                        }
+                    });
+                    localStorage.setItem(storageKey, JSON.stringify(current));
+                    return current;
+                });
+            } catch (err) {
+                const error = err instanceof Error ? err : new Error(String(err));
+                console.error("[useDittoSync] Mock batch operation failed:", error);
+                errors.push(error);
+            }
+        }
+
+        if (errors.length > 0) {
+            setError(new Error(`Batch failed with ${errors.length} errors. Check console for details.`));
+        }
+    }, [ditto, isMockMode, dittoCollectionName, sanitizedCollection, storageKey, queryClient, incrementPendingChanges, decrementPendingChanges]);
+
+    const queueOp = useCallback((id: string, doc: T | null) => {
+        pendingOpsRef.current.set(id, doc);
+
+        // Optimistic update
+        queryClient.setQueryData(["ditto", dittoCollectionName], (old: T[] = []) => {
+            if (doc === null) {
+                return old.filter(d => d._id !== id && d.id !== id);
+            } else {
+                const existingIndex = old.findIndex((d) => d._id === id || d.id === id);
+                if (existingIndex >= 0) {
+                    const updated = [...old];
+                    updated[existingIndex] = { ...doc, _id: id, id } as T;
+                    return updated;
+                } else {
+                    return [...old, { ...doc, _id: id, id } as T];
+                }
+            }
+        });
+
+        if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+        batchTimerRef.current = setTimeout(processBatch, 300);
+    }, [processBatch, queryClient, dittoCollectionName]);
 
     // Early return if collection name is invalid after sanitization
     if (sanitizedCollection === "") {
@@ -116,12 +211,7 @@ export function useDittoSync<T extends DittoDocument>(
         }
     }, [tenantId, optionsOrCollectionString]);
 
-    // Collection name with tenant prefix for Ditto
-    const dittoCollectionName = tenantId ? `${tenantId}:${sanitizedCollection}` : sanitizedCollection;
-
     // Storage key for localStorage fallback
-    const storageKey = tenantId ? `ditto:${tenantId}:${collection}` : undefined;
-
 
     /**
      * Load documents from localStorage (fallback mode)
@@ -190,6 +280,10 @@ export function useDittoSync<T extends DittoDocument>(
         return () => {
             subscriptionRef.current?.cancel();
             observerRef.current?.cancel();
+            if (batchTimerRef.current) {
+                clearTimeout(batchTimerRef.current);
+                batchTimerRef.current = null;
+            }
         };
     }, [ditto, dittoCollectionName, isMockMode, dittoInitialized, queryClient]);
 
@@ -293,48 +387,13 @@ export function useDittoSync<T extends DittoDocument>(
 
     // Upsert document (insert or update) - for CommunityOS app compatibility
     const upsertDocument = useCallback(async (id: string, doc: T): Promise<void> => {
-        if (ditto && !isMockMode) {
-            incrementPendingChanges();
-            try {
-                const dittoCollection = ditto.store.collection(dittoCollectionName);
-                await dittoCollection.upsert({ ...doc, _id: id } as unknown as Record<string, unknown>);
-                decrementPendingChanges();
-            } catch (err) {
-                console.error("[useDittoSync] Error upserting document:", err);
-                decrementPendingChanges();
-
-                // Optimistic update
-                queryClient.setQueryData(["ditto", dittoCollectionName], (old: T[] = []) => {
-                    const existingIndex = old.findIndex((d) => d._id === id || d.id === id);
-                    if (existingIndex >= 0) {
-                        const updated = [...old];
-                        updated[existingIndex] = { ...doc, _id: id, id } as T;
-                        return updated;
-                    } else {
-                        return [...old, { ...doc, _id: id, id } as T];
-                    }
-                });
-            }
-        } else {
-            queryClient.setQueryData(["ditto", dittoCollectionName], (old: T[] = []) => {
-                const existingIndex = old.findIndex((d) => d._id === id || d.id === id);
-                let updatedDocs: T[];
-                if (existingIndex >= 0) {
-                    updatedDocs = [...old];
-                    updatedDocs[existingIndex] = { ...doc, _id: id, id } as T;
-                } else {
-                    updatedDocs = [...old, { ...doc, _id: id, id } as T];
-                }
-                if (storageKey) localStorage.setItem(storageKey, JSON.stringify(updatedDocs));
-                return updatedDocs;
-            });
-        }
-    }, [ditto, isMockMode, dittoCollectionName]);
+        queueOp(id, doc);
+    }, [queueOp]);
 
     // Delete document - for CommunityOS app compatibility
     const deleteDocument = useCallback(async (id: string): Promise<void> => {
-        await remove(id);
-    }, [remove]);
+        queueOp(id, null);
+    }, [queueOp]);
 
     return {
         documents,
