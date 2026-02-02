@@ -124,12 +124,14 @@ export function GenericCommunityApp({
                 footer={
                     <>
                         <button
+                            type="button"
                             onClick={handleSave}
                             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
                         >
                             Save
                         </button>
                         <button
+                            type="button"
                             onClick={() => setIsEditing(null)}
                             className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                         >
@@ -140,8 +142,9 @@ export function GenericCommunityApp({
             >
                 <div className="space-y-4 py-2">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                        <label htmlFor="generic-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
                         <input
+                            id="generic-title"
                             type="text"
                             title="Title"
                             value={formData.title || ""}
@@ -150,8 +153,9 @@ export function GenericCommunityApp({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                        <label htmlFor="generic-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                         <textarea
+                            id="generic-description"
                             title="Description"
                             placeholder="Enter description"
                             value={formData.description || ""}

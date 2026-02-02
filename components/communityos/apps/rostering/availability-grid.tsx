@@ -20,6 +20,66 @@ interface AvailabilityGridProps {
     className?: string;
 }
 
+// Sub-component: Grid Header
+const AvailabilityGridHeader = ({ dates, days }: { dates: Date[], days: number }) => (
+    <div className="grid border-b bg-muted/50 [grid-template-columns:var(--grid-cols)]" style={{ '--grid-cols': `200px repeat(${days}, 1fr)` } as React.CSSProperties}>
+        <div className="p-3 font-semibold text-sm flex items-center border-r">Staff Member</div>
+        {dates.map(date => (
+            <div key={date.toISOString()} className="p-2 text-center border-r last:border-r-0">
+                <div className="text-xs font-medium text-muted-foreground">{format(date, 'EEE')}</div>
+                <div className="text-sm font-bold">{format(date, 'd')}</div>
+            </div>
+        ))}
+    </div>
+);
+
+// Sub-component: Grid Row
+const AvailabilityGridRow = ({
+    person,
+    dates,
+    days,
+    availability,
+    getStatusColor,
+    getStatusLabel
+}: {
+    person: { id: string; name: string },
+    dates: Date[],
+    days: number,
+    availability: Availability[],
+    getStatusColor: (status?: Availability['status']) => string,
+    getStatusLabel: (status?: Availability['status']) => string
+}) => (
+    <div
+        className="grid border-b last:border-b-0 hover:bg-muted/10 transition-colors [grid-template-columns:var(--grid-cols)]"
+        style={{ '--grid-cols': `200px repeat(${days}, 1fr)` } as React.CSSProperties}
+    >
+        <div className="p-3 text-sm font-medium border-r flex items-center bg-card z-10 sticky left-0">
+            {person.name}
+        </div>
+        {dates.map(date => {
+            const entry = availability.find(a =>
+                a.userId === person.id && isSameDay(a.date, date)
+            );
+
+            return (
+                <div
+                    key={`${person.id}-${date.toISOString()}`}
+                    className="p-1 border-r last:border-r-0 h-12"
+                >
+                    <div className={cn(
+                        "w-full h-full rounded flex items-center justify-center text-xs font-bold transition-all hover:scale-105 cursor-help",
+                        getStatusColor(entry?.status)
+                    )}
+                        title={entry?.note || entry?.status || "No input"}
+                    >
+                        {getStatusLabel(entry?.status)}
+                    </div>
+                </div>
+            );
+        })}
+    </div>
+);
+
 export function AvailabilityGrid({
     staff,
     availability,
@@ -27,8 +87,9 @@ export function AvailabilityGrid({
     days = 7,
     className
 }: AvailabilityGridProps) {
+    const clampedDays = Math.min(days, 31);
     const start = startOfWeek(startDate, { weekStartsOn: 1 });
-    const dates = Array.from({ length: days }, (_, i) => addDays(start, i));
+    const dates = Array.from({ length: clampedDays }, (_, i) => addDays(start, i));
 
     const getStatusColor = (status?: Availability['status']) => {
         switch (status) {
@@ -51,49 +112,17 @@ export function AvailabilityGrid({
     return (
         <div className={cn("overflow-x-auto rounded-lg border bg-card", className)}>
             <div className="min-w-[800px]">
-                {/* Header */}
-                <div className="grid border-b bg-muted/50" style={{ gridTemplateColumns: `200px repeat(${days}, 1fr)` } as React.CSSProperties}>
-                    <div className="p-3 font-semibold text-sm flex items-center border-r">Staff Member</div>
-                    {dates.map(date => (
-                        <div key={date.toISOString()} className="p-2 text-center border-r last:border-r-0">
-                            <div className="text-xs font-medium text-muted-foreground">{format(date, 'EEE')}</div>
-                            <div className="text-sm font-bold">{format(date, 'd')}</div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Rows */}
+                <AvailabilityGridHeader dates={dates} days={clampedDays} />
                 {staff.map(person => (
-                    <div
+                    <AvailabilityGridRow
                         key={person.id}
-                        className="grid border-b last:border-b-0 hover:bg-muted/10 transition-colors"
-                        style={{ gridTemplateColumns: `200px repeat(${days}, 1fr)` } as React.CSSProperties}
-                    >
-                        <div className="p-3 text-sm font-medium border-r flex items-center bg-card z-10 sticky left-0">
-                            {person.name}
-                        </div>
-                        {dates.map(date => {
-                            const entry = availability.find(a =>
-                                a.userId === person.id && isSameDay(a.date, date)
-                            );
-
-                            return (
-                                <div
-                                    key={`${person.id}-${date.toISOString()}`}
-                                    className="p-1 border-r last:border-r-0 h-12"
-                                >
-                                    <div className={cn(
-                                        "w-full h-full rounded flex items-center justify-center text-xs font-bold transition-all hover:scale-105 cursor-help",
-                                        getStatusColor(entry?.status)
-                                    )}
-                                        title={entry?.note || entry?.status || "No input"}
-                                    >
-                                        {getStatusLabel(entry?.status)}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                        person={person}
+                        dates={dates}
+                        days={clampedDays}
+                        availability={availability}
+                        getStatusColor={getStatusColor}
+                        getStatusLabel={getStatusLabel}
+                    />
                 ))}
             </div>
         </div>

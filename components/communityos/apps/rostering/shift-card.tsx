@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-import { cn } from "@/lib/utils";
 import { Clock, MapPin, User, AlertCircle, CheckCircle2 } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export interface Shift {
     id: string;
@@ -51,6 +51,7 @@ export function ShiftCard({ shift, onClick, className }: ShiftCardProps) {
             )}
             role="button"
             tabIndex={0}
+            aria-label={`Shift: ${shift.title}, status: ${shift.status}, ${format(shift.start, 'h:mm a')} to ${format(shift.end, 'h:mm a')}`}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -59,7 +60,7 @@ export function ShiftCard({ shift, onClick, className }: ShiftCardProps) {
             }}
         >
             <div className="flex justify-between items-start mb-2">
-                <h4 className="font-semibold text-sm truncate pr-2">{shift.title}</h4>
+                <h4 className="font-semibold text-sm truncate pr-2" title={shift.title}>{shift.title}</h4>
                 {shift.status === 'unfilled' ? (
                     <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />
                 ) : shift.status === 'published' ? (
@@ -71,10 +72,10 @@ export function ShiftCard({ shift, onClick, className }: ShiftCardProps) {
                 <div className="flex items-center text-xs text-muted-foreground">
                     <Clock className="h-3 w-3 mr-1.5" />
                     <span>
-                        {shift.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {format(shift.start, 'h:mm a')}
                         {" - "}
-                        {shift.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        <span className="ml-1 opacity-70">({durationHours}h)</span>
+                        {format(shift.end, 'h:mm a')}
+                        <span className="ml-1 opacity-70">({durationHours.toFixed(1)}h)</span>
                     </span>
                 </div>
 

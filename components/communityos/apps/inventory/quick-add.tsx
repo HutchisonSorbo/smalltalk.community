@@ -4,8 +4,20 @@ import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Plus, Package, Hash, MapPin, Tag } from "lucide-react";
 
+export interface InventoryItem {
+    id?: string;
+    name: string;
+    sku: string;
+    category: string;
+    location: string;
+    quantity: number;
+    description?: string;
+    minStockLevel?: number;
+    [key: string]: any;
+}
+
 interface QuickAddProps {
-    onAdd: (item: any) => void;
+    onAdd: (item: InventoryItem) => void;
     onCancel: () => void;
     className?: string;
 }
@@ -35,25 +47,26 @@ export function QuickAdd({ onAdd, onCancel, className }: QuickAddProps) {
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                    <label htmlFor="quick-add-name" className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                         <Package className="w-3.5 h-3.5" /> Item Name
                     </label>
                     <input
+                        id="quick-add-name"
                         required
                         className="w-full px-3 py-2 bg-background border rounded-md text-sm focus:ring-2 focus:ring-primary"
                         placeholder="e.g. Wireless Microphone"
                         value={formData.name}
                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        autoFocus
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                        <label htmlFor="quick-add-sku" className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                             <Hash className="w-3.5 h-3.5" /> SKU / Tag
                         </label>
                         <input
+                            id="quick-add-sku"
                             required
                             className="w-full px-3 py-2 bg-background border rounded-md text-sm font-mono"
                             value={formData.sku}
@@ -61,10 +74,11 @@ export function QuickAdd({ onAdd, onCancel, className }: QuickAddProps) {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                        <label htmlFor="quick-add-quantity" className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                             <Tag className="w-3.5 h-3.5" /> Quantity
                         </label>
                         <input
+                            id="quick-add-quantity"
                             type="number"
                             min="1"
                             required
@@ -75,12 +89,13 @@ export function QuickAdd({ onAdd, onCancel, className }: QuickAddProps) {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                        <label htmlFor="quick-add-category" className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                             <Tag className="w-3.5 h-3.5" /> Category
                         </label>
                         <select
+                            id="quick-add-category"
                             className="w-full px-3 py-2 bg-background border rounded-md text-sm"
                             value={formData.category}
                             onChange={e => setFormData({ ...formData, category: e.target.value })}
@@ -93,10 +108,11 @@ export function QuickAdd({ onAdd, onCancel, className }: QuickAddProps) {
                         </select>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                        <label htmlFor="quick-add-location" className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                             <MapPin className="w-3.5 h-3.5" /> Location
                         </label>
                         <select
+                            id="quick-add-location"
                             className="w-full px-3 py-2 bg-background border rounded-md text-sm"
                             value={formData.location}
                             onChange={e => setFormData({ ...formData, location: e.target.value })}

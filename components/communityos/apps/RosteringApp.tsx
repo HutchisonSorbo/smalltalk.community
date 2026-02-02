@@ -12,8 +12,9 @@ import { CalendarView } from "./rostering/calendar-view";
 import { AvailabilityGrid } from "./rostering/availability-grid";
 import { Shift as CalendarShift } from "./rostering/shift-card";
 import { Plus, Calendar as CalendarIcon, Users } from "lucide-react";
-import { COSDataCard } from "../ui/cos-data-card";
+import { COSCard } from "../ui/cos-card";
 import { COSSegmentedControl } from "../ui/cos-segmented-control";
+import { COSModal } from "../ui/cos-modal";
 
 interface Shift {
     id: string;
@@ -36,6 +37,7 @@ export function RosteringApp() {
     const [viewMode, setViewMode] = useState<"calendar" | "availability">("calendar");
     const [calendarViewMode, setCalendarViewMode] = useState<'week' | 'month'>('week');
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [shiftToDelete, setShiftToDelete] = useState<string | null>(null);
 
     // Guard against missing tenant
     if (isLoading) {
@@ -75,39 +77,60 @@ export function RosteringApp() {
         status: 'available' as const
     }));
 
-    const handleShiftMove = (shiftId: string, newDate: Date) => {
-        const shift = shifts.find(s => s.id === shiftId);
-        if (shift) {
-            const duration = new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime();
-            const newStart = newDate.toISOString();
-            const newEnd = new Date(newDate.getTime() + duration).toISOString();
+    const handleShiftMove = async (shiftId: string, newDate: Date) => {
+        try {
+            const shift = shifts.find(s => s.id === shiftId);
+            if (shift) {
+                const duration = new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime();
+                const newStart = newDate.toISOString();
+                const newEnd = new Date(newDate.getTime() + duration).toISOString();
 
-            upsertDocument(shiftId, {
-                ...shift,
-                startTime: newStart,
-                endTime: newEnd
-            });
+                await upsertDocument(shiftId as any, {
+                    ...shift,
+                    startTime: newStart,
+                    endTime: newEnd
+                });
+            }
+        } catch (err) {
+            console.error("Failed to move shift:", err);
         }
     };
 
-    const handleAddShift = () => {
-        const start = new Date(currentDate);
-        start.setHours(9, 0, 0, 0);
-        const end = new Date(start);
-        end.setHours(17, 0, 0, 0);
+    const handleAddShift = async () => {
+        try {
+            const start = new Date(currentDate);
+            start.setHours(9, 0, 0, 0);
+            const end = new Date(start);
+            end.setHours(17, 0, 0, 0);
 
-        upsertDocument(crypto.randomUUID(), {
-            workerName: "New Worker",
-            role: "Volunteer",
-            startTime: start.toISOString(),
-            endTime: end.toISOString(),
-            status: "pending",
-            location: "Main Hall"
-        });
+            const id = crypto.randomUUID();
+            await upsertDocument(id as any, {
+                id,
+                workerName: "New Worker",
+                role: "Volunteer",
+                startTime: start.toISOString(),
+                endTime: end.toISOString(),
+                status: "pending",
+                location: "Main Hall"
+            });
+        } catch (err) {
+            console.error("Failed to add shift:", err);
+        }
+    };
+
+    const handleDeleteShift = async () => {
+        if (shiftToDelete) {
+            try {
+                await deleteDocument(shiftToDelete);
+                setShiftToDelete(null);
+            } catch (err) {
+                console.error("Failed to delete shift:", err);
+            }
+        }
     };
 
     return (
-        <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
+        <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col max-w-full">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Rostering</h2>
@@ -120,7 +143,7 @@ export function RosteringApp() {
                             { id: 'availability', label: 'Availability', icon: <Users className="w-4 h-4 mr-2" /> }
                         ]}
                         value={viewMode}
-                        onChange={(val: any) => setViewMode(val)}
+                        onChange={(val: string) => setViewMode(val as "calendar" | "availability")}
                     />
 
                     <button
@@ -147,26 +170,58 @@ export function RosteringApp() {
                         viewMode={calendarViewMode}
                         onViewModeChange={setCalendarViewMode}
                         onShiftMove={handleShiftMove}
-                        onShiftClick={(shift) => {
-                            if (confirm('Delete this shift?')) {
-                                deleteDocument(shift.id);
-                            }
-                        }}
+                        onShiftClick={(shift) => setShiftToDelete(shift.id)}
                         className="h-full"
                     />
                 </div>
             ) : (
                 <div className="flex-1 min-h-0 overflow-auto">
-                    <COSDataCard title="Staff Availability" className="h-full">
+                    <COSCard className="h-full">
+                        <h3 className="text-lg font-semibold mb-4">Staff Availability</h3>
                         <AvailabilityGrid
                             staff={mockStaff}
                             availability={mockAvailability}
                             startDate={currentDate}
                             days={14}
                         />
-                    </COSDataCard>
+                    </COSCard>
                 </div>
             )}
+
+            {/* Deletion Confirmation Modal */}
+            <COSModal
+                isOpen={!!shiftToDelete}
+                onClose={() => setShiftToDelete(null)}
+                title="Delete Shift"
+                description="Are you sure you want to remove this shift?"
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShiftToDelete(null)}
+                            className="px-4 py-2 border rounded-md text-sm font-medium hover:bg-muted"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                if (shiftToDelete) {
+                                    await deleteDocument(shiftToDelete as any);
+                                    setShiftToDelete(null);
+                                }
+                            }}
+                            className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                }
+            >
+                <p className="py-4 text-sm text-muted-foreground">
+                    This will remove the shift from the roster and notify the assigned staff member if applicable.
+                </p>
+            </COSModal>
         </div>
     );
 }

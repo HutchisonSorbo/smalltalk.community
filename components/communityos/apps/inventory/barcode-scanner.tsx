@@ -52,16 +52,17 @@ export function BarcodeScanner({ onScan, onClose, className }: BarcodeScannerPro
         }
     };
 
-    // Mock scanning effect
+    // Mock scanning effect - placeholder for future BarcodeDetector logic
     useEffect(() => {
         if (!isScanning || !hasPermission) return;
 
-        const interval = setInterval(() => {
-            // In a real app, we'd use BarcodeDetector API or a library here
-            // For now, we just simulate the UI
-        }, 1000);
+        // TODO: Implement BarcodeDetector API or scanning library loop here
+        // Currently disabled to avoid wasteful no-op timer
+        const interval = null;
 
-        return () => clearInterval(interval);
+        return () => {
+            if (interval) clearInterval(interval);
+        };
     }, [isScanning, hasPermission]);
 
     return (
@@ -69,7 +70,13 @@ export function BarcodeScanner({ onScan, onClose, className }: BarcodeScannerPro
             {/* Header */}
             <div className="flex items-center justify-between p-4 text-white z-10">
                 <h3 className="text-lg font-semibold">Scan Barcode</h3>
-                <button onClick={onClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20" title="Close Scanner" aria-label="Close Scanner">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20"
+                    title="Close Scanner"
+                    aria-label="Close Scanner"
+                >
                     <X className="w-6 h-6" />
                 </button>
             </div>
@@ -110,10 +117,12 @@ export function BarcodeScanner({ onScan, onClose, className }: BarcodeScannerPro
             <div className="p-4 bg-black/80 backdrop-blur-sm pb-8">
                 <form onSubmit={handleManualSubmit} className="flex gap-2">
                     <input
+                        id="manual-barcode-input"
                         type="text"
                         value={manualCode}
                         onChange={(e) => setManualCode(e.target.value)}
                         placeholder="Or enter code manually..."
+                        aria-label="Manual barcode input"
                         className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <button

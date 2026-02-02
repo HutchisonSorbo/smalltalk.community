@@ -4,21 +4,12 @@ import { useState } from "react";
 import { useDittoSync } from "@/hooks/useDittoSync";
 import { useTenant } from "@/components/communityos/TenantProvider";
 import { BarcodeScanner } from "./inventory/barcode-scanner";
-import { QuickAdd } from "./inventory/quick-add";
-import { Scan, Plus, Search, AlertCircle, Package, Hash } from "lucide-react";
+import { QuickAdd, type InventoryItem } from "./inventory/quick-add";
+import { Scan, Plus, Search, AlertCircle, Package, Hash, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { COSModal } from "../ui/cos-modal";
 
-interface InventoryItem {
-    id: string;
-    name: string;
-    category: string;
-    quantity: number;
-    unit: string;
-    location: string;
-    minStockLevel: number;
-    lastChecked: string;
-    sku?: string;
-}
+// Local interface removed in favor of imported InventoryItem from quick-add.tsx
 
 export function InventoryApp() {
     const { tenant, isLoading } = useTenant();
@@ -33,6 +24,8 @@ export function InventoryApp() {
     const [isEditing, setIsEditing] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(false);
     const [isQuickAdding, setIsQuickAdding] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<string | number | null>(null);
+    const [pendingScanCode, setPendingScanCode] = useState<string | null>(null);
     const [scanMessage, setScanMessage] = useState<string | null>(null);
 
     const [formData, setFormData] = useState<Partial<InventoryItem>>({});
@@ -51,24 +44,30 @@ export function InventoryApp() {
         );
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (formData.name && formData.quantity !== undefined) {
-            upsertDocument(
-                isEditing === "new" ? crypto.randomUUID() : (isEditing as string),
-                {
-                    name: formData.name,
-                    category: formData.category || "General",
-                    quantity: Number(formData.quantity),
-                    unit: formData.unit || "pcs",
-                    location: formData.location || "Store Room",
-                    minStockLevel: Number(formData.minStockLevel || 0),
-                    lastChecked: new Date().toISOString(),
-                    sku: formData.sku || `INV-${Math.floor(Math.random() * 10000)}`,
-                    ...formData,
-                } as InventoryItem
-            );
-            setIsEditing(null);
-            setFormData({});
+            try {
+                const id = isEditing === "new" ? crypto.randomUUID() : (isEditing as string);
+                await upsertDocument(
+                    id as any,
+                    {
+                        id,
+                        name: formData.name,
+                        category: formData.category || "General",
+                        quantity: Number(formData.quantity),
+                        unit: formData.unit || "pcs",
+                        location: formData.location || "Store Room",
+                        minStockLevel: Number(formData.minStockLevel || 0),
+                        lastChecked: new Date().toISOString(),
+                        sku: formData.sku || `INV-${Math.floor(Math.random() * 10000)}`,
+                        ...formData,
+                    } as InventoryItem
+                );
+                setIsEditing(null);
+                setFormData({});
+            } catch (err) {
+                console.error("Failed to save inventory item:", err);
+            }
         }
     };
 
@@ -76,36 +75,55 @@ export function InventoryApp() {
         const existingItem = items.find(i => i.sku === code || i.id === code);
 
         if (existingItem) {
-            // If item exists, open edit mode or increment count? 
-            // For now, let's open edit mode
+            // If item exists, open edit mode 
             setIsScanning(false);
             setFormData(existingItem);
-            setIsEditing(existingItem.id);
+            setIsEditing(existingItem.id ?? null);
             setScanMessage(`Found item: ${existingItem.name}`);
         } else {
-            // If not found, prompt to add
-            if (confirm(`Item with code ${code} not found. Create new?`)) {
-                setIsScanning(false);
-                setFormData({
-                    sku: code,
-                    quantity: 1,
-                    minStockLevel: 5
-                });
-                setIsEditing("new");
-            }
+            // If not found, show modal to add
+            setPendingScanCode(code);
         }
     };
 
-    const handleQuickAdd = (data: any) => {
-        const id = crypto.randomUUID();
-        upsertDocument(id, {
-            id,
-            ...data,
-            unit: "pcs",
-            minStockLevel: 5,
-            lastChecked: new Date().toISOString()
-        });
-        setIsQuickAdding(false);
+    const handleCreateFromScan = () => {
+        if (pendingScanCode) {
+            setIsScanning(false);
+            setFormData({
+                sku: pendingScanCode,
+                quantity: 1,
+                minStockLevel: 5
+            });
+            setIsEditing("new");
+            setPendingScanCode(null);
+        }
+    };
+
+    const handleQuickAdd = async (data: InventoryItem) => {
+        try {
+            const id = crypto.randomUUID();
+            await upsertDocument(id, {
+                id,
+                ...data,
+                unit: "pcs",
+                minStockLevel: 5,
+                lastChecked: new Date().toISOString()
+            });
+            setIsQuickAdding(false);
+        } catch (err) {
+            console.error("Failed to quick add item:", err);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (itemToDelete) {
+            try {
+                await deleteDocument(itemToDelete as any);
+                setItemToDelete(null);
+            } catch (err) {
+                console.error("Failed to delete inventory item:", err);
+            }
+        }
     };
 
     const filteredItems = items.filter(item =>
@@ -165,6 +183,7 @@ export function InventoryApp() {
                 <input
                     type="text"
                     placeholder="Search items by name, SKU, or category..."
+                    aria-label="Search inventory items"
                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/20"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -319,13 +338,13 @@ export function InventoryApp() {
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4">
                                         <div className="flex flex-col gap-1">
-                                            <span className={`inline-flex w-fit rounded-full px-2 text-xs font-semibold leading-5 ${item.quantity <= item.minStockLevel
-                                                    ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                                                    : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                            <span className={`inline-flex w-fit rounded-full px-2 text-xs font-semibold leading-5 ${item.quantity <= (item.minStockLevel ?? 0)
+                                                ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                                                 }`}>
                                                 {item.quantity} {item.unit}
                                             </span>
-                                            {item.quantity <= item.minStockLevel && (
+                                            {item.quantity <= (item.minStockLevel ?? 0) && (
                                                 <span className="text-[10px] text-red-500 font-medium">Low Stock (Min: {item.minStockLevel})</span>
                                             )}
                                         </div>
@@ -338,7 +357,7 @@ export function InventoryApp() {
                                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                                         <button
                                             onClick={() => {
-                                                setIsEditing(item.id);
+                                                setIsEditing(item.id ?? null);
                                                 setFormData(item);
                                             }}
                                             className="mr-3 text-primary hover:text-primary/80 transition-colors"
@@ -346,11 +365,7 @@ export function InventoryApp() {
                                             Edit
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                if (confirm("Are you sure you want to delete this item?")) {
-                                                    deleteDocument(item.id);
-                                                }
-                                            }}
+                                            onClick={() => setItemToDelete(item.id ?? null)}
                                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                                         >
                                             Delete
@@ -362,6 +377,76 @@ export function InventoryApp() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Deletion Confirmation Modal */}
+            <COSModal
+                isOpen={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                title="Confirm Deletion"
+                description="Are you sure you want to delete this item? This action cannot be undone."
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setItemToDelete(null)}
+                            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                if (itemToDelete) {
+                                    await deleteDocument(itemToDelete as any);
+                                    setItemToDelete(null);
+                                }
+                            }}
+                            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                }
+            >
+                <div className="flex items-center gap-4 py-4 text-red-600">
+                    <Trash2 className="h-10 w-10 opacity-20" />
+                    <p className="text-sm">
+                        Confirming will permanently remove this item from the organization's inventory records across all synchronized devices.
+                    </p>
+                </div>
+            </COSModal>
+
+            {/* Scan Not Found Modal */}
+            <COSModal
+                isOpen={!!pendingScanCode}
+                onClose={() => setPendingScanCode(null)}
+                title="Unknown Item"
+                description={`The scanned code "${pendingScanCode}" was not found in current inventory.`}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setPendingScanCode(null)}
+                            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            Dismiss
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleCreateFromScan}
+                            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90"
+                        >
+                            Create New Item
+                        </button>
+                    </div>
+                }
+            >
+                <div className="py-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Would you like to register a new inventory item with this SKU/barcode?
+                    </p>
+                </div>
+            </COSModal>
         </div>
     );
 }
