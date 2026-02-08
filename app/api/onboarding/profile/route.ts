@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
+import { moderateContent } from "../../../../lib/utils/moderation";
 
 // Use service role for database updates that might require admin privileges or bypassing RLS if needed (though we use Drizzle so we bypass RLS mostly unless using Postgres directly via Supabase client)
 // We use Drizzle for DB, so we don't need Supabase Sudo client strictly, but we need to verify the user from the Request headers/Supabase token.
@@ -104,11 +105,6 @@ export async function POST(req: Request) {
             userUpdates.dateOfBirth = dob;
             const isMinor = age < 18;
             userUpdates.isMinor = isMinor;
-
-            // Enforce privacy for minors
-            if (isMinor) {
-                userUpdates.messagePrivacy = 'verified_only';
-            }
         }
 
         // 4. Update Profile based on type
@@ -121,6 +117,9 @@ export async function POST(req: Request) {
             const accType = userRec.accountType;
             const uType = userRec.userType;
 
+            // Calculate effective minor status (either from update or existing record)
+            const isMinorNow = userUpdates.isMinor !== undefined ? userUpdates.isMinor : userRec.isMinor;
+
             // Save raw response for audit/debugging
             await tx.insert(userOnboardingResponses).values({
                 userId,
@@ -129,7 +128,10 @@ export async function POST(req: Request) {
             });
 
             // Enforce strict privacy defaults for minors
-            if (userUpdates.isMinor) {
+            if (isMinorNow) {
+                // Force message privacy to verified_only for minors
+                userUpdates.messagePrivacy = 'verified_only';
+
                 await tx.insert(userPrivacySettings).values({
                     userId,
                     profileVisibility: 'private',
@@ -150,14 +152,19 @@ export async function POST(req: Request) {
                 });
             }
 
+            // Moderate content
+            const sanitizedBio = moderateContent(profileData.bio);
+            const sanitizedHeadline = moderateContent(profileData.headline);
+            const sanitizedLocation = moderateContent(profileData.location);
+
             if (accType === 'Individual') {
                 if (uType === 'professional') {
                     // Create Professional Profile
                     await tx.insert(professionalProfiles).values({
                         userId,
-                        role: (profileData.headline?.trim().substring(0, 50)) || "Professional",
-                        bio: profileData.bio || "",
-                        location: profileData.location || "",
+                        role: (sanitizedHeadline?.trim().substring(0, 50)) || "Professional",
+                        bio: sanitizedBio || "",
+                        location: sanitizedLocation || "",
                         profileImageUrl: profileData.profileImageUrl,
                         // Update other fields as needed
                     });
@@ -166,8 +173,8 @@ export async function POST(req: Request) {
                     await tx.insert(musicianProfiles).values({
                         userId,
                         name: [userRec.firstName, userRec.lastName].filter(Boolean).join(" ").trim() || "Unnamed Musician",
-                        bio: profileData.bio,
-                        location: profileData.location,
+                        bio: sanitizedBio,
+                        location: sanitizedLocation,
                         profileImageUrl: profileData.profileImageUrl,
                         // Map headline -> experienceLevel? No.
                     });
@@ -175,10 +182,13 @@ export async function POST(req: Request) {
             } else {
                 // Organisation
                 // Create Org
+                const orgNameRaw = userRec.organisationName || "New Organisation";
+                const sanitizedOrgName = moderateContent(orgNameRaw);
+
                 const [org] = await tx.insert(organisations).values({
-                    name: userRec.organisationName || "New Organisation",
-                    slug: generateSlug(userRec.organisationName || "New Organisation"),
-                    description: profileData.bio, // Mapping bio to description
+                    name: sanitizedOrgName,
+                    slug: generateSlug(sanitizedOrgName),
+                    description: sanitizedBio, // Mapping bio to description
                     logoUrl: profileData.profileImageUrl,
                     // location and type are not in organisations schema
                 }).returning();
