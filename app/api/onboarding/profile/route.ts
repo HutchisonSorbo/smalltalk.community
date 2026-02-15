@@ -115,28 +115,26 @@ export async function POST(req: Request) {
         // 3.2 Content Moderation (AI + Regex)
         const isMinor = userUpdates.isMinor ?? userRec.isMinor ?? false;
 
-        if (profileData.bio) {
-             const modResult = await validateContentWithAI(profileData.bio, isMinor);
-             if (!modResult.valid) {
-                 return NextResponse.json({ error: `Bio content flagged as unsafe: ${modResult.error}` }, { status: 400 });
-             }
-             profileData.bio = modResult.sanitized;
+        // Execute moderation checks in parallel for performance
+        const [bioResult, headlineResult, locationResult] = await Promise.all([
+            profileData.bio ? validateContentWithAI(profileData.bio, isMinor) : Promise.resolve(null),
+            profileData.headline ? validateContentWithAI(profileData.headline, isMinor) : Promise.resolve(null),
+            profileData.location ? validateContentWithAI(profileData.location, isMinor) : Promise.resolve(null),
+        ]);
+
+        if (bioResult) {
+             if (!bioResult.valid) return NextResponse.json({ error: `Bio content flagged as unsafe: ${bioResult.error}` }, { status: 400 });
+             profileData.bio = bioResult.sanitized;
         }
 
-        if (profileData.headline) {
-             const modResult = await validateContentWithAI(profileData.headline, isMinor);
-             if (!modResult.valid) {
-                 return NextResponse.json({ error: `Headline content flagged as unsafe: ${modResult.error}` }, { status: 400 });
-             }
-             profileData.headline = modResult.sanitized;
+        if (headlineResult) {
+             if (!headlineResult.valid) return NextResponse.json({ error: `Headline content flagged as unsafe: ${headlineResult.error}` }, { status: 400 });
+             profileData.headline = headlineResult.sanitized;
         }
 
-        if (profileData.location) {
-             const modResult = await validateContentWithAI(profileData.location, isMinor);
-             if (!modResult.valid) {
-                 return NextResponse.json({ error: `Location content flagged as unsafe: ${modResult.error}` }, { status: 400 });
-             }
-             profileData.location = modResult.sanitized;
+        if (locationResult) {
+             if (!locationResult.valid) return NextResponse.json({ error: `Location content flagged as unsafe: ${locationResult.error}` }, { status: 400 });
+             profileData.location = locationResult.sanitized;
         }
 
         // 4. Update Profile based on type
