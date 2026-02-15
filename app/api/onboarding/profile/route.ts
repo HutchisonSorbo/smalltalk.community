@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { profileSetupSchema } from "../../../../lib/onboarding-schemas";
+import { validateContentWithAI } from "../../../../lib/utils/moderation";
 
 // Use service role for database updates that might require admin privileges or bypassing RLS if needed (though we use Drizzle so we bypass RLS mostly unless using Postgres directly via Supabase client)
 // We use Drizzle for DB, so we don't need Supabase Sudo client strictly, but we need to verify the user from the Request headers/Supabase token.
@@ -109,6 +110,33 @@ export async function POST(req: Request) {
             if (isMinor) {
                 userUpdates.messagePrivacy = 'verified_only';
             }
+        }
+
+        // 3.2 Content Moderation (AI + Regex)
+        const isMinor = userUpdates.isMinor ?? userRec.isMinor ?? false;
+
+        if (profileData.bio) {
+             const modResult = await validateContentWithAI(profileData.bio, isMinor);
+             if (!modResult.valid) {
+                 return NextResponse.json({ error: `Bio content flagged as unsafe: ${modResult.error}` }, { status: 400 });
+             }
+             profileData.bio = modResult.sanitized;
+        }
+
+        if (profileData.headline) {
+             const modResult = await validateContentWithAI(profileData.headline, isMinor);
+             if (!modResult.valid) {
+                 return NextResponse.json({ error: `Headline content flagged as unsafe: ${modResult.error}` }, { status: 400 });
+             }
+             profileData.headline = modResult.sanitized;
+        }
+
+        if (profileData.location) {
+             const modResult = await validateContentWithAI(profileData.location, isMinor);
+             if (!modResult.valid) {
+                 return NextResponse.json({ error: `Location content flagged as unsafe: ${modResult.error}` }, { status: 400 });
+             }
+             profileData.location = modResult.sanitized;
         }
 
         // 4. Update Profile based on type
