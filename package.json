@@ -6,6 +6,10 @@
   "engines": {
     "node": "22"
   },
+  "overrides": {
+    "flatted": "3.4.2",
+    "immutable": "4.3.8"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/cleanup-binaries.mjs && npm run build:sw && next build",
